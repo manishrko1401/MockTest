@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import { randomUUID } from 'crypto';
+import { requireStaff } from '../../lib/serverAuth';
 
 export async function POST(req: Request) {
   try {
@@ -76,7 +77,10 @@ export async function POST(req: Request) {
   }
 }
 
+// Inquiries hold names, emails and phone numbers: admin / support team only (sending one is open)
 export async function GET(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
@@ -119,6 +123,8 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, status, adminNotes } = body;
@@ -175,6 +181,8 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

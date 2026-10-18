@@ -45,9 +45,12 @@ Thumbs.db
 # Scratch directory
 scratch/
 
-# Database backups
+# Database backups (contain users' personal data — never commit)
 database_backup/
 database_backup*
+FULL_DATABASE_BACKUP*.json
+*DATABASE_BACKUP*
+*_backup.json
 *.zip
 backup_database.js
 restore_database.js

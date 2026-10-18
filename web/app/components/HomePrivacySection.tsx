@@ -92,24 +92,24 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
   const curr = isHindi ? content.hi : content.en;
 
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden animate-in fade-in duration-200">
+    <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden animate-in fade-in duration-200">
       
       {/* TOP HEADER WITH BACK BUTTON */}
       <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition active:scale-95 cursor-pointer shrink-0"
+            className="p-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
             title={isHindi ? 'मुख्य पृष्ठ पर वापस जाएं' : 'Back to Home'}
           >
             <ArrowLeft className="h-4.5 w-4.5" />
           </button>
           <div className="min-w-0">
-            <h2 className="font-black text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-tight truncate flex items-center gap-2">
+            <h2 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate flex items-center gap-2">
               <ShieldCheck className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
               <span>{curr.title}</span>
             </h2>
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs sm:text-xs text-slate-500 dark:text-slate-400 truncate">
               {curr.lastUpdated}
             </p>
           </div>
@@ -117,7 +117,7 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
 
         <button
           onClick={onBack}
-          className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline shrink-0 cursor-pointer"
+          className="text-xs font-bold text-[#1e4e79] dark:text-blue-400 hover:underline shrink-0 cursor-pointer"
         >
           {isHindi ? 'होम पर वापस' : 'Back to Home'}
         </button>
@@ -127,19 +127,19 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
         
         {/* BANNER */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-md">
-          <h3 className="text-base sm:text-xl font-black">{curr.title}</h3>
+        <div className="bg-[#1e4e79] rounded-lg sm:rounded-lg p-5 sm:p-6 text-white shadow-md">
+          <h3 className="text-base sm:text-xl font-semibold">{curr.title}</h3>
           <p className="text-xs sm:text-sm text-emerald-100 mt-1 font-medium">{curr.subtitle}</p>
         </div>
 
         {/* ZERO ACCESS DRIVE PRIVACY HIGHLIGHT */}
-        <div className="p-5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 space-y-2.5">
+        <div className="p-5 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 space-y-2.5">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h4 className="font-black text-xs sm:text-sm text-purple-950 dark:text-purple-200 flex items-center gap-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-purple-950 dark:text-purple-200 flex items-center gap-2">
               <FolderLock className="h-4.5 w-4.5 text-purple-600" />
               <span>{curr.sec2Title}</span>
             </h4>
-            <span className="px-2.5 py-0.5 rounded-full bg-purple-200/60 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300 font-extrabold text-[9px] uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-full bg-purple-200/60 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300 font-semibold text-[11px]">
               {curr.sec2Badge}
             </span>
           </div>
@@ -150,9 +150,9 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
 
         {/* PRIVACY CLAUSES */}
         <div className="space-y-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <Database className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          <div className="p-4 sm:p-5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <Database className="h-4 w-4 text-[#1e4e79] dark:text-blue-400 shrink-0" />
               <span>{curr.sec1Title}</span>
             </h4>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
@@ -160,8 +160,8 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="p-4 sm:p-5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-amber-500 shrink-0" />
               <span>{curr.sec4Title}</span>
             </h4>
@@ -170,8 +170,8 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="p-4 sm:p-5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Bell className="h-4 w-4 text-indigo-500 shrink-0" />
               <span>{curr.sec5Title}</span>
             </h4>
@@ -180,8 +180,8 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="p-4 sm:p-5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Gift className="h-4 w-4 text-pink-500 shrink-0" />
               <span>{curr.sec6Title}</span>
             </h4>
@@ -190,8 +190,8 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <div className="p-4 sm:p-5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>{curr.sec7Title}</span>
             </h4>
@@ -200,9 +200,9 @@ export default function HomePrivacySection({ onBack }: HomePrivacySectionProps) 
             </p>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
-            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-              <Lock className="h-4 w-4 text-blue-600 shrink-0" />
+          <div className="p-4 sm:p-5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-2">
+            <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <Lock className="h-4 w-4 text-[#1e4e79] shrink-0" />
               <span>{curr.sec8Title}</span>
             </h4>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">

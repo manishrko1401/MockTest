@@ -34,7 +34,7 @@ let cachedCategories: TypingCategory[] | null = null;
 let cachedCategoryCounts: Record<string, number> | null = null;
 let cachedLightTestsByCategory: Record<string, TypingTest[]> = {};
 let lastCacheTime = 0;
-const CACHE_TTL_MS = 60 * 1000; // 60 seconds TTL
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes (admin writes call invalidateTypingCache)
 
 export function invalidateTypingCache() {
   cachedCategories = null;

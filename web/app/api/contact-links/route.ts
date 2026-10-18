@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
+import { requireStaff } from '../../lib/serverAuth';
 
 const DEFAULT_CONTACT_LINKS = [
   {
@@ -185,7 +186,10 @@ export async function GET() {
   }
 }
 
+// Changing links: admin / support team only (reading them is public)
 export async function POST(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { action, links, link } = body;
@@ -383,6 +387,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

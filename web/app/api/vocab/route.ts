@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
+import { requireStaff } from '../../lib/serverAuth';
 import fs from 'fs';
 import path from 'path';
 
@@ -171,7 +172,10 @@ export async function GET() {
   }
 }
 
+// Changing vocabulary: admin only (reading it is public)
 export async function POST(req: Request) {
+  const denied = await requireStaff(req, []);
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { action, data, items: bulkItems } = body;

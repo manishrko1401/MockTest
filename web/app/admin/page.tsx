@@ -707,7 +707,7 @@ export default function AdminAnalytics() {
         setEditTier(updatedUser.subscriptionTier);
         setEditExpiry(updatedUser.subscriptionExpiresAt || '');
         setEditPurchasedAt(updatedUser.subscriptionPurchasedAt || '');
-        setEditPassword(updatedUser.password || 'password123');
+        setEditPassword(''); // passwords are never shown; type a new one to change it
         setEditIsBlocked(updatedUser.isBlocked || false);
         setEditCoins(updatedUser.coins || 0);
       }
@@ -903,7 +903,7 @@ export default function AdminAnalytics() {
     setEditTier(user.subscriptionTier);
     setEditExpiry(user.subscriptionExpiresAt || '');
     setEditPurchasedAt(user.subscriptionPurchasedAt || '');
-    setEditPassword(user.password || 'password123');
+    setEditPassword(''); // passwords are never shown; type a new one to change it
     setEditIsBlocked(user.isBlocked || false);
     setEditCoins(user.coins || 0);
 
@@ -1124,8 +1124,7 @@ export default function AdminAnalytics() {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          'x-admin-key': 'super_secret_admin_key_2026'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           action: 'save-custom-questions',
@@ -1390,562 +1389,257 @@ export default function AdminAnalytics() {
 
   if (!hasAdminAccess) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 relative overflow-hidden px-4">
-        {/* DEBUG STRIP */}
-        <div style={{position:'fixed',top:0,left:0,right:0,zIndex:9999,background:'#111',color:'#0f0',fontSize:'11px',padding:'4px 12px',display:'flex',gap:'16px'}}>
-          <span>≡ƒæñ currentUser: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'null'}</span>
-          <span>≡ƒôï usersList: {usersList.length}</span>
-          <span>≡ƒôÜ catalog: {examCatalog.length}</span>
-          <span>≡ƒöÆ hasAccess: {String(!!hasAdminAccess)}</span>
-        </div>
-        {/* Ambient background blur circles */}
-        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-10 right-10 w-72 h-72 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="min-h-screen flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100">
+        <header className="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 px-2 py-1 -ml-2 rounded-md hover:bg-[#eef3f8] dark:hover:bg-slate-800 transition-colors">
+            <span className="bg-[#E6F4FE] dark:bg-slate-800 rounded-md h-8 w-8 flex items-center justify-center border border-blue-200 dark:border-slate-700">
+              <Database className="h-4 w-4 text-[#1e4e79] dark:text-blue-400" />
+            </span>
+            <span className="font-bold text-sm text-slate-900 dark:text-white">{t.logoTitle}</span>
+            <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 ring-1 ring-inset ring-slate-500/20">Admin</span>
+          </Link>
+          <Link href="/" className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" /> {t.backToHome}
+          </Link>
+        </header>
 
-        <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 p-8 rounded-2xl shadow-2xl backdrop-blur-md relative z-10">
-          <div className="text-center mb-6">
-            <div className="bg-blue-600/10 border border-blue-500/30 p-3.5 rounded-full inline-flex items-center justify-center mb-4">
-              <Database className="h-7 w-7 text-blue-500 animate-pulse" />
+        <main className="flex-1 flex items-center justify-center p-4 py-12">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+            <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Admin sign in</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Sign in with a staff account to open the management panel.</p>
             </div>
-            <h2 className="text-xl font-black uppercase tracking-wider text-white">Admin Authentication</h2>
-            <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mt-1">Management Suite Gating</p>
+            <div className="px-6 py-5">
+              {adminLoginError && (
+                <div className="mb-4 flex items-start gap-2.5 rounded-md border border-red-200 dark:border-red-900/60 border-l-4 border-l-[#b02a37] bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-800 dark:text-red-300">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{adminLoginError}</span>
+                </div>
+              )}
+              <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Admin email</label>
+                  <input
+                    type="email"
+                    required
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="admin@mocktest.com"
+                    autoComplete="username"
+                    className="w-full h-10 px-3 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#1e4e79] focus:ring-2 focus:ring-[#1e4e79]/15"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    className="w-full h-10 px-3 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#1e4e79] focus:ring-2 focus:ring-[#1e4e79]/15"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full h-10 inline-flex items-center justify-center rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-sm font-medium transition-colors cursor-pointer"
+                >
+                  Sign in
+                </button>
+              </form>
+            </div>
           </div>
-
-          {adminLoginError && (
-            <div className="bg-red-950/40 border border-red-900/50 p-3 rounded-lg text-red-400 text-xs font-bold mb-4 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{adminLoginError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
-            <div>
-              <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Admin ID / Email</label>
-              <input
-                type="email"
-                required
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@mocktest.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-bold transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Security Password</label>
-              <input
-                type="password"
-                required
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-bold transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-blue-900/35 cursor-pointer mt-2"
-            >
-              Sign In to Suite
-            </button>
-          </form>
-
-          <div className="mt-6 border-t border-slate-800/80 pt-4 text-center">
-            <Link href="/" className="text-slate-500 hover:text-slate-300 text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
-              <ArrowLeft className="h-3.5 w-3.5" /> Return to Homepage
-            </Link>
-          </div>
-        </div>
+        </main>
       </div>
     );
   }
 
+  type AdminTab = typeof activeTab;
+  const pendingSuggestions = suggestionsList.filter(s => s.status === 'PENDING').length;
+  const NAV_GROUPS: Array<{ title: string; items: Array<{ id: AdminTab; label: string; icon: React.ElementType; show: boolean; badge?: React.ReactNode }> }> = [
+    {
+      title: language === 'hi' ? 'अवलोकन' : 'Overview',
+      items: [
+        { id: 'analytics', label: language === 'hi' ? 'छात्र प्रदर्शन' : 'Student performance', icon: BarChart2, show: hasTabAccess('analytics') },
+        { id: 'attempts', label: language === 'hi' ? 'टेस्ट प्रयास लॉग' : 'Test attempt logs', icon: TrendingUp, show: hasTabAccess('attempts') },
+        { id: 'typing_attempts', label: language === 'hi' ? 'टाइपिंग प्रयास लॉग' : 'Typing attempt logs', icon: BarChart2, show: hasTabAccess('typing_attempts') },
+        { id: 'dbmonitor', label: language === 'hi' ? 'डेटाबेस मॉनिटर' : 'Database monitor', icon: Database, show: hasTabAccess('dbmonitor') },
+      ],
+    },
+    {
+      title: language === 'hi' ? 'टेस्ट सामग्री' : 'Test content',
+      items: [
+        { id: 'categories', label: language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam categories', icon: FolderPlus, show: hasTabAccess('categories') },
+        { id: 'subcategories', label: language === 'hi' ? 'उप-श्रेणियां' : 'Sub categories', icon: Layers, show: hasTabAccess('subcategories') },
+        { id: 'subsubcategories', label: language === 'hi' ? 'उप-उप-श्रेणियां' : 'Sub-sub categories', icon: FileText, show: hasTabAccess('subsubcategories') },
+        { id: 'mocks', label: language === 'hi' ? 'मॉक टेस्ट' : 'Mock tests', icon: PlusCircle, show: hasTabAccess('mocks') },
+        { id: 'upload', label: language === 'hi' ? 'बल्क प्रश्न आयात' : 'Bulk question importer', icon: Upload, show: hasTabAccess('upload') },
+        { id: 'typing', label: language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing tests', icon: Keyboard, show: hasTabAccess('typing') },
+        { id: 'vocab', label: language === 'hi' ? 'शब्दावली' : 'Vocabulary', icon: BookOpen, show: true },
+      ],
+    },
+    {
+      title: language === 'hi' ? 'सूचनाएं और वेबसाइट' : 'Notices & website',
+      items: [
+        { id: 'notices', label: language === 'hi' ? 'लाइव सूचनाएं' : 'Live notices', icon: Bell, show: hasTabAccess('notices') },
+        { id: 'notice_details', label: language === 'hi' ? 'सूचना विवरण संपादक' : 'Notice details editor', icon: Layers, show: hasTabAccess('notices') },
+        { id: 'announcements', label: language === 'hi' ? 'घोषणाएं' : 'Announcements', icon: Megaphone, show: hasTabAccess('announcements') },
+        { id: 'testimonials', label: language === 'hi' ? 'टॉपर प्रशंसापत्र' : 'Topper testimonials', icon: Award, show: hasTabAccess('testimonials') },
+        { id: 'contact_links', label: language === 'hi' ? 'संपर्क लिंक' : 'Contact links', icon: Share2, show: hasTabAccess('contact_links') },
+      ],
+    },
+    {
+      title: language === 'hi' ? 'उपयोगकर्ता और सहायता' : 'Users & support',
+      items: [
+        { id: 'users', label: language === 'hi' ? 'उपयोगकर्ता प्रबंधन' : 'User management', icon: Users, show: hasTabAccess('users') },
+        { id: 'locker', label: language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document locker', icon: FolderLock, show: hasTabAccess('locker') },
+        { id: 'support', label: language === 'hi' ? 'सपोर्ट टीम' : 'Support helpdesk', icon: MessageSquare, show: hasTabAccess('support'), badge: totalUnseenCount > 0 ? totalUnseenCount : null },
+        { id: 'inquiries', label: language === 'hi' ? 'संपर्क पूछताछ' : 'Contact inquiries', icon: Inbox, show: hasTabAccess('inquiries'), badge: pendingInquiriesCount > 0 ? pendingInquiriesCount : null },
+        { id: 'reports', label: language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported questions', icon: AlertCircle, show: hasTabAccess('reports') },
+        { id: 'feedback', label: language === 'hi' ? 'उपयोगकर्ता प्रतिक्रिया' : 'User feedback', icon: MessageCircle, show: hasTabAccess('feedback') },
+        { id: 'suggestions', label: language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion box', icon: Lightbulb, show: hasTabAccess('suggestions'), badge: pendingSuggestions > 0 ? pendingSuggestions : null },
+      ],
+    },
+  ];
+
+  const activeSectionTitle = NAV_GROUPS.flatMap(g => g.items).find(item => item.id === activeTab)?.label || (language === 'hi' ? 'एडमिन पैनल' : 'Admin panel');
+
   return (
-    <div className="flex h-screen bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 overflow-hidden transition-colors duration-200">
-      
-      {/* SIDEBAR NAVIGATION BACKDROP ON MOBILE */}
-      {isMounted && isMobile && mobileSidebarOpen && (
-        <div 
-          onClick={() => setMobileSidebarOpen(false)}
-          className="fixed inset-0 bg-black/60 z-40 backdrop-blur-xs transition-opacity duration-200"
-        />
-      )}
+    <div className="flex flex-col h-screen bg-[#f5f7fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 overflow-hidden">
 
-      {/* SIDEBAR NAVIGATION */}
-      <aside className={`
-        ${isMounted && isMobile 
-          ? `fixed inset-y-0 left-0 z-50 w-64 shadow-2xl transition-transform duration-300 transform ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}` 
-          : 'w-64 border-r border-slate-200 dark:border-slate-800'
-        }
-        bg-white dark:bg-slate-950 p-6 flex flex-col justify-between h-full shrink-0
-      `}>
-        <style dangerouslySetInnerHTML={{ __html: `
-          .custom-sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-          }
-          .custom-sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-sidebar-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 2px;
-          }
-          .dark .custom-sidebar-scroll::-webkit-scrollbar-thumb {
-            background: #334155;
-          }
-          .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-          }
-        `}} />
-        <div className="flex flex-col flex-1 overflow-y-auto min-h-0 mb-4 pr-1 custom-sidebar-scroll">
-          {/* Brand logo */}
-          <div className="flex items-center gap-3 mb-8 shrink-0">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Database className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="font-extrabold text-sm leading-tight text-slate-900 dark:text-white tracking-wider">MOCK TEST ADMIN</h1>
-              <p className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase font-sans">Management Suite</p>
-            </div>
-          </div>
-
-          {/* Nav Items */}
-          <nav className="space-y-2 font-sans">
-            {hasTabAccess('analytics') && (
-              <button
-                onClick={() => selectTab('analytics')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'analytics'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <BarChart2 className="h-4 w-4" />
-                Student Performance
-              </button>
-            )}
-            {hasTabAccess('upload') && (
-              <button
-                onClick={() => selectTab('upload')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'upload'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Upload className="h-4 w-4" />
-                Bulk Question Importer
-              </button>
-            )}
+      {/* TOP BAR */}
+      <header className="h-14 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-5 flex items-center justify-between gap-3 z-30">
+        <div className="flex items-center gap-2 min-w-0">
+          {isMounted && isMobile && (
             <button
-              onClick={() => selectTab('vocab')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                activeTab === 'vocab'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              onClick={() => setMobileSidebarOpen(true)}
+              className="h-8 w-8 flex items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Open navigation"
             >
-              <BookOpen className="h-4 w-4" />
-              Vocab Upload & Manager
+              <Menu className="h-4 w-4" />
             </button>
-            {hasTabAccess('users') && (
-              <button
-                onClick={() => selectTab('users')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'users'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                User Management
-              </button>
-            )}
-            {hasTabAccess('locker') && (
-              <button
-                onClick={() => selectTab('locker')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'locker'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <FolderLock className="h-4 w-4 text-purple-400" />
-                  <span>Document Locker</span>
-                </div>
-                <span className="bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[9px] font-black rounded-full h-4 px-1.5 flex items-center justify-center">
-                  Drive
-                </span>
-              </button>
-            )}
-            {hasTabAccess('notices') && (
-              <button
-                onClick={() => selectTab('notices')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'notices'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Bell className="h-4 w-4" />
-                Live Notices & Updates
-              </button>
-            )}
-            {hasTabAccess('notices') && (
-              <button
-                onClick={() => selectTab('notice_details')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'notice_details'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Layers className="h-4 w-4 text-indigo-400" />
-                Inner Details Editor ⚡
-              </button>
-            )}
-            {hasTabAccess('announcements') && (
-              <button
-                onClick={() => selectTab('announcements')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'announcements'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Megaphone className="h-4 w-4" />
-                {language === 'hi' ? 'αñåαñºαñ┐αñòαñ╛αñ░αñ┐αñò αñÿαÑïαñ╖αñúαñ╛αñÅαñü' : 'Manage Announcements'}
-              </button>
-            )}
-            {hasTabAccess('testimonials') && (
-              <button
-                onClick={() => selectTab('testimonials')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'testimonials'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Award className="h-4 w-4" />
-                {language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αñéαñ╕αñ╛αñ¬αññαÑìαñ░ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Topper Testimonials'}
-              </button>
-            )}
-            {hasTabAccess('categories') && (
-              <button
-                onClick={() => selectTab('categories')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'categories'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <FolderPlus className="h-4 w-4" />
-                {language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé' : 'Exam Categories'}
-              </button>
-            )}
-            {hasTabAccess('subcategories') && (
-              <button
-                onClick={() => selectTab('subcategories')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'subcategories'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Layers className="h-4 w-4" />
-                {language === 'hi' ? 'αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé' : 'Sub Categories'}
-              </button>
-            )}
-            {hasTabAccess('subsubcategories') && (
-              <button
-                onClick={() => selectTab('subsubcategories')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'subsubcategories'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                {language === 'hi' ? 'αñëαñ¬-αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé' : 'Sub Sub Categories'}
-              </button>
-            )}
-            {hasTabAccess('mocks') && (
-              <button
-                onClick={() => selectTab('mocks')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'mocks'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <PlusCircle className="h-4 w-4" />
-                {language === 'hi' ? 'मॉक टेस्ट प्रबंधित करें' : 'Manage Mock Tests'}
-              </button>
-            )}
-            {hasTabAccess('typing') && (
-              <button
-                onClick={() => selectTab('typing')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'typing'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Keyboard className="h-4 w-4" />
-                {language === 'hi' ? 'टाइपिंग टेस्ट एवं सिम्युलेटर' : 'Typing Exams & Simulator'}
-              </button>
-            )}
-            {hasTabAccess('typing_attempts') && (
-              <button
-                onClick={() => selectTab('typing_attempts')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'typing_attempts'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <BarChart2 className="h-4 w-4 text-emerald-400" />
-                {language === 'hi' ? 'टाइपिंग एटेम्पटेड लॉग्स' : 'Typing Attempt Logs'}
-              </button>
-            )}
-            {hasTabAccess('reports') && (
-              <button
-                onClick={() => selectTab('reports')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'reports'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <AlertCircle className="h-4 w-4" />
-                {language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿' : 'Reported Questions'}
-              </button>
-            )}
-            {hasTabAccess('support') && (
-              <button
-                onClick={() => selectTab('support')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'support'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>{language === 'hi' ? 'αñ╕αñ¬αÑïαñ░αÑìαñƒ αñƒαÑÇαñ«' : 'Support Team'}</span>
-                </div>
-                {totalUnseenCount > 0 && (
-                  <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
-                    {totalUnseenCount}
-                  </span>
-                )}
-              </button>
-            )}
-            {hasTabAccess('dbmonitor') && (
-              <button
-                onClick={() => selectTab('dbmonitor')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'dbmonitor'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Database className="h-4 w-4" />
-                DB Monitor
-              </button>
-            )}
-            {hasTabAccess('feedback') && (
-              <button
-                onClick={() => selectTab('feedback')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'feedback'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <MessageCircle className="h-4 w-4" />
-                User Feedbacks
-              </button>
-            )}
-            {hasTabAccess('suggestions') && (
-              <button
-                onClick={() => selectTab('suggestions')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'suggestions'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Lightbulb className="h-4 w-4" />
-                  <span>{language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}</span>
-                </div>
-                {suggestionsList.filter(s => s.status === 'PENDING').length > 0 && (
-                  <span className="bg-amber-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
-                    {suggestionsList.filter(s => s.status === 'PENDING').length}
-                  </span>
-                )}
-              </button>
-            )}
-            {hasTabAccess('inquiries') && (
-              <button
-                onClick={() => selectTab('inquiries')}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'inquiries'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Inbox className="h-4 w-4" />
-                  <span>Contact Inquiries</span>
-                </div>
-                {pendingInquiriesCount > 0 && (
-                  <span className="bg-red-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center animate-pulse">
-                    {pendingInquiriesCount}
-                  </span>
-                )}
-              </button>
-            )}
-            {hasTabAccess('contact_links') && (
-              <button
-                onClick={() => selectTab('contact_links')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'contact_links'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Share2 className="h-4 w-4" />
-                <span>Manage Contact Links</span>
-              </button>
-            )}
-            {hasTabAccess('attempts') && (
-              <button
-                onClick={() => selectTab('attempts')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
-                  activeTab === 'attempts'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <TrendingUp className="h-4 w-4" />
-                Test Attempt Logs
-              </button>
-            )}
-          </nav>
+          )}
+          <Link href="/" className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-[#eef3f8] dark:hover:bg-slate-800 transition-colors shrink-0" title={t.backToHome}>
+            <span className="bg-[#E6F4FE] dark:bg-slate-800 rounded-md h-8 w-8 flex items-center justify-center border border-blue-200 dark:border-slate-700">
+              <Database className="h-4 w-4 text-[#1e4e79] dark:text-blue-400" />
+            </span>
+            <span className="hidden sm:block font-bold text-sm text-slate-900 dark:text-white">{t.logoTitle}</span>
+            <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-[#eef3f8] dark:bg-slate-800 text-[#1e4e79] dark:text-blue-300">Admin</span>
+          </Link>
+          <span className="hidden md:block h-5 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+          <h1 className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{activeSectionTitle}</h1>
         </div>
-
-        {/* Refresh + System telemetry */}
-        <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-3">
-          <button
-            onClick={async () => {
-              await refreshCatalog();
-              showToast('Catalog refreshed from database!');
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer"
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-xs text-slate-600 dark:text-slate-300 bg-[#eaf6ec] dark:bg-green-950/40 ring-1 ring-inset ring-green-600/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1e7e34]" />
+            {language === 'hi' ? 'सर्वर ऑनलाइन' : 'API online'}
+          </span>
+          <Link href="/" className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-sm text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white transition-colors">
+            <Globe className="h-4 w-4" /> {language === 'hi' ? 'वेबसाइट' : 'View website'}
+          </Link>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
+            className="h-8 px-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 outline-none cursor-pointer hover:bg-[#eef3f8] dark:hover:bg-slate-800 transition-colors"
+            aria-label="Language"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh Data
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+          </select>
+          <button
+            onClick={toggleTheme}
+            className="h-8 w-8 flex items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+            title={theme === 'light' ? t.themeDark : t.themeLight}
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
-          <div className="text-[10px] text-slate-500">
-            <p>Database: Connected (PostgreSQL)</p>
-            <p>Active sessions: 1,429</p>
-            <p>System load: Normal</p>
-          </div>
         </div>
-      </aside>
+      </header>
+
+      <div className="flex-1 flex min-h-0 relative">
+        {/* SIDEBAR BACKDROP ON MOBILE */}
+        {isMounted && isMobile && mobileSidebarOpen && (
+          <div onClick={() => setMobileSidebarOpen(false)} className="fixed inset-0 bg-slate-900/50 z-40" />
+        )}
+
+        {/* SIDEBAR NAVIGATION */}
+        <aside className={`
+          ${isMounted && isMobile
+            ? `fixed inset-y-0 left-0 z-50 w-72 shadow-xl transition-transform duration-300 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`
+            : 'w-64 xl:w-72 border-r border-slate-200 dark:border-slate-800'}
+          bg-[#f5f7fa] dark:bg-slate-950 flex flex-col h-full shrink-0
+        `}>
+          {isMounted && isMobile && (
+            <div className="h-14 px-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <span className="text-sm font-semibold text-slate-900 dark:text-white">{language === 'hi' ? 'एडमिन मेन्यू' : 'Admin menu'}</span>
+              <button onClick={() => setMobileSidebarOpen(false)} className="h-8 w-8 flex items-center justify-center rounded-md text-slate-500 hover:bg-[#eef3f8] dark:hover:bg-slate-800 cursor-pointer" aria-label="Close navigation">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          <nav className="flex-1 overflow-y-auto min-h-0 p-3 space-y-5 no-scrollbar">
+            {NAV_GROUPS.map(group => {
+              const items = group.items.filter(item => item.show);
+              if (items.length === 0) return null;
+              return (
+                <div key={group.title}>
+                  <p className="px-1 pb-2 text-xs font-semibold text-slate-600 dark:text-slate-400">{group.title}</p>
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden divide-y divide-slate-200 dark:divide-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+                    {items.map(item => {
+                      const Icon = item.icon;
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => selectTab(item.id)}
+                          className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors cursor-pointer ${
+                            isActive
+                              ? 'bg-[#eef3f8] dark:bg-slate-800/70 text-[#1e4e79] dark:text-blue-300 font-medium shadow-[inset_3px_0_0_0_#1e4e79]'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-[#f5f7fa] dark:hover:bg-slate-800/50'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5 min-w-0">
+                            <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#1e4e79] dark:text-blue-300' : 'text-slate-400'}`} />
+                            <span className="truncate">{item.label}</span>
+                          </span>
+                          {item.badge ? (
+                            <span className="text-[11px] font-semibold min-w-[20px] h-5 px-1.5 rounded-full bg-[#b02a37] text-white flex items-center justify-center tabular-nums">{item.badge}</span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+
+          {/* Refresh */}
+          <div className="p-3 border-t border-slate-200 dark:border-slate-800">
+            <button
+              onClick={async () => {
+                await refreshCatalog();
+                showToast('Catalog refreshed from database!');
+              }}
+              className="w-full h-9 inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-[#eef3f8] hover:border-[#1e4e79]/40 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {language === 'hi' ? 'डेटा रीफ्रेश करें' : 'Refresh catalog'}
+            </button>
+          </div>
+        </aside>
 
       {/* MAIN VIEW AREA */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        
-        {/* TOP BAR */}
-        <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 sm:px-8 flex items-center justify-between transition-colors duration-200">
-          <div className="flex items-center gap-3">
-            {isMounted && isMobile && (
-              <button
-                onClick={() => setMobileSidebarOpen(true)}
-                className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
-              >
-                <Menu className="h-4.5 w-4.5" />
-              </button>
-            )}
-            <h2 className="text-xs sm:text-sm md:text-base font-extrabold tracking-wide text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-[300px] md:max-w-none">
-              {activeTab === 'analytics' 
-                ? (language === 'hi' ? 'αñ¢αñ╛αññαÑìαñ░ αñ╡αñ┐αñ╢αÑìαñ▓αÑçαñ╖αñú αñöαñ░ αñ╕αÑìαñ¬αÑÇαñí αñíαÑêαñ╢αñ¼αÑïαñ░αÑìαñí' : 'Student Analytics & Speed Dashboard')
-                : activeTab === 'upload' 
-                ? (language === 'hi' ? 'αñÑαÑïαñò αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¬αÑìαñ░αñ╡αñ┐αñ╖αÑìαñƒαñ┐ αñƒαñ░αÑìαñ«αñ┐αñ¿αñ▓' : 'Bulk Question Ingestion Terminal')
-                : activeTab === 'users'
-                ? (language === 'hi' ? 'αñëαñ¬αñ»αÑïαñùαñòαñ░αÑìαññαñ╛ αñ¬αÑìαñ░αñ¼αñéαñºαñ¿ αñöαñ░ αñ¬αñ╣αÑüαñüαñÜ αñ¿αñ┐αñ»αñéαññαÑìαñ░αñú' : 'User Management & Access Control')
-                : activeTab === 'locker'
-                ? (language === 'hi' ? 'दस्तावेज़ लॉकर और गूगल ड्राइव विश्लेषिकी' : 'Document Locker & Google Drive Intelligence')
-                : activeTab === 'typing'
-                ? (language === 'hi' ? 'टाइपिंग परीक्षा एवं सिम्युलेटर प्रबंधक' : 'Typing Exams & Simulator Manager')
-                : activeTab === 'notices'
-                ? (language === 'hi' ? 'लाइव अपडेट और नोटिस प्रबंधक' : 'Live Updates & Notices Manager')
-                : activeTab === 'notice_details'
-                ? (language === 'hi' ? 'नोटिफिकेशन विवरण और रिक्रूटमेंट ब्रेकडाउन एडिटर' : 'Notification Inner Details & Breakdown Editor')
-                : activeTab === 'testimonials'
-                ? (language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αñéαñ╕αñ╛αñ¬αññαÑìαñ░ αñ¬αÑìαñ░αñ¼αñéαñºαñò' : 'Toppers Testimonials Manager')
-                : activeTab === 'categories'
-                ? (language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Exam Categories')
-                : activeTab === 'subcategories'
-                ? (language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Exam Subcategories')
-                : activeTab === 'subsubcategories'
-                ? (language === 'hi' ? 'αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñëαñ¬-αñëαñ¬-αñ╢αÑìαñ░αÑçαñúαñ┐αñ»αñ╛αñé αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Exam Sub-Subcategories')
-                : activeTab === 'mocks'
-                ? (language === 'hi' ? 'αñ«αÑëαñò αñƒαÑçαñ╕αÑìαñƒ αñ¬αÑìαñ░αñ¼αñéαñºαñ┐αññ αñòαñ░αÑçαñé' : 'Manage Mock Tests')
-                : activeTab === 'announcements'
-                ? (language === 'hi' ? 'αñåαñºαñ┐αñòαñ╛αñ░αñ┐αñò αñÿαÑïαñ╖αñúαñ╛ αñ¬αÑìαñ░αñòαñ╛αñ╢αñò' : 'Official Announcements Publisher')
-                : activeTab === 'support'
-                ? (language === 'hi' ? 'सपोर्ट टीम हेल्पडेस्क' : 'Support Team Helpdesk')
-                : activeTab === 'vocab'
-                ? (language === 'hi' ? 'वोकैब अपलोड और शब्दावली प्रबंधक' : 'Vocab Upload & Catalog Manager')
-                : activeTab === 'attempts'
-                ? (language === 'hi' ? 'टेस्ट एटेम्पटेड लॉग्स' : 'Test Attempt Logs & Active Sittings')
-                : activeTab === 'typing_attempts'
-                ? (language === 'hi' ? 'टाइपिंग एटेम्पटेड लॉग्स एवं विश्लेषण' : 'Typing Attempt Logs & Speed Analytics')
-                : (language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Questions')}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* Back to Home Link */}
-            <Link href="/" className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white transition-colors mr-2">
-              {t.backToHome}
-            </Link>
-
-            {/* Language selector */}
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-              className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
-            >
-              <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
-              <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">αñ╣αñ┐αñ¿αÑìαñªαÑÇ</option>
-            </select>
-
-            {/* Theme switcher */}
-            <button 
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-              title={theme === 'light' ? t.themeDark : t.themeLight}
-            >
-              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </button>
-
-            <span className="h-4 w-[1px] bg-slate-200 dark:bg-slate-800"></span>
-
-            <div className="flex items-center gap-3">
-              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{language === 'hi' ? 'αñÅαñ¬αÑÇαñåαñê αñ╕αñ░αÑìαñ╡αñ░ αñæαñ¿αñ▓αñ╛αñçαñ¿' : 'API Server Online'}</span>
-            </div>
-          </div>
-        </header>
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Section title (mobile) */}
+        <div className="md:hidden px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <h1 className="text-sm font-semibold text-slate-900 dark:text-white truncate">{activeSectionTitle}</h1>
+        </div>
 
         {/* CONTAINER CONTENT */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           
           {/* TAB 1: STUDENT PERFORMANCE METRICS */}
           {activeTab === 'analytics' && hasTabAccess('analytics') && (
@@ -1954,43 +1648,43 @@ export default function AdminAnalytics() {
               {/* Core Cards KPI Summary */}
               <div className="grid grid-cols-4 gap-6">
                 
-                <div className="bg-slate-950 border border-slate-800 p-5 rounded-xl flex items-center gap-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-lg flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-blue-900/30 text-blue-400">
                     <TrendingUp className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Avg. Percentile Rank</p>
-                    <p className="text-xl font-extrabold text-white">87.2%</p>
+                    <p className="text-xs font-bold text-slate-500">Avg. Percentile Rank</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">87.2%</p>
                   </div>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 p-5 rounded-xl flex items-center gap-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-lg flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-green-900/30 text-green-400">
                     <CheckCircle2 className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Accuracy Score</p>
-                    <p className="text-xl font-extrabold text-white">78.3%</p>
+                    <p className="text-xs font-bold text-slate-500">Accuracy Score</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">78.3%</p>
                   </div>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 p-5 rounded-xl flex items-center gap-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-lg flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-purple-900/30 text-purple-400">
                     <Users className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Competitors Beat</p>
-                    <p className="text-xl font-extrabold text-white">18.4K</p>
+                    <p className="text-xs font-bold text-slate-500">Competitors Beat</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">18.4K</p>
                   </div>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 p-5 rounded-xl flex items-center gap-4">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-lg flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-yellow-900/30 text-yellow-400">
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Mock Tests Taken</p>
-                    <p className="text-xl font-extrabold text-white">48</p>
+                    <p className="text-xs font-bold text-slate-500">Mock Tests Taken</p>
+                    <p className="text-xl font-semibold text-slate-900 dark:text-white">48</p>
                   </div>
                 </div>
 
@@ -2000,8 +1694,8 @@ export default function AdminAnalytics() {
               <div className="grid grid-cols-2 gap-8">
                 
                 {/* Chart 1: Percentile Tracking */}
-                <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  <h3 className="font-extrabold text-xs text-white mb-4 uppercase tracking-wider">Percentile Growth (Student vs. Topper)</h3>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-4">Percentile Growth (Student vs. Topper)</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={percentileData}>
@@ -2011,10 +1705,10 @@ export default function AdminAnalytics() {
                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                        <CartesianGrid stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} strokeDasharray="3 3" />
                         <XAxis dataKey="testName" stroke="#94a3b8" fontSize={10} />
                         <YAxis stroke="#94a3b8" fontSize={10} domain={[0, 100]} />
-                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
+                        <Tooltip contentStyle={theme === 'dark' ? { backgroundColor: '#0f172a', borderColor: '#1e293b' } : { backgroundColor: '#ffffff', borderColor: '#e2e8f0', color: '#0f172a' }} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
                         <Area type="monotone" dataKey="studentPercentile" name="Student %" stroke="#3b82f6" fillOpacity={1} fill="url(#colorStudent)" />
                         <Area type="monotone" dataKey="topperPercentile" name="Topper %" stroke="#10b981" fill="none" strokeDasharray="5 5" />
@@ -2024,17 +1718,17 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Chart 2: Sectional Time Allocation */}
-                <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  <h3 className="font-extrabold text-xs text-white mb-4 uppercase tracking-wider">Sectional Speed Comparison (Time in Minutes)</h3>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-4">Sectional Speed Comparison (Time in Minutes)</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={sectionalTimeData}>
-                        <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" />
+                        <CartesianGrid stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} strokeDasharray="3 3" />
                         <XAxis dataKey="section" stroke="#94a3b8" fontSize={10} />
                         <YAxis stroke="#94a3b8" fontSize={10} />
-                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
+                        <Tooltip contentStyle={theme === 'dark' ? { backgroundColor: '#0f172a', borderColor: '#1e293b' } : { backgroundColor: '#ffffff', borderColor: '#e2e8f0', color: '#0f172a' }} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
-                        <Bar dataKey="studentTimeMin" name="Student (Min)" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="studentTimeMin" name="Student (Min)" fill="#1e4e79" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="topperTimeMin" name="Topper (Min)" fill="#10b981" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="avgUserTimeMin" name="Avg Candidate" fill="#475569" radius={[4, 4, 0, 0]} />
                       </BarChart>
@@ -2043,15 +1737,15 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Chart 3: Accuracy vs. Speed Metrics */}
-                <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  <h3 className="font-extrabold text-xs text-white mb-4 uppercase tracking-wider">Accuracy (%) vs. Speed (Seconds per Question)</h3>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-4">Accuracy (%) vs. Speed (Seconds per Question)</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={accuracySpeedVariance}>
                         <CartesianGrid stroke="#1e293b" />
                         <XAxis dataKey="difficulty" stroke="#94a3b8" fontSize={10} />
                         <YAxis stroke="#94a3b8" fontSize={10} />
-                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
+                        <Tooltip contentStyle={theme === 'dark' ? { backgroundColor: '#0f172a', borderColor: '#1e293b' } : { backgroundColor: '#ffffff', borderColor: '#e2e8f0', color: '#0f172a' }} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
                         <Line type="monotone" dataKey="studentAccuracy" name="Student Acc %" stroke="#3b82f6" strokeWidth={2} />
                         <Line type="monotone" dataKey="timePerQSeconds" name="Time Spent (s)" stroke="#fbbf24" strokeWidth={2} />
@@ -2062,16 +1756,16 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Chart 4: Score Variance relative to topper */}
-                <div className="bg-slate-950 border border-slate-800 p-6 rounded-xl">
-                  <h3 className="font-extrabold text-xs text-white mb-4 uppercase tracking-wider">Total score benchmarks (SSC CGL)</h3>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-4">Total score benchmarks (SSC CGL)</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={scoreVariance} layout="vertical">
                         <CartesianGrid stroke="#1e293b" />
                         <XAxis type="number" stroke="#94a3b8" fontSize={10} />
                         <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={10} />
-                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b' }} />
-                        <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]} />
+                        <Tooltip contentStyle={theme === 'dark' ? { backgroundColor: '#0f172a', borderColor: '#1e293b' } : { backgroundColor: '#ffffff', borderColor: '#e2e8f0', color: '#0f172a' }} />
+                        <Bar dataKey="value" fill="#1e4e79" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -2163,7 +1857,7 @@ export default function AdminAnalytics() {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">User Management Portal</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">User Management Portal</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage user credentials, passes, roles, referral data, and view attempt histories</p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -2172,7 +1866,7 @@ export default function AdminAnalytics() {
                       await refreshUsersList();
                       showToast('Users directory refreshed from database!');
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-800 text-white text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1e4e79] hover:bg-indigo-800 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     Refresh List
@@ -2190,27 +1884,27 @@ export default function AdminAnalytics() {
                 const onlineWeb = onlineUsers.filter(u => u.lastPlatform !== 'app').length;
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Users</p>
-                      <h4 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{usersList.length}</h4>
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3 shadow-xs">
+                      <p className="text-xs font-semibold text-slate-400">Total Users</p>
+                      <h4 className="text-xl font-semibold text-slate-900 dark:text-white mt-0.5">{usersList.length}</h4>
                     </div>
-                    <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-xl p-3 shadow-xs">
+                    <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-md p-3 shadow-xs">
                       <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Live Online</p>
+                        <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Live Online</p>
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
                       </div>
-                      <h4 className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5">{onlineUsers.length} online</h4>
+                      <h4 className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">{onlineUsers.length} online</h4>
                     </div>
-                    <div className="bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900/40 rounded-xl p-3 shadow-xs">
-                      <p className="text-[10px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-wider">📱 Mobile App</p>
-                      <h4 className="text-xl font-black text-violet-700 dark:text-violet-300 mt-0.5">{onlineApp} active</h4>
+                    <div className="bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900/40 rounded-md p-3 shadow-xs">
+                      <p className="text-xs font-semibold text-violet-600 dark:text-violet-400">Mobile App</p>
+                      <h4 className="text-xl font-semibold text-violet-700 dark:text-violet-300 mt-0.5">{onlineApp} active</h4>
                     </div>
-                    <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-xl p-3 shadow-xs">
-                      <p className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">💻 Website</p>
-                      <h4 className="text-xl font-black text-blue-700 dark:text-blue-300 mt-0.5">{onlineWeb} active</h4>
+                    <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-md p-3 shadow-xs">
+                      <p className="text-xs font-semibold text-[#1e4e79] dark:text-blue-400">Website</p>
+                      <h4 className="text-xl font-semibold text-[#1e4e79] dark:text-blue-300 mt-0.5">{onlineWeb} active</h4>
                     </div>
                   </div>
                 );
@@ -2218,14 +1912,14 @@ export default function AdminAnalytics() {
 
               {/* Collapsible Edit Profile Form */}
               {!selectedUserId && (
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsEditUserOpen(!isEditUserOpen)}
                   className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                       <Users className="h-4 w-4" />
                     </div>
                     <div>
@@ -2234,16 +1928,16 @@ export default function AdminAnalytics() {
                           const activeUser = usersList.find(u => u.id === selectedUserId);
                           return (
                             <>
-                              <p className="font-extrabold text-sm text-slate-900 dark:text-white">
+                              <p className="font-semibold text-sm text-slate-900 dark:text-white">
                                 Edit Profile: {activeUser?.name || 'Loading...'}
                               </p>
-                              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
+                              <p className="text-[11px] text-[#1e4e79] dark:text-blue-400 font-bold">Roll Code: {activeUser?.candidateCode || 'None'}</p>
                             </>
                           );
                         })()
                       ) : (
                         <>
-                          <p className="font-extrabold text-sm text-slate-900 dark:text-white">Profile Editor (No User Selected)</p>
+                          <p className="font-semibold text-sm text-slate-900 dark:text-white">Profile Editor (No User Selected)</p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400">Select a user from the table below to edit details</p>
                         </>
                       )}
@@ -2265,78 +1959,78 @@ export default function AdminAnalytics() {
                           <form onSubmit={handleSaveProfile} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Full Name</label>
                                 <input
                                   type="text"
                                   required
                                   value={editName}
                                   onChange={(e) => setEditName(e.target.value)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Email Address</label>
                                 <input
                                   type="email"
                                   required
                                   value={editEmail}
                                   onChange={(e) => setEditEmail(e.target.value)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Mobile Number</label>
                                 <input
                                   type="text"
                                   required
                                   maxLength={10}
                                   value={editMobile}
                                   onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, ''))}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Referral Code</label>
                                 <input
                                   type="text"
                                   required
                                   value={editReferralCode}
                                   onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Referred By (Code)</label>
                                 <input
                                   type="text"
                                   value={editReferredBy}
                                   onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
                                   placeholder="None"
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Referrals Count</label>
                                 <input
                                   type="number"
                                   required
                                   value={editReferralsCount}
                                   onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">System Role</label>
                                 <select
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value as any)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
                                   <option value="TEST_CREATOR">Test Creator</option>
@@ -2347,11 +2041,11 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Subscription Pass Tier</label>
                                 <select
                                   value={editTier}
                                   onChange={(e) => setEditTier(e.target.value as any)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                 >
                                   <option value="None">None (No Pass)</option>
                                   <option value="Testbook Pass">Mock Test Pass (Basic)</option>
@@ -2360,48 +2054,49 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">New Password (optional)</label>
                                 <input
-                                  type="text"
-                                  required
+                                  type="password"
+                                  autoComplete="new-password"
+                                  minLength={6}
                                   value={editPassword}
                                   onChange={(e) => setEditPassword(e.target.value)}
-                                  placeholder="User password"
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  placeholder="Leave blank to keep the current password"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               {editTier !== 'None' && (
                                 <>
                                   <div>
-                                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                    <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Pass Purchased Date</label>
                                     <input
                                       type="date"
                                       required
                                       value={editPurchasedAt}
                                       onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                    <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Pass Expiry Date</label>
                                     <input
                                       type="date"
                                       required
                                       value={editExpiry}
                                       onChange={(e) => setEditExpiry(e.target.value)}
-                                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                     />
                                   </div>
                                 </>
                               )}
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Account Status</label>
                                 <select
                                   value={editIsBlocked ? 'true' : 'false'}
                                   onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                 >
                                   <option value="false">Active (Unblocked)</option>
                                   <option value="true">Suspended (Blocked)</option>
@@ -2409,7 +2104,7 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Coins Balance</label>
                                 <div className="relative flex items-center">
                                   <span className="absolute left-3 text-amber-400">
                                     <Coins className="h-3.5 w-3.5 text-amber-400" />
@@ -2419,7 +2114,7 @@ export default function AdminAnalytics() {
                                     required
                                     value={editCoins}
                                     onChange={(e) => setEditCoins(Number(e.target.value))}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                   />
                                 </div>
                               </div>
@@ -2435,7 +2130,7 @@ export default function AdminAnalytics() {
                               </button>
                               <button
                                 type="submit"
-                                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2 px-5 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                                className="flex items-center gap-2 bg-[#1e4e79] text-white font-bold py-2 px-5 rounded-lg text-xs hover:bg-[#163c5e] transition-all shadow-md cursor-pointer"
                               >
                                 <UserCheck className="h-4 w-4" />
                                 Save Changes
@@ -2452,11 +2147,11 @@ export default function AdminAnalytics() {
               </div>
               )}
 
-              {/* Users List & Search Card ΓÇö Full Width */}
+              {/* Users List & Search Card — Full Width */}
               {!selectedUserId && (
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Registered Users Directory</h3>
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-white">Registered Users Directory</h3>
                   
                   {/* Search and Filters */}
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
@@ -2469,14 +2164,14 @@ export default function AdminAnalytics() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Search name, email, roll code..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-300 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                     
                     <select
                       value={roleFilter}
                       onChange={(e) => setRoleFilter(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer w-full sm:w-auto"
                     >
                       <option value="ALL">All Roles</option>
                       <option value="STUDENT">Student</option>
@@ -2489,7 +2184,7 @@ export default function AdminAnalytics() {
                     <select
                       value={tierFilter}
                       onChange={(e) => setTierFilter(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer w-full sm:w-auto"
                     >
                       <option value="ALL">All Passes</option>
                       <option value="None">No Pass</option>
@@ -2500,10 +2195,10 @@ export default function AdminAnalytics() {
                     <select
                       value={presenceFilter}
                       onChange={(e: any) => setPresenceFilter(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer w-full sm:w-auto font-bold"
+                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer w-full sm:w-auto font-bold"
                     >
                       <option value="ALL">All Online & Offline</option>
-                      <option value="ONLINE">🟢 Online Now</option>
+                      <option value="ONLINE">Online Now</option>
                       <option value="OFFLINE">⚪ Offline</option>
                     </select>
                   </div>
@@ -2512,7 +2207,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-xs">
                         <th className="pb-3 px-4">User Details</th>
                         <th className="pb-3 px-4">System Role</th>
                         <th className="pb-3 px-4">Access Pass</th>
@@ -2562,35 +2257,35 @@ export default function AdminAnalytics() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <p className="font-bold text-slate-900 dark:text-white text-xs">{user.name}</p>
                                   {isUserOnline(user.lastSeen) ? (
-                                    <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold px-1.5 py-0.5 rounded-full">
                                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                      Online ({user.lastPlatform === 'app' ? '📱 App' : user.lastPlatform === 'mobile_web' ? '📱 Web Mobile' : '💻 Web'})
+                                      Online ({user.lastPlatform === 'app' ? 'App' : user.lastPlatform === 'mobile_web' ? 'Web Mobile' : 'Web'})
                                     </span>
                                   ) : (
-                                    <span className="text-[8px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded">
+                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded">
                                       Active: {formatTimeAgo(user.lastSeen)}
                                     </span>
                                   )}
                                   {user.isBlocked && (
-                                    <span className="bg-red-50 dark:bg-red-950/45 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                    <span className="bg-red-50 dark:bg-red-950/45 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-[11px] font-semibold px-1.5 py-0.5 rounded">
                                       Blocked
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400">{user.email}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
                                 {user.candidateCode && (
-                                  <p className="text-[10px] text-blue-600 dark:text-blue-400 font-extrabold mt-0.5">
-                                    Hub ID: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[9px] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white">{user.candidateCode}</span>
+                                  <p className="text-xs text-[#1e4e79] dark:text-blue-400 font-semibold mt-0.5">
+                                    Hub ID: <span className="font-mono bg-slate-100 dark:bg-slate-900 px-1 py-0.5 rounded text-[11px] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white">{user.candidateCode}</span>
                                   </p>
                                 )}
-                                <p className="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5">Joined: {user.registeredDate}</p>
-                                <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-[10px] font-black mt-1">
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Joined: {user.registeredDate}</p>
+                                <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400 text-xs font-semibold mt-1">
                                   <Coins className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                                   <span>{user.coins || 0} Coins</span>
                                 </div>
                               </td>
                               <td className="py-3.5 px-4">
-                                <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
                                   user.role === 'ADMIN' 
                                     ? 'bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400' 
                                     : user.role === 'TEST_CREATOR' 
@@ -2599,15 +2294,15 @@ export default function AdminAnalytics() {
                                     ? 'bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' 
                                     : user.role === 'NOTICES_MANAGER' 
                                     ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 text-amber-700 dark:text-amber-400' 
-                                    : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                                    : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[#1e4e79] dark:text-blue-400'
                                 }`}>
                                   {user.role}
                                 </span>
                               </td>
                               <td className="py-3.5 px-4">
-                                <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
                                   user.subscriptionTier === 'Testbook Pass Pro'
-                                    ? 'bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 font-extrabold'
+                                    ? 'bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400 font-semibold'
                                     : user.subscriptionTier === 'Testbook Pass'
                                     ? 'bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400'
                                     : 'bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
@@ -2616,14 +2311,14 @@ export default function AdminAnalytics() {
                                 </span>
                               </td>
                               <td className="py-3.5 px-4 text-center">
-                                <div className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
+                                <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs">
                                   {refTotal}
                                 </div>
                                 {refTotal > 0 && (
-                                  <div className="text-[9px] mt-0.5 whitespace-nowrap">
-                                    <span className="text-green-600 dark:text-green-400 font-extrabold">{refSuccessful} S</span>
+                                  <div className="text-[11px] mt-0.5 whitespace-nowrap">
+                                    <span className="text-green-600 dark:text-green-400 font-semibold">{refSuccessful} S</span>
                                     <span className="text-slate-400 mx-1">/</span>
-                                    <span className="text-amber-600 dark:text-amber-500 font-extrabold">{refPending} P</span>
+                                    <span className="text-amber-600 dark:text-amber-500 font-semibold">{refPending} P</span>
                                   </div>
                                 )}
                               </td>
@@ -2649,7 +2344,7 @@ export default function AdminAnalytics() {
                                     e.stopPropagation();
                                     handleSelectUser(user);
                                   }}
-                                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                  className="text-[#1e4e79] hover:text-[#1e4e79] dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                 >
                                   View Dossier
                                 </button>
@@ -2664,7 +2359,7 @@ export default function AdminAnalytics() {
 
               )}
 
-              {/* Detailed User Management Dossier & Sitting History section ΓÇö shows when selectedUserId is active */}
+              {/* Detailed User Management Dossier & Sitting History section — shows when selectedUserId is active */}
               {selectedUserId && (
                 (() => {
                   const activeUser = usersList.find(u => u.id === selectedUserId);
@@ -2694,54 +2389,54 @@ export default function AdminAnalytics() {
                       <button 
                         type="button"
                         onClick={() => setSelectedUserId(null)}
-                        className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-extrabold text-xs transition cursor-pointer"
+                        className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-semibold text-xs transition cursor-pointer"
                       >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Registered Users Directory
                       </button>
 
                       {/* User Header Card */}
-                      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in slide-in-from-top-4 duration-250">
+                      <div className="bg-[#1e4e79] text-white p-6 rounded-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in slide-in-from-top-4 duration-250">
                         <div className="space-y-1 text-left">
                           <div className="flex items-center gap-3 flex-wrap">
-                            <h2 className="text-lg font-extrabold">{activeUser.name}</h2>
+                            <h2 className="text-lg font-semibold">{activeUser.name}</h2>
                             {activeUser.isBlocked && (
-                              <span className="bg-red-500/20 border border-red-400/30 text-red-200 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              <span className="bg-red-500/20 border border-red-400/30 text-red-200 text-[11px] font-semibold px-2 py-0.5 rounded-full">
                                 Blocked
                               </span>
                             )}
                           </div>
                           <p className="text-xs text-blue-100">{activeUser.email} &bull; Hub ID: <span className="font-mono font-bold bg-white/10 px-1.5 py-0.5 rounded">{activeUser.candidateCode || 'None'}</span></p>
-                          <p className="text-[10px] text-indigo-200">Registered on: {activeUser.registeredDate || 'N/A'}</p>
+                          <p className="text-xs text-indigo-200">Registered on: {activeUser.registeredDate || 'N/A'}</p>
                         </div>
                         
                         <div className="flex items-center gap-3">
-                          <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-center">
-                            <p className="text-[9px] text-indigo-200 font-bold uppercase tracking-wider">Wallet Balance</p>
+                          <div className="bg-white/10 px-4 py-2 rounded-md border border-white/10 text-center">
+                            <p className="text-[11px] text-indigo-200 font-bold">Wallet Balance</p>
                             <div className="flex items-center justify-center gap-1 mt-0.5">
                               <Coins className="h-3.5 w-3.5 text-amber-300" />
-                              <span className="font-black text-xs">{activeUser.coins || 0} Coins</span>
+                              <span className="font-semibold text-xs">{activeUser.coins || 0} Coins</span>
                             </div>
                           </div>
-                          <div className="bg-white/10 px-4 py-2 rounded-xl border border-white/10 text-center">
-                            <p className="text-[9px] text-indigo-200 font-bold uppercase tracking-wider">Sittings Taken</p>
-                            <span className="font-black text-xs mt-0.5 block">{activeUser.testSessions?.length || 0}</span>
+                          <div className="bg-white/10 px-4 py-2 rounded-md border border-white/10 text-center">
+                            <p className="text-[11px] text-indigo-200 font-bold">Sittings Taken</p>
+                            <span className="font-semibold text-xs mt-0.5 block">{activeUser.testSessions?.length || 0}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Main Details and Edit Form */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
-                        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+                        <div className="lg:col-span-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
                           <div className="flex items-center gap-3 mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
-                            <UserCheck className="h-5 w-5 text-blue-500" />
-                            <h2 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Modify Profile Dossier</h2>
+                            <UserCheck className="h-5 w-5 text-[#1e4e79]" />
+                            <h2 className="font-semibold text-sm text-slate-900 dark:text-white">Modify Profile Dossier</h2>
                           </div>
                           
                           <form onSubmit={handleSaveProfile} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name (Read-Only)</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Full Name (Read-Only)</label>
                                 <input
                                   type="text"
                                   readOnly
@@ -2751,7 +2446,7 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address (Read-Only)</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Email Address (Read-Only)</label>
                                 <input
                                   type="email"
                                   readOnly
@@ -2761,7 +2456,7 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number (Read-Only)</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Mobile Number (Read-Only)</label>
                                 <input
                                   type="text"
                                   readOnly
@@ -2771,44 +2466,44 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Referral Code</label>
                                 <input
                                   type="text"
                                   required
                                   value={editReferralCode}
                                   onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Referred By (Code)</label>
                                 <input
                                   type="text"
                                   value={editReferredBy}
                                   onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
                                   placeholder="None"
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Referrals Count</label>
                                 <input
                                   type="number"
                                   required
                                   value={editReferralsCount}
                                   onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">System Role</label>
                                 <select
                                   value={editRole}
                                   onChange={(e) => setEditRole(e.target.value as any)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                 >
                                   <option value="STUDENT">Student (Candidate)</option>
                                   <option value="TEST_CREATOR">Test Creator</option>
@@ -2819,11 +2514,11 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass Tier</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Subscription Pass Tier</label>
                                 <select
                                   value={editTier}
                                   onChange={(e) => setEditTier(e.target.value as any)}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                 >
                                   <option value="None">None (No Pass)</option>
                                   <option value="Testbook Pass">Mock Test Pass (Basic)</option>
@@ -2832,58 +2527,58 @@ export default function AdminAnalytics() {
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Coins Balance</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Coins Balance</label>
                                 <input
                                   type="number"
                                   required
                                   value={editCoins}
                                   onChange={(e) => setEditCoins(Number(e.target.value))}
-                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                                 />
                               </div>
 
                               <div>
-                                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password (Read-Only)</label>
+                                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Account Password</label>
                                 <input
                                   type="text"
                                   readOnly
-                                  value={editPassword}
+                                  value="Stored securely (hidden)"
                                   className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
                                 />
                               </div>
                             </div>
 
                             {editTier !== 'None' && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-950/5 p-4 rounded-xl border border-blue-100 dark:border-blue-950/20">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-950/5 p-4 rounded-md border border-blue-100 dark:border-blue-950/20">
                                 <div>
-                                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                                  <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Pass Purchased Date</label>
                                   <input
                                     type="date"
                                     required
                                     value={editPurchasedAt}
                                     onChange={(e) => setEditPurchasedAt(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                                  <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Pass Expiry Date</label>
                                   <input
                                     type="date"
                                     required
                                     value={editExpiry}
                                     onChange={(e) => setEditExpiry(e.target.value)}
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                                   />
                                 </div>
                               </div>
                             )}
 
                             <div>
-                              <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Account Status</label>
+                              <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Account Status</label>
                               <select
                                 value={editIsBlocked ? 'true' : 'false'}
                                 onChange={(e) => setEditIsBlocked(e.target.value === 'true')}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                               >
                                 <option value="false">Active (Unblocked)</option>
                                 <option value="true">Suspended (Blocked)</option>
@@ -2893,7 +2588,7 @@ export default function AdminAnalytics() {
                             <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                               <button
                                 type="submit"
-                                className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                                className="flex items-center gap-2 bg-[#1e4e79] text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-[#163c5e] transition-all shadow-md cursor-pointer"
                               >
                                 <UserCheck className="h-4 w-4" />
                                 Save Dossier Changes
@@ -2904,12 +2599,12 @@ export default function AdminAnalytics() {
 
                         {/* Sidebar info */}
                         <div className="space-y-6">
-                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
-                            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">Access Rights</h3>
+                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
+                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">Access Rights</h3>
                             <div className="space-y-4 text-xs">
                               <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
                                 <span className="font-medium text-slate-500">System Permission:</span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
                                   activeUser.role === 'ADMIN' 
                                     ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400' 
                                     : activeUser.role === 'TEST_CREATOR' 
@@ -2918,16 +2613,16 @@ export default function AdminAnalytics() {
                                     ? 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400' 
                                     : activeUser.role === 'NOTICES_MANAGER' 
                                     ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400' 
-                                    : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700'
+                                    : 'bg-blue-50 dark:bg-blue-950/40 text-[#1e4e79]'
                                 }`}>
                                   {activeUser.role}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
                                 <span className="font-medium text-slate-500">Subscription Pass:</span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                                <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
                                   activeUser.subscriptionTier === 'Testbook Pass Pro'
-                                    ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 font-black'
+                                    ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 font-semibold'
                                     : activeUser.subscriptionTier === 'Testbook Pass'
                                     ? 'bg-green-50 dark:bg-green-950/40 text-green-700'
                                     : 'bg-slate-100 dark:bg-slate-900 text-slate-500'
@@ -2949,51 +2644,51 @@ export default function AdminAnalytics() {
                               )}
                               <div className="flex justify-between items-center py-2">
                                 <span className="font-medium text-slate-500">Total Referrals:</span>
-                                <span className="font-extrabold text-slate-900 dark:text-white">{activeUser.referralsCount || 0} user(s)</span>
+                                <span className="font-semibold text-slate-900 dark:text-white">{activeUser.referralsCount || 0} user(s)</span>
                               </div>
                             </div>
                           </div>
 
                           {/* Referral Details Card */}
-                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
-                            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
+                            <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                               <Gift className="h-4 w-4 text-amber-500" />
                               Referral Stats
                             </h3>
                             <div className="space-y-3.5 text-xs text-left">
                               <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-900">
                                 <span className="font-medium text-slate-500">Total Invited:</span>
-                                <span className="font-black text-slate-900 dark:text-white">{activeRefTotal} user(s)</span>
+                                <span className="font-semibold text-slate-900 dark:text-white">{activeRefTotal} user(s)</span>
                               </div>
                               <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-900">
                                 <span className="font-medium text-slate-500 flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full bg-green-500"></span>
                                   Successful Referrals:
                                 </span>
-                                <span className="font-black text-green-600 dark:text-green-400">{activeRefSuccessful} user(s)</span>
+                                <span className="font-semibold text-green-600 dark:text-green-400">{activeRefSuccessful} user(s)</span>
                               </div>
                               <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-900">
                                 <span className="font-medium text-slate-500 flex items-center gap-1.5">
                                   <span className="h-2 w-2 rounded-full bg-amber-500"></span>
                                   Pending First Test:
                                 </span>
-                                <span className="font-black text-amber-600 dark:text-amber-500">{activeRefPending} user(s)</span>
+                                <span className="font-semibold text-amber-600 dark:text-amber-500">{activeRefPending} user(s)</span>
                               </div>
                               
                               {/* Short list of referred users names */}
                               {activeRefTotal > 0 && (
                                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                                  <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Referred Friends List</p>
+                                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-400">Referred Friends List</p>
                                   <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
                                     {activeReferredList.map(refUser => {
                                       const isSuccessful = activeRefSuccessfulList.some(u => u.id === refUser.id);
                                       return (
-                                        <div key={refUser.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800/30 text-[10px]">
+                                        <div key={refUser.id} className="flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800/30 text-xs">
                                           <div>
                                             <p className="font-bold text-slate-800 dark:text-slate-200">{refUser.name}</p>
-                                            <p className="text-[9px] text-slate-400 dark:text-slate-500">{refUser.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}</p>
+                                            <p className="text-[11px] text-slate-400 dark:text-slate-500">{refUser.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")}</p>
                                           </div>
-                                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                                          <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${
                                             isSuccessful 
                                               ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200/50' 
                                               : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200/50'
@@ -3012,9 +2707,9 @@ export default function AdminAnalytics() {
                       </div>
 
                       {/* Full Width Exam Sitting History */}
-                      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm text-left">
+                      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm text-left">
                         <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-800 font-bold">
-                          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Exam Sitting History</h3>
+                          <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Exam Sitting History</h3>
                           <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 font-bold">
                             {activeUser.testSessions?.length || 0} sessions logged
                           </span>
@@ -3023,31 +2718,31 @@ export default function AdminAnalytics() {
                         {activeUser.testSessions && activeUser.testSessions.length > 0 ? (
                           <div className="space-y-4">
                             {activeUser.testSessions.map(session => (
-                              <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-4 text-xs">
+                              <div key={session.id} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-md p-4 text-xs">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-3">
                                   <div>
                                     <div className="flex items-center gap-2 flex-wrap">
                                       {(() => {
                                         const subCategoryName = getExamSubCategoryName(session.testId);
                                         return subCategoryName ? (
-                                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit" title={subCategoryName}>
-                                            📁 {subCategoryName}
+                                          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#1e4e79] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit" title={subCategoryName}>
+                                            {subCategoryName}
                                           </span>
                                         ) : null;
                                       })()}
-                                      <p className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
+                                      <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{session.title}</p>
                                     </div>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-semibold">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-semibold">
                                       <Calendar className="h-3 w-3" /> Attempted on {session.date}
                                     </p>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                    <span className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${
                                       session.status === 'COMPLETED'
                                         ? 'bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
                                         : session.status === 'AUTO_SUBMITTED'
                                         ? 'bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400'
-                                        : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
+                                        : 'bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[#1e4e79] dark:text-blue-400'
                                     }`}>
                                       {session.status}
                                     </span>
@@ -3072,22 +2767,22 @@ export default function AdminAnalytics() {
 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
                                   <div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Score Obtained</p>
-                                    <p className="text-sm font-black text-blue-600 dark:text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Score Obtained</p>
+                                    <p className="text-sm font-semibold text-[#1e4e79] dark:text-blue-400 mt-0.5">{session.score.toFixed(1)} / {session.maxScore}</p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Accuracy Percentage</p>
-                                    <p className="text-sm font-black text-green-600 dark:text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Accuracy Percentage</p>
+                                    <p className="text-sm font-semibold text-green-600 dark:text-green-400 mt-0.5">{session.accuracy.toFixed(1)}%</p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Time Spent</p>
-                                    <p className="text-sm font-black text-yellow-600 dark:text-yellow-400 mt-0.5">
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Time Spent</p>
+                                    <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mt-0.5">
                                       {formatExactTime(computeExactTimeSpent(session))}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider">Cheat Violations</p>
-                                    <p className={`text-sm font-black mt-0.5 ${session.violations > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
+                                    <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">Cheat Violations</p>
+                                    <p className={`text-sm font-semibold mt-0.5 ${session.violations > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
                                       {session.violations} Focus Alert{session.violations === 1 ? '' : 's'}
                                     </p>
                                   </div>
@@ -3096,7 +2791,7 @@ export default function AdminAnalytics() {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 text-xs">
+                          <div className="text-center py-10 border border-dashed border-slate-200 dark:border-slate-800 rounded-md text-slate-500 text-xs">
                             <FileText className="h-8 w-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
                             This user has not sat for any exam sittings yet.
                           </div>
@@ -3115,7 +2810,7 @@ export default function AdminAnalytics() {
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Live Notices & Updates Manager</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Live Notices & Updates Manager</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish and manage live notices, results, and admit cards visible on client home screens</p>
                 </div>
                 <div className="flex items-center gap-2.5 flex-wrap">
@@ -3123,7 +2818,7 @@ export default function AdminAnalytics() {
                     type="button"
                     onClick={handleSyncRojgarNotices}
                     disabled={isSyncingRojgar}
-                    className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-2 px-3.5 py-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white rounded-md text-xs font-semibold shadow-md transition-all disabled:opacity-50 cursor-pointer"
                     title="Fetch and sync newly posted Jobs, Results, Admit cards, and Answer keys"
                   >
                     <RefreshCw className={`h-3.5 w-3.5 ${isSyncingRojgar ? 'animate-spin' : ''}`} />
@@ -3136,10 +2831,10 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Info alert */}
-              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
-                <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/25 p-4 rounded-lg flex items-start gap-3">
+                <Bell className="h-5 w-5 text-[#1e4e79] dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Live Updates Engine</p>
+                  <p className="font-semibold text-[#1e4e79] dark:text-blue-400 mb-1">Live Updates Engine</p>
                   <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                     Publish exam alerts, admit card download releases, and result sheets directly to the homepage updates grid. All additions will update client dashboards instantly via context state.
                   </p>
@@ -3147,18 +2842,18 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Collapsible Publish Card */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsCreateNoticeOpen(!isCreateNoticeOpen)}
                   className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                       <PlusCircle className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Publish New Update / Alert</p>
+                      <p className="font-semibold text-sm text-slate-900 dark:text-white">Publish New Update / Alert</p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">Click to expand the alert publication form</p>
                     </div>
                   </div>
@@ -3183,11 +2878,11 @@ export default function AdminAnalytics() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Update Category</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Update Category</label>
                           <select
                             value={noticeCategory}
                             onChange={(e) => setNoticeCategory(e.target.value as any)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                           >
                             <option value="notice">Live Notices & Announcements</option>
                             <option value="result">Live Result Section</option>
@@ -3196,25 +2891,25 @@ export default function AdminAnalytics() {
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Label Tag (e.g. EXAM DATE, MERIT LIST)</label>
                           <input
                             type="text"
                             required
                             value={noticeType}
                             onChange={(e) => setNoticeType(e.target.value)}
                             placeholder="EXAM DATE, RESULT, ADMISSION, etc."
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Publish Date</label>
                           <input
                             type="date"
                             required
                             value={noticeDate}
                             onChange={(e) => setNoticeDate(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                           />
                         </div>
                       </div>
@@ -3222,25 +2917,25 @@ export default function AdminAnalytics() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {noticeCategory === 'notice' && (
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Application Last Date (Optional)</label>
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Application Last Date (Optional)</label>
                             <input
                               type="date"
                               value={noticeLastDate}
                               onChange={(e) => setNoticeLastDate(e.target.value)}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                             />
                           </div>
                         )}
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Attachment URL / File (Optional)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Attachment URL / File (Optional)</label>
                           <div className="flex gap-2">
                             <input
                               type="text"
                               value={noticeUrl}
                               onChange={(e) => setNoticeUrl(e.target.value)}
                               placeholder="https://example.com/advisory or upload file"
-                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                             <input
                               type="file"
@@ -3265,7 +2960,7 @@ export default function AdminAnalytics() {
                                 isUploadingNotice ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                               }`}
                             >
-                              <Upload className={`h-3.5 w-3.5 ${isUploadingNotice ? "animate-bounce" : ""}`} />
+                              <Upload className={`h-3.5 w-3.5 ${isUploadingNotice ? "" : ""}`} />
                               {isUploadingNotice ? "Uploading..." : "Upload File"}
                             </label>
                           </div>
@@ -3274,24 +2969,24 @@ export default function AdminAnalytics() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (English)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Update Heading Title (English)</label>
                           <textarea
                             required
                             value={noticeTitle}
                             onChange={(e) => setNoticeTitle(e.target.value)}
                             placeholder="Type notice title description in English..."
                             rows={3}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] resize-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Update Heading Title (Hindi)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Update Heading Title (Hindi)</label>
                           <textarea
                             value={noticeTitleHi}
                             onChange={(e) => setNoticeTitleHi(e.target.value)}
                             placeholder="टाइटल हिन्दी में दर्ज करें (वैकल्पिक)..."
                             rows={3}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] resize-none"
                           />
                         </div>
                       </div>
@@ -3299,7 +2994,7 @@ export default function AdminAnalytics() {
                       <div className="flex justify-end pt-3">
                         <button
                           type="submit"
-                          className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                          className="flex items-center justify-center gap-2 bg-[#1e4e79] text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-[#163c5e] transition-all shadow-md cursor-pointer"
                         >
                           Publish Alert
                         </button>
@@ -3309,11 +3004,11 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Active Board List ΓÇö Full Width */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+              {/* Active Board List — Full Width */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Bell className="h-4.5 w-4.5 text-blue-500" /> Active Updates Board
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                    <Bell className="h-4.5 w-4.5 text-[#1e4e79]" /> Active Updates Board
                   </h3>
                   
                   {/* Search bar */}
@@ -3324,7 +3019,7 @@ export default function AdminAnalytics() {
                       value={noticeSearch}
                       onChange={(e) => setNoticeSearch(e.target.value)}
                       placeholder="Search updates..."
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
                 </div>
@@ -3332,7 +3027,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-xs">
                         <th className="py-3 px-4">Heading Title</th>
                         <th className="py-3 px-4">Category</th>
                         <th className="py-3 px-4">Label Tag</th>
@@ -3354,7 +3049,7 @@ export default function AdminAnalytics() {
                           <tr key={notice.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
                             <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-md">
                               {notice.url ? (
-                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center gap-1 mb-1">
+                                <a href={notice.url} target="_blank" rel="noopener noreferrer" className="text-[#1e4e79] hover:text-[#1e4e79] dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center gap-1 mb-1">
                                   {notice.title}
                                   <ChevronRight className="h-3 w-3 inline animate-pulse" />
                                 </a>
@@ -3362,15 +3057,15 @@ export default function AdminAnalytics() {
                                 <span className="block mb-1">{notice.title}</span>
                               )}
                               {notice.lastDate && (
-                                <span className="block text-[10px] text-red-600 dark:text-red-500 font-extrabold mt-1 uppercase tracking-wider">
+                                <span className="block text-xs text-red-600 dark:text-red-500 font-semibold mt-1">
                                   Last Date: {notice.lastDate}
                                 </span>
                               )}
                             </td>
                             <td className="py-3 px-4 capitalize">
-                              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
+                              <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
                                 notice.category === 'notice'
-                                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
+                                  ? 'bg-blue-50 dark:bg-blue-950/40 text-[#1e4e79] dark:text-blue-400 border border-blue-200 dark:border-blue-900'
                                   : notice.category === 'result'
                                   ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-900'
                                   : 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900'
@@ -3379,7 +3074,7 @@ export default function AdminAnalytics() {
                               </span>
                             </td>
                             <td className="py-3 px-4">
-                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{notice.type}</span>
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs">{notice.type}</span>
                             </td>
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{notice.date}</td>
                             <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
@@ -3391,7 +3086,7 @@ export default function AdminAnalytics() {
                               </button>
                               <button
                                 onClick={() => handleOpenEditAnnouncement(notice)}
-                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-[#1e4e79] hover:text-[#1e4e79] dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Edit
                               </button>
@@ -3445,7 +3140,7 @@ export default function AdminAnalytics() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Exam Categories</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Manage Exam Categories</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete main exam categories</p>
                   </div>
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
@@ -3454,18 +3149,18 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Collapsible Add Category Card */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setIsCreateCategoryOpen(!isCreateCategoryOpen)}
                     className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                         <FolderPlus className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create New Category</p>
+                        <p className="font-semibold text-sm text-slate-900 dark:text-white">Create New Category</p>
                         <p className="text-[11px] text-slate-400">Click to expand the category creation form</p>
                       </div>
                     </div>
@@ -3501,7 +3196,7 @@ export default function AdminAnalytics() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Category Name (English)
                             </label>
                             <input
@@ -3510,11 +3205,11 @@ export default function AdminAnalytics() {
                               value={newCategoryName}
                               onChange={(e) => setNewCategoryName(e.target.value)}
                               placeholder="e.g. UPSC Exams, SSC Exams"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Category Name (Hindi)
                             </label>
                             <input
@@ -3522,12 +3217,12 @@ export default function AdminAnalytics() {
                               value={newCategoryNameHi}
                               onChange={(e) => setNewCategoryNameHi(e.target.value)}
                               placeholder="e.g. यूपीएससी परीक्षा, एसएससी परीक्षा"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                             Category Logo Image URL
                           </label>
                           <div className="flex gap-2">
@@ -3536,7 +3231,7 @@ export default function AdminAnalytics() {
                               value={newCategoryLogoUrl}
                               onChange={(e) => setNewCategoryLogoUrl(e.target.value)}
                               placeholder="e.g. https://example.com/logo.png or upload image"
-                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                             <input
                               type="file"
@@ -3561,13 +3256,13 @@ export default function AdminAnalytics() {
                                 isUploadingCategoryLogo ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                               }`}
                             >
-                              <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
+                              <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "" : ""}`} />
                               {isUploadingCategoryLogo ? "Uploading..." : "Upload Logo"}
                             </label>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                             Description (e.g. SSC CGL, CHSL, MTS, GD Constable)
                           </label>
                           <input
@@ -3575,11 +3270,11 @@ export default function AdminAnalytics() {
                             value={newCategoryDescription}
                             onChange={(e) => setNewCategoryDescription(e.target.value)}
                             placeholder="List sub-exams or a brief description"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                             Test Count / Badge Text (e.g. 45+ Tests)
                           </label>
                           <input
@@ -3587,7 +3282,7 @@ export default function AdminAnalytics() {
                             value={newCategoryCountText}
                             onChange={(e) => setNewCategoryCountText(e.target.value)}
                             placeholder="e.g. 45+ Tests"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                           />
                         </div>
                         <div className="flex items-center gap-2 pt-1.5">
@@ -3596,7 +3291,7 @@ export default function AdminAnalytics() {
                             id="newCategoryIsPopular"
                             checked={newCategoryIsPopular}
                             onChange={(e) => setNewCategoryIsPopular(e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            className="h-4 w-4 rounded border-slate-300 text-[#1e4e79] focus:ring-blue-500 cursor-pointer"
                           />
                           <label htmlFor="newCategoryIsPopular" className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
                             Show in Popular Exam Mock Series section on homepage
@@ -3605,7 +3300,7 @@ export default function AdminAnalytics() {
                         <div className="flex justify-end pt-2">
                           <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                            className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2.5 px-6 rounded-lg text-xs transition cursor-pointer shadow-md"
                           >
                             Create Category
                           </button>
@@ -3616,9 +3311,9 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Filter Bar */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm font-sans">
                   <div className="flex flex-wrap gap-3 items-center">
-                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                       <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
                     </div>
                     <div className="relative flex-1 min-w-[180px]">
@@ -3628,13 +3323,13 @@ export default function AdminAnalytics() {
                         value={catFilterSearch}
                         onChange={(e) => setCatFilterSearch(e.target.value)}
                         placeholder="Search exam category..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <select
                       value={catFilterCategory}
                       onChange={(e) => setCatFilterCategory(e.target.value)}
-                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                     >
                       <option value="">All Exam Categories</option>
                       {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
@@ -3648,15 +3343,15 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Categories Table Card — Full Width */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-6">
                     Active Exam Categories
                   </h3>
                   
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-[11px] font-semibold">
                           <th className="py-3 px-4">Logo</th>
                           <th className="py-3 px-4">Name</th>
                           <th className="py-3 px-4">Description</th>
@@ -3686,7 +3381,7 @@ export default function AdminAnalytics() {
                                       value={editingCategoryLogoUrl}
                                       onChange={(e) => setEditingCategoryLogoUrl(e.target.value)}
                                       placeholder="e.g. Logo URL"
-                                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-semibold w-20 flex-1 min-w-0"
+                                      className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] font-semibold w-20 flex-1 min-w-0"
                                     />
                                     <input
                                       type="file"
@@ -3712,7 +3407,7 @@ export default function AdminAnalytics() {
                                       }`}
                                       title="Upload Logo to Tigris"
                                     >
-                                      <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "animate-bounce" : ""}`} />
+                                      <Upload className={`h-3.5 w-3.5 ${isUploadingCategoryLogo ? "" : ""}`} />
                                     </label>
                                   </div>
                                 ) : cat.logoUrl ? (
@@ -3722,7 +3417,7 @@ export default function AdminAnalytics() {
                                     className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800"
                                   />
                                 ) : (
-                                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-400 font-bold">
+                                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs text-slate-400 font-bold">
                                     None
                                   </div>
                                 )}
@@ -3735,7 +3430,7 @@ export default function AdminAnalytics() {
                                     type="text"
                                     value={editingCategoryName}
                                     onChange={(e) => setEditingCategoryName(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] font-bold w-full max-w-xs"
                                   />
                                 ) : (
                                   <span>{cat.name}</span>
@@ -3749,7 +3444,7 @@ export default function AdminAnalytics() {
                                     type="text"
                                     value={editingCategoryDescription}
                                     onChange={(e) => setEditingCategoryDescription(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium w-full"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] font-medium w-full"
                                   />
                                 ) : (
                                   <span>{cat.description || '-'}</span>
@@ -3763,7 +3458,7 @@ export default function AdminAnalytics() {
                                     type="text"
                                     value={editingCategoryCountText}
                                     onChange={(e) => setEditingCategoryCountText(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-medium w-24"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] font-medium w-24"
                                   />
                                 ) : (
                                   <span>{cat.countText || '-'}</span>
@@ -3777,12 +3472,12 @@ export default function AdminAnalytics() {
                                     type="checkbox"
                                     checked={editingCategoryIsPopular}
                                     onChange={(e) => setEditingCategoryIsPopular(e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    className="h-4 w-4 rounded border-slate-300 text-[#1e4e79] focus:ring-blue-500 cursor-pointer"
                                   />
                                 ) : cat.isPopular ? (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Popular</span>
+                                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Popular</span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400">Regular</span>
+                                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400">Regular</span>
                                 )}
                               </td>
 
@@ -3859,7 +3554,7 @@ export default function AdminAnalytics() {
                                         setEditingCategoryDescription(cat.description || '');
                                         setEditingCategoryCountText(cat.countText || '');
                                       }}
-                                      className="text-blue-500 hover:text-blue-600 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-[#1e4e79] hover:text-[#1e4e79] font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
@@ -3904,7 +3599,7 @@ export default function AdminAnalytics() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Categories</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Manage Sub-Categories</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete exam sub-categories under main categories</p>
                   </div>
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
@@ -3913,18 +3608,18 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Collapsible Add Card */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setIsCreateSubCategoryOpen(!isCreateSubCategoryOpen)}
                     className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                         <Layers className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Category</p>
+                        <p className="font-semibold text-sm text-slate-900 dark:text-white">Create Sub-Category</p>
                         <p className="text-[11px] text-slate-400">Click to expand the subcategory creation form</p>
                       </div>
                     </div>
@@ -3952,14 +3647,14 @@ export default function AdminAnalytics() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Parent Category
                             </label>
                             <select
                               required
                               value={newSubCategoryParent}
                               onChange={(e) => setNewSubCategoryParent(e.target.value)}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                             >
                               <option value="">-- Select Parent Category --</option>
                               {examCatalog.map(cat => (
@@ -3969,7 +3664,7 @@ export default function AdminAnalytics() {
                           </div>
                           
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Sub Category Name (English)
                             </label>
                             <input
@@ -3978,12 +3673,12 @@ export default function AdminAnalytics() {
                               value={newSubCategoryName}
                               onChange={(e) => setNewSubCategoryName(e.target.value)}
                               placeholder="e.g. SSC CGL, IBPS RRB PO"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Sub Category Name (Hindi)
                             </label>
                             <input
@@ -3991,7 +3686,7 @@ export default function AdminAnalytics() {
                               value={newSubCategoryNameHi}
                               onChange={(e) => setNewSubCategoryNameHi(e.target.value)}
                               placeholder="e.g. एसएससी सीजीएल, आईबीपीएस आरआरबी पीओ"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                           </div>
                         </div>
@@ -3999,7 +3694,7 @@ export default function AdminAnalytics() {
                         <div className="flex justify-end">
                           <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                            className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2.5 px-6 rounded-lg text-xs transition cursor-pointer shadow-md"
                           >
                             Create Sub Category
                           </button>
@@ -4010,9 +3705,9 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Filter Bar */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm font-sans">
                   <div className="flex flex-wrap gap-3 items-center">
-                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                       <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
                     </div>
                     <div className="relative flex-1 min-w-[180px]">
@@ -4022,13 +3717,13 @@ export default function AdminAnalytics() {
                         value={subCatFilterSearch}
                         onChange={(e) => setSubCatFilterSearch(e.target.value)}
                         placeholder="Search subcategory name..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <select
                       value={subCatFilterCategory}
                       onChange={(e) => { setSubCatFilterCategory(e.target.value); setSubCatFilterSubCategory(''); }}
-                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                     >
                       <option value="">All Exam Categories</option>
                       {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
@@ -4037,7 +3732,7 @@ export default function AdminAnalytics() {
                       value={subCatFilterSubCategory}
                       onChange={(e) => setSubCatFilterSubCategory(e.target.value)}
                       disabled={!subCatFilterCategory}
-                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-40"
                     >
                       <option value="">All Sub Categories</option>
                       {examCatalog.find((c: any) => c.id === subCatFilterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
@@ -4051,15 +3746,15 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Subcategories Table Card — Full Width */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-6">
                     Active Sub Categories
                   </h3>
                   
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-[11px] font-semibold">
                           <th className="py-3 px-4">Parent Category</th>
                           <th className="py-3 px-4">Sub Category Name</th>
                           <th className="py-3 px-4">Mock Tests Count</th>
@@ -4083,7 +3778,7 @@ export default function AdminAnalytics() {
                                     type="text"
                                     value={editingSubCategoryName}
                                     onChange={(e) => setEditingSubCategoryName(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] font-bold w-full max-w-xs"
                                   />
                                 ) : (
                                   <span>{sub.name}</span>
@@ -4151,7 +3846,7 @@ export default function AdminAnalytics() {
                                         setEditingSubCategoryId(sub.id);
                                         setEditingSubCategoryName(sub.name);
                                       }}
-                                      className="text-blue-500 hover:text-blue-600 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-[#1e4e79] hover:text-[#1e4e79] font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
@@ -4202,7 +3897,7 @@ export default function AdminAnalytics() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Sub-Sub-Categories</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Manage Sub-Sub-Categories</h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete subject sub-subcategories nested under sub-categories</p>
                   </div>
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
@@ -4211,18 +3906,18 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Collapsible Add Card */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setIsCreateSubSubCategoryOpen(!isCreateSubSubCategoryOpen)}
                     className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                         <FileText className="h-4.5 w-4.5" />
                       </div>
                       <div>
-                        <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create Sub-Sub Category</p>
+                        <p className="font-semibold text-sm text-slate-900 dark:text-white">Create Sub-Sub Category</p>
                         <p className="text-[11px] text-slate-400">Click to expand the sub-subcategory creation form</p>
                       </div>
                     </div>
@@ -4250,7 +3945,7 @@ export default function AdminAnalytics() {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Parent Category
                             </label>
                             <select
@@ -4260,7 +3955,7 @@ export default function AdminAnalytics() {
                                 setNewSubSubCategoryParentCategory(e.target.value);
                                 setNewSubSubCategoryParentSubCategory('');
                               }}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                             >
                               <option value="">-- Select Parent Category --</option>
                               {examCatalog.map(cat => (
@@ -4270,7 +3965,7 @@ export default function AdminAnalytics() {
                           </div>
                           
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Parent Sub Category
                             </label>
                             <select
@@ -4278,7 +3973,7 @@ export default function AdminAnalytics() {
                               value={newSubSubCategoryParentSubCategory}
                               onChange={(e) => setNewSubSubCategoryParentSubCategory(e.target.value)}
                               disabled={!newSubSubCategoryParentCategory}
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer disabled:opacity-50"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer disabled:opacity-50"
                             >
                               <option value="">-- Select Parent Sub Category --</option>
                               {examCatalog.find(c => c.id === newSubSubCategoryParentCategory)?.subCategories.map(sub => (
@@ -4288,7 +3983,7 @@ export default function AdminAnalytics() {
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Sub-Sub Category Name (English)
                             </label>
                             <input
@@ -4297,12 +3992,12 @@ export default function AdminAnalytics() {
                               value={newSubSubCategoryName}
                               onChange={(e) => setNewSubSubCategoryName(e.target.value)}
                               placeholder="e.g. Full Test, PYP"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                            <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                               Sub-Sub Category Name (Hindi)
                             </label>
                             <input
@@ -4310,7 +4005,7 @@ export default function AdminAnalytics() {
                               value={newSubSubCategoryNameHi}
                               onChange={(e) => setNewSubSubCategoryNameHi(e.target.value)}
                               placeholder="e.g. फुल मॉक टेस्ट, अध्याय-वार टेस्ट"
-                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                             />
                           </div>
                         </div>
@@ -4318,7 +4013,7 @@ export default function AdminAnalytics() {
                         <div className="flex justify-end">
                           <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs transition active:scale-95 cursor-pointer shadow-md"
+                            className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2.5 px-6 rounded-lg text-xs transition cursor-pointer shadow-md"
                           >
                             Create Sub-Sub Category
                           </button>
@@ -4329,9 +4024,9 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Filter Bar */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm font-sans">
                   <div className="flex flex-wrap gap-3 items-center">
-                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
                       <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
                     </div>
                     <div className="relative flex-1 min-w-[180px]">
@@ -4341,13 +4036,13 @@ export default function AdminAnalytics() {
                         value={subSubCatFilterSearch}
                         onChange={(e) => setSubSubCatFilterSearch(e.target.value)}
                         placeholder="Search sub-subcategory name..."
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <select
                       value={subSubCatFilterCategory}
                       onChange={(e) => { setSubSubCatFilterCategory(e.target.value); setSubSubCatFilterSubCategory(''); setSubSubCatFilterSubSubCategory(''); }}
-                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                     >
                       <option value="">All Exam Categories</option>
                       {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
@@ -4356,7 +4051,7 @@ export default function AdminAnalytics() {
                       value={subSubCatFilterSubCategory}
                       onChange={(e) => { setSubSubCatFilterSubCategory(e.target.value); setSubSubCatFilterSubSubCategory(''); }}
                       disabled={!subSubCatFilterCategory}
-                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-40"
                     >
                       <option value="">All Sub Categories</option>
                       {examCatalog.find((c: any) => c.id === subSubCatFilterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
@@ -4365,7 +4060,7 @@ export default function AdminAnalytics() {
                       value={subSubCatFilterSubSubCategory}
                       onChange={(e) => setSubSubCatFilterSubSubCategory(e.target.value)}
                       disabled={!subSubCatFilterSubCategory}
-                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+                      className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-40"
                     >
                       <option value="">All Sub-Sub Categories</option>
                       {examCatalog.find((c: any) => c.id === subSubCatFilterCategory)?.subCategories.find((s: any) => s.id === subSubCatFilterSubCategory)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
@@ -4379,15 +4074,15 @@ export default function AdminAnalytics() {
                 </div>
 
                 {/* Sub-subcategories Table Card — Full Width */}
-                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-6">
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6">
+                  <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-6">
                     Active Sub-Sub Categories
                   </h3>
                   
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-[9px] tracking-wider font-extrabold">
+                        <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 text-[11px] font-semibold">
                           <th className="py-3 px-4">Parent Category</th>
                           <th className="py-3 px-4">Sub Category</th>
                           <th className="py-3 px-4">Sub-Sub Category Name</th>
@@ -4413,7 +4108,7 @@ export default function AdminAnalytics() {
                                     type="text"
                                     value={editingSubSubCategoryName}
                                     onChange={(e) => setEditingSubSubCategoryName(e.target.value)}
-                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 font-bold w-full max-w-xs"
+                                    className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] font-bold w-full max-w-xs"
                                   />
                                 ) : (
                                   <span>{subsub.name}</span>
@@ -4481,7 +4176,7 @@ export default function AdminAnalytics() {
                                         setEditingSubSubCategoryId(subsub.id);
                                         setEditingSubSubCategoryName(subsub.name);
                                       }}
-                                      className="text-blue-500 hover:text-blue-700 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                      className="text-[#1e4e79] hover:text-[#1e4e79] font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                                     >
                                       Edit
                                     </button>
@@ -4579,44 +4274,44 @@ export default function AdminAnalytics() {
                   </span>
                   <input
                     type="text"
-                    placeholder={language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñåαñêαñíαÑÇ, αñ¬αñ░αÑÇαñòαÑìαñ╖αñ╛ αñ»αñ╛ αñ╕αñéαñªαÑçαñ╢ αñ╕αÑç αñûαÑïαñ£αÑçαñé...' : 'Search by Question ID, Test, or message...'}
+                    placeholder={language === 'hi' ? 'प्रश्न आईडी, परीक्षा या संदेश से खोजें...' : 'Search by Question ID, Test, or message...'}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors font-semibold"
+                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-md text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-[#1e4e79] transition-colors font-semibold"
                   />
                 </div>
                 
                 <div className="flex gap-4 shrink-0 text-xs font-bold text-slate-500 dark:text-slate-400">
-                  <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 flex items-center gap-2">
+                  <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2 flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
-                    <span>{language === 'hi' ? 'αñòαÑüαñ▓ αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ:' : 'Total Reports:'} <strong className="text-slate-800 dark:text-white font-extrabold">{reportedQuestionsList.length}</strong></span>
+                    <span>{language === 'hi' ? 'कुल रिपोर्ट:' : 'Total Reports:'} <strong className="text-slate-800 dark:text-white font-semibold">{reportedQuestionsList.length}</strong></span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden p-6">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-6">
-                  {language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿' : 'Reported Question Logs'}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden p-6">
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-6">
+                  {language === 'hi' ? 'रिपोर्ट किए गए प्रश्न' : 'Reported Question Logs'}
                 </h3>
 
                 <div className="overflow-x-auto max-h-[600px] overflow-y-auto pr-1">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead className="sticky top-0 bg-white dark:bg-slate-950 z-10 border-b border-slate-200 dark:border-slate-800">
-                      <tr className="text-slate-400 dark:text-slate-500 uppercase text-[9px] tracking-wider font-bold">
-                        <th className="py-3 px-4">{language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñåαñêαñíαÑÇ' : 'Question ID'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'αñ«αÑëαñò αñƒαÑçαñ╕αÑìαñƒ' : 'Mock Test'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¬αñ╛αñá' : 'Question Text'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'αñ╡αñ┐αñ╡αñ░αñú / αñ╕αñéαñªαÑçαñ╢' : 'Report Message'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒαñ░ (αñ░αÑïαñ▓ αñòαÑïαñí)' : 'Reporter (Roll Code)'}</th>
-                        <th className="py-3 px-4">{language === 'hi' ? 'αñªαñ┐αñ¿αñ╛αñéαñò αñöαñ░ αñ╕αñ«αñ»' : 'Report Date & Time'}</th>
-                        <th className="py-3 px-4 text-right">{language === 'hi' ? 'αñòαñ╛αñ░αÑìαñ░αñ╡αñ╛αñê' : 'Action'}</th>
+                      <tr className="text-slate-400 dark:text-slate-500 text-[11px] font-bold">
+                        <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न आईडी' : 'Question ID'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'मॉक टेस्ट' : 'Mock Test'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'प्रश्न पाठ' : 'Question Text'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'विवरण / संदेश' : 'Report Message'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'रिपोर्टर (रोल कोड)' : 'Reporter (Roll Code)'}</th>
+                        <th className="py-3 px-4">{language === 'hi' ? 'दिनांक और समय' : 'Report Date & Time'}</th>
+                        <th className="py-3 px-4 text-right">{language === 'hi' ? 'कार्रवाई' : 'Action'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reportedQuestionsList.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-8 text-center text-slate-400 dark:text-slate-500 font-bold">
-                            {language === 'hi' ? 'αñòαÑïαñê αñ░αñ┐αñ¬αÑïαñ░αÑìαñƒ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑìαñ░αñ╢αÑìαñ¿ αñ¿αñ╣αÑÇαñé αñ«αñ┐αñ▓αÑçαÑñ' : 'No reported questions found.'}
+                            {language === 'hi' ? 'कोई रिपोर्ट किए गए प्रश्न नहीं मिले।' : 'No reported questions found.'}
                           </td>
                         </tr>
                       ) : (
@@ -4634,13 +4329,13 @@ export default function AdminAnalytics() {
                           })
                           .map((rq) => (
                             <tr key={rq.id} className="border-b border-slate-50 dark:border-slate-900 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                              <td className="py-4 px-4 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                              <td className="py-4 px-4 font-mono font-bold text-[#1e4e79] dark:text-blue-400 whitespace-nowrap">
                                 {rq.questionId}
                               </td>
                               <td className="py-4 px-4 font-bold text-slate-800 dark:text-slate-200">
                                 <div className="leading-tight">
                                   <div>{rq.mockTestTitle || 'N/A'}</div>
-                                  <div className="text-[9px] text-slate-400 font-normal">{rq.mockTestId || 'N/A'}</div>
+                                  <div className="text-[11px] text-slate-400 font-normal">{rq.mockTestId || 'N/A'}</div>
                                 </div>
                               </td>
                               <td className="py-4 px-4 text-slate-500 max-w-[200px] truncate font-medium" title={rq.questionText}>
@@ -4653,7 +4348,7 @@ export default function AdminAnalytics() {
                               </td>
                               <td className="py-4 px-4 whitespace-nowrap font-bold">
                                 {rq.candidateCode ? (
-                                  <span className="font-mono bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded border border-blue-100 dark:border-blue-900/30 text-[10px]">
+                                  <span className="font-mono bg-blue-50 dark:bg-blue-950/20 text-[#1e4e79] dark:text-blue-400 px-2 py-1 rounded border border-blue-100 dark:border-blue-900/30 text-xs">
                                     {rq.candidateCode}
                                   </span>
                                 ) : (
@@ -4678,7 +4373,7 @@ export default function AdminAnalytics() {
                                       }
                                     }
                                   }}
-                                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1 rounded-lg cursor-pointer text-[10px]"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition px-2.5 py-1 rounded-lg cursor-pointer text-xs"
                                 >
                                   Delete Log
                                 </button>
@@ -4695,13 +4390,13 @@ export default function AdminAnalytics() {
 
           {/* TAB 10: SUPPORT TEAM HELP DESK */}
           {activeTab === 'support' && hasTabAccess('support') && (
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden h-[calc(100vh-12rem)] flex animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden h-[calc(100vh-12rem)] flex animate-in fade-in duration-200">
               
               {/* User List sidebar (1/3 width) */}
               <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full bg-slate-50/50 dark:bg-slate-950">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <MessageSquare className="h-4.5 w-4.5 text-blue-500" /> Conversations ({supportUsers.length})
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                    <MessageSquare className="h-4.5 w-4.5 text-[#1e4e79]" /> Conversations ({supportUsers.length})
                   </h3>
                   <button
                     onClick={() => fetchSupportUsers(true)}
@@ -4713,7 +4408,7 @@ export default function AdminAnalytics() {
                 </div>
 
                 <div className="p-3 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
-                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs">
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2 text-xs">
                     <Search className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <input
                       type="text"
@@ -4761,21 +4456,21 @@ export default function AdminAnalytics() {
                           }`}
                         >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="h-10 w-10 rounded-full bg-blue-600/10 dark:bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-black flex items-center justify-center shrink-0">
+                            <div className="h-10 w-10 rounded-full bg-[#1e4e79]/10 dark:bg-blue-500/10 border border-blue-500/20 text-[#1e4e79] dark:text-blue-400 font-semibold flex items-center justify-center shrink-0">
                               {initials}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <span className="font-extrabold text-slate-900 dark:text-white truncate">{user.name}</span>
+                                <span className="font-semibold text-slate-900 dark:text-white truncate">{user.name}</span>
                                 {user.lastMessage && (
-                                  <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
+                                  <span className="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap ml-2">
                                     {new Date(user.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mb-1">{user.email}</p>
+                              <p className="text-xs text-slate-400 dark:text-slate-500 truncate mb-1">{user.email}</p>
                               {user.lastMessage && (
-                                <p className={`text-[11px] truncate leading-tight ${user.unseenCount > 0 ? 'text-slate-900 dark:text-white font-extrabold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
+                                <p className={`text-[11px] truncate leading-tight ${user.unseenCount > 0 ? 'text-slate-900 dark:text-white font-semibold' : 'text-slate-500 dark:text-slate-400 font-semibold'}`}>
                                   {user.lastMessage.sender === 'ADMIN' ? 'You: ' : ''}{user.lastMessage.message}
                                 </p>
                               )}
@@ -4784,7 +4479,7 @@ export default function AdminAnalytics() {
 
                           <div className="flex items-center gap-2 shrink-0">
                             {user.unseenCount > 0 && (
-                              <span className="bg-emerald-500 text-white text-[9px] font-black rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
+                              <span className="bg-emerald-500 text-white text-[11px] font-semibold rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">
                                 {user.unseenCount}
                               </span>
                             )}
@@ -4840,8 +4535,8 @@ export default function AdminAnalytics() {
                       return (
                         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/20 dark:bg-slate-900/10">
                           <div>
-                            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">{selectedUser?.name || 'Loading user...'}</h4>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">{selectedUser?.email}</p>
+                            <h4 className="font-semibold text-xs text-slate-900 dark:text-white">{selectedUser?.name || 'Loading user...'}</h4>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold">{selectedUser?.email}</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <button
@@ -4854,7 +4549,7 @@ export default function AdminAnalytics() {
                             </button>
                             <div className="flex items-center gap-1.5">
                               <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Active session</span>
+                              <span className="text-[11px] font-bold text-slate-500">Active session</span>
                             </div>
                           </div>
                         </div>
@@ -4876,10 +4571,10 @@ export default function AdminAnalytics() {
                               key={msg.id}
                               className={`flex ${isStudent ? 'justify-start' : 'justify-end'} group/msg`}
                             >
-                              <div className={`max-w-[70%] p-3.5 rounded-xl border text-xs font-medium shadow-xs relative ${
+                              <div className={`max-w-[70%] p-3.5 rounded-md border text-xs font-medium shadow-xs relative ${
                                 isStudent
                                   ? 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-xs'
-                                  : 'bg-blue-600 border-blue-600 text-white rounded-br-xs'
+                                  : 'bg-[#1e4e79] border-[#1e4e79] text-white rounded-br-xs'
                               }`}>
                                 {isEditing ? (
                                   <div className="flex flex-col gap-2 min-w-[200px]">
@@ -4894,14 +4589,14 @@ export default function AdminAnalytics() {
                                       <button
                                         type="button"
                                         onClick={() => setEditingMessageId(null)}
-                                        className="bg-blue-700 hover:bg-blue-800 text-blue-200 px-2 py-1 rounded text-[10px] font-bold"
+                                        className="bg-blue-700 hover:bg-blue-800 text-blue-200 px-2 py-1 rounded text-xs font-bold"
                                       >
                                         Cancel
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => handleSaveEditMessage(msg.id, editingMessageText)}
-                                        className="bg-white hover:bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-bold"
+                                        className="bg-white hover:bg-blue-50 text-[#1e4e79] px-2 py-1 rounded text-xs font-bold"
                                       >
                                         Save
                                       </button>
@@ -4917,24 +4612,24 @@ export default function AdminAnalytics() {
                                             setEditingMessageId(msg.id);
                                             setEditingMessageText(msg.message);
                                           }}
-                                          className="opacity-0 group-hover/msg:opacity-100 transition-opacity text-[9px] text-blue-200 hover:text-white underline cursor-pointer"
+                                          className="opacity-0 group-hover/msg:opacity-100 transition-opacity text-[11px] text-blue-200 hover:text-white underline cursor-pointer"
                                         >
                                           Edit
                                         </button>
                                       )}
-                                      <div className={`text-[8px] font-bold flex items-center justify-end gap-1.5 ${
+                                      <div className={`text-[11px] font-bold flex items-center justify-end gap-1.5 ${
                                         isStudent ? 'text-slate-400 dark:text-slate-500' : 'text-blue-200'
                                       }`}>
                                         <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         {!isStudent && (
                                           <span
                                             className={`inline-flex items-center gap-0.5 ml-1 ${
-                                              msg.isRead ? 'text-sky-300 font-black' : 'text-blue-200/60 font-medium'
+                                              msg.isRead ? 'text-sky-300 font-semibold' : 'text-blue-200/60 font-medium'
                                             }`}
                                             title={msg.isRead ? 'Seen by Student' : 'Delivered'}
                                           >
                                             <CheckCheck className={`h-3 w-3 ${msg.isRead ? 'text-sky-300 stroke-[2.5]' : 'text-blue-200/60 stroke-[1.8]'}`} />
-                                            <span className="text-[7.5px] uppercase tracking-wider">{msg.isRead ? 'Seen' : 'Delivered'}</span>
+                                            <span className="text-[11px]">{msg.isRead ? 'Seen' : 'Delivered'}</span>
                                           </span>
                                         )}
                                       </div>
@@ -4956,12 +4651,12 @@ export default function AdminAnalytics() {
                         value={supportInputText}
                         onChange={(e) => setSupportInputText(e.target.value)}
                         placeholder="Type a reply here..."
-                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-medium"
                       />
                       <button
                         type="submit"
                         disabled={!supportInputText.trim() || supportSending}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md hover:shadow-lg disabled:bg-blue-300 disabled:shadow-none cursor-pointer"
+                        className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold px-5 py-2.5 rounded-md text-xs flex items-center gap-1.5 transition-all shadow-md hover:shadow-sm disabled:bg-blue-300 disabled:shadow-none cursor-pointer"
                       >
                         Reply
                       </button>
@@ -4972,7 +4667,7 @@ export default function AdminAnalytics() {
                     <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-full mb-4">
                       <MessageCircle className="h-10 w-10 text-slate-300 dark:text-slate-700" />
                     </div>
-                    <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-700 dark:text-white mb-1">Select a Student</h4>
+                    <h4 className="font-semibold text-sm text-slate-700 dark:text-white mb-1">Select a Student</h4>
                     <p className="text-xs max-w-sm leading-relaxed font-semibold">
                       Click a student conversation from the list to start responding to tickets and chatting in real-time.
                     </p>
@@ -4990,7 +4685,7 @@ export default function AdminAnalytics() {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Official Announcements Publisher</h2>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Official Announcements Publisher</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Publish special alerts and visual news banner cards that slide horizontally on the mobile app home screen</p>
                 </div>
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">
@@ -4999,10 +4694,10 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Info alert */}
-              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/25 p-4 rounded-2xl flex items-start gap-3">
-                <Megaphone className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-500/25 p-4 rounded-lg flex items-start gap-3">
+                <Megaphone className="h-5 w-5 text-[#1e4e79] dark:text-blue-400 shrink-0 mt-0.5" />
                 <div className="text-xs">
-                  <p className="font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Mobile Banner Engine</p>
+                  <p className="font-semibold text-[#1e4e79] dark:text-blue-400 mb-1">Mobile Banner Engine</p>
                   <p className="text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
                     Create and publish official announcements that will appear as a swipable horizontal carousel on the mobile app home screen. Announcements are saved as a special category of notices.
                   </p>
@@ -5010,18 +4705,18 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Collapsible Publish Card */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsCreateAnnouncementOpen(!isCreateAnnouncementOpen)}
                   className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                       <Megaphone className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="font-extrabold text-sm text-slate-900 dark:text-white">Publish Announcement</p>
+                      <p className="font-semibold text-sm text-slate-900 dark:text-white">Publish Announcement</p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">Click to expand the announcement editor</p>
                     </div>
                   </div>
@@ -5046,49 +4741,49 @@ export default function AdminAnalytics() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Type / Tag</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Announcement Type / Tag</label>
                           <input
                             type="text"
                             required
                             value={announcementType}
                             onChange={(e) => setAnnouncementType(e.target.value)}
                             placeholder="e.g., PROMOTION, ALERT, NEWS, SOCIAL"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Publish Date</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Publish Date</label>
                           <input
                             type="date"
                             required
                             value={announcementDate}
                             onChange={(e) => setAnnouncementDate(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Details Link / URL (Optional)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Details Link / URL (Optional)</label>
                           <input
                             type="url"
                             value={announcementUrl}
                             onChange={(e) => setAnnouncementUrl(e.target.value)}
                             placeholder="https://example.com/details"
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL / Banner (Optional)</label>
+                        <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Image URL / Banner (Optional)</label>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={announcementImageUrl}
                             onChange={(e) => setAnnouncementImageUrl(e.target.value)}
                             placeholder="https://example.com/image.png or upload banner"
-                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                           />
                           <input
                             type="file"
@@ -5113,35 +4808,35 @@ export default function AdminAnalytics() {
                               isUploadingAnnouncement ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                             }`}
                           >
-                            <Upload className={`h-3.5 w-3.5 ${isUploadingAnnouncement ? "animate-bounce" : ""}`} />
+                            <Upload className={`h-3.5 w-3.5 ${isUploadingAnnouncement ? "" : ""}`} />
                             {isUploadingAnnouncement ? "Uploading..." : "Upload Banner"}
                           </label>
                         </div>
-                        <p className="text-[9px] text-slate-500 dark:text-slate-500 mt-1 font-semibold">
-                          ≡ƒÆí Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
+                        <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1 font-semibold">
+                          Perfect size for tile view is 1200x600 (aspect ratio 2:1) for clean coverage.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (English)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Announcement Content (English)</label>
                           <textarea
                             required
                             value={announcementTitle}
                             onChange={(e) => setAnnouncementTitle(e.target.value)}
                             placeholder="Type announcement description content in English..."
                             rows={4}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] resize-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Announcement Content (Hindi)</label>
+                          <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Announcement Content (Hindi)</label>
                           <textarea
                             value={announcementTitleHi}
                             onChange={(e) => setAnnouncementTitleHi(e.target.value)}
                             placeholder="घोषणा हिन्दी में दर्ज करें (वैकल्पिक)..."
                             rows={4}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] resize-none"
                           />
                         </div>
                       </div>
@@ -5149,7 +4844,7 @@ export default function AdminAnalytics() {
                       <div className="flex justify-end pt-3">
                         <button
                           type="submit"
-                          className="flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer"
+                          className="flex items-center justify-center gap-2 bg-[#1e4e79] text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-[#163c5e] transition-all shadow-md cursor-pointer"
                         >
                           Publish Announcement
                         </button>
@@ -5159,11 +4854,11 @@ export default function AdminAnalytics() {
                 )}
               </div>
 
-              {/* Active Announcements List Card ΓÇö Full Width */}
-              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+              {/* Active Announcements List Card — Full Width */}
+              <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <Megaphone className="h-4.5 w-4.5 text-blue-500" /> Active Announcements Banners
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                    <Megaphone className="h-4.5 w-4.5 text-[#1e4e79]" /> Active Announcements Banners
                   </h3>
                   
                   {/* Search bar */}
@@ -5174,7 +4869,7 @@ export default function AdminAnalytics() {
                       value={announcementSearch}
                       onChange={(e) => setAnnouncementSearch(e.target.value)}
                       placeholder="Search announcements..."
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
                 </div>
@@ -5182,7 +4877,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-xs">
                         <th className="py-3 px-4">Content</th>
                         <th className="py-3 px-4">Tag</th>
                         <th className="py-3 px-4">Date</th>
@@ -5201,7 +4896,7 @@ export default function AdminAnalytics() {
                           <tr key={ann.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition text-slate-800 dark:text-slate-300">
                             <td className="py-3 px-4 font-bold text-slate-900 dark:text-slate-100 max-w-sm">
                               {ann.url ? (
-                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center gap-1">
+                                <a href={ann.url} target="_blank" rel="noopener noreferrer" className="text-[#1e4e79] hover:text-[#1e4e79] dark:text-blue-400 dark:hover:text-blue-300 hover:underline flex items-center gap-1">
                                   {ann.title}
                                   <ChevronRight className="h-3 w-3 inline animate-pulse" />
                                 </a>
@@ -5209,8 +4904,8 @@ export default function AdminAnalytics() {
                                 <span>{ann.title}</span>
                               )}
                               {ann.imageUrl && (
-                                <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                  <span>≡ƒû╝∩╕Å Image:</span>
+                                <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                                  <span>Image:</span>
                                   <a href={ann.imageUrl} target="_blank" rel="noopener noreferrer" className="underline truncate max-w-[200px] inline-block font-normal">
                                     {ann.imageUrl}
                                   </a>
@@ -5218,13 +4913,13 @@ export default function AdminAnalytics() {
                               )}
                             </td>
                             <td className="py-3 px-4">
-                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-[10px]">{ann.type}</span>
+                              <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs">{ann.type}</span>
                             </td>
                             <td className="py-3 px-4 font-semibold text-[11px] text-slate-500 dark:text-slate-400">{ann.date}</td>
                             <td className="py-3 px-4 text-right flex items-center justify-end gap-2">
                               <button
                                 onClick={() => handleOpenEditAnnouncement(ann)}
-                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
+                                className="text-[#1e4e79] hover:text-[#1e4e79] dark:text-blue-400 dark:hover:text-blue-300 font-bold bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-950/40 transition px-2.5 py-1.5 rounded cursor-pointer"
                               >
                                 Edit
                               </button>
@@ -5256,15 +4951,15 @@ export default function AdminAnalytics() {
 
           {/* EDIT ANNOUNCEMENT MODAL OVERLAY */}
           {editingAnnouncement && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto font-sans">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto font-sans">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-2xl w-full p-6 shadow-2xl relative space-y-5 animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                       <Megaphone className="h-4 w-4" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Edit Announcement</h3>
+                      <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Edit Announcement</h3>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">Update banner image, text content, publish date, or link</p>
                     </div>
                   </div>
@@ -5298,7 +4993,7 @@ export default function AdminAnalytics() {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                         Announcement Type / Tag
                       </label>
                       <input
@@ -5307,12 +5002,12 @@ export default function AdminAnalytics() {
                         value={editAnnType}
                         onChange={(e) => setEditAnnType(e.target.value)}
                         placeholder="PROMOTION, ALERT, NEWS"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                         Publish Date
                       </label>
                       <input
@@ -5320,12 +5015,12 @@ export default function AdminAnalytics() {
                         required
                         value={editAnnDate}
                         onChange={(e) => setEditAnnDate(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                         Details Link / URL (Optional)
                       </label>
                       <input
@@ -5333,13 +5028,13 @@ export default function AdminAnalytics() {
                         value={editAnnUrl}
                         onChange={(e) => setEditAnnUrl(e.target.value)}
                         placeholder="https://example.com/details"
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                       Image URL / Banner (Optional)
                     </label>
                     <div className="flex gap-2">
@@ -5348,7 +5043,7 @@ export default function AdminAnalytics() {
                         value={editAnnImageUrl}
                         onChange={(e) => setEditAnnImageUrl(e.target.value)}
                         placeholder="https://example.com/banner.png or upload image"
-                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                       <input
                         type="file"
@@ -5373,7 +5068,7 @@ export default function AdminAnalytics() {
                           isUploadingEditAnnBanner ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                         }`}
                       >
-                        <Upload className={`h-3.5 w-3.5 ${isUploadingEditAnnBanner ? "animate-bounce" : ""}`} />
+                        <Upload className={`h-3.5 w-3.5 ${isUploadingEditAnnBanner ? "" : ""}`} />
                         {isUploadingEditAnnBanner ? "Uploading..." : "Upload Banner"}
                       </label>
                     </div>
@@ -5381,7 +5076,7 @@ export default function AdminAnalytics() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                         Announcement Content (English)
                       </label>
                       <textarea
@@ -5390,11 +5085,11 @@ export default function AdminAnalytics() {
                         onChange={(e) => setEditAnnTitle(e.target.value)}
                         placeholder="Type announcement description content in English..."
                         rows={4}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] resize-none font-medium"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-400 dark:text-slate-500 mb-2">
                         Announcement Content (Hindi)
                       </label>
                       <textarea
@@ -5402,7 +5097,7 @@ export default function AdminAnalytics() {
                         onChange={(e) => setEditAnnTitleHi(e.target.value)}
                         placeholder="घोषणा हिन्दी में दर्ज करें (वैकल्पिक)..."
                         rows={4}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 resize-none font-medium"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] resize-none font-medium"
                       />
                     </div>
                   </div>
@@ -5417,7 +5112,7 @@ export default function AdminAnalytics() {
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-md active:scale-95 cursor-pointer text-xs"
+                      className="px-6 py-2 rounded-lg bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold transition shadow-md cursor-pointer text-xs"
                     >
                       Save Changes
                     </button>
@@ -5430,55 +5125,55 @@ export default function AdminAnalytics() {
           {activeTab === 'testimonials' && hasTabAccess('testimonials') && (
             <div className="space-y-8 animate-in fade-in duration-200">
               {/* Testimonial Creation Form */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-                <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
-                  <PlusCircle className="h-4.5 w-4.5 text-blue-600" /> Create New Topper Testimonial
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
+                <h3 className="font-semibold text-xs text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                  <PlusCircle className="h-4.5 w-4.5 text-[#1e4e79]" /> Create New Topper Testimonial
                 </h3>
 
                 <form onSubmit={handleAddTestimonialSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Student Name</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Topper Student Name</label>
                       <input
                         type="text"
                         required
                         value={testiName}
                         onChange={(e) => setTestiName(e.target.value)}
                         placeholder="e.g. Rahul Sharma"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Exam & Selection Title</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Exam & Selection Title</label>
                       <input
                         type="text"
                         required
                         value={testiExam}
                         onChange={(e) => setTestiExam(e.target.value)}
                         placeholder="e.g. SSC CGL 2025 (Selected: Excise Inspector)"
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Student Initials (Optional)</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Student Initials (Optional)</label>
                       <input
                         type="text"
                         value={testiInitials}
                         onChange={(e) => setTestiInitials(e.target.value)}
                         placeholder="e.g. RS (Auto-falls back to first letters)"
                         maxLength={2}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Background Gradient Scheme</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Background Gradient Scheme</label>
                       <select
                         value={testiGradient}
                         onChange={(e) => setTestiGradient(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                       >
                         <option value="from-blue-600 to-cyan-500">Ocean Blue (Blue to Cyan)</option>
                         <option value="from-purple-600 to-pink-500">Neon Orchid (Purple to Pink)</option>
@@ -5488,7 +5183,7 @@ export default function AdminAnalytics() {
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Photo (Optional)</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Topper Photo (Optional)</label>
                       <div className="flex items-center gap-3">
                         <input
                           type="file"
@@ -5499,15 +5194,15 @@ export default function AdminAnalytics() {
                         />
                         <label
                           htmlFor={isUploadingPhoto ? undefined : "topper-photo-upload"}
-                          className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2 ${
+                          className={`bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition inline-flex items-center gap-2 ${
                             isUploadingPhoto ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                           }`}
                         >
-                          <Upload className={`h-4 w-4 ${isUploadingPhoto ? "animate-bounce" : ""}`} /> 
+                          <Upload className={`h-4 w-4 ${isUploadingPhoto ? "" : ""}`} /> 
                           {isUploadingPhoto ? "Uploading..." : "Choose Photo"}
                         </label>
                         {isUploadingPhoto ? (
-                          <span className="text-[10px] text-blue-500 font-semibold animate-pulse">Uploading to Tigris...</span>
+                          <span className="text-xs text-[#1e4e79] font-semibold animate-pulse">Uploading to Tigris...</span>
                         ) : testiPhotoUrl ? (
                           <div className="flex items-center gap-2">
                             <img src={testiPhotoUrl} alt="Topper preview" className="h-10 w-10 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow" />
@@ -5520,7 +5215,7 @@ export default function AdminAnalytics() {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-slate-400 font-semibold">No photo selected (initials placeholder will be used)</span>
+                          <span className="text-xs text-slate-400 font-semibold">No photo selected (initials placeholder will be used)</span>
                         )}
                       </div>
                     </div>
@@ -5528,24 +5223,24 @@ export default function AdminAnalytics() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Quote / Message Text (English)</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Topper Quote / Message Text (English)</label>
                       <textarea
                         required
                         value={testiQuote}
                         onChange={(e) => setTestiQuote(e.target.value)}
                         placeholder="e.g. Testbook Pass Pro mock sittings exactly models the live CBT screen. It was key to my success!"
                         rows={3}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Topper Quote / Message Text (Hindi)</label>
+                      <label className="block text-xs font-bold text-slate-500 mb-2">Topper Quote / Message Text (Hindi)</label>
                       <textarea
                         value={testiQuoteHi}
                         onChange={(e) => setTestiQuoteHi(e.target.value)}
                         placeholder="संदेश हिन्दी में दर्ज करें (वैकल्पिक)..."
                         rows={3}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                   </div>
@@ -5553,7 +5248,7 @@ export default function AdminAnalytics() {
                   <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
                     <button
                       type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
+                      className="bg-[#1e4e79] hover:bg-[#163c5e] text-white px-5 py-3 rounded-md text-xs font-bold shadow-lg transition-all cursor-pointer"
                     >
                       Publish Testimonial
                     </button>
@@ -5562,11 +5257,11 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Created Testimonials list table */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
                   <div>
-                    <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">Active Testimonials Listing</h3>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">Manage topper cards currently displayed in rotation on the home screen.</p>
+                    <h3 className="font-semibold text-xs text-slate-900 dark:text-white">Active Testimonials Listing</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">Manage topper cards currently displayed in rotation on the home screen.</p>
                   </div>
 
                   <div className="relative w-full sm:w-64">
@@ -5584,7 +5279,7 @@ export default function AdminAnalytics() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold text-xs">
                         <th className="py-3 px-4">Topper Profile</th>
                         <th className="py-3 px-4">Quote Message</th>
                         <th className="py-3 px-4">Selection Detail</th>
@@ -5612,7 +5307,7 @@ export default function AdminAnalytics() {
                                 )}
                                 <div>
                                   <h5 className="font-bold text-slate-900 dark:text-white text-xs">{testi.title}</h5>
-                                  <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Initials: {testi.lastDate}</span>
+                                  <span className="text-[11px] text-slate-400 font-semibold">Initials: {testi.lastDate}</span>
                                 </div>
                               </div>
                             </td>
@@ -5660,13 +5355,13 @@ export default function AdminAnalytics() {
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">User Feedbacks & Ratings</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">User Feedbacks & Ratings</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monitor ratings and suggestions submitted by candidates upon test submission.</p>
                 </div>
                 <button
                   onClick={fetchFeedbacks}
                   disabled={loadingFeedbacks}
-                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  className="flex items-center justify-center gap-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${loadingFeedbacks ? 'animate-spin' : ''}`} />
                   Refresh List
@@ -5675,20 +5370,20 @@ export default function AdminAnalytics() {
 
               {/* Summary Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Feedback Submissions</p>
-                    <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{feedbacksList.length}</h4>
+                    <p className="text-xs font-semibold text-slate-400">Total Feedback Submissions</p>
+                    <h4 className="text-2xl font-semibold text-slate-900 dark:text-white mt-1">{feedbacksList.length}</h4>
                   </div>
-                  <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-blue-500">
+                  <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-[#1e4e79]">
                     <MessageSquare className="h-5 w-5" />
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Average Platform Rating</p>
-                    <h4 className="text-2xl font-black text-amber-500 mt-1">
+                    <p className="text-xs font-semibold text-slate-400">Average Platform Rating</p>
+                    <h4 className="text-2xl font-semibold text-amber-500 mt-1">
                       {feedbacksList.length > 0 
                         ? (feedbacksList.reduce((sum, f) => sum + f.platformRating, 0) / feedbacksList.length).toFixed(1)
                         : "0.0"} <span className="text-sm text-amber-400">★</span>
@@ -5699,10 +5394,10 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Average Exam Experience</p>
-                    <h4 className="text-2xl font-black text-emerald-500 mt-1">
+                    <p className="text-xs font-semibold text-slate-400">Average Exam Experience</p>
+                    <h4 className="text-2xl font-semibold text-emerald-500 mt-1">
                       {feedbacksList.length > 0 
                         ? (feedbacksList.reduce((sum, f) => sum + f.examRating, 0) / feedbacksList.length).toFixed(1)
                         : "0.0"} <span className="text-sm text-emerald-400">★</span>
@@ -5715,25 +5410,25 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Feedbacks Table Grid */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate / Date</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Source</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">App/Web Rating</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Exam Rating</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Written Feedback</th>
-                        <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Action</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Candidate / Date</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Mock Test</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Source</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">App/Web Rating</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Exam Rating</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Written Feedback</th>
+                        <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {loadingFeedbacks ? (
                         <tr>
                           <td colSpan={7} className="py-24 text-center">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e4e79] mb-3"></div>
                             <p className="text-xs text-slate-400 font-bold">Loading feedbacks data...</p>
                           </td>
                         </tr>
@@ -5741,23 +5436,23 @@ export default function AdminAnalytics() {
                         feedbacksList.map((f) => (
                           <tr key={f.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                             <td className="py-4 px-4">
-                              <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{f.userFullName || 'Anonymous'}</p>
-                              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{f.userEmail}</p>
-                              <p className="text-[9px] text-slate-400 font-medium mt-1 font-sans">
+                              <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">{f.userFullName || 'Anonymous'}</p>
+                              <p className="text-xs text-slate-400 font-semibold mt-0.5">{f.userEmail}</p>
+                              <p className="text-[11px] text-slate-400 font-medium mt-1 font-sans">
                                 {new Date(f.createdAt).toLocaleString()}
                               </p>
                             </td>
                             <td className="py-4 px-4 max-w-[200px]">
                               <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">{f.testTitle}</p>
-                              <p className="text-[9px] text-slate-400 font-mono mt-0.5 truncate">{f.testId}</p>
+                              <p className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">{f.testId}</p>
                             </td>
                             <td className="py-4 px-4">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                                 f.source === 'app'
                                   ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
-                                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                  : 'bg-blue-100 text-[#1e4e79] dark:bg-blue-900/30 dark:text-blue-300'
                               }`}>
-                                {f.source === 'app' ? '📱 App' : '🌐 Web'}
+                                {f.source === 'app' ? 'App' : 'Web'}
                               </span>
                             </td>
                             <td className="py-4 px-4">
@@ -5766,7 +5461,7 @@ export default function AdminAnalytics() {
                                   <span key={s} className={s <= f.platformRating ? 'text-amber-400' : 'text-slate-200 dark:text-slate-700'}>★</span>
                                 ))}
                               </div>
-                              <span className="text-[9px] font-bold text-slate-500 mt-1 block">Rating: {f.platformRating}/5</span>
+                              <span className="text-[11px] font-bold text-slate-500 mt-1 block">Rating: {f.platformRating}/5</span>
                             </td>
                             <td className="py-4 px-4">
                               <div className="flex gap-0.5 text-emerald-500 text-sm">
@@ -5774,7 +5469,7 @@ export default function AdminAnalytics() {
                                   <span key={s} className={s <= f.examRating ? 'text-emerald-400' : 'text-slate-200 dark:text-slate-700'}>★</span>
                                 ))}
                               </div>
-                              <span className="text-[9px] font-bold text-slate-500 mt-1 block">Rating: {f.examRating}/5</span>
+                              <span className="text-[11px] font-bold text-slate-500 mt-1 block">Rating: {f.examRating}/5</span>
                             </td>
                             <td className="py-4 px-4">
                               {f.feedbackText ? (
@@ -5784,13 +5479,13 @@ export default function AdminAnalytics() {
                                   </p>
                                 </div>
                               ) : (
-                                <span className="text-[10px] text-slate-400 italic">No comment provided</span>
+                                <span className="text-xs text-slate-400 italic">No comment provided</span>
                               )}
                             </td>
                             <td className="py-4 px-4 text-right">
                               <button
                                 onClick={() => deleteFeedback(f.id)}
-                                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-900/30 dark:text-red-400 font-black text-[9px] uppercase tracking-wider px-2 py-1 rounded-lg transition shadow-sm cursor-pointer"
+                                className="inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-900/30 dark:text-red-400 font-semibold text-[11px] px-2 py-1 rounded-lg transition shadow-sm cursor-pointer"
                               >
                                 <Trash2 className="h-3 w-3" />
                                 Delete
@@ -5818,13 +5513,13 @@ export default function AdminAnalytics() {
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Test Attempt Logs</h3>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Test Attempt Logs</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monitor ongoing, completed, and auto-submitted mock test sittings across all platforms.</p>
                 </div>
                 <button
                   onClick={fetchAttempts}
                   disabled={loadingAttempts}
-                  className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  className="flex items-center justify-center gap-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${loadingAttempts ? 'animate-spin' : ''}`} />
                   Refresh List
@@ -5833,20 +5528,20 @@ export default function AdminAnalytics() {
 
               {/* Summary Stats Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Attempts</p>
-                    <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{attemptsList.length}</h4>
+                    <p className="text-xs font-semibold text-slate-400">Total Attempts</p>
+                    <h4 className="text-2xl font-semibold text-slate-900 dark:text-white mt-1">{attemptsList.length}</h4>
                   </div>
-                  <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-blue-500">
+                  <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-[#1e4e79]">
                     <TrendingUp className="h-5 w-5" />
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Mobile App Attempts</p>
-                    <h4 className="text-2xl font-black text-violet-600 dark:text-violet-400 mt-1">
+                    <p className="text-xs font-semibold text-slate-400">Mobile App Attempts</p>
+                    <h4 className="text-2xl font-semibold text-violet-600 dark:text-violet-400 mt-1">
                       {attemptsList.filter(a => a.source === 'app').length}
                     </h4>
                   </div>
@@ -5855,10 +5550,10 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Desktop Web Attempts</p>
-                    <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                    <p className="text-xs font-semibold text-slate-400">Desktop Web Attempts</p>
+                    <h4 className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                       {attemptsList.filter(a => a.source === 'web').length}
                     </h4>
                   </div>
@@ -5867,10 +5562,10 @@ export default function AdminAnalytics() {
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Mobile Web Attempts</p>
-                    <h4 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                    <p className="text-xs font-semibold text-slate-400">Mobile Web Attempts</p>
+                    <h4 className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">
                       {attemptsList.filter(a => a.source === 'mobile_web').length}
                     </h4>
                   </div>
@@ -5881,7 +5576,7 @@ export default function AdminAnalytics() {
               </div>
 
               {/* Filters Bar */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
                 {/* Search Bar */}
                 <div className="relative w-full md:w-96">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
@@ -5895,7 +5590,7 @@ export default function AdminAnalytics() {
                       setAttemptsSearch(e.target.value);
                       setAttemptsPage(1);
                     }}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                    className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-[#1e4e79] font-medium"
                   />
                 </div>
 
@@ -5903,7 +5598,7 @@ export default function AdminAnalytics() {
                 <div className="flex flex-wrap gap-3 w-full md:w-auto justify-end items-center">
                   {/* Platform Filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Platform:</span>
+                    <span className="text-xs font-semibold text-slate-400">Platform:</span>
                     <select
                       value={attemptsPlatformFilter}
                       onChange={(e: any) => {
@@ -5913,15 +5608,15 @@ export default function AdminAnalytics() {
                       className="border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-1.5 px-3 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-bold focus:outline-none cursor-pointer"
                     >
                       <option value="all">All Platforms</option>
-                      <option value="web">🌐 Website (Desktop)</option>
-                      <option value="app">📱 Mobile App</option>
-                      <option value="mobile_web">📱 Website (Mobile View)</option>
+                      <option value="web">Website (Desktop)</option>
+                      <option value="app">Mobile App</option>
+                      <option value="mobile_web">Website (Mobile View)</option>
                     </select>
                   </div>
 
                   {/* Status Filter */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Status:</span>
+                    <span className="text-xs font-semibold text-slate-400">Status:</span>
                     <select
                       value={attemptsStatusFilter}
                       onChange={(e: any) => {
@@ -5967,25 +5662,25 @@ export default function AdminAnalytics() {
                   : filteredAttempts.slice((attemptsPage - 1) * attemptsPageSize, attemptsPage * attemptsPageSize);
 
                 return (
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Candidate details</th>
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mock Test Details</th>
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Platform</th>
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Start / End Time</th>
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Attempt Stats</th>
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                            <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions / Analysis</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Candidate details</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Mock Test Details</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Platform</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Start / End Time</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Attempt Stats</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">Status</th>
+                            <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400 text-right">Actions / Analysis</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                           {loadingAttempts ? (
                             <tr>
                               <td colSpan={7} className="py-24 text-center">
-                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e4e79] mb-3"></div>
                                 <p className="text-xs text-slate-400 font-bold">Loading test attempt logs...</p>
                               </td>
                             </tr>
@@ -6000,15 +5695,15 @@ export default function AdminAnalytics() {
                               <tr key={a.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                                 {/* Candidate Details */}
                                 <td className="py-4 px-4">
-                                  <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{a.user?.fullName || 'Unknown'}</p>
-                                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{a.user?.email || 'N/A'}</p>
+                                  <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">{a.user?.fullName || 'Unknown'}</p>
+                                  <p className="text-xs text-slate-400 font-semibold mt-0.5">{a.user?.email || 'N/A'}</p>
                                   <div className="flex gap-2 mt-1">
-                                    <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
+                                    <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">
                                       {a.user?.candidateCode || 'No Code'}
                                     </span>
                                     {a.user?.mobile && (
-                                      <span className="text-[9px] font-sans text-slate-500 dark:text-slate-400">
-                                        📞 {a.user.mobile}
+                                      <span className="text-[11px] font-sans text-slate-500 dark:text-slate-400">
+                                        {a.user.mobile}
                                       </span>
                                     )}
                                   </div>
@@ -6021,14 +5716,14 @@ export default function AdminAnalytics() {
                                     return (
                                       <div className="flex flex-col gap-1">
                                         {subCategoryName && (
-                                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={subCategoryName}>
-                                            📁 {subCategoryName}
+                                          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#1e4e79] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={subCategoryName}>
+                                            {subCategoryName}
                                           </span>
                                         )}
                                         <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate" title={a.mockTest?.title || 'Unknown Test'}>
                                           {a.mockTest?.title || 'Unknown Test'}
                                         </p>
-                                        <p className="text-[9px] text-slate-400 font-mono truncate">{a.mockTestId}</p>
+                                        <p className="text-[11px] text-slate-400 font-mono truncate">{a.mockTestId}</p>
                                       </div>
                                     );
                                   })()}
@@ -6036,29 +5731,29 @@ export default function AdminAnalytics() {
 
                                 {/* Platform Source */}
                                 <td className="py-4 px-4">
-                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
                                     a.source === 'app'
                                       ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300'
                                       : a.source === 'mobile_web'
                                       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                      : 'bg-blue-100 text-[#1e4e79] dark:bg-blue-900/30 dark:text-blue-300'
                                   }`}>
-                                    {a.source === 'app' ? '📱 Mobile App' : a.source === 'mobile_web' ? '📱 Web Mobile' : '🌐 Desktop Web'}
+                                    {a.source === 'app' ? 'Mobile App' : a.source === 'mobile_web' ? 'Web Mobile' : 'Desktop Web'}
                                   </span>
                                 </td>
 
                                 {/* Start / End Time */}
                                 <td className="py-4 px-4">
-                                  <p className="text-[10px] text-slate-700 dark:text-slate-300 font-medium">
-                                    📅 {new Date(a.startedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                                  <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                    {new Date(a.startedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                                   </p>
                                   {a.completedAt ? (
-                                    <p className="text-[9px] text-slate-400 font-medium mt-0.5">
-                                      ✅ Ended: {new Date(a.completedAt).toLocaleString('en-IN', { timeStyle: 'short' })}
+                                    <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                                      Ended: {new Date(a.completedAt).toLocaleString('en-IN', { timeStyle: 'short' })}
                                     </p>
                                   ) : (
-                                    <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold italic mt-0.5 animate-pulse text-amber-500">
-                                      ⏳ Active session...
+                                    <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold italic mt-0.5 animate-pulse text-amber-500">
+                                      Active session...
                                     </p>
                                   )}
                                 </td>
@@ -6067,24 +5762,24 @@ export default function AdminAnalytics() {
                                 <td className="py-4 px-4">
                                   {a.status === 'ONGOING' ? (
                                     <div className="space-y-0.5">
-                                      <p className="text-[10px] text-slate-500 font-bold">Remaining time:</p>
-                                      <p className="text-xs font-black text-slate-800 dark:text-slate-200">{formatExactTime(a.remainingSeconds)}</p>
+                                      <p className="text-xs text-slate-500 font-bold">Remaining time:</p>
+                                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{formatExactTime(a.remainingSeconds)}</p>
                                       {a.violationsCount > 0 && (
-                                        <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
+                                        <span className="text-[11px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-semibold px-1 rounded">
                                           Violations: {a.violationsCount}
                                         </span>
                                       )}
                                     </div>
                                   ) : (
                                     <div className="space-y-0.5">
-                                      <p className="text-xs font-black text-slate-800 dark:text-slate-200">
-                                        Score: <span className="text-blue-600 dark:text-blue-400">{a.finalScore ?? 0}</span> / {a.mockTest?.maxMarks || 200}
+                                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                        Score: <span className="text-[#1e4e79] dark:text-blue-400">{a.finalScore ?? 0}</span> / {a.mockTest?.maxMarks || 200}
                                       </p>
-                                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">
+                                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
                                         Accuracy: {a.accuracyPercentage ?? 0}% | Time: {formatExactTime(computeExactTimeSpent(a))}
                                       </p>
                                       {a.violationsCount > 0 && (
-                                        <span className="text-[9px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-black px-1 rounded">
+                                        <span className="text-[11px] bg-red-100 text-red-700 dark:bg-red-950/20 dark:text-red-400 font-semibold px-1 rounded">
                                           Violations: {a.violationsCount}
                                         </span>
                                       )}
@@ -6094,12 +5789,12 @@ export default function AdminAnalytics() {
 
                                 {/* Status */}
                                 <td className="py-4 px-4">
-                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                                     a.status === 'COMPLETED'
                                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                                       : a.status === 'AUTO_SUBMITTED'
                                       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 animate-pulse'
+                                      : 'bg-blue-100 text-[#1e4e79] dark:bg-blue-900/30 dark:text-blue-300 animate-pulse'
                                   }`}>
                                     {a.status}
                                   </span>
@@ -6110,7 +5805,7 @@ export default function AdminAnalytics() {
                                   <div className="flex items-center justify-end">
                                     <button
                                       onClick={() => setSelectedAnalysisSessionId(a.id)}
-                                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition active:scale-95 cursor-pointer"
+                                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-bold rounded-lg shadow-sm transition cursor-pointer"
                                       title="View Candidate Test Analysis & Question Attempts"
                                     >
                                       <BarChart2 className="h-3.5 w-3.5" />
@@ -6195,13 +5890,13 @@ export default function AdminAnalytics() {
           {activeTab === 'suggestions' && (
             <div className="space-y-6 animate-in fade-in duration-200">
               {/* Top Bar / Header */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
+                  <div className="p-3 bg-amber-500/10 text-amber-500 rounded-lg">
                     <Lightbulb className="h-6 w-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                       Suggestion Box / सुझाव पेटिका
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
@@ -6212,7 +5907,7 @@ export default function AdminAnalytics() {
 
                 <button
                   onClick={fetchSuggestions}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer self-start md:self-auto"
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-md text-xs font-semibold flex items-center gap-2 transition cursor-pointer self-start md:self-auto"
                 >
                   <RefreshCw className="h-4 w-4" />
                   <span>Refresh Suggestions</span>
@@ -6221,55 +5916,55 @@ export default function AdminAnalytics() {
 
               {/* Metric Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Suggestions</p>
-                    <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{suggestionsList.length}</p>
+                    <p className="text-xs font-semibold text-slate-400">Total Suggestions</p>
+                    <p className="text-2xl font-semibold text-slate-900 dark:text-white mt-1">{suggestionsList.length}</p>
                   </div>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 rounded-xl">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-[#1e4e79] rounded-md">
                     <Lightbulb className="h-5 w-5" />
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider">Pending (New)</p>
-                    <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+                    <p className="text-xs font-semibold text-amber-500">Pending (New)</p>
+                    <p className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">
                       {suggestionsList.filter(s => s.status === 'PENDING').length}
                     </p>
                   </div>
-                  <div className="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-600 rounded-xl">
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-600 rounded-md">
                     <AlertCircle className="h-5 w-5" />
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-extrabold text-blue-500 uppercase tracking-wider">Reviewed</p>
-                    <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+                    <p className="text-xs font-semibold text-[#1e4e79]">Reviewed</p>
+                    <p className="text-2xl font-semibold text-[#1e4e79] dark:text-blue-400 mt-1">
                       {suggestionsList.filter(s => s.status === 'REVIEWED').length}
                     </p>
                   </div>
-                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 rounded-xl">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 text-[#1e4e79] rounded-md">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-extrabold text-emerald-500 uppercase tracking-wider">Resolved</p>
-                    <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                    <p className="text-xs font-semibold text-emerald-500">Resolved</p>
+                    <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                       {suggestionsList.filter(s => s.status === 'RESOLVED').length}
                     </p>
                   </div>
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-xl">
+                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 rounded-md">
                     <Award className="h-5 w-5" />
                   </div>
                 </div>
               </div>
 
               {/* Filter & Search Controls */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Search Input */}
                 <div className="relative w-full md:w-80">
                   <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
@@ -6278,7 +5973,7 @@ export default function AdminAnalytics() {
                     value={suggestionSearch}
                     onChange={(e) => setSuggestionSearch(e.target.value)}
                     placeholder="Search by name, email, keyword..."
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-4 py-2 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                   />
                 </div>
 
@@ -6288,9 +5983,9 @@ export default function AdminAnalytics() {
                     <button
                       key={status}
                       onClick={() => setSuggestionStatusFilter(status)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
                         suggestionStatusFilter === status
-                          ? 'bg-blue-600 text-white shadow-sm'
+                          ? 'bg-[#1e4e79] text-white shadow-sm'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
                       }`}
                     >
@@ -6301,7 +5996,7 @@ export default function AdminAnalytics() {
                   <select
                     value={suggestionCategoryFilter}
                     onChange={(e) => setSuggestionCategoryFilter(e.target.value)}
-                    className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
+                    className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
                   >
                     <option value="ALL">All Categories</option>
                     <option value="General">General</option>
@@ -6332,7 +6027,7 @@ export default function AdminAnalytics() {
 
                   if (filtered.length === 0) {
                     return (
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-400 dark:text-slate-500">
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-12 text-center text-slate-400 dark:text-slate-500">
                         <Lightbulb className="h-10 w-10 mx-auto mb-3 text-slate-300 dark:text-slate-700" />
                         <p className="font-bold text-sm text-slate-600 dark:text-slate-400">No suggestions found</p>
                         <p className="text-xs mt-1">Try adjusting your filters or search query.</p>
@@ -6343,16 +6038,16 @@ export default function AdminAnalytics() {
                   return filtered.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-sm space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
                     >
                       {/* Header / Info Row */}
                       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-black flex items-center justify-center text-sm shadow-md">
+                          <div className="h-10 w-10 rounded-full bg-[#1e4e79] text-white font-semibold flex items-center justify-center text-sm shadow-md">
                             {(item.name || item.email || 'U').slice(0, 1).toUpperCase()}
                           </div>
                           <div>
-                            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                            <h4 className="font-semibold text-sm text-slate-900 dark:text-white">
                               {item.name || 'Anonymous User'}
                             </h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -6363,40 +6058,40 @@ export default function AdminAnalytics() {
 
                         <div className="flex items-center gap-2">
                           {/* Platform Source Badge */}
-                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${
                             item.source === 'app'
                               ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50'
                               : item.source === 'mobile_web'
                               ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-900/50'
                               : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/50'
                           }`}>
-                            {item.source === 'app' ? '📱 Mobile App' : item.source === 'mobile_web' ? '📱 Mobile Web' : '💻 Website'}
+                            {item.source === 'app' ? 'Mobile App' : item.source === 'mobile_web' ? 'Mobile Web' : 'Website'}
                           </span>
 
                           {/* Category Badge */}
-                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 text-xs font-semibold px-2.5 py-1 rounded-lg">
                             {item.category || 'General'}
                           </span>
 
                           {/* Status Badge */}
-                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider ${
+                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${
                             item.status === 'RESOLVED'
                               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
                               : item.status === 'REVIEWED'
-                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                              ? 'bg-blue-100 text-[#1e4e79] dark:bg-blue-950/40 dark:text-blue-300'
                               : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 animate-pulse'
                           }`}>
                             {item.status}
                           </span>
 
-                          <span className="text-[10px] text-slate-400 font-mono">
+                          <span className="text-xs text-slate-400 font-mono">
                             {new Date(item.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                           </span>
                         </div>
                       </div>
 
                       {/* Suggestion Body */}
-                      <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60">
+                      <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-md border border-slate-100 dark:border-slate-800/60">
                         <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">
                           {item.message}
                         </p>
@@ -6404,8 +6099,8 @@ export default function AdminAnalytics() {
 
                       {/* Admin Reply Note if present */}
                       {item.adminReply && (
-                        <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 p-3 rounded-xl text-xs space-y-1">
-                          <p className="font-extrabold text-[10px] text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                        <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 p-3 rounded-md text-xs space-y-1">
+                          <p className="font-semibold text-xs text-[#1e4e79] dark:text-blue-400">
                             Admin Note / Internal Action:
                           </p>
                           <p className="text-slate-700 dark:text-slate-300 font-medium">{item.adminReply}</p>
@@ -6418,7 +6113,7 @@ export default function AdminAnalytics() {
                           {item.status !== 'REVIEWED' && (
                             <button
                               onClick={() => handleUpdateSuggestionStatus(item.id, 'REVIEWED')}
-                              className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-blue-600 dark:text-blue-300 font-extrabold text-xs transition cursor-pointer border border-blue-200 dark:border-blue-900/50"
+                              className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 text-[#1e4e79] dark:text-blue-300 font-semibold text-xs transition cursor-pointer border border-blue-200 dark:border-blue-900/50"
                             >
                               Mark Reviewed
                             </button>
@@ -6427,7 +6122,7 @@ export default function AdminAnalytics() {
                           {item.status !== 'RESOLVED' && (
                             <button
                               onClick={() => handleUpdateSuggestionStatus(item.id, 'RESOLVED')}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-300 font-extrabold text-xs transition cursor-pointer border border-emerald-200 dark:border-emerald-900/50"
+                              className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-600 dark:text-emerald-300 font-semibold text-xs transition cursor-pointer border border-emerald-200 dark:border-emerald-900/50"
                             >
                               Mark Resolved
                             </button>
@@ -6442,7 +6137,7 @@ export default function AdminAnalytics() {
                                 setSuggestionReplyText(item.adminReply || '');
                               }
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold text-xs transition cursor-pointer"
                           >
                             {suggestionReplyingId === item.id ? 'Close Note' : 'Add Note'}
                           </button>
@@ -6450,7 +6145,7 @@ export default function AdminAnalytics() {
 
                         <button
                           onClick={() => handleDeleteSuggestion(item.id)}
-                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/30 hover:bg-red-100 text-red-600 dark:text-red-400 font-extrabold text-xs transition cursor-pointer border border-red-200 dark:border-red-900/50 flex items-center gap-1.5"
+                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/30 hover:bg-red-100 text-red-600 dark:text-red-400 font-semibold text-xs transition cursor-pointer border border-red-200 dark:border-red-900/50 flex items-center gap-1.5"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           <span>Delete</span>
@@ -6465,11 +6160,11 @@ export default function AdminAnalytics() {
                             value={suggestionReplyText}
                             onChange={(e) => setSuggestionReplyText(e.target.value)}
                             placeholder="Enter internal admin note or status update details..."
-                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                           />
                           <button
                             onClick={() => handleUpdateSuggestionStatus(item.id, item.status, suggestionReplyText)}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-extrabold text-xs transition cursor-pointer"
+                            className="px-4 py-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white rounded-lg font-semibold text-xs transition cursor-pointer"
                           >
                             Save Note
                           </button>
@@ -6510,6 +6205,7 @@ export default function AdminAnalytics() {
         </div>
 
       </main>
+      </div>
 
       {/* Mock Test Attempt Analysis & Question Attempts Modal */}
       {selectedAnalysisSessionId && (
@@ -6522,11 +6218,11 @@ export default function AdminAnalytics() {
 
       {/* Custom Confirmation Modal */}
       {resetConfirmOpen && resetTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-md p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex items-center gap-3 text-red-500 mb-4">
               <AlertCircle className="h-6 w-6" />
-              <h4 className="font-extrabold text-sm uppercase tracking-wider text-white">Reset Exam Attempt</h4>
+              <h4 className="font-semibold text-sm text-white">Reset Exam Attempt</h4>
             </div>
             
             <p className="text-slate-300 text-xs leading-relaxed mb-6">
@@ -6545,7 +6241,7 @@ export default function AdminAnalytics() {
               </button>
               <button
                 onClick={confirmResetAction}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-red-900/20"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg"
               >
                 Confirm Reset
               </button>
@@ -6555,13 +6251,13 @@ export default function AdminAnalytics() {
       )}
 
       {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between">
+            <div className="bg-[#1e4e79] text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Key className="h-5 w-5 text-amber-300" />
-                <h3 className="font-extrabold text-sm uppercase tracking-wider">Confirm Administration Authorization</h3>
+                <h3 className="font-semibold text-sm">Confirm Administration Authorization</h3>
               </div>
               <button 
                 onClick={() => setIsPasswordModalOpen(false)}
@@ -6578,21 +6274,21 @@ export default function AdminAnalytics() {
               </p>
 
               <div className="text-left">
-                <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Administrator Password</label>
+                <label className="block text-xs font-semibold text-slate-400 dark:text-slate-400 mb-2">Administrator Password</label>
                 <input 
                   type="password"
                   required
                   placeholder="Enter admin password"
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-mono"
                   autoFocus
                 />
               </div>
 
               {passwordError && (
                 <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold flex items-center gap-2 text-left">
-                  <ShieldAlert className="h-4 w-4 shrink-0 animate-bounce" />
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
                   <span>{passwordError}</span>
                 </div>
               )}
@@ -6611,11 +6307,11 @@ export default function AdminAnalytics() {
                 type="button"
                 onClick={submitSaveProfile}
                 disabled={savingProfile}
-                className="px-5 py-2 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2 text-xs font-bold rounded-lg bg-[#1e4e79] hover:bg-[#163c5e] text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 {savingProfile ? (
                   <>
-                    <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span className="h-3.5 w-3.5 border border-white border-t-transparent rounded-full animate-spin"></span>
                     <span>Saving...</span>
                   </>
                 ) : (

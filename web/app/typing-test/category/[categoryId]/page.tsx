@@ -38,6 +38,9 @@ import {
   Flame,
   ShieldCheck
 } from 'lucide-react';
+import { SiteHeader, SiteFooter } from '../../../components/SiteUI';
+import { TypingExamTour } from '../../../components/TypingTour';
+import { resetStaleTypingLocalData } from '../../../lib/typingLocalReset';
 import { TypingTest, TypingCategory, TypingAttempt, isSscExam, isSscCglExam, isSscChslExam, isAiimsExam, detectExamCategory, ExamCategoryConfig } from '../../../lib/typingTypes';
 
 const cleanDisplayTitle = (title: string) => {
@@ -47,6 +50,17 @@ const cleanDisplayTitle = (title: string) => {
     .replace(/\s+/g, ' ')
     .trim();
 };
+
+// Plain bordered section with a solid heading bar — standard government-portal panel.
+const Panel = ({ title, right, children, bodyClass = 'px-5 sm:px-6 py-5' }: { title: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; bodyClass?: string }) => (
+  <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+    <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+      <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">{title}</h2>
+      {right}
+    </div>
+    <div className={bodyClass}>{children}</div>
+  </section>
+);
 
 export default function TypingCategoryDetailPage({
   params
@@ -79,6 +93,7 @@ export default function TypingCategoryDetailPage({
   useEffect(() => {
     let active = true;
     setIsMounted(true);
+    resetStaleTypingLocalData();
 
     // 1. Instant client-side hydration from cache
     try {
@@ -304,166 +319,37 @@ export default function TypingCategoryDetailPage({
   const englishCount = useMemo(() => tests.filter(t => t.language === 'en').length, [tests]);
   const hindiCount = useMemo(() => tests.filter(t => t.language === 'hi').length, [tests]);
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans transition-colors duration-200" suppressHydrationWarning>
-      {/* 1. NAVBAR HEADER */}
-      <header className="h-18 sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-xs" suppressHydrationWarning>
-        {/* Left Side: Back button + Branding */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/typing-test"
-            className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm shrink-0 cursor-pointer"
-          >
-            <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">{isHindi ? 'टाइपिंग प्लेटफॉर्म' : 'Typing Platform'}</span>
-            <span className="sm:hidden">{isHindi ? 'श्रेणियां' : 'Back'}</span>
-          </Link>
-
-          <Link href="/" className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800 shrink-0 hover:opacity-90 transition">
-            <div className="bg-[#E6F4FE] p-1.5 rounded-full shadow-sm flex items-center justify-center h-8.5 w-8.5 border border-blue-200/60 shrink-0">
-              <Trophy className="h-4.5 w-4.5 text-blue-600" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">
-                {t.logoTitle}
-              </h1>
-              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">
-                {t.logoSub}
-              </p>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-2 lg:ml-4">
-            <Link href="/typing-test" className="text-blue-600 dark:text-blue-400 font-extrabold whitespace-nowrap">
-              <span>{isHindi ? 'टाइपिंग टेस्ट' : 'Typing Tests'}</span>
-            </Link>
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{t.navTestSeries}</span>
-            </Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{language === 'hi' ? 'सूचनाएं' : 'Notices'}</span>
-            </Link>
-          </nav>
-        </div>
-
-        {/* Right Navigation & Controls */}
-        <div className="flex items-center gap-2 sm:gap-2.5" suppressHydrationWarning>
-          {/* Profile Button */}
-          <Link
-            href={currentUser ? "/profile" : "/auth"}
-            suppressHydrationWarning
-            className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer active:scale-95 shadow-2xs shrink-0"
-            title={currentUser ? (language === 'hi' ? 'मेरी प्रोफाइल' : 'Profile') : (language === 'hi' ? 'लॉग इन' : 'Login')}
-          >
-            <User className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline" suppressHydrationWarning>{currentUser ? (language === 'hi' ? 'प्रोफाइल' : 'Profile') : (language === 'hi' ? 'लॉग इन' : 'Login')}</span>
-          </Link>
-
-          {/* Language Selector */}
-          <select
-            suppressHydrationWarning
-            value={language}
-            onChange={e => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold outline-none cursor-pointer text-slate-700 dark:text-slate-300"
-          >
-            <option value="en">English</option>
-            <option value="hi">हिंदी</option>
-          </select>
-
-          {/* Theme Switcher */}
-          <button
-            suppressHydrationWarning
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-        </div>
-      </header>
-
-      {/* 2. EXAM HEADER CARD */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="flex flex-col items-center max-w-3xl mx-auto space-y-4">
-            {/* Category Logo */}
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white border-2 border-slate-200/90 dark:border-slate-700/80 shadow-md p-2 flex items-center justify-center overflow-hidden transition-all duration-300 hover:scale-105">
-              {currentCategory?.logoUrl ? (
-                <img
-                  src={currentCategory.logoUrl}
-                  alt={currentCategory.name}
-                  loading="lazy"
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-              ) : (
-                <Keyboard className="w-12 h-12 text-blue-600" />
-              )}
-            </div>
-
-            {/* Exam Title */}
-            <div>
-              <span className="inline-block text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-900 mb-2">
-                Official Typing Simulation
-              </span>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-300 dark:to-purple-300">
-                {currentCategory?.name || 'Typing Test'}
-              </h1>
-            </div>
-
-            {/* Exam Description */}
-            {categoryMeta.description && (
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                {categoryMeta.description}
-              </p>
-            )}
-
-            {/* Typing Rules Box */}
-            <div className="w-full bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-700 text-left space-y-2.5 shadow-2xs mt-2">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 pb-2.5">
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-extrabold text-sm sm:text-base">
-                  <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
-                  <span>{isHindi ? 'टाइपिंग परीक्षा के नियम एवं मानक' : 'Official Typing Rules & Guidelines'}</span>
-                </div>
-              </div>
-
-              <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-3">
-                {(() => {
+  // Official per-exam rules content (unchanged copy), rendered inside the "Rules" tab.
+  const renderOfficialRules = () => {
                   const catConfig = detectExamCategory(currentCategory);
                   const key = catConfig.key;
 
                   if (key === 'aiims-cre') {
                     return (
-                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-2">
-                        <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🏛️ AIIMS Common Recruitment Examination (CRE-5) Official Speed & Penalty Formulas</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>AIIMS Common Recruitment Examination (CRE-5) Official Speed & Penalty Formulas</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. MISTAKES & PENALTY CALCULATION:</strong>
-                            <div className="font-mono text-[11px] text-emerald-800 dark:text-emerald-400 bg-emerald-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Total Mistakes = Full Mistakes + 1/2 Half Mistakes<br />
                               [Note: NO rounding off e.g. FM=4 & HM=7, Total=7.5]
                             </div>
                             <div>• Standard Average Word length = <strong>5 strokes</strong>.</div>
                             <div>• Penalty = <strong>50 strokes</strong> for each mistake (50 × Total Mistakes).</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. SPEED & ACCURACY (15 Min Test):</strong>
-                            <div className="font-mono text-[11px] text-emerald-800 dark:text-emerald-400 bg-emerald-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Net Speed (w.p.m.) = (Total Strokes − Penalty) ÷ 75<br />
                               Gross Speed (w.p.m.) = Total Strokes ÷ 75
                             </div>
                             <div>• Accuracy (%) = (Net Typing Speed ÷ Gross Typing Speed) × 100.</div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-emerald-200 dark:border-emerald-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Qualifying Standard: <strong>35 WPM (English) / 30 WPM (Hindi)</strong></span>
                           <span>• Backspace key: <strong>Allowed</strong></span>
                         </div>
@@ -473,20 +359,20 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'ssc-cgl' || key === 'ssc-cgl-previous') {
                     return (
-                      <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl space-y-2">
-                        <div className="font-bold text-blue-900 dark:text-blue-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🏛️ Staff Selection Commission (SSC CGL Tier-2 DEST) Official Evaluation Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>Staff Selection Commission (SSC CGL Tier-2 DEST) Official Evaluation Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. PERCENTAGE OF ERRORS FORMULA:</strong>
-                            <div className="font-mono text-[11px] text-blue-800 dark:text-blue-400 bg-blue-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Error % = (Total Mistakes ÷ Master Passage Words) × 100<br />
                               Total Mistakes = Full Mistakes + (Half Mistakes ÷ 2)
                             </div>
                             <div>• Master Passage base: <strong>2,000 Key Depressions (~350–400 words)</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. OFFICIAL QUALIFYING CUTOFFS:</strong>
                             <div className="space-y-0.5 text-[11px]">
                               <div>• <strong>UR (General):</strong> Max <strong>20.00% Error</strong> (≥ 80% accuracy)</div>
@@ -495,7 +381,7 @@ export default function TypingCategoryDetailPage({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-blue-200 dark:border-blue-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Duration: <strong>15 Minutes</strong></span>
                           <span>• Nature: <strong>Qualifying in Nature</strong></span>
                           <span>• Backspace key: <strong>Allowed</strong></span>
@@ -506,20 +392,20 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'ssc-chsl') {
                     return (
-                      <div className="p-3 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 rounded-xl space-y-2">
-                        <div className="font-bold text-indigo-900 dark:text-indigo-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🏛️ Staff Selection Commission (SSC CHSL LDC/DEO) Official Speed & Error Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>Staff Selection Commission (SSC CHSL LDC/DEO) Official Speed & Error Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. SPEED & WORDS FORMULAS (10 Min):</strong>
-                            <div className="font-mono text-[11px] text-indigo-800 dark:text-indigo-400 bg-indigo-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Net Words = Gross Typed Words − Total Mistakes<br />
                               Net Speed (WPM) = Net Words ÷ 10 Minutes
                             </div>
                             <div>• Total Mistakes = Full Mistakes + (Half Mistakes ÷ 2).</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. PERMISSIBLE ERROR LIMITS:</strong>
                             <div className="space-y-0.5 text-[11px]">
                               <div>• <strong>UR & EWS:</strong> Max <strong>7.00% Error</strong></div>
@@ -528,7 +414,7 @@ export default function TypingCategoryDetailPage({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-indigo-200 dark:border-indigo-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Duration: <strong>10 Minutes</strong> (1,750 Key Depressions English / 1,500 Hindi)</span>
                         </div>
                       </div>
@@ -537,28 +423,28 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'rrb-ntpc') {
                     return (
-                      <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl space-y-2">
-                        <div className="font-bold text-amber-900 dark:text-amber-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🚆 Railway Recruitment Board (RRB NTPC) Official 5% Permissible Margin & Penalty Rule</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>Railway Recruitment Board (RRB NTPC) Official 5% Permissible Margin & Penalty Rule</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. 5% MARGIN & 10x PENALTY:</strong>
-                            <div className="font-mono text-[11px] text-amber-800 dark:text-amber-400 bg-amber-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Permissible Mistakes = 5% of Total Typed Words<br />
                               Excess Mistakes = Total Mistakes − Permissible Mistakes<br />
                               Penalty Words = Excess Mistakes × 10
                             </div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. FINAL NET SPEED FORMULA:</strong>
-                            <div className="font-mono text-[11px] text-amber-800 dark:text-amber-400 bg-amber-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Net Speed (WPM) = (Gross Words − Penalty Words) ÷ 10
                             </div>
                             <div>• Qualifying Threshold: <strong>30 WPM (English) / 25 WPM (Hindi KrutiDev / Mangal)</strong>.</div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-amber-200 dark:border-amber-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Test Duration: <strong>10 Minutes</strong></span>
                           <span>• Backspace: <strong>Allowed</strong></span>
                         </div>
@@ -568,20 +454,20 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'delhi-police-hcm') {
                     return (
-                      <div className="p-3 bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 rounded-xl space-y-2">
-                        <div className="font-bold text-purple-900 dark:text-purple-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>👮 Delhi Police Head Constable (Ministerial) Official 25-Marks Scale Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>Delhi Police Head Constable (Ministerial) Official 25-Marks Scale Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-purple-100 dark:border-purple-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. SPEED & MISTAKE DEDUCTION:</strong>
-                            <div className="font-mono text-[11px] text-purple-800 dark:text-purple-400 bg-purple-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Tentative Speed = Total Typed Words ÷ 10<br />
                               Actual Speed = Tentative Speed − Total Mistakes
                             </div>
                             <div>• Each mistake directly deducts <strong>1.0 WPM</strong> from tentative speed.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-purple-100 dark:border-purple-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. OFFICIAL 25-MARKS SCORECARD TABLE:</strong>
                             <div className="grid grid-cols-2 gap-1 text-[11px]">
                               <div>• &lt; 30 WPM = <strong>0 Marks</strong></div>
@@ -594,7 +480,7 @@ export default function TypingCategoryDetailPage({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-purple-200 dark:border-purple-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Duration: <strong>10 Minutes</strong></span>
                           <span>• Qualifying: Minimum <strong>30 WPM (10 Marks)</strong> required.</span>
                         </div>
@@ -604,19 +490,19 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'allahabad-hc') {
                     return (
-                      <div className="p-3 bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 rounded-xl space-y-2">
-                        <div className="font-bold text-sky-900 dark:text-sky-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>⚖️ High Court of Judicature at Allahabad Official 50-Marks Evaluation System</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>High Court of Judicature at Allahabad Official 50-Marks Evaluation System</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-sky-100 dark:border-sky-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. MARKS & DEDUCTION FORMULA:</strong>
-                            <div className="font-mono text-[11px] text-sky-800 dark:text-sky-400 bg-sky-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Secured Marks = 50.0 − (Total Mistakes × 0.1)
                             </div>
                             <div>• Every mistake deducts exactly <strong>0.1 Marks</strong> from maximum 50.0 marks.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-sky-100 dark:border-sky-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. QUALIFYING CRITERIA:</strong>
                             <div className="space-y-0.5 text-[11px]">
                               <div>• Minimum Qualifying Marks: <strong>25.0 / 50.0 Marks (50.0%)</strong></div>
@@ -624,7 +510,7 @@ export default function TypingCategoryDetailPage({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-sky-200 dark:border-sky-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Duration: <strong>15 Minutes</strong></span>
                           <span>• Minimum 25.0 marks required for qualification.</span>
                         </div>
@@ -634,19 +520,19 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'mp-cpct') {
                     return (
-                      <div className="p-3 bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 rounded-xl space-y-2">
-                        <div className="font-bold text-teal-900 dark:text-teal-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🖥️ MP CPCT Official NWPM & Scaled Scorecard Percentage Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>MP CPCT Official NWPM & Scaled Scorecard Percentage Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-teal-100 dark:border-teal-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. NET SPEED (NWPM) FORMULA:</strong>
-                            <div className="font-mono text-[11px] text-teal-800 dark:text-teal-400 bg-teal-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               NWPM = Gross WPM − (Total Mistakes ÷ Test Minutes)
                             </div>
                             <div>• Standard Duration: <strong>15 Minutes</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-teal-100 dark:border-teal-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. SCALED SCORE BRACKETS:</strong>
                             <div className="grid grid-cols-2 gap-1 text-[11px]">
                               <div>• &lt; 30 WPM: <strong>Not Qualified</strong></div>
@@ -658,7 +544,7 @@ export default function TypingCategoryDetailPage({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-teal-200 dark:border-teal-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Qualifying: Minimum <strong>30 NWPM (English) / 20 NWPM (Hindi)</strong> (50% Scorecard).</span>
                         </div>
                       </div>
@@ -667,20 +553,20 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'rssb-ldc') {
                     return (
-                      <div className="p-3 bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-800 rounded-xl space-y-2">
-                        <div className="font-bold text-orange-900 dark:text-orange-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🏛️ Rajasthan RSSB LDC Official Section-1 Speed Test Marking System</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>Rajasthan RSSB LDC Official Section-1 Speed Test Marking System</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-orange-100 dark:border-orange-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. WORD-BY-WORD MARKING FORMULA:</strong>
-                            <div className="font-mono text-[11px] text-orange-800 dark:text-orange-400 bg-orange-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               English: 0.05 Marks per correct word (Max 25 Marks)<br />
                               Hindi: 0.0625 Marks per correct word (Max 25 Marks)
                             </div>
                             <div>• Passages: 500 Words (English) / 400 Words (Hindi).</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-orange-100 dark:border-orange-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. QUALIFYING MINIMUM MARKS:</strong>
                             <div className="space-y-0.5 text-[11px]">
                               <div>• Minimum Qualifying: <strong>9.0 / 25.0 Marks (36.0%)</strong> in Speed Test</div>
@@ -688,7 +574,7 @@ export default function TypingCategoryDetailPage({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-orange-200 dark:border-orange-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Candidates scoring below 9.0 marks are disqualified.</span>
                         </div>
                       </div>
@@ -697,28 +583,28 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'delhi-hc-jja') {
                     return (
-                      <div className="p-3 bg-violet-50 dark:bg-violet-950/50 border border-violet-200 dark:border-violet-800 rounded-xl space-y-2">
-                        <div className="font-bold text-violet-900 dark:text-violet-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>⚖️ High Court of Delhi (DHC JJA / SJA) Official 3% Permissible Margin Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>High Court of Delhi (DHC JJA / SJA) Official 3% Permissible Margin Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-violet-100 dark:border-violet-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. 3% MARGIN & DECIMAL ROUNDING:</strong>
-                            <div className="font-mono text-[11px] text-violet-800 dark:text-violet-400 bg-violet-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Permissible = 3% of Typed Words [0.01-0.49→0.5, 0.51-0.99→1.0]<br />
                               Excess Mistakes = Total Mistakes − Permissible<br />
                               Penalty Words = Excess Mistakes × 10
                             </div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-violet-100 dark:border-violet-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. NET SPEED & QUALIFYING:</strong>
-                            <div className="font-mono text-[11px] text-violet-800 dark:text-violet-400 bg-violet-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Net Speed = (Gross Words − Penalty Words) ÷ 10
                             </div>
                             <div>• Qualifying Speed: <strong>35 WPM (10 Minutes)</strong>.</div>
                           </div>
                         </div>
-                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-violet-200 dark:border-violet-800 flex flex-wrap gap-x-4 gap-y-1">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-x-4 gap-y-1">
                           <span>• Strict decimal rounding applies to permissible mistake limits.</span>
                         </div>
                       </div>
@@ -727,19 +613,19 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'supreme-court-jca') {
                     return (
-                      <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl space-y-2">
-                        <div className="font-bold text-red-900 dark:text-red-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>⚖️ Supreme Court of India (JCA) Official Strict 3.00% Error Threshold</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>Supreme Court of India (JCA) Official Strict 3.00% Error Threshold</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-red-100 dark:border-red-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. ERROR PERCENTAGE:</strong>
-                            <div className="font-mono text-[11px] text-red-800 dark:text-red-400 bg-red-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Error % = (Total Mistakes ÷ Total Typed Words) × 100
                             </div>
                             <div>• Maximum Permissible Error: <strong>Strictly 3.00%</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-red-100 dark:border-red-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. SPEED CRITERIA:</strong>
                             <div className="space-y-0.5 text-[11px]">
                               <div>• Minimum Speed: <strong>35 WPM in English</strong></div>
@@ -753,21 +639,21 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'spmcil') {
                     return (
-                      <div className="p-3 bg-cyan-50 dark:bg-cyan-950/50 border border-cyan-200 dark:border-cyan-800 rounded-xl space-y-2">
-                        <div className="font-bold text-cyan-900 dark:text-cyan-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🏭 SPMCIL Typing Test Official Evaluation & Direct Deduction Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>SPMCIL Typing Test Official Evaluation & Direct Deduction Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-cyan-100 dark:border-cyan-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. PERMISSIBLE ERROR MARGIN:</strong>
-                            <div className="font-mono text-[11px] text-cyan-800 dark:text-cyan-400 bg-cyan-50/70 dark:bg-slate-950 p-1.5 rounded space-y-0.5">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded space-y-0.5">
                               <div>• UR Margin: <strong>5%</strong> of Typed Words</div>
                               <div>• Reserved Margin: <strong>7%</strong> of Typed Words</div>
                               <div>• Actual Error = max(0, Total Errors − Error Allowed)</div>
                               <div>• Direct Deduction: Net Words = Words Typed − Actual Error</div>
                             </div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-cyan-100 dark:border-cyan-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. SPEED & TARGETS:</strong>
                             <div>• Qualifying Net Speed: <strong>40 WPM (English) / 30 WPM (Hindi)</strong></div>
                             <div>• Duration: <strong>10 Minutes</strong> (Standard Examination)</div>
@@ -781,19 +667,19 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'up-police-co') {
                     return (
-                      <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-xl space-y-2">
-                        <div className="font-bold text-blue-900 dark:text-blue-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>👮 UP Police Computer Operator Official 85% Accuracy Scheme</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>UP Police Computer Operator Official 85% Accuracy Scheme</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. MANDATORY ACCURACY RULE:</strong>
-                            <div className="font-mono text-[11px] text-blue-800 dark:text-blue-400 bg-blue-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Accuracy (%) = ((Total Words − Total Mistakes) ÷ Total Words) × 100
                             </div>
                             <div>• Minimum Accuracy Required: <strong>≥ 85.00%</strong> (Mandatory).</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. SPEED CRITERIA (15 Min):</strong>
                             <div>• English Typing: <strong>30 WPM</strong></div>
                             <div>• Hindi Typing (Unicode / Inscript): <strong>25 WPM</strong></div>
@@ -805,19 +691,19 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'bsf-hcm') {
                     return (
-                      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl space-y-2">
-                        <div className="font-bold text-emerald-900 dark:text-emerald-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🛡️ BSF HCM Official 5% Mistake Allowance & 10x Penalty Formula</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>BSF HCM Official 5% Mistake Allowance & 10x Penalty Formula</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. 5% ALLOWANCE & PENALTY:</strong>
-                            <div className="font-mono text-[11px] text-emerald-800 dark:text-emerald-400 bg-emerald-50/70 dark:bg-slate-950 p-1.5 rounded">
+                            <div className="font-mono text-[11px] text-slate-800 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-950 p-1.5 rounded">
                               Permissible Mistakes = 5% of Total Words<br />
                               Penalty = (Total Mistakes − Permissible) × 10 words
                             </div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-emerald-100 dark:border-emerald-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. QUALIFYING SPEED:</strong>
                             <div>• <strong>35 WPM (English) / 30 WPM (Hindi)</strong> (10 Minutes).</div>
                           </div>
@@ -828,29 +714,29 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'bombay-hc-clerk' || key === 'bombay-hc-clerk-400') {
                     return (
-                      <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 rounded-xl space-y-2.5">
-                        <div className="font-bold text-indigo-900 dark:text-indigo-300 text-xs sm:text-sm flex items-center justify-between">
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center justify-between">
                           <span className="flex items-center gap-1.5">
-                            <span>⚖️</span>
+                            <span></span>
                             <span>High Court of Judicature at Bombay — Clerk Typing Official Scheme</span>
                           </span>
-                          <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-400">
+                          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-400">
                             Cutoff: 10.0 / 20.0 Marks (50%) &amp; 40 WPM
                           </span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. PASSAGE &amp; SPEED:</strong>
                             <div>• 400 Words English passage in <strong>10 Minutes</strong>.</div>
                             <div>• Minimum Qualifying Speed: <strong>40 WPM (En) / 30 WPM (Hi)</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. MARKS &amp; PENALTY:</strong>
                             <div>• Maximum Marks: <strong>20.00 Marks</strong>.</div>
                             <div>• Penalty: <strong>0.25 Marks deducted per mistake</strong> (1 Mark per 4 mistakes).</div>
                             <div>• Minimum Qualifying: <strong>10.00 Marks (50%)</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">III. TEST MODE &amp; TOOLS:</strong>
                             <div>• <strong>Paper-to-Screen Mode</strong> supported (passage toggle).</div>
                             <div>• <strong>Download Authentic Passage PDF</strong> to practice physical sheet typing.</div>
@@ -862,28 +748,28 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'chandigarh-admin-clerk') {
                     return (
-                      <div className="p-3.5 bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 rounded-xl space-y-2.5">
-                        <div className="font-bold text-sky-900 dark:text-sky-300 text-xs sm:text-sm flex items-center justify-between">
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center justify-between">
                           <span className="flex items-center gap-1.5">
-                            <span>🏛️</span>
+                            <span></span>
                             <span>Chandigarh Administration Clerk &amp; Steno-Typist Official Scheme</span>
                           </span>
-                          <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-400">
+                          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-400">
                             Qualifying Cutoff: 35 WPM (Net Speed)
                           </span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-sky-100 dark:border-sky-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. DURATION &amp; SPEED:</strong>
                             <div>• Duration: <strong>10 Minutes (600 seconds)</strong>.</div>
                             <div>• Minimum Qualifying Speed: <strong>35 WPM (English) / 30 WPM (Hindi)</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-sky-100 dark:border-sky-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. ERROR EVALUATION RULE:</strong>
                             <div>• <strong>All Errors Count as Full Errors (1.0 each)</strong>.</div>
                             <div>• Spacing, capitalization, punctuation &amp; transposition count as 1.0 Full Mistake (no half errors).</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-sky-100 dark:border-sky-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">III. SPEED FORMULA:</strong>
                             <div>• Net Words = <strong>Words Typed − Total Errors</strong>.</div>
                             <div>• Net Speed = <strong>Net Words ÷ 10 Minutes</strong>.</div>
@@ -896,28 +782,28 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'punjab-haryana-hc' || categoryId.includes('punjab')) {
                     return (
-                      <div className="p-3 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 rounded-xl space-y-2">
-                        <div className="font-bold text-indigo-900 dark:text-indigo-300 text-xs sm:text-sm flex items-center justify-between">
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center justify-between">
                           <span className="flex items-center gap-1.5">
-                            <span>⚖️</span>
+                            <span></span>
                             <span>High Court of Punjab and Haryana Official Typing Speed Scheme</span>
                           </span>
-                          <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-400">
+                          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-400">
                             Cutoff: 30 WPM (En) / 25 WPM (Hi)
                           </span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. DURATION &amp; SPEED:</strong>
                             <div>• Duration: <strong>10 Minutes (600 seconds)</strong>.</div>
                             <div>• Minimum Qualifying Speed: <strong>30 WPM (English) / 25 WPM (Hindi)</strong>.</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. ERROR EVALUATION RULE:</strong>
                             <div>• <strong>All Errors Count as Full Errors (1.0 each)</strong>.</div>
                             <div>• Spacing, capitalization, punctuation &amp; substitutions count as 1.0 Full Mistake (no half errors).</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-indigo-100 dark:border-indigo-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">III. SPEED FORMULA:</strong>
                             <div>• Net Words = <strong>Words Typed − Total Errors</strong>.</div>
                             <div>• Net Speed = <strong>Net Words ÷ 10 Minutes</strong>.</div>
@@ -930,17 +816,17 @@ export default function TypingCategoryDetailPage({
 
                   if (key === 'upsssc-ja' || key === 'upsssc-ja-hindi') {
                     return (
-                      <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-xl space-y-2">
-                        <div className="font-bold text-amber-900 dark:text-amber-300 text-xs sm:text-sm flex items-center gap-1.5">
-                          <span>🏛️ UPSSSC Junior Assistant Official 5-Minute Typing Speed Standard</span>
+                      <div className="space-y-2.5">
+                        <div className="font-semibold text-[#1e4e79] dark:text-blue-300 text-[13px] sm:text-sm border-b border-slate-200 dark:border-slate-700 pb-1.5 flex items-center gap-1.5">
+                          <span>UPSSSC Junior Assistant Official 5-Minute Typing Speed Standard</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">I. SPEED & DURATION:</strong>
                             <div>• English Typing: <strong>30 WPM (5 Minutes)</strong></div>
                             <div>• Hindi Typing: <strong>25 WPM (5 Minutes)</strong> (Mangal / KrutiDev)</div>
                           </div>
-                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-amber-100 dark:border-amber-900/60 space-y-1">
+                          <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-100 dark:border-slate-900/60 space-y-1">
                             <strong className="text-slate-900 dark:text-white">II. QUALIFICATION:</strong>
                             <div>• Qualifying in nature. Both English and Hindi required as per board rules.</div>
                           </div>
@@ -951,22 +837,22 @@ export default function TypingCategoryDetailPage({
 
                   // Default / Generic Government Exam Template (DSSSB, KVS, EMRS, CSIR, DDA, etc.)
                   return (
-                    <div className="p-3 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl space-y-2">
+                    <div className="space-y-2.5">
                       <div className="font-bold text-slate-900 dark:text-slate-200 text-xs sm:text-sm flex items-center gap-1.5">
-                        <span>📝 {catConfig.name} Official Typing Speed, Mistake & Accuracy Formulas</span>
+                        <span>{catConfig.name} Official Typing Speed, Mistake & Accuracy Formulas</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-                        <div className="bg-white dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+                        <div className="bg-white dark:bg-slate-950 p-2.5 rounded-none border border-slate-200 dark:border-slate-800 space-y-1">
                           <strong className="text-slate-900 dark:text-white">I. MISTAKE COUNTING & ACCURACY:</strong>
-                          <div className="font-mono text-[11px] text-blue-700 dark:text-blue-400 bg-blue-50/70 dark:bg-slate-900 p-1.5 rounded">
+                          <div className="font-mono text-[11px] text-slate-700 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-900 p-1.5 rounded">
                             Total Mistakes = Full Mistakes + (Half Mistakes ÷ 2)<br />
                             Accuracy (%) = ((Gross Words − Total Mistakes) ÷ Gross Words) × 100
                           </div>
                           <div>• Permissible Error Cap: <strong>≤ 5.00%</strong></div>
                         </div>
-                        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1">
+                        <div className="bg-white dark:bg-slate-900 p-2.5 rounded-none border border-slate-200 dark:border-slate-800 space-y-1">
                           <strong className="text-slate-900 dark:text-white">II. SPEED CALCULATION FORMULAS:</strong>
-                          <div className="font-mono text-[11px] text-blue-700 dark:text-blue-400 bg-blue-50/70 dark:bg-slate-900 p-1.5 rounded">
+                          <div className="font-mono text-[11px] text-slate-700 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-900 p-1.5 rounded">
                             Gross Speed (WPM) = Total Words Typed ÷ Duration<br />
                             Net Speed (WPM) = (Gross Words − Total Mistakes) ÷ Duration
                           </div>
@@ -979,340 +865,432 @@ export default function TypingCategoryDetailPage({
                       </div>
                     </div>
                   );
-                })()}
+  };
 
-                {categoryMeta.rules && (
-                  <p className="whitespace-pre-line text-xs text-slate-600 dark:text-slate-400 mt-2">
-                    {categoryMeta.rules.replace(/<br\s*\/?>/gi, '\n')}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+  const examConfig = detectExamCategory(currentCategory);
 
-        {/* User Category Performance Stats Strip (Matching Home Page) */}
-        <div className="mt-6">
-          <div className="flex items-center justify-between px-1 mb-2">
-            <div className="text-xs font-extrabold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <BarChart2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>{isHindi ? `${currentCategory?.name || 'इस परीक्षा'} में आपका व्यक्तिगत प्रदर्शन` : `Your ${currentCategory?.name || 'Category'} Performance`}</span>
-            </div>
-            {categoryPersonalBest && (
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                {categoryPersonalBest.totalAttempts} {isHindi ? 'प्रयास दर्ज' : 'attempt(s) recorded'}
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-left">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
-                <Flame className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  {isHindi ? 'सर्वोत्तम नेट स्पीड' : 'Personal Best Net Speed'}
-                </div>
-                <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                  {categoryPersonalBest ? categoryPersonalBest.bestNetWpm : '--'} <span className="text-[9px] font-normal">WPM</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{isHindi ? 'औसत शुद्धता' : 'Avg Accuracy'}</div>
-                <div className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                  {categoryPersonalBest ? `${categoryPersonalBest.avgAccuracy}%` : '--%'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-purple-100 dark:purple-900/50 text-purple-600 dark:text-purple-400">
-                <BarChart2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{isHindi ? 'कुल प्रयास' : 'Total Attempts'}</div>
-                <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                  {categoryPersonalBest ? categoryPersonalBest.totalAttempts : 0}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400">
-                <Trophy className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{isHindi ? 'क्वालिफाइड' : 'Qualified'}</div>
-                <div className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">
-                  {categoryPersonalBest ? categoryPersonalBest.qualifiedCount : 0}{' '}
-                  <span className="text-[9px] font-normal text-slate-500">
-                    / {categoryPersonalBest ? categoryPersonalBest.totalAttempts : 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+  const evaluationLabel = (() => {
+    const m = examConfig.evaluationMode;
+    if (m === 'SSC_CGL_DEST' || m === 'SSC_CHSL_NET') return isHindi ? 'त्रुटि % आधारित' : 'Error % based';
+    if (m.endsWith('_MARKS')) return isHindi ? 'अंक आधारित' : 'Marks based';
+    if (m === 'MP_CPCT_SCALED') return isHindi ? 'स्केल्ड स्कोर' : 'Scaled score';
+    if (m === 'AIIMS_CRE_STROKES') return isHindi ? 'कीस्ट्रोक पेनल्टी' : 'Keystroke penalty';
+    return isHindi ? 'नेट स्पीड आधारित' : 'Net speed based';
+  })();
 
-        {/* 3. LANGUAGE SWITCHER */}
-        <div className="text-center my-8 space-y-3">
-          <h2 className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-200">
-            {isHindi ? 'भाषा का चयन करें' : 'Select Language'}
-          </h2>
+  // Best result per passage, so each row can show how the student did last time.
+  const attemptsByTest = useMemo(() => {
+    const map = new Map<string, { best: number; qualified: boolean; count: number }>();
+    for (const a of userAttempts) {
+      const prev = map.get(a.testId);
+      const net = Number(a.netWpm || 0);
+      map.set(a.testId, {
+        best: Math.max(prev?.best ?? 0, isFinite(net) ? net : 0),
+        qualified: (prev?.qualified ?? false) || !!a.isQualified,
+        count: (prev?.count ?? 0) + 1,
+      });
+    }
+    return map;
+  }, [userAttempts]);
 
-          <div className="inline-flex p-1.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 shadow-sm gap-2" suppressHydrationWarning>
-            <button
-              suppressHydrationWarning
-              onClick={() => setSelectedLanguage('en')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-                selectedLanguage === 'en'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Keyboard className="w-4 h-4" />
-              <span>English</span>
-              {englishCount > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  selectedLanguage === 'en' ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                }`}>
-                  {englishCount}
-                </span>
-              )}
-            </button>
+  // Compact page list with ellipses: 1 … 4 5 [6] 7 8 … 20
+  const pageNumbers = useMemo(() => {
+    const pages: Array<number | 'gap'> = [];
+    const add = (p: number) => { if (!pages.includes(p)) pages.push(p); };
+    add(1);
+    for (let p = safeCurrentPage - 1; p <= safeCurrentPage + 1; p++) {
+      if (p > 1 && p < totalPages) add(p);
+    }
+    if (totalPages > 1) add(totalPages);
+    const out: Array<number | 'gap'> = [];
+    pages.sort((a, b) => (a as number) - (b as number)).forEach((p, i, arr) => {
+      if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) out.push('gap');
+      out.push(p);
+    });
+    return out;
+  }, [safeCurrentPage, totalPages]);
 
-            <button
-              suppressHydrationWarning
-              onClick={() => setSelectedLanguage('hi')}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-                selectedLanguage === 'hi'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Keyboard className="w-4 h-4" />
-              <span>हिंदी (Hindi)</span>
-              {hindiCount > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  selectedLanguage === 'hi' ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                }`}>
-                  {hindiCount}
-                </span>
-              )}
-            </button>
-          </div>
+  const [descExpanded, setDescExpanded] = useState(false);
 
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {isHindi ? 'प्रदर्शित' : 'Showing'}{' '}
-            <strong className="text-blue-600 dark:text-blue-400 font-bold">
-              {selectedLanguage === 'en' ? 'English' : 'Hindi'}
-            </strong>{' '}
-            {isHindi ? 'गद्यांश' : 'passages'} ({filteredTests.length} {isHindi ? 'उपलब्ध' : 'available'})
-          </p>
-        </div>
+  // Admin-entered descriptions sometimes arrive HTML-escaped (e.g. &quot;B&quot;).
+  const heroDescription = (categoryMeta.description || '')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ');
 
-        {/* 4. PASSAGES SECTION & FILTERS */}
-        <div className="space-y-4" ref={passagesSectionRef}>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-            {/* Total Available Indicator */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {isHindi ? 'उपलब्ध टाइपिंग टेस्ट्स:' : 'Available Typing Tests:'}
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-extrabold text-xs border border-blue-200 dark:border-blue-800">
-                {filteredTests.length}
-              </span>
-            </div>
 
-            {/* Live Search */}
-            <div className="relative w-full sm:w-64" suppressHydrationWarning>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Search className="h-3.5 w-3.5" />
-              </div>
-              <input
-                suppressHydrationWarning
-                type="text"
-                value={passageSearch}
-                onChange={e => setPassageSearch(e.target.value)}
-                placeholder={isHindi ? 'गद्यांश खोजें...' : 'Search passage...'}
-                className="w-full bg-white dark:bg-slate-900 rounded-xl pl-9 pr-7 py-2 text-xs text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 shadow-2xs placeholder:text-slate-400"
-              />
-              {passageSearch && (
-                <button
-                  suppressHydrationWarning
-                  onClick={() => setPassageSearch('')}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer"
-                >
-                  ✕
-                </button>
+  const infoRows: Array<[string, React.ReactNode]> = [
+    [isHindi ? 'परीक्षा' : 'Examination', currentCategory?.name || '—'],
+    [isHindi ? 'परीक्षा की अवधि' : 'Test duration', `${examConfig.standardDurationMinutes} ${isHindi ? 'मिनट' : 'minutes'}`],
+    [isHindi ? 'न्यूनतम स्पीड (अंग्रेज़ी)' : 'Qualifying speed (English)', `${examConfig.qualifyingSpeed.en} WPM`],
+    [isHindi ? 'न्यूनतम स्पीड (हिंदी)' : 'Qualifying speed (Hindi)', `${examConfig.qualifyingSpeed.hi} WPM`],
+    [isHindi ? 'मूल्यांकन पद्धति' : 'Evaluation method', evaluationLabel],
+    [isHindi ? 'पुनः टाइपिंग' : 'Retyping', examConfig.retypeAllowed ? (isHindi ? 'अनुमत' : 'Allowed') : (isHindi ? 'अनुमत नहीं' : 'Not allowed')],
+    [isHindi ? 'उपलब्ध गद्यांश' : 'Passages available', `${englishCount} English, ${hindiCount} Hindi`],
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#f5f7fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans" suppressHydrationWarning>
+      <SiteHeader />
+
+      {/* ───── Page title ───── */}
+      <div className="bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-1">
+          <nav className="text-xs text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5 flex-wrap">
+            <Link href="/" className="text-[#1e4e79] dark:text-blue-400 hover:underline">{isHindi ? 'होम' : 'Home'}</Link>
+            <span>/</span>
+            <Link href="/typing-test" className="text-[#1e4e79] dark:text-blue-400 hover:underline">{isHindi ? 'टाइपिंग टेस्ट' : 'Typing Tests'}</Link>
+            <span>/</span>
+            <span className="text-slate-700 dark:text-slate-300">{currentCategory?.name || '…'}</span>
+          </nav>
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 border border-slate-200 dark:border-slate-800 bg-white flex items-center justify-center p-1.5 shrink-0">
+              {currentCategory?.logoUrl ? (
+                <img
+                  src={currentCategory.logoUrl}
+                  alt={currentCategory.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                />
+              ) : (
+                <Keyboard className="w-8 h-8 text-[#1e4e79]" />
               )}
             </div>
-          </div>
-
-          {/* 5. PASSAGES TABLE (CLEAN, NO DIFFICULTY CATEGORISATION) */}
-          {isLoading && tests.length === 0 ? (
-            <div className="space-y-2 py-4">
-              {[1, 2, 3, 4, 5, 6].map(n => (
-                <div key={n} className="h-14 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
-              ))}
-            </div>
-          ) : filteredTests.length === 0 ? (
-            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
-              <Search className="w-12 h-12 text-slate-400 mx-auto" />
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-                {isHindi ? 'कोई गद्यांश नहीं मिला' : 'No Passages Found'}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isHindi ? 'कृपया दूसरा शब्द खोजें या भाषा बदलें।' : 'Try switching the language or clearing your search query.'}
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+                {currentCategory?.name || (isLoading ? '…' : 'Typing Test')}
+              </h1>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                {isHindi ? 'ऑनलाइन टाइपिंग टेस्ट अभ्यास — आधिकारिक परीक्षा पैटर्न पर आधारित' : 'Online typing test practice based on the official examination pattern'}
               </p>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 text-xs font-black uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
-                      <th className="py-3.5 px-4 text-center w-16">#</th>
-                      <th className="py-3.5 px-4">Passage Name</th>
-                      <th className="py-3.5 px-4 text-center w-28">Timing</th>
-                      <th className="py-3.5 px-4 text-center w-36">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70 text-xs sm:text-sm">
-                    {paginatedTests.map((test, index) => {
-                      const testAttempts = userAttempts.filter(a => a.testId === test.id);
-                      const hasLocalAttempt = typeof window !== 'undefined' && !!localStorage.getItem(`typing_attempt_${test.id}`);
-                      const hasAttempted = testAttempts.length > 0 || hasLocalAttempt;
-                      const displayName = cleanDisplayTitle(isHindi && test.titleHi ? test.titleHi : test.title);
-
-                      return (
-                        <tr
-                          key={test.id}
-                          className="hover:bg-blue-50/50 dark:hover:bg-slate-800/50 transition-colors group"
-                        >
-                          <td className="py-3.5 px-4 text-center font-bold text-slate-500 dark:text-slate-400">
-                            {(safeCurrentPage - 1) * TESTS_PER_PAGE + index + 1}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-extrabold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                {displayName}
-                              </span>
-                              {hasAttempted && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                                  <Check className="w-3 h-3" /> Attempted
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4 text-center font-bold text-slate-700 dark:text-slate-300">
-                            {test.mainDurationMinutes} Min
-                          </td>
-                          <td className="py-3.5 px-4 text-center">
-                            {hasAttempted ? (
-                              <div className="flex items-center justify-center gap-1.5 flex-wrap sm:flex-nowrap">
-                                <Link
-                                  href={`/typing-test/${test.id}?view=analysis`}
-                                  prefetch={true}
-                                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-full font-bold text-xs bg-[#286090] hover:bg-[#1f4b72] text-white shadow-xs hover:shadow-md transition cursor-pointer active:scale-95 whitespace-nowrap"
-                                  title="View detailed test scorecard and mistake analysis"
-                                >
-                                  <BarChart2 className="w-3 h-3 text-white" />
-                                  <span>{isHindi ? 'विश्लेषण' : 'Analysis'}</span>
-                                </Link>
-                                <Link
-                                  href={`/typing-test/${test.id}`}
-                                  prefetch={true}
-                                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-full font-bold text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer active:scale-95 whitespace-nowrap"
-                                  title="Retake this typing test"
-                                >
-                                  <RotateCcw className="w-3 h-3" />
-                                  <span>{isHindi ? 'पुनः दें' : 'Re-attempt'}</span>
-                                </Link>
-                              </div>
-                            ) : (
-                              <Link
-                                href={`/typing-test/${test.id}`}
-                                prefetch={true}
-                                className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs hover:shadow-md transition cursor-pointer active:scale-95 whitespace-nowrap"
-                              >
-                                <Play className="w-3 h-3 fill-white" />
-                                <span>{isHindi ? 'शुरू करें' : 'Start'}</span>
-                              </Link>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* PAGINATION BAR */}
-              {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 px-4 py-3.5 bg-slate-50/60 dark:bg-slate-800/30">
-                  <p className="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">
-                    {isHindi
-                      ? `पृष्ठ ${safeCurrentPage} / ${totalPages} · ${filteredTests.length} में से ${(safeCurrentPage - 1) * TESTS_PER_PAGE + 1}-${Math.min(safeCurrentPage * TESTS_PER_PAGE, filteredTests.length)} दिखाया जा रहा है`
-                      : `Showing ${(safeCurrentPage - 1) * TESTS_PER_PAGE + 1}-${Math.min(safeCurrentPage * TESTS_PER_PAGE, filteredTests.length)} of ${filteredTests.length} · Page ${safeCurrentPage} of ${totalPages}`}
+              {heroDescription && (
+                <div className="mt-2 max-w-4xl">
+                  <p className={`text-[13px] leading-relaxed text-slate-600 dark:text-slate-400 ${descExpanded ? '' : 'line-clamp-2'}`}>
+                    {heroDescription}
                   </p>
-                  <div className="flex items-center gap-2">
+                  {heroDescription.length > 220 && (
                     <button
                       type="button"
-                      onClick={() => goToPage(safeCurrentPage - 1)}
-                      disabled={safeCurrentPage <= 1}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-slate-900 cursor-pointer"
+                      onClick={() => setDescExpanded(v => !v)}
+                      className="text-xs text-[#1e4e79] dark:text-blue-400 hover:underline cursor-pointer"
                     >
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>{isHindi ? 'पिछला' : 'Previous'}</span>
+                      {descExpanded ? (isHindi ? 'कम दिखाएं' : 'Show less') : (isHindi ? 'और पढ़ें' : 'Read more')}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => goToPage(safeCurrentPage + 1)}
-                      disabled={safeCurrentPage >= totalPages}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600 cursor-pointer"
-                    >
-                      <span>{isHindi ? 'अगला' : 'Next'}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* FOOTER (Identical to Home Page with full details) */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-8 px-6 md:px-12 mt-16 text-center text-xs text-slate-500 dark:text-slate-400 shrink-0">
-        <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
-        <p className="mt-1 text-[11px]">Developed to simulate real-world government selection computer based assessments.</p>
-        <div className="mt-3 flex items-center justify-center gap-4">
-          <Link
-            href="/contact"
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
-          >
-            {isHindi ? 'हमसे संपर्क करें' : 'Contact Us'}
-          </Link>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <Link
-            href="/terms"
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
-          >
-            {isHindi ? 'नियम और शर्तें' : 'Terms & Conditions'}
-          </Link>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <Link
-            href="/privacy"
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
-          >
-            {isHindi ? 'गोपनीयता नीति' : 'Privacy Policy'}
-          </Link>
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-12 space-y-6">
+        {/* ───── Rules & marking scheme + exam info ───── */}
+        <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+          <div data-tour="tt-rules">
+          <Panel title={isHindi ? 'टाइपिंग परीक्षा के नियम एवं अंकन योजना' : 'Rules & Marking Scheme'}>
+            <div className="text-xs sm:text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed space-y-3">
+              {renderOfficialRules()}
+              {categoryMeta.rules && (
+                <p className="whitespace-pre-line text-xs text-slate-600 dark:text-slate-400 pt-3 border-t border-slate-200 dark:border-slate-700">
+                  {categoryMeta.rules.replace(/<br\s*\/?>/gi, '\n')}
+                </p>
+              )}
+            </div>
+          </Panel>
+          </div>
+
+          <div className="space-y-6">
+            <div data-tour="tt-details">
+            <Panel title={isHindi ? 'परीक्षा विवरण' : 'Examination Details'} bodyClass="">
+              <table className="w-full text-[13px]">
+                <tbody>
+                  {infoRows.map(([k, v], i) => (
+                    <tr key={i} className="border-b last:border-b-0 border-slate-200 dark:border-slate-700">
+                      <th scope="row" className="text-left font-medium text-slate-500 dark:text-slate-400 px-4 py-2.5 w-[48%] align-top">{k}</th>
+                      <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Panel>
+            </div>
+
+          </div>
         </div>
-      </footer>
+
+        {/* ───── Your performance (horizontal) ───── */}
+        <div data-tour="tt-performance">
+        <Panel
+          title={isHindi ? 'आपका प्रदर्शन' : 'Your Performance'}
+          bodyClass=""
+        >
+          {currentUser ? (() => {
+            const total = categoryPersonalBest?.totalAttempts ?? 0;
+            const qualified = categoryPersonalBest?.qualifiedCount ?? 0;
+            const qualifiedPct = total > 0 ? Math.round((qualified / total) * 100) : 0;
+            const stats: Array<{ label: string; value: React.ReactNode; note?: React.ReactNode }> = [
+              {
+                label: isHindi ? 'सर्वोत्तम नेट स्पीड' : 'Best net speed',
+                value: categoryPersonalBest ? <>{categoryPersonalBest.bestNetWpm}<span className="text-sm font-normal text-slate-500 dark:text-slate-400"> WPM</span></> : '—',
+                note: isHindi ? 'इस परीक्षा में आपका सर्वश्रेष्ठ' : 'Your best in this exam',
+              },
+              {
+                label: isHindi ? 'औसत शुद्धता' : 'Average accuracy',
+                value: categoryPersonalBest ? `${categoryPersonalBest.avgAccuracy}%` : '—',
+                note: isHindi ? 'सभी प्रयासों का औसत' : 'Across all attempts',
+              },
+              {
+                label: isHindi ? 'कुल प्रयास' : 'Tests attempted',
+                value: total,
+                note: isHindi ? 'इस परीक्षा श्रेणी में' : 'In this exam category',
+              },
+              {
+                label: isHindi ? 'क्वालिफाइड' : 'Qualified',
+                value: <>{qualified}<span className="text-sm font-normal text-slate-500 dark:text-slate-400"> / {total}</span></>,
+                note: (
+                  <span className="flex items-center gap-2">
+                    <span className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <span className="block h-full rounded-full bg-[#1e7e34]" style={{ width: `${qualifiedPct}%` }} />
+                    </span>
+                    <span className="tabular-nums">{qualifiedPct}%</span>
+                  </span>
+                ),
+              },
+            ];
+            return (
+              <dl className="grid grid-cols-2 md:grid-cols-4">
+                {stats.map((st, i) => (
+                  <div
+                    key={i}
+                    className={`px-5 py-4 border-slate-200 dark:border-slate-700 ${i % 2 === 0 ? 'border-r' : ''} ${i < 2 ? 'border-b md:border-b-0' : ''} ${i === 1 ? 'md:border-r' : ''} ${i === 2 ? 'md:border-r' : ''}`}
+                  >
+                    <dt className="text-xs text-slate-500 dark:text-slate-400">{st.label}</dt>
+                    <dd className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">{st.value}</dd>
+                    {st.note && <dd className="mt-1 text-xs text-slate-500 dark:text-slate-400">{st.note}</dd>}
+                  </div>
+                ))}
+              </dl>
+            );
+          })() : (
+            <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p className="text-[13px] text-slate-600 dark:text-slate-400">
+                {isHindi
+                  ? 'अपनी सर्वोत्तम स्पीड, शुद्धता और क्वालिफाइड टेस्ट देखने के लिए लॉग इन करें।'
+                  : 'Log in to see your best speed, accuracy and qualified tests for this exam.'}
+              </p>
+              <Link href="/auth" className="inline-flex items-center justify-center h-9 px-4 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-sm font-medium transition-colors shrink-0">
+                {isHindi ? 'लॉग इन करें' : 'Log in'}
+              </Link>
+            </div>
+          )}
+        </Panel>
+        </div>
+
+        {/* ───── Available typing tests ───── */}
+        <div ref={passagesSectionRef} className="scroll-mt-20">
+          <Panel
+            title={<>{isHindi ? 'उपलब्ध टाइपिंग टेस्ट' : 'Available Typing Tests'} <span className="font-normal text-slate-500 dark:text-slate-400">({filteredTests.length})</span></>}
+            bodyClass=""
+          >
+            {/* Toolbar */}
+            <div data-tour="tt-passages" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-[#f8f9fb] dark:bg-slate-900/60">
+              <div className="flex items-center gap-2 text-[13px]" suppressHydrationWarning>
+                <span className="text-slate-600 dark:text-slate-400 font-medium">{isHindi ? 'भाषा:' : 'Language:'}</span>
+                <div className="inline-flex border border-slate-300 dark:border-slate-600 rounded overflow-hidden">
+                  {([
+                    { id: 'en', label: `English (${englishCount})` },
+                    { id: 'hi', label: `हिंदी (${hindiCount})` },
+                  ] as const).map((l, i) => (
+                    <button
+                      key={l.id}
+                      suppressHydrationWarning
+                      type="button"
+                      onClick={() => setSelectedLanguage(l.id)}
+                      className={`px-3 py-1.5 text-xs font-semibold cursor-pointer ${i > 0 ? 'border-l border-slate-300 dark:border-slate-600' : ''} ${
+                        selectedLanguage === l.id
+                          ? 'bg-[#1e4e79] text-white'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="relative w-full sm:w-64" suppressHydrationWarning>
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                <input
+                  suppressHydrationWarning
+                  type="text"
+                  value={passageSearch}
+                  onChange={e => setPassageSearch(e.target.value)}
+                  placeholder={isHindi ? 'गद्यांश का नाम खोजें' : 'Search by passage name'}
+                  className="w-full h-8 pl-8 pr-7 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-[13px] text-slate-800 dark:text-slate-200 outline-none focus:border-[#1e4e79] focus:ring-1 focus:ring-[#1e4e79]"
+                />
+                {passageSearch && (
+                  <button
+                    suppressHydrationWarning
+                    type="button"
+                    onClick={() => setPassageSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 text-xs cursor-pointer"
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {isLoading && tests.length === 0 ? (
+              <div className="p-8 text-center text-[13px] text-slate-500">{isHindi ? 'लोड हो रहा है…' : 'Loading tests…'}</div>
+            ) : !currentCategory && categories.length > 0 ? (
+              // Category set Inactive (or removed) by an admin
+              <div className="p-10 text-center">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{isHindi ? 'यह टाइपिंग परीक्षा अभी उपलब्ध नहीं है' : 'This typing exam is not available right now'}</p>
+                <Link href="/typing-test" className="inline-block mt-3 text-xs font-semibold text-[#1e4e79] dark:text-blue-300 hover:underline">{isHindi ? 'सभी टाइपिंग परीक्षाएं देखें' : 'See all typing exams'}</Link>
+              </div>
+            ) : filteredTests.length === 0 ? (
+              <div className="p-10 text-center">
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{isHindi ? 'कोई गद्यांश नहीं मिला' : 'No passages found'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{isHindi ? 'कृपया दूसरा शब्द खोजें या भाषा बदलें।' : 'Try another language or clear the search.'}</p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[13px] border-collapse">
+                    <thead>
+                      <tr className="bg-[#eef1f5] dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-left">
+                        <th className="px-3 sm:px-4 py-2.5 font-semibold w-12 sm:w-16 border-b border-slate-300 dark:border-slate-600">{isHindi ? 'क्र.' : 'S.No.'}</th>
+                        <th className="px-4 py-2.5 font-semibold border-b border-slate-300 dark:border-slate-600">{isHindi ? 'गद्यांश' : 'Passage'}</th>
+                        <th className="px-4 py-2.5 font-semibold w-24 border-b border-slate-300 dark:border-slate-600 hidden sm:table-cell">{isHindi ? 'अवधि' : 'Duration'}</th>
+                        <th className="px-4 py-2.5 font-semibold w-48 border-b border-slate-300 dark:border-slate-600 hidden md:table-cell">{isHindi ? 'स्थिति' : 'Status'}</th>
+                        <th className="px-3 sm:px-4 py-2.5 font-semibold text-right sm:w-48 border-b border-slate-300 dark:border-slate-600">{isHindi ? 'कार्रवाई' : 'Action'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedTests.map((test, index) => {
+                        const stats = attemptsByTest.get(test.id);
+                        const hasLocalAttempt = typeof window !== 'undefined' && !!localStorage.getItem(`typing_attempt_${test.id}`);
+                        const hasAttempted = !!stats || hasLocalAttempt;
+                        const displayName = cleanDisplayTitle(isHindi && test.titleHi ? test.titleHi : test.title);
+                        const status = stats ? (
+                          <span>
+                            <span className={stats.qualified ? 'text-green-700 dark:text-green-400 font-semibold' : 'text-red-700 dark:text-red-400 font-semibold'}>
+                              {stats.qualified ? (isHindi ? 'क्वालिफाइड' : 'Qualified') : (isHindi ? 'क्वालिफाइड नहीं' : 'Not qualified')}
+                            </span>
+                            <span className="text-slate-500 dark:text-slate-400"> · {isHindi ? 'सर्वश्रेष्ठ' : 'Best'} {Math.round(stats.best * 10) / 10} WPM</span>
+                          </span>
+                        ) : hasAttempted ? (
+                          <span className="text-slate-700 dark:text-slate-300">{isHindi ? 'प्रयास किया' : 'Attempted'}</span>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-500">{isHindi ? 'प्रयास नहीं किया' : 'Not attempted'}</span>
+                        );
+
+                        return (
+                          <tr key={test.id} className="border-b border-slate-200 dark:border-slate-700 even:bg-[#fafbfc] dark:even:bg-slate-900/40 hover:bg-[#f1f6fb] dark:hover:bg-slate-800/60">
+                            <td className="px-3 sm:px-4 py-3 text-slate-500 dark:text-slate-400 tabular-nums align-top">
+                              {(safeCurrentPage - 1) * TESTS_PER_PAGE + index + 1}
+                            </td>
+                            <td className="px-4 py-3 align-top">
+                              <div className="font-semibold text-slate-900 dark:text-white">{displayName}</div>
+                              <div className="md:hidden text-xs mt-0.5">
+                                <span className="sm:hidden text-slate-500 dark:text-slate-400">{test.mainDurationMinutes} {isHindi ? 'मिनट' : 'min'} · </span>
+                                {status}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-slate-700 dark:text-slate-300 hidden sm:table-cell align-top">
+                              {test.mainDurationMinutes} {isHindi ? 'मिनट' : 'min'}
+                            </td>
+                            <td className="px-4 py-3 hidden md:table-cell align-top text-xs">{status}</td>
+                            <td data-tour="tt-start" className="px-3 sm:px-4 py-3 text-right align-top whitespace-nowrap">
+                              {hasAttempted ? (
+                                <div className="inline-flex items-center gap-1.5">
+                                  <Link
+                                    href={`/typing-test/${test.id}?view=analysis`}
+                                    prefetch={true}
+                                    className="inline-flex items-center h-7 px-2.5 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs font-semibold text-[#1e4e79] dark:text-blue-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                  >
+                                    {isHindi ? 'परिणाम' : 'View Result'}
+                                  </Link>
+                                  <Link
+                                    href={`/typing-test/${test.id}`}
+                                    prefetch={true}
+                                    className="inline-flex items-center h-7 px-2.5 rounded bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-semibold"
+                                  >
+                                    {isHindi ? 'पुनः दें' : 'Retake'}
+                                  </Link>
+                                </div>
+                              ) : (
+                                <Link
+                                  href={`/typing-test/${test.id}`}
+                                  prefetch={true}
+                                  className="inline-flex items-center h-7 px-3 rounded bg-[#1e7e34] hover:bg-[#186429] text-white text-xs font-semibold"
+                                >
+                                  {isHindi ? 'टेस्ट शुरू करें' : 'Start Test'}
+                                </Link>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-[#f8f9fb] dark:bg-slate-900/60">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 tabular-nums">
+                      {isHindi
+                        ? `${filteredTests.length} में से ${(safeCurrentPage - 1) * TESTS_PER_PAGE + 1} – ${Math.min(safeCurrentPage * TESTS_PER_PAGE, filteredTests.length)} प्रदर्शित`
+                        : `Showing ${(safeCurrentPage - 1) * TESTS_PER_PAGE + 1} to ${Math.min(safeCurrentPage * TESTS_PER_PAGE, filteredTests.length)} of ${filteredTests.length} entries`}
+                    </p>
+                    <div className="inline-flex border border-slate-300 dark:border-slate-600 rounded overflow-hidden text-xs">
+                      <button
+                        type="button"
+                        onClick={() => goToPage(safeCurrentPage - 1)}
+                        disabled={safeCurrentPage <= 1}
+                        className="px-3 h-8 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:text-slate-400 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        {isHindi ? 'पिछला' : 'Previous'}
+                      </button>
+                      {pageNumbers.map((p, i) =>
+                        p === 'gap' ? (
+                          <span key={`gap-${i}`} className="px-2.5 h-8 flex items-center border-l border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-400">…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => goToPage(p)}
+                            aria-current={p === safeCurrentPage ? 'page' : undefined}
+                            className={`min-w-9 px-2.5 h-8 border-l border-slate-300 dark:border-slate-600 tabular-nums cursor-pointer ${
+                              p === safeCurrentPage
+                                ? 'bg-[#1e4e79] text-white font-semibold'
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        )
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => goToPage(safeCurrentPage + 1)}
+                        disabled={safeCurrentPage >= totalPages}
+                        className="px-3 h-8 border-l border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:text-slate-400 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        {isHindi ? 'अगला' : 'Next'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </Panel>
+        </div>
+      </main>
+
+      <SiteFooter />
+      <TypingExamTour ready={!isLoading} />
     </div>
   );
 }

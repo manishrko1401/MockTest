@@ -45,7 +45,7 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
       icon: Menu,
       badge: isHindi ? 'मेन्यू' : 'Menu',
       bgClass: 'from-blue-600 to-indigo-600 text-white',
-      borderClass: 'border-blue-500/40 shadow-blue-500/20',
+      borderClass: 'border-blue-500/40',
       iconBg: 'bg-white/20 text-white',
       isSpecial: true,
     },
@@ -69,7 +69,7 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
       badge: 'DEST NEW',
       bgClass: 'bg-blue-50/80 hover:bg-blue-100/90 dark:bg-blue-950/30 dark:hover:bg-blue-900/40',
       borderClass: 'border-blue-200/80 dark:border-blue-900/50 hover:border-blue-400',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/50 text-[#1e4e79] dark:text-blue-400',
     },
     {
       id: 'notices',
@@ -130,7 +130,7 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
 
   return (
     <section className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 min-[1080px]:px-8 py-2 relative z-10">
-      <div className="bg-slate-900 dark:bg-slate-950 backdrop-blur-md border border-slate-700/80 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl">
+      <div className="bg-slate-900 dark:bg-slate-950 border border-slate-700/80 dark:border-slate-800 rounded-lg p-3 sm:p-4 shadow-xl">
         
         {/* Section Header */}
         <div className="flex items-center justify-between mb-3 px-1">
@@ -139,10 +139,10 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
               <Menu className="h-3.5 w-3.5" />
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+              <h3 className="text-xs sm:text-sm font-semibold text-white">
                 {isHindi ? 'होम स्क्रीन मेन्यू एवं डायरेक्ट शॉर्टकट' : 'Quick Hub Menu & Direct Shortcuts'}
               </h3>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-400 font-medium">
                 {isHindi ? 'टेस्ट सीरीज, सूचनाएं, लॉकर, प्रोफाइल एवं पास तक तुरंत पहुंचें' : 'Instant 1-click access to Test Series, Notices, Document Locker, Profile & Pass'}
               </p>
             </div>
@@ -150,7 +150,7 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
 
           <button
             onClick={onOpenMenu}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-black text-[11px] transition active:scale-95 cursor-pointer shadow-xs"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-[11px] transition cursor-pointer shadow-xs"
           >
             <span>{isHindi ? 'पूरा मेन्यू खोलें' : 'Open Left Menu'}</span>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
@@ -158,12 +158,12 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
         </div>
 
         {/* Shortcuts Horizontal Scroll / Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-x divide-y sm:divide-y-0 divide-slate-700/60 dark:divide-slate-800 bg-slate-800/60 dark:bg-slate-900/60 rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-x divide-y sm:divide-y-0 divide-slate-700/60 dark:divide-slate-800 bg-slate-800/60 dark:bg-slate-900/60 rounded-md overflow-hidden">
           {shortcuts.map((item) => {
             const Icon = item.icon;
             const content = (
               <div
-                className={`p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-150 hover:bg-slate-700/40 dark:hover:bg-slate-800/50 active:scale-95 cursor-pointer h-full relative overflow-hidden group ${
+                className={`p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-150 hover:bg-slate-700/40 dark:hover:bg-slate-800/50 cursor-pointer h-full relative overflow-hidden group ${
                   item.isSpecial
                     ? 'bg-slate-700/60 text-white'
                     : 'text-slate-200'
@@ -171,11 +171,11 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
               >
                 {/* Top Row: Icon + Badge */}
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-slate-200 transition-transform group-hover:scale-110 shrink-0">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-slate-200 transition-transform shrink-0">
                     <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-300 group-hover:text-white" />
                   </div>
                   {item.badge && (
-                    <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider bg-slate-700/60 text-slate-300 border border-slate-600/40">
+                    <span className="text-[11px] sm:text-[11px] font-semibold px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300 border border-slate-600/40">
                       {item.badge}
                     </span>
                   )}
@@ -183,10 +183,10 @@ export default function HomeShortcutsSection({ onOpenMenu, onOpenPassClaim }: Ho
 
                 {/* Bottom Row: Title + Subtitle */}
                 <div>
-                  <h4 className="font-extrabold text-[11px] sm:text-xs leading-tight line-clamp-1 text-slate-100 group-hover:text-white">
+                  <h4 className="font-semibold text-[11px] sm:text-xs leading-tight line-clamp-1 text-slate-100 group-hover:text-white">
                     {item.title}
                   </h4>
-                  <p className="text-[9px] font-semibold mt-0.5 line-clamp-1 text-slate-400">
+                  <p className="text-[11px] font-semibold mt-0.5 line-clamp-1 text-slate-400">
                     {item.subtitle}
                   </p>
                 </div>

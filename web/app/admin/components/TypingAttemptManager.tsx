@@ -359,11 +359,11 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <Keyboard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Keyboard className="h-5 w-5 text-[#1e4e79] dark:text-blue-400" />
               {language === 'hi' ? 'टाइपिंग एटेम्पटेड लॉग्स' : 'Typing Attempt Logs'}
             </h3>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
               {attempts.length} Total Sittings
             </span>
           </div>
@@ -387,7 +387,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
           <button
             onClick={fetchAttempts}
             disabled={loading}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+            className="flex items-center justify-center gap-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -398,27 +398,27 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Attempts */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Filtered Attempts</p>
-            <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stats.total}</h4>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-xs font-semibold text-slate-400">Filtered Attempts</p>
+            <h4 className="text-2xl font-semibold text-slate-900 dark:text-white mt-1">{stats.total}</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               of {attempts.length} total across all tests
             </p>
           </div>
-          <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-blue-500">
+          <div className="h-10 w-10 bg-blue-50 dark:bg-blue-950/40 rounded-lg flex items-center justify-center text-[#1e4e79]">
             <TrendingUp className="h-5 w-5" />
           </div>
         </div>
 
         {/* Qualified Candidates */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Qualified / Passed</p>
-            <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+            <p className="text-xs font-semibold text-slate-400">Qualified / Passed</p>
+            <h4 className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
               {stats.qualified} <span className="text-xs font-semibold text-slate-400">({stats.qualRate}%)</span>
             </h4>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {stats.total - stats.qualified} failed qualification
             </p>
           </div>
@@ -428,13 +428,13 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
         </div>
 
         {/* Average Net Speed */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Average Net Speed</p>
-            <h4 className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+            <p className="text-xs font-semibold text-slate-400">Average Net Speed</p>
+            <h4 className="text-2xl font-semibold text-[#1e4e79] dark:text-blue-400 mt-1">
               {stats.avgNetWpm} <span className="text-xs font-semibold text-slate-400">WPM</span>
             </h4>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               Avg Gross: {stats.avgGrossWpm} WPM
             </p>
           </div>
@@ -444,13 +444,13 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
         </div>
 
         {/* Average Accuracy */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 flex items-center justify-between shadow-sm">
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Average Accuracy</p>
-            <h4 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+            <p className="text-xs font-semibold text-slate-400">Average Accuracy</p>
+            <h4 className="text-2xl font-semibold text-amber-600 dark:text-amber-400 mt-1">
               {stats.avgAccuracy}%
             </h4>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               Calculated on keystrokes
             </p>
           </div>
@@ -461,7 +461,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
       </div>
 
       {/* Filters and Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 shadow-sm space-y-3">
         <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[260px]">
@@ -473,7 +473,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
               placeholder="Search candidate name, email, candidate code, test title, or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-medium"
+              className="w-full pl-9 pr-8 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-[#1e4e79] font-medium"
             />
             {searchQuery && (
               <button
@@ -489,7 +489,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
           <div className="flex flex-wrap gap-2 items-center">
             {/* Category Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Exam:</span>
+              <span className="text-xs font-semibold text-slate-400 hidden sm:inline">Exam:</span>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
@@ -504,21 +504,21 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
 
             {/* Status Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Result:</span>
+              <span className="text-xs font-semibold text-slate-400 hidden sm:inline">Result:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="border border-slate-200 dark:border-slate-800 rounded-lg text-xs py-1.5 px-2.5 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-bold focus:outline-none cursor-pointer"
               >
                 <option value="all">All Results</option>
-                <option value="qualified">✅ Qualified (Pass)</option>
-                <option value="failed">❌ Not Qualified (Fail)</option>
+                <option value="qualified">Qualified (Pass)</option>
+                <option value="failed">Not Qualified (Fail)</option>
               </select>
             </div>
 
             {/* Language Filter */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Lang:</span>
+              <span className="text-xs font-semibold text-slate-400 hidden sm:inline">Lang:</span>
               <select
                 value={languageFilter}
                 onChange={(e) => setLanguageFilter(e.target.value as any)}
@@ -566,30 +566,30 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
       </div>
 
       {/* Attempt Logs Data Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">
                   Candidate Details
                 </th>
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">
                   Typing Test & Category
                 </th>
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">
                   Speed (Net / Gross)
                 </th>
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">
                   Accuracy & Errors
                 </th>
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400">
                   Time & Date
                 </th>
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400 text-center">
                   Result
                 </th>
-                <th className="py-3.5 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">
+                <th className="py-3.5 px-4 text-xs font-bold text-slate-500 dark:text-slate-400 text-right">
                   Actions
                 </th>
               </tr>
@@ -598,7 +598,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
               {loading ? (
                 <tr>
                   <td colSpan={7} className="py-24 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-3"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1e4e79] mb-3"></div>
                     <p className="text-xs text-slate-400 font-bold">Loading typing attempt records...</p>
                   </td>
                 </tr>
@@ -620,17 +620,17 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                     <tr key={a.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/20 transition-colors">
                       {/* Candidate Details */}
                       <td className="py-3.5 px-4">
-                        <p className="font-extrabold text-xs text-slate-800 dark:text-slate-200">{candidateName}</p>
-                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5 truncate max-w-[180px]" title={candidateEmail}>
+                        <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">{candidateName}</p>
+                        <p className="text-xs text-slate-400 font-semibold mt-0.5 truncate max-w-[180px]" title={candidateEmail}>
                           {candidateEmail}
                         </p>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                          <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-semibold border border-slate-200 dark:border-slate-700">
+                          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-semibold border border-slate-200 dark:border-slate-700">
                             ID: {candidateCode}
                           </span>
                           {a.user?.mobile && (
-                            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
-                              📞 {a.user.mobile}
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                              {a.user.mobile}
                             </span>
                           )}
                         </div>
@@ -639,14 +639,14 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                       {/* Typing Test & Category */}
                       <td className="py-3.5 px-4 max-w-[230px]">
                         <div className="flex flex-col gap-1">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={categoryName}>
-                            📁 {categoryName}
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-[#1e4e79] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/40 w-fit max-w-full truncate" title={categoryName}>
+                            {categoryName}
                           </span>
                           <p className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate" title={testTitle}>
                             {testTitle}
                           </p>
-                          <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
-                            <span className={`px-1 rounded font-bold uppercase ${a.language === 'hi' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                            <span className={`px-1 rounded font-bold ${a.language === 'hi' ? 'bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                               {a.language === 'hi' ? 'HINDI' : 'ENGLISH'}
                             </span>
                             <span className="font-mono truncate max-w-[120px]" title={a.testId}>
@@ -660,18 +660,18 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                       <td className="py-3.5 px-4">
                         <div className="space-y-0.5">
                           <div className="flex items-baseline gap-1.5">
-                            <span className="text-base font-black text-slate-900 dark:text-white">
+                            <span className="text-base font-semibold text-slate-900 dark:text-white">
                               {a.netWpm}
                             </span>
-                            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase">
+                            <span className="text-xs font-semibold text-[#1e4e79] dark:text-blue-400">
                               Net WPM
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                             Gross: <span className="font-bold text-slate-700 dark:text-slate-300">{a.grossWpm} WPM</span>
                           </p>
                           {a.backspaceCount !== undefined && a.backspaceCount > 0 && (
-                            <p className="text-[9px] text-slate-400 font-medium">
+                            <p className="text-[11px] text-slate-400 font-medium">
                               Backspaces: {a.backspaceCount}
                             </p>
                           )}
@@ -682,7 +682,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                       <td className="py-3.5 px-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5">
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-black ${
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
                               a.accuracyPercentage >= 95
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
                                 : a.accuracyPercentage >= 90
@@ -692,15 +692,15 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                               {a.accuracyPercentage}% Acc
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                             Mistakes: <strong className="text-red-500">{a.totalMistakes ?? 0}</strong>
                             {(a.fullMistakes > 0 || a.halfMistakes > 0) && (
-                              <span className="text-[9px] text-slate-400 ml-1">
+                              <span className="text-[11px] text-slate-400 ml-1">
                                 (F: {a.fullMistakes}, H: {a.halfMistakes})
                               </span>
                             )}
                           </p>
-                          <p className="text-[9px] text-slate-400">
+                          <p className="text-[11px] text-slate-400">
                             Strokes: {a.correctKeystrokes ?? 0} / {a.totalKeystrokes ?? 0}
                           </p>
                         </div>
@@ -713,19 +713,19 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                             <Clock className="h-3 w-3 text-slate-400" />
                             {formatSeconds(a.timeSpentSeconds)}
                             {a.allocatedTimeSeconds > 0 && (
-                              <span className="text-[10px] text-slate-400 font-normal">
+                              <span className="text-xs text-slate-400 font-normal">
                                 / {formatSeconds(a.allocatedTimeSeconds)}
                               </span>
                             )}
                           </p>
-                          <p className="text-[10px] text-slate-400 font-medium">
+                          <p className="text-xs text-slate-400 font-medium">
                             {new Date(a.completedAt).toLocaleDateString('en-IN', {
                               day: '2-digit',
                               month: 'short',
                               year: 'numeric',
                             })}
                           </p>
-                          <p className="text-[9px] text-slate-400 font-mono">
+                          <p className="text-[11px] text-slate-400 font-mono">
                             {new Date(a.completedAt).toLocaleTimeString('en-IN', {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -736,7 +736,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
 
                       {/* Result / Qualification */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
                           a.isQualified
                             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
                             : 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40'
@@ -761,7 +761,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                           <button
                             onClick={() => setInspectAttempt(a)}
                             title="Inspect Exact Result Page"
-                            className="p-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer"
+                            className="p-1.5 text-[#1e4e79] hover:text-[#1e4e79] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -770,7 +770,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Open Exact Result Page in New Tab"
-                            className="p-1.5 text-slate-400 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer inline-flex items-center"
+                            className="p-1.5 text-slate-400 hover:text-[#1e4e79] dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-lg transition cursor-pointer inline-flex items-center"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </a>
@@ -805,7 +805,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
             <div className="flex items-center gap-3">
               {/* Page size selector */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-slate-400 font-bold uppercase">Rows:</span>
+                <span className="text-xs text-slate-400 font-bold">Rows:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value))}
@@ -845,12 +845,12 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
 
       {/* INSPECT MODAL - EXACT RESULT PAGE */}
       {inspectAttempt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4 overflow-hidden">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-6xl h-[92vh] max-h-[92vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-2 sm:p-4 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg w-full max-w-6xl h-[92vh] max-h-[92vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
             {/* Modal Header */}
             <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-800/60 shrink-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className={`p-2 rounded-xl shrink-0 ${
+                <div className={`p-2 rounded-md shrink-0 ${
                   inspectAttempt.isQualified
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                     : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
@@ -859,22 +859,22 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">
+                    <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white truncate">
                       {inspectAttempt.user?.fullName || inspectAttempt.userName}
                     </h4>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                       inspectAttempt.isQualified
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                         : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
                     }`}>
                       {inspectAttempt.isQualified ? 'QUALIFIED' : 'NOT QUALIFIED'}
                     </span>
-                    <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold border border-slate-200 dark:border-slate-700">
+                    <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-bold border border-slate-200 dark:border-slate-700">
                       ID: {inspectAttempt.user?.candidateCode || 'GUEST'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                    {inspectAttempt.testTitle || inspectAttempt.test?.title} • <span className="font-semibold text-blue-600 dark:text-blue-400">{inspectAttempt.categoryName}</span>
+                    {inspectAttempt.testTitle || inspectAttempt.test?.title} • <span className="font-semibold text-[#1e4e79] dark:text-blue-400">{inspectAttempt.categoryName}</span>
                   </p>
                 </div>
               </div>
@@ -882,11 +882,11 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
               {/* Top Controls */}
               <div className="flex items-center gap-2 shrink-0">
                 <div className="hidden sm:flex items-center gap-2 mr-2">
-                  <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-100 dark:border-blue-900/40">
-                    ⚡ {inspectAttempt.netWpm} Net WPM
+                  <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#1e4e79] dark:text-blue-300 text-xs font-bold border border-blue-100 dark:border-blue-900/40">
+                    {inspectAttempt.netWpm} Net WPM
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700">
-                    🎯 {inspectAttempt.accuracyPercentage}% Acc
+                    {inspectAttempt.accuracyPercentage}% Acc
                   </span>
                 </div>
 
@@ -894,7 +894,7 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
                   href={`/typing-test/${inspectAttempt.testId}?attemptId=${inspectAttempt.id}&view=analysis`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-bold transition cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#1e4e79] dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-bold transition cursor-pointer"
                   title="Open exact result page in a full new browser window"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -914,8 +914,8 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
             {/* Modal Body: Exact Result Page iframe */}
             <div className="relative flex-1 w-full h-full bg-[#edf2f8] overflow-hidden">
               {iframeLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#edf2f8]/90 backdrop-blur-xs z-10">
-                  <RefreshCw className="h-7 w-7 text-blue-600 animate-spin mb-2" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#edf2f8]/90 z-10">
+                  <RefreshCw className="h-7 w-7 text-[#1e4e79] animate-spin mb-2" />
                   <p className="text-xs font-bold text-slate-600">Loading exact typing test result page...</p>
                 </div>
               )}
@@ -946,11 +946,11 @@ export function TypingAttemptManager({ showToast, language = 'en' }: TypingAttem
 
       {/* DELETE CONFIRMATION MODAL */}
       {deleteAttemptTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-md p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex items-center gap-3 text-red-500 mb-4">
               <AlertCircle className="h-6 w-6" />
-              <h4 className="font-extrabold text-sm uppercase tracking-wider text-white">Delete Typing Attempt</h4>
+              <h4 className="font-semibold text-sm text-white">Delete Typing Attempt</h4>
             </div>
 
             <p className="text-slate-300 text-xs leading-relaxed mb-6">

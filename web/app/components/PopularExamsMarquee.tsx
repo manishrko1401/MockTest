@@ -2,6 +2,7 @@
 
 import React, { useRef } from 'react';
 import Link from 'next/link';
+import { buildTestSeriesPath } from '../lib/testSeriesUrl';
 import {
   Award,
   TrendingUp,
@@ -79,18 +80,18 @@ const DEFAULT_CATEGORIES: ExamCategoryItem[] = [
 ];
 
 const STYLE_MAP: Record<string, { badgeBg: string; iconBg: string; hoverBorder: string; glow: string; btnText: string; gradient: string; Icon: any }> = {
-  ssc:       { badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',   iconBg: 'bg-white border border-slate-200/80 shadow-xs text-amber-600',   hoverBorder: 'hover:border-amber-500/50',   glow: 'hover:shadow-[0_12px_28px_-6px_rgba(245,158,11,0.25)]',   btnText: 'group-hover:text-amber-600',   gradient: 'from-amber-500/5',   Icon: Award        },
-  railways:  { badgeBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-blue-600',       hoverBorder: 'hover:border-blue-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(59,130,246,0.25)]',   btnText: 'group-hover:text-blue-600',    gradient: 'from-blue-500/5',    Icon: TrendingUp   },
-  banking:   { badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-emerald-600', hoverBorder: 'hover:border-emerald-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(16,185,129,0.25)]', btnText: 'group-hover:text-emerald-600', gradient: 'from-emerald-500/5', Icon: Coins        },
-  teaching:  { badgeBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-orange-600', hoverBorder: 'hover:border-orange-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(249,115,22,0.25)]', btnText: 'group-hover:text-orange-600', gradient: 'from-orange-500/5', Icon: BookOpen     },
-  ugc_net:   { badgeBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-cyan-600',       hoverBorder: 'hover:border-cyan-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(6,182,212,0.25)]',    btnText: 'group-hover:text-cyan-600',    gradient: 'from-cyan-500/5',    Icon: GraduationCap },
-  upsc:      { badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-rose-600',       hoverBorder: 'hover:border-rose-500/50',    glow: 'hover:shadow-[0_12px_28px_-6px_rgba(244,63,94,0.25)]',    btnText: 'group-hover:text-rose-600',    gradient: 'from-rose-500/5',    Icon: ShieldCheck  },
-  defence:   { badgeBg: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',           iconBg: 'bg-white border border-slate-200/80 shadow-xs text-red-600',           hoverBorder: 'hover:border-red-500/50',     glow: 'hover:shadow-[0_12px_28px_-6px_rgba(239,68,68,0.25)]',    btnText: 'group-hover:text-red-600',     gradient: 'from-red-500/5',     Icon: ShieldCheck  },
-  state_exams:{ badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-indigo-600', hoverBorder: 'hover:border-indigo-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(99,102,241,0.25)]', btnText: 'group-hover:text-indigo-600', gradient: 'from-indigo-500/5', Icon: GraduationCap },
-  engineering:{ badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-purple-600', hoverBorder: 'hover:border-purple-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(168,85,247,0.25)]', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap },
+  ssc:       { badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',   iconBg: 'bg-white border border-slate-200/80 shadow-xs text-amber-600',   hoverBorder: 'hover:border-amber-500/50',   glow: '',   btnText: 'group-hover:text-amber-600',   gradient: 'from-amber-500/5',   Icon: Award        },
+  railways:  { badgeBg: 'bg-blue-500/10 text-[#1e4e79] dark:text-blue-400 border-blue-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-[#1e4e79]',       hoverBorder: 'hover:border-blue-500/50',    glow: '',   btnText: 'group-hover:text-[#1e4e79]',    gradient: 'from-blue-500/5',    Icon: TrendingUp   },
+  banking:   { badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-emerald-600', hoverBorder: 'hover:border-emerald-500/50', glow: '', btnText: 'group-hover:text-emerald-600', gradient: 'from-emerald-500/5', Icon: Coins        },
+  teaching:  { badgeBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-orange-600', hoverBorder: 'hover:border-orange-500/50', glow: '', btnText: 'group-hover:text-orange-600', gradient: 'from-orange-500/5', Icon: BookOpen     },
+  ugc_net:   { badgeBg: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-cyan-600',       hoverBorder: 'hover:border-cyan-500/50',    glow: '',    btnText: 'group-hover:text-cyan-600',    gradient: 'from-cyan-500/5',    Icon: GraduationCap },
+  upsc:      { badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',       iconBg: 'bg-white border border-slate-200/80 shadow-xs text-rose-600',       hoverBorder: 'hover:border-rose-500/50',    glow: '',    btnText: 'group-hover:text-rose-600',    gradient: 'from-rose-500/5',    Icon: ShieldCheck  },
+  defence:   { badgeBg: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',           iconBg: 'bg-white border border-slate-200/80 shadow-xs text-red-600',           hoverBorder: 'hover:border-red-500/50',     glow: '',    btnText: 'group-hover:text-red-600',     gradient: 'from-red-500/5',     Icon: ShieldCheck  },
+  state_exams:{ badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-indigo-600', hoverBorder: 'hover:border-indigo-500/50', glow: '', btnText: 'group-hover:text-indigo-600', gradient: 'from-indigo-500/5', Icon: GraduationCap },
+  engineering:{ badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-purple-600', hoverBorder: 'hover:border-purple-500/50', glow: '', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap },
 };
 
-const DEFAULT_STYLE = { badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-purple-600', hoverBorder: 'hover:border-purple-500/50', glow: 'hover:shadow-[0_12px_28px_-6px_rgba(168,85,247,0.25)]', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap };
+const DEFAULT_STYLE = { badgeBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', iconBg: 'bg-white border border-slate-200/80 shadow-xs text-purple-600', hoverBorder: 'hover:border-purple-500/50', glow: '', btnText: 'group-hover:text-purple-600', gradient: 'from-purple-500/5', Icon: GraduationCap };
 
 function getStyle(id: string) {
   const lower = id.toLowerCase();
@@ -127,22 +128,22 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
       <div className="w-full px-4 sm:px-6 md:px-8 mb-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
               {title || (isHindi ? 'लोकप्रिय मॉक टेस्ट सीरीज' : 'Popular Exam Mock Series')}
             </h2>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => manualScroll('left')} aria-label="Scroll left"
-              className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 transition-all cursor-pointer active:scale-95">
+              className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-[#1e4e79] hover:border-blue-400 transition-all cursor-pointer">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button onClick={() => manualScroll('right')} aria-label="Scroll right"
-              className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 transition-all cursor-pointer active:scale-95">
+              className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-[#1e4e79] hover:border-blue-400 transition-all cursor-pointer">
               <ChevronRight className="h-4 w-4" />
             </button>
             <Link href="/mock-tests"
-              className="hidden sm:inline-flex items-center gap-1 ml-1 text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:underline">
+              className="hidden sm:inline-flex items-center gap-1 ml-1 text-xs font-semibold text-[#1e4e79] dark:text-blue-400 hover:underline">
               {isHindi ? 'सभी देखें' : 'View All'} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -152,8 +153,8 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
       {/* ── Marquee wrapper ── */}
       <div className="relative w-full overflow-hidden">
         {/* Edge fades */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 sm:w-12 md:w-16 bg-gradient-to-r from-slate-200/90 dark:from-slate-900 to-transparent z-20" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 sm:w-12 md:w-16 bg-gradient-to-l from-slate-200/90 dark:from-slate-900 to-transparent z-20" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 sm:w-12 md:w-16 bg-gradient-to-r from-[#f5f7fa] dark:from-slate-950 to-transparent z-20" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 sm:w-12 md:w-16 bg-gradient-to-l from-[#f5f7fa] dark:from-slate-950 to-transparent z-20" />
 
         {/* Animated track – uses global .exam-marquee-track class from globals.css */}
         <div className="py-3 px-0 w-full">
@@ -166,42 +167,42 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
               return (
                 <Link
                   key={`${cat.id}-${idx}`}
-                  href={`/mock-tests?cat=${cat.id}`}
+                  href={buildTestSeriesPath(cat.id)}
                   className={`
                     group shrink-0 w-[250px] sm:w-[275px] md:w-[300px]
                     flex flex-col justify-between
-                    p-4 sm:p-5 rounded-2xl
+                    p-4 sm:p-5 rounded-lg
                     bg-white dark:bg-slate-900
                     border border-slate-200/90 dark:border-slate-800/90
                     ${s.hoverBorder} ${s.glow}
-                    shadow-sm hover:shadow-xl
-                    transition-all duration-300 transform-gpu
-                    hover:-translate-y-1.5 hover:scale-[1.02]
+                    shadow-sm hover:shadow-sm
+                    transition-all duration-300
+                   
                     relative overflow-hidden
-                    bg-gradient-to-br ${s.gradient} via-transparent to-transparent
+                    
                   `}
                 >
                   {/* Top: icon + count */}
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-3">
                       {cat.logoUrl ? (
-                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200/80 p-1 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+                        <div className="w-10 h-10 rounded-md bg-white border border-slate-200/80 p-1 flex items-center justify-center overflow-hidden shrink-0 transition-transform shadow-xs">
                           <img src={cat.logoUrl} alt={name} className="w-full h-full object-contain" loading="lazy" />
                         </div>
                       ) : (
-                        <div className={`w-10 h-10 rounded-xl ${s.iconBg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                        <div className={`w-10 h-10 rounded-md ${s.iconBg} flex items-center justify-center shrink-0 transition-transform`}>
                           <Icon className="h-5 w-5" />
                         </div>
                       )}
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-black tracking-wider border ${s.badgeBg} shrink-0`}>
+                      <span className={`px-2.5 py-1 rounded-full text-xs sm:text-[11px] font-semibold border ${s.badgeBg} shrink-0`}>
                         {cat.count || '40+ Tests'}
                       </span>
                     </div>
 
-                    <h3 className={`font-black text-sm sm:text-[15px] text-slate-900 dark:text-white leading-tight line-clamp-1 mb-1 transition-colors ${s.btnText}`}>
+                    <h3 className={`font-semibold text-sm sm:text-[15px] text-slate-900 dark:text-white leading-tight line-clamp-1 mb-1 transition-colors ${s.btnText}`}>
                       {name}
                     </h3>
-                    <p className="text-[10.5px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-normal line-clamp-2 mb-3">
+                    <p className="text-xs sm:text-xs text-slate-500 dark:text-slate-400 font-medium leading-normal line-clamp-2 mb-3">
                       {cat.desc || 'Full CBT Mock Tests, Sectionals & Previous Year Papers'}
                     </p>
 
@@ -209,12 +210,12 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
                     {cat.subCategories && cat.subCategories.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {cat.subCategories.slice(0, 3).map((sub, i) => (
-                          <span key={i} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9.5px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[110px]">
+                          <span key={i} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[110px]">
                             {isHindi && sub.nameHi ? sub.nameHi : sub.name}
                           </span>
                         ))}
                         {cat.subCategories.length > 3 && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-400">
+                          <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-400">
                             +{cat.subCategories.length - 3}
                           </span>
                         )}
@@ -223,7 +224,7 @@ export default function PopularExamsMarquee({ categories, language = 'en', title
                   </div>
 
                   {/* Bottom CTA */}
-                  <div className={`flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 ${s.btnText} transition-colors`}>
+                  <div className={`flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-xs sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 ${s.btnText} transition-colors`}>
                     <span>{exploreText}</span>
                     <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </div>

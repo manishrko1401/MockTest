@@ -36,6 +36,7 @@ import {
   Lock,
   User
 } from 'lucide-react';
+import { resetStaleTypingLocalData } from '../../lib/typingLocalReset';
 import {
   TypingTest,
   TypingAttempt,
@@ -271,6 +272,9 @@ export default function TCSiONTypingTerminalPage() {
       }
     }
   };
+
+  // Drop browser copies of typing data from before the last server-side reset
+  useEffect(() => { resetStaleTypingLocalData(); }, []);
 
   useEffect(() => {
     const audio = typingAudioRef.current;
@@ -1080,10 +1084,10 @@ export default function TCSiONTypingTerminalPage() {
 
   if (isLoading || !test) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f0f3f6] text-slate-700 font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f7fa] text-slate-700 font-sans">
         <div className="text-center space-y-2">
-          <div className="w-10 h-10 border-4 border-[#337ab7] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-bold text-slate-600">Loading Examination Terminal...</p>
+          <div className="w-8 h-8 border-2 border-[#1e4e79] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-500">Loading examination terminal…</p>
         </div>
       </div>
     );
@@ -1095,28 +1099,28 @@ export default function TCSiONTypingTerminalPage() {
   if (!isAnalysisMode && !currentUser && phase !== 'RESULT') {
     const loginRedirect = encodeURIComponent(`/typing-test/${test.id}`);
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#eef4fb] via-white to-[#edf2f8] text-slate-800 flex flex-col font-sans">
+      <div className="min-h-screen bg-[#f5f7fa] text-slate-800 flex flex-col font-sans">
         {/* Top Header */}
-        <header className="bg-[#1f4b72] text-white px-4 py-3 shadow-md border-b border-blue-900/40">
-          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+        <header className="bg-white text-slate-800 px-4 h-14 flex items-center border-b border-slate-200">
+          <div className="max-w-6xl w-full mx-auto flex items-center justify-between gap-4">
             <Link
               href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
-              className="inline-flex items-center gap-2 text-white/90 hover:text-white text-xs font-bold transition"
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-[#1e4e79] text-sm transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{isHindi ? 'वापस जाएं' : 'Back to Tests'}</span>
             </Link>
             <div className="flex items-center gap-2">
-              <div className="bg-white/15 p-1.5 rounded-full">
-                <Trophy className="w-4 h-4 text-amber-300" />
+              <div className="bg-[#E6F4FE] h-8 w-8 rounded-md flex items-center justify-center">
+                <Trophy className="w-4 h-4 text-[#1e4e79]" />
               </div>
-              <span className="font-black text-sm uppercase tracking-wider text-white">
-                MockTest <span className="text-amber-300">Hub</span>
+              <span className="font-bold text-sm text-slate-900">
+                {t.logoTitle}
               </span>
             </div>
             <Link
               href={`/auth?redirect=${loginRedirect}&mode=login`}
-              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-9 px-4 text-sm"
             >
               <User className="w-3.5 h-3.5" />
               <span>{isHindi ? 'लॉग इन' : 'Login'}</span>
@@ -1126,30 +1130,30 @@ export default function TCSiONTypingTerminalPage() {
 
         {/* Content Body */}
         <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
-          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-xl p-6 sm:p-8 text-center space-y-6 relative overflow-hidden">
+          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-lg p-6 sm:p-8 text-center space-y-6 relative overflow-hidden">
             {/* Mock Test Hub Logo */}
             <div className="flex flex-col items-center justify-center gap-2">
-              <div className="bg-[#E6F4FE] p-3.5 rounded-2xl shadow-xs flex items-center justify-center h-16 w-16 border border-blue-200/80 mx-auto transition-transform hover:scale-105">
-                <Trophy className="h-9 w-9 text-blue-600" />
+              <div className="bg-[#E6F4FE] rounded-lg flex items-center justify-center h-14 w-14 mx-auto">
+                <Trophy className="h-7 w-7 text-[#1e4e79]" />
               </div>
               <div className="flex flex-col items-center">
-                <span className="font-black text-sm leading-tight text-slate-900 tracking-wider uppercase">
+                <span className="font-bold text-sm leading-tight text-slate-900">
                   {t.logoTitle}
                 </span>
-                <span className="text-[9px] text-blue-600 font-extrabold tracking-widest uppercase leading-tight">
+                <span className="text-xs text-slate-500 leading-tight">
                   {t.logoSub}
                 </span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-extrabold uppercase tracking-wide border border-amber-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-xs font-medium ring-1 ring-inset ring-amber-600/20">
                 {isHindi ? 'लॉगिन आवश्यक है' : 'Login Required to Attempt Test'}
               </span>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
                 {cleanDisplayTitle(test.title)}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+              <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
                 {isHindi
                   ? 'टाइपिंग टेस्ट शुरू करने और अपने विस्तृत अंक, गति एवं गलतियों के विश्लेषण को सहेजने के लिए कृपया अपने खाते में लॉगिन करें।'
                   : 'Please log in to your account to start this typing test, save your keystroke scorecard, and track your speed & accuracy progress.'}
@@ -1157,28 +1161,28 @@ export default function TCSiONTypingTerminalPage() {
             </div>
 
             {/* Test Metadata Card */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 grid grid-cols-3 gap-2 text-center text-xs">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-xs text-slate-500">
                   {isHindi ? 'अवधि' : 'Duration'}
                 </span>
-                <p className="font-extrabold text-slate-800 text-sm">
+                <p className="font-semibold text-slate-900 text-sm">
                   {test.mainDurationMinutes} Min
                 </p>
               </div>
               <div className="space-y-0.5 border-x border-slate-200">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-xs text-slate-500">
                   {isHindi ? 'भाषा' : 'Language'}
                 </span>
-                <p className="font-extrabold text-blue-600 text-sm uppercase">
+                <p className="font-semibold text-[#1e4e79] text-sm">
                   {test.language === 'hi' ? 'Hindi' : 'English'}
                 </p>
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-xs text-slate-500">
                   {isHindi ? 'योग्यता' : 'Qualifying'}
                 </span>
-                <p className="font-extrabold text-slate-800 text-sm">
+                <p className="font-semibold text-slate-900 text-sm">
                   {test.qualifyingWpm || 35} WPM
                 </p>
               </div>
@@ -1188,14 +1192,14 @@ export default function TCSiONTypingTerminalPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <Link
                 href={`/auth?redirect=${loginRedirect}&mode=login`}
-                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-600/20 transition cursor-pointer"
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-10 px-6 text-sm"
               >
                 <User className="w-4 h-4" />
                 <span>{isHindi ? 'लॉग इन करके टेस्ट शुरू करें' : 'Login to Start Test'}</span>
               </Link>
               <Link
                 href={`/auth?redirect=${loginRedirect}&tab=signup`}
-                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-extrabold text-xs sm:text-sm border border-slate-300 transition cursor-pointer"
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium rounded-md transition-colors cursor-pointer h-10 px-6 text-sm"
               >
                 <span>{isHindi ? 'नया खाता बनाएं (Free)' : 'Create Free Account'}</span>
               </Link>
@@ -1204,7 +1208,7 @@ export default function TCSiONTypingTerminalPage() {
             <div className="pt-2">
               <Link
                 href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
-                className="text-xs font-bold text-slate-500 hover:text-slate-700 underline"
+                className="text-sm text-[#1e4e79] hover:underline"
               >
                 {isHindi ? '← अन्य टाइपिंग टेस्ट्स देखें' : '← Browse other typing tests'}
               </Link>
@@ -1536,54 +1540,77 @@ export default function TCSiONTypingTerminalPage() {
       othersRuleText = `Direct deduction: Net = (Gross − Errors) ÷ Time`;
     }
 
+    // Headline numbers for the hero. Taken from the SAME exam-specific values the detailed
+    // scorecard below displays (branch order mirrors the card grid), so the summary can
+    // never contradict the cards for any exam.
+    const headline: { net: string; gross: string; accuracy: string; qualified: boolean; extra?: { label: string; value: string } } = (() => {
+      if (isAiims) return { net: (result.aiimsNetWpm ?? result.netWpm).toFixed(1), gross: (result.aiimsGrossWpm ?? result.grossWpm).toFixed(1), accuracy: result.accuracyPercentage.toFixed(0), qualified: isQualified };
+      if (isRrbNtpc) return { net: String(Math.round(result.netWpm)), gross: String(Math.round(result.grossWpm)), accuracy: result.accuracyPercentage.toFixed(2), qualified: isQualified };
+      if (isDsssbJsa) return { net: dsssbNetWpm.toFixed(2), gross: result.grossWpm.toFixed(2), accuracy: dsssbAccuracy.toFixed(2), qualified: dsssbQualified };
+      if (isKvsOrEmrsOrNvs || isCbseJsa) return { net: (isCbseJsa ? cbseNetWpm : kvsNetWpm).toFixed(2), gross: result.grossWpm.toFixed(2), accuracy: (isCbseJsa ? cbseAccuracy : kvsAccuracy).toFixed(2), qualified: isCbseJsa ? cbseQualified : kvsQualified };
+      if (isCsirFormula) return { net: csirFormulaNetWpm.toFixed(2), gross: csirFormulaGrossWpm.toFixed(2), accuracy: csirFormulaAccuracy.toFixed(1), qualified: csirFormulaQualified };
+      if (isUpssscJa) return { net: upssscNetWpm.toFixed(2), gross: upssscGrossWpm.toFixed(2), accuracy: upssscAccuracy.toFixed(2), qualified: upssscQualified };
+      if (isDelhiPoliceHcm || isDdaJsa) return { net: result.netWpm.toFixed(2), gross: result.grossWpm.toFixed(2), accuracy: result.accuracyPercentage.toFixed(2), qualified: isQualified };
+      if (isDdaSteno) return { net: ddaStenoNetWpm.toFixed(2), gross: result.grossWpm.toFixed(2), accuracy: ddaStenoAccuracy.toFixed(2), qualified: ddaStenoQualified };
+      if (isMpCpct) return { net: mpCpctNetWpm.toFixed(2), gross: result.grossWpm.toFixed(2), accuracy: mpCpctAccuracy.toFixed(2), qualified: mpCpctQualified, extra: { label: isHindi ? 'स्केल्ड स्कोर' : 'Scaled score', value: `${mpCpctScaledScore}%` } };
+      if (isDhcJja) return { net: dhcNetWpm.toFixed(2), gross: dhcGrossWpm.toFixed(2), accuracy: dhcAccuracy.toFixed(2), qualified: dhcQualified };
+      if (isAllahabadHc) return { net: Number.isInteger(ahcNetWpm) ? String(ahcNetWpm) : ahcNetWpm.toFixed(2), gross: ahcGrossWpm.toFixed(2), accuracy: ahcAccuracy.toFixed(2), qualified: ahcQualified, extra: { label: isHindi ? 'अंक' : 'Marks', value: `${ahcMarks.toFixed(2)} / 50` } };
+      if (isCcrasLdcUdc) return { net: result.netWpm.toFixed(0), gross: result.grossWpm.toFixed(0), accuracy: result.accuracyPercentage.toFixed(2), qualified: isQualified };
+      if (isRssbLdc) return { net: result.netWpm.toFixed(0), gross: result.grossWpm.toFixed(0), accuracy: result.accuracyPercentage.toFixed(2), qualified: (catEval.marksObtained ?? 0) >= 9, extra: { label: isHindi ? 'अंक' : 'Marks', value: `${(catEval.marksObtained ?? 0).toFixed(2)} / 25` } };
+      if (isUpPoliceCo) return { net: result.netWpm.toFixed(1), gross: result.grossWpm.toFixed(1), accuracy: result.accuracyPercentage.toFixed(1), qualified: isQualified };
+      if (isBsfHcm || isCsirJsa) return { net: (isBsfHcm ? bsfNetWpm : csirNetWpm).toFixed(2), gross: (isBsfHcm ? bsfGrossWpm : result.grossWpm).toFixed(2), accuracy: (isBsfHcm ? bsfAccuracy : csirAccuracy).toFixed(2), qualified: isBsfHcm ? bsfQualified : csirQualified };
+      return { net: result.netWpm.toFixed(2), gross: result.grossWpm.toFixed(2), accuracy: result.accuracyPercentage.toFixed(2), qualified: isSscExam ? result.errorPercentage <= 7 : isQualified };
+    })();
+
+    const resultTitle = isCbseJsa && !(isCbseSuperintendentTest || catConfig.key === 'cbse-superintendent' || cleanDisplayTitle(test.title).toLowerCase().includes('cbse'))
+      ? `CBSE JSA · ${cleanDisplayTitle(test.title)}`
+      : cleanDisplayTitle(test.title);
+
+    const keystrokeLine = isUpPoliceCo
+      ? `${isHindi ? 'गद्यांश में कुल शब्द' : 'Words in passage'}: ${result.totalWordsInMasterPassage || 500}`
+      : isCsirFormula
+      ? `${isHindi ? 'गद्यांश कीस्ट्रोक्स' : 'Passage keystrokes'}: ${csirPassageKeystrokes} (${csirPassageWords} ${isHindi ? 'शब्द' : 'words'})`
+      : (isAiims || isRrbNtpc || isDsssbJsa || isKvsOrEmrsOrNvs || isCsirJsa || isCbseJsa || isUpssscJa || isDelhiPoliceHcm || isDdaJsa || isDdaSteno || isCcrasLdcUdc || isRssbLdc || isMpCpct || isAllahabadHc || isUttrakhandHc || isDhcJja || isChandigarhAdmin || isPunjabHaryanaHc)
+      ? `${isHindi ? 'टाइप किए गए कीस्ट्रोक्स' : 'Keystrokes typed'}: ${result.totalKeystrokes}`
+      : `${isHindi ? 'गद्यांश कीस्ट्रोक्स' : 'Passage keystrokes'}: ${totalKeystrokesInPassage}`;
+
+    const attemptDate = (() => {
+      const raw = loadedAttemptMeta?.completedAt || attemptsList[selectedAttemptIndex]?.completedAt || attemptsList[selectedAttemptIndex]?.createdAt;
+      const d = raw ? new Date(raw) : null;
+      return d && !isNaN(d.getTime()) ? d.toLocaleString(isHindi ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : null;
+    })();
+
     return (
-      <div className="min-h-screen bg-[#edf2f8] text-slate-800 p-3 sm:p-6 lg:p-8 flex flex-col items-center font-sans">
-        <div className="w-full max-w-5xl space-y-6">
-
-          {/* Top Header Bar */}
-          <div className="flex items-center justify-between gap-3">
-            {isEmbed ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold shadow-xs">
-                <span>🔍 Candidate Result Inspection</span>
-              </span>
-            ) : (
-              <Link
-                href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition shrink-0"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{isHindi ? 'सभी टाइपिंग टेस्ट्स' : 'Back to Typing Tests'}</span>
-              </Link>
-            )}
-
-            {/* Center: Mock Test Hub Logo */}
-            <div className="flex items-center justify-center shrink-0">
-              <Link
-                href="/"
-                className="flex items-center gap-2 group cursor-pointer hover:opacity-95 transition"
-                title={t.backToHome}
-              >
-                <div className="bg-[#E6F4FE] p-1.5 rounded-full shadow-xs flex items-center justify-center h-8 w-8 border border-blue-200/80 shrink-0 group-hover:border-blue-400 transition">
-                  <Trophy className="h-4 w-4 text-blue-600" />
+      <div className="min-h-screen bg-[#f4f6f9] text-slate-800 font-sans print:bg-white">
+        {/* ───── Toolbar ───── */}
+        <div className="sticky top-0 z-30 bg-white border-b border-[#cfd6de] print:hidden">
+          <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link href="/" className="flex items-center gap-2 shrink-0" title={t.backToHome}>
+                <div className="bg-[#E6F4FE] rounded-md flex items-center justify-center h-8 w-8 border border-blue-200">
+                  <Trophy className="h-4 w-4 text-blue-700" />
                 </div>
-                <div className="flex flex-col text-left">
-                  <span className="font-black text-xs leading-tight text-slate-900 tracking-wider uppercase group-hover:text-blue-700 transition">
-                    {t.logoTitle}
-                  </span>
-                  <span className="hidden xs:inline text-[7.5px] text-blue-600 font-extrabold tracking-widest uppercase leading-tight">
-                    {t.logoSub}
-                  </span>
-                </div>
+                <span className="hidden sm:inline font-bold text-sm text-slate-900">{t.logoTitle}</span>
               </Link>
+              {isEmbed ? (
+                <span className="text-xs font-semibold text-[#1e4e79] border-l border-slate-200 pl-3">Candidate Result Inspection</span>
+              ) : (
+                <Link
+                  href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
+                  className="inline-flex items-center gap-1 text-[13px] text-[#0b5cad] hover:underline border-l border-slate-200 pl-3 truncate"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{isHindi ? 'सभी गद्यांश' : 'Back to passages'}</span>
+                </Link>
+              )}
             </div>
-
             <div className="flex items-center gap-2 shrink-0">
               {isEmbed && targetAttemptId && (
                 <a
                   href={`/typing-test/${test.id}?attemptId=${targetAttemptId}&view=analysis`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold"
                   title="Open in new window"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -1592,15 +1619,15 @@ export default function TCSiONTypingTerminalPage() {
               )}
               <button
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-xs transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>{isHindi ? 'प्रिंट रिपोर्ट' : 'Print / Save PDF'}</span>
+                <span className="hidden sm:inline">{isHindi ? 'प्रिंट करें' : 'Print'}</span>
               </button>
               {!isEmbed && (
                 <button
                   onClick={() => initDemoPhase(test)}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-semibold cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{isHindi ? 'पुनः टेस्ट दें' : 'Retake Test'}</span>
@@ -1608,95 +1635,102 @@ export default function TCSiONTypingTerminalPage() {
               )}
             </div>
           </div>
+        </div>
 
-          {/* Title and Passage Keystrokes Banner */}
-          <div className="text-center space-y-1.5">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              {isRrbNtpc
-                ? `Typingmitra.in | Typing Test Result(Repetition Allowed): ${cleanDisplayTitle(test.title)}`
-                : (isDelhiPoliceHcm || isUpPoliceCo || isDhcJja)
-                ? `Typingmitra.in | Typing Test Result: ${cleanDisplayTitle(test.title)}`
-                : isDsssbJsa
-                ? (isDsssbItAssistant || isDsssbSteno
-                    ? `Typing Test Result: ${cleanDisplayTitle(test.title)}`
-                    : `Typingmitra.in | Typing Test Result: ${cleanDisplayTitle(test.title)}`)
-                : (isCbseSuperintendentTest || catConfig.key === 'cbse-superintendent' || cleanDisplayTitle(test.title).toLowerCase().includes('cbse'))
-                ? `Typing Test Result: ${cleanDisplayTitle(test.title)}`
-                : isCbseJsa
-                ? `Typing Test Result: CBSE JSA (${cleanDisplayTitle(test.title)})`
-                : (isKvsOrEmrsOrNvs || isCsirJsa || isCsirFormula || isUpssscJa || isDdaJsa || isDdaSteno || isCcrasLdcUdc || isRssbLdc || isMpCpct || isAllahabadHc || isUttrakhandHc)
-                ? `Typing Test Result: ${cleanDisplayTitle(test.title)}`
-                : `Typingmitra | Typing Test Result: ${cleanDisplayTitle(test.title)}`}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              {isUpPoliceCo
-                ? `Total Words Available in Passage: ${result.totalWordsInMasterPassage || 500}`
-                : isCsirFormula
-                ? `Total Keystrokes in Passage: ${csirPassageKeystrokes} (${csirPassageWords} Words)`
-                : (isAiims || isRrbNtpc || isDsssbJsa || isKvsOrEmrsOrNvs || isCsirJsa || isCbseJsa || isUpssscJa || isDelhiPoliceHcm || isDdaJsa || isDdaSteno || isCcrasLdcUdc || isRssbLdc || isMpCpct || isAllahabadHc || isUttrakhandHc || isDhcJja || isChandigarhAdmin || isPunjabHaryanaHc)
-                ? `Total Keystrokes Typed: ${result.totalKeystrokes}`
-                : `Total Keystrokes in Passage: ${totalKeystrokesInPassage}`}
-            </p>
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-5 sm:py-6 space-y-5">
 
-            {/* Candidate & Sitting Details Banner */}
-            {loadedCandidate ? (
-              <div className="bg-white border border-blue-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-black text-sm flex items-center justify-center shrink-0">
-                    👤
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-extrabold text-sm text-slate-900">
-                        {loadedCandidate.fullName || loadedCandidate.userName || 'Candidate Attempt'}
-                      </h3>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        isQualified
-                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                          : 'bg-rose-100 text-rose-700 border border-rose-200'
-                      }`}>
-                        {isQualified ? 'QUALIFIED' : 'NOT QUALIFIED'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium flex-wrap mt-0.5">
-                      {loadedCandidate.email && <span>{loadedCandidate.email} •</span>}
-                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-700">
-                        ID: {loadedCandidate.candidateCode || 'GUEST'}
-                      </span>
-                      {loadedCandidate.mobile && <span>• 📞 {loadedCandidate.mobile}</span>}
-                    </div>
+          {/* ───── Result summary ───── */}
+          <section className="bg-white border border-[#cfd6de]">
+            <div className="bg-[#1e4e79] text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+              <h1 className="text-sm font-semibold">{isHindi ? 'टाइपिंग टेस्ट परिणाम' : 'Typing Test Result'}</h1>
+              <span className="text-xs text-white/85">{catConfig.name}</span>
+            </div>
+
+            <div className="grid md:grid-cols-[1fr_280px]">
+              <table className="w-full text-[13px]">
+                <tbody>
+                  {([
+                    ...(loadedCandidate ? [
+                      [isHindi ? 'अभ्यर्थी' : 'Candidate', `${loadedCandidate.fullName || loadedCandidate.userName || 'Candidate'}${loadedCandidate.candidateCode ? ` (${loadedCandidate.candidateCode})` : ''}`],
+                      ...(loadedCandidate.email || loadedCandidate.mobile ? [[isHindi ? 'संपर्क' : 'Contact', [loadedCandidate.email, loadedCandidate.mobile].filter(Boolean).join(' · ')]] : []),
+                    ] : []),
+                    [isHindi ? 'टेस्ट' : 'Test', resultTitle],
+                    [isHindi ? 'भाषा' : 'Language', isHindiTest ? 'Hindi' : 'English'],
+                    ...(attemptDate ? [[isHindi ? 'प्रयास की तिथि' : 'Date of attempt', attemptDate]] : []),
+                    [isHindi ? 'लिया गया समय' : 'Time taken', `${formattedDuration} ${isHindi ? 'मिनट' : 'min'}`],
+                    [keystrokeLine.split(': ')[0], keystrokeLine.split(': ').slice(1).join(': ')],
+                    ...(isRrbNtpc ? [[isHindi ? 'पुनरावृत्ति' : 'Repetition', isHindi ? 'अनुमत' : 'Allowed']] : []),
+                  ] as Array<[string, string]>).map(([k, v], i) => (
+                    <tr key={i} className="border-b last:border-b-0 border-slate-200">
+                      <th scope="row" className="text-left font-medium text-slate-500 px-4 py-2 w-40 align-top">{k}</th>
+                      <td className="px-4 py-2 font-semibold text-slate-900">{v}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Verdict */}
+              <div className={`border-t md:border-t-0 md:border-l border-[#cfd6de] p-4 flex flex-col justify-center ${headline.qualified ? 'bg-[#eaf6ec]' : 'bg-[#fbeaec]'}`}>
+                <div className="text-xs font-medium text-slate-600">
+                  {isSscExam ? (isHindi ? 'परिणाम (अनारक्षित)' : 'Result (UR category)') : (isHindi ? 'परिणाम' : 'Result')}
+                </div>
+                <div className={`mt-1 flex items-center gap-2 text-xl font-bold ${headline.qualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'}`}>
+                  {headline.qualified ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                  {headline.qualified ? (isHindi ? 'क्वालिफाइड' : 'QUALIFIED') : (isHindi ? 'क्वालिफाइड नहीं' : 'NOT QUALIFIED')}
+                </div>
+                <p className="mt-1.5 text-xs text-slate-600 leading-snug">{isHindi ? 'मानदंड' : 'Criteria'}: {urRuleText}</p>
+              </div>
+            </div>
+
+            {/* Headline metrics */}
+            <div className={`grid grid-cols-2 ${headline.extra ? 'md:grid-cols-5' : 'md:grid-cols-4'} border-t border-[#cfd6de] bg-[#f8f9fb]`}>
+              {[
+                { label: isHindi ? 'नेट स्पीड' : 'Net Speed', value: `${headline.net} WPM`, strong: true },
+                { label: isHindi ? 'ग्रॉस स्पीड' : 'Gross Speed', value: `${headline.gross} WPM` },
+                { label: isHindi ? 'शुद्धता' : 'Accuracy', value: `${headline.accuracy}%` },
+                ...(headline.extra ? [{ label: headline.extra.label, value: headline.extra.value }] : []),
+                { label: isHindi ? 'लिया गया समय' : 'Time Taken', value: `${formattedDuration}` },
+              ].map((m, i) => (
+                <div key={i} className="px-4 py-3 border-r border-b md:border-b-0 border-slate-200 last:border-r-0">
+                  <div className="text-xs text-slate-500">{m.label}</div>
+                  <div className={`mt-0.5 tabular-nums font-bold ${('strong' in m && m.strong) ? 'text-xl text-[#1e4e79]' : 'text-lg text-slate-900'}`}>{m.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-[#cfd6de] px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <span className="text-xs text-slate-600">
+                {loadedCandidate
+                  ? (isHindi ? 'व्यवस्थापक द्वारा परिणाम निरीक्षण' : 'Viewing candidate result (administrator)')
+                  : (isHindi ? 'यह परिणाम आपके खाते में सहेजा गया है।' : 'This result has been saved to your account.')}
+              </span>
+              {!isEmbed && attemptsList.length > 1 && (
+                <div className="flex items-center gap-2 text-xs print:hidden">
+                  <span className="text-slate-600">{isHindi ? 'प्रयास:' : 'Attempt:'}</span>
+                  <div className="inline-flex border border-slate-300 rounded overflow-hidden">
+                    {attemptsList.slice(0, 2).map((_, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectAttempt(idx)}
+                        className={`px-3 h-7 font-semibold cursor-pointer ${idx > 0 ? 'border-l border-slate-300' : ''} ${
+                          selectedAttemptIndex === idx ? 'bg-[#1e4e79] text-white' : 'bg-white text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {idx === 0 ? (isHindi ? 'नवीनतम' : 'Latest') : (isHindi ? 'पिछला' : 'Previous')}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div className="text-left sm:text-right text-[11px] text-slate-500">
-                  <p className="font-medium">
-                    Attempt Sitting:{' '}
-                    <span className="font-bold text-slate-800">
-                      {loadedAttemptMeta?.completedAt
-                        ? new Date(loadedAttemptMeta.completedAt).toLocaleString('en-IN')
-                        : 'Recent Sitting'}
-                    </span>
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    Duration: {formattedDuration} • Category: {cleanDisplayTitle(test.title)}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-1">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-xs font-semibold shadow-2xs">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Test result saved successfully!
-                </span>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </section>
 
           {/* RTI 5% Rule Toggle for DSSSB JSA only (TypingMitra does not show on IT Assistant or Stenographer) */}
           {isDsssbJsa && !isDsssbItAssistant && !isDsssbSteno && (
-            <div className="bg-white rounded-xl p-3.5 px-4 shadow-sm border border-slate-200 flex items-center justify-between">
+            <div className="bg-white px-4 py-3 border border-[#cfd6de] flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
-                <span className="text-base">⚖️</span>
-                <span>According to RTI 5% Error Allowed Rule</span>
+                <span>According to RTI 5% Error Allowed Rule <span className="block text-[11px] font-medium text-slate-500">Toggle to re-evaluate this result under the RTI 5% error margin</span></span>
               </div>
               <button
                 type="button"
@@ -1722,10 +1756,10 @@ export default function TCSiONTypingTerminalPage() {
             const rssbCorrectWords = Math.max(0, rssbWordsTyped - result.totalMistakes);
             const rssbPassed = rssbMarks >= 9;
             return (
-              <div className="bg-[#5b54d6] text-white rounded-xl p-5 shadow-sm mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="bg-[#1e4e79] text-white p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <div className="text-sm font-semibold text-white/90">Marks Obtained</div>
-                  <div className="text-4xl font-black tracking-tight mt-0.5 font-mono">
+                  <div className="text-4xl font-black tracking-tight mt-0.5 tabular-nums">
                     {rssbMarks.toFixed(2)} / 25
                   </div>
                   <div className="text-xs text-white/80 mt-1 flex items-center gap-1.5 font-medium">
@@ -1736,7 +1770,7 @@ export default function TCSiONTypingTerminalPage() {
                 <div className="flex flex-col items-start sm:items-end gap-1.5">
                   <div className="text-xs font-semibold text-white/80">Passing Marks: 9</div>
                   <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                    rssbPassed ? 'bg-[#10b981] text-white' : 'bg-[#ef4444] text-white'
+                    rssbPassed ? 'bg-[#1e7e34] text-white' : 'bg-[#b02a37] text-white'
                   }`}>
                     {rssbPassed ? '✓ PASSED' : '✕ FAILED'}
                   </span>
@@ -1745,200 +1779,169 @@ export default function TCSiONTypingTerminalPage() {
             );
           })()}
 
-          {/* 12-Card Grid (Exact Replica of TypingMitra) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Detailed scorecard */}
+          <section className="bg-white border border-[#cfd6de]">
+            <div className="bg-[#1e4e79] text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+              <h2 className="text-sm font-semibold">{isHindi ? 'विस्तृत स्कोरकार्ड' : 'Detailed scorecard'}</h2>
+              <span className="text-xs text-white/85">{isHindi ? `${catConfig.name} के आधिकारिक नियमों के अनुसार मूल्यांकन` : `Evaluated under official ${catConfig.name} rules`}</span>
+            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 [&>*]:border-b [&>*]:border-slate-200 lg:[&>*:nth-child(odd)]:border-r">
             {isAiims ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Half Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-[11px]">
-                      ▲
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Half Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.halfMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Spacing, capitalization, punctuation, transposition, paragraphic, tab errors
                   </p>
                 </div>
 
                 {/* Card 3: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👥
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-[#6366f1] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.totalMistakes.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors + Half Errors/2
                   </p>
                 </div>
 
                 {/* Card 4: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      −
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {result.aiimsPenaltyStrokes?.toFixed(0) ?? (result.totalMistakes * 50).toFixed(0)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors × 50 Keystrokes
                   </p>
                 </div>
 
                 {/* Card 5: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalWordsTyped > 0
                       ? `${((result.totalMistakes / result.totalWordsTyped) * 100).toFixed(2)}%`
                       : `${result.errorPercentage.toFixed(2)}%`}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 6: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 7: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 8: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🔤
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 9: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.aiimsGrossWpm ?? result.grossWpm).toFixed(1)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 10: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {(result.aiimsNetWpm ?? result.netWpm).toFixed(1)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes - Penalty) / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 11: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(0)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 12: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time
                   </p>
                 </div>
@@ -1946,225 +1949,186 @@ export default function TCSiONTypingTerminalPage() {
             ) : isRrbNtpc ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Half Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Half Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.halfMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Spacing, capitalization, punctuation, transposition, paragraphic, tab, extra space errors
                   </p>
                 </div>
 
                 {/* Card 3: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👥
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-[#6366f1] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.totalMistakes.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors + Half Errors/2
                   </p>
                 </div>
 
                 {/* Card 4: Ignorable Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-black text-[11px]">
-                      🛡️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Ignorable Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.ignorableMistakes ?? (0.05 * result.totalKeystrokes / 5)).toFixed(2)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     5% of (Total Keystrokes Typed / 5)
                   </p>
                 </div>
 
                 {/* Card 5: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      −
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.penalty ?? Math.max(0, (result.totalMistakes - (result.ignorableMistakes ?? (0.05 * result.totalKeystrokes / 5))) * 10)).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Total Errors - Ignorable Errors) × 10
                   </p>
                 </div>
 
                 {/* Card 6: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.errorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 7: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 8: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 9: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🔤
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 10: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {Math.round(result.grossWpm)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 11: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {Math.round(result.netWpm)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Penalty) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 12: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 13: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time
                   </p>
                 </div>
 
                 {/* Card 14: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 text-white ${
-                  isQualified ? 'bg-emerald-600' : 'bg-red-600'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  isQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {isQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isHindiTest ? 25 : 30}
                   </p>
                 </div>
@@ -2172,193 +2136,160 @@ export default function TCSiONTypingTerminalPage() {
             ) : isDsssbJsa ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dsssbTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dsssbTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (In DSSSB all errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      ⛔
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dsssbPenalty}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     {useRti5PercentRule ? 'Waived under RTI 5% rule' : '(Total Errors) × 2 (Ek Wrong per 2 words ki penalty lagti hai)'}
                   </p>
                 </div>
 
                 {/* Card 4: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.errorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 5: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 6: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 7: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📝
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 8: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dsssbNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     {useRti5PercentRule ? '((Keystrokes/5) - Total Errors) / Time' : '((Keystrokes/5 - Penalty) / Time (min)'}
                   </p>
                 </div>
 
                 {/* Card 10: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dsssbAccuracy.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 11: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 12: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 text-white ${
-                  dsssbQualified ? 'bg-emerald-600' : 'bg-red-600'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  dsssbQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {dsssbQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     {useRti5PercentRule ? `Error % ≤ 5% & Net WPM ≥ ${dsssbRequiredSpeed}` : `Net WPM ≥ ${dsssbRequiredSpeed}`}
                   </p>
                 </div>
@@ -2366,177 +2297,147 @@ export default function TCSiONTypingTerminalPage() {
             ) : (isKvsOrEmrsOrNvs || isCbseJsa) ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {isCbseJsa ? cbseTotalErrors : kvsTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {isCbseJsa ? cbseTotalErrors : kvsTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (All errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isCbseJsa ? cbseErrorPercentage : result.errorPercentage).toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 4: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 5: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 6: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📝
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isCbseJsa ? cbseWordsTyped : (result.totalKeystrokes / 5)).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isCbseJsa ? cbseNetWpm : kvsNetWpm).toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Error) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isCbseJsa ? cbseAccuracy : kvsAccuracy).toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 text-white ${
-                  (isCbseJsa ? cbseQualified : kvsQualified) ? 'bg-emerald-600' : 'bg-red-600'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  (isCbseJsa ? cbseQualified : kvsQualified) ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {(isCbseJsa ? cbseQualified : kvsQualified) ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isCbseJsa ? cbseRequiredSpeed : kvsRequiredSpeed}
                   </p>
                 </div>
@@ -2544,225 +2445,186 @@ export default function TCSiONTypingTerminalPage() {
             ) : isCsirFormula ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaFullErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Omissions, additions, substitutions, spelling
                   </p>
                 </div>
 
                 {/* Card 2: Half Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-[11px]">
-                      ▲
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Half Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaHalfErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Spacing, capitalization, punctuation, paragraphic
                   </p>
                 </div>
 
                 {/* Card 3: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors + (Half Errors / 2)
                   </p>
                 </div>
 
                 {/* Card 4: Ignorable Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-[11px]">
-                      🛡️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Ignorable Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaIgnorable.toFixed(2)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     5% of Total Words in Passage
                   </p>
                 </div>
 
                 {/* Card 5: Actual Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Actual Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaActualErrors.toFixed(2)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors - Ignorable Errors
                   </p>
                 </div>
 
                 {/* Card 6: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaErrorPct.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words in Passage × 100
                   </p>
                 </div>
 
                 {/* Card 7: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces, tabs
                   </p>
                 </div>
 
                 {/* Card 8: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 9: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📝
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaWordsTyped.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 10: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaGrossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 11: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes / 5) / Time (min)) - Actual Errors
                   </p>
                 </div>
 
                 {/* Card 12: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {csirFormulaAccuracy.toFixed(1)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 13: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 14: Qualification Status */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 text-white ${
-                  csirFormulaQualified ? 'bg-emerald-600' : 'bg-red-600'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  csirFormulaQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification Status</span>
                   </div>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {csirFormulaQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {csirFormulaRequiredSpeed}
                   </p>
                 </div>
@@ -2770,225 +2632,186 @@ export default function TCSiONTypingTerminalPage() {
             ) : isUpssscJa ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Half Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-[11px]">
-                      ▲
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Half Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.halfMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Spacing, capitalization, punctuation, transposition, paragraphic, tabs
                   </p>
                 </div>
 
                 {/* Card 3: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors + (Half Errors / 2)
                   </p>
                 </div>
 
                 {/* Card 4: Ignorable Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-[11px]">
-                      🛡️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Ignorable Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscIgnorable}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     First 5 errors
                   </p>
                 </div>
 
                 {/* Card 5: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      ⛔
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscPenalty}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Total Errors - Ignorable Errors) ×5
                   </p>
                 </div>
 
                 {/* Card 6: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscErrorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 7: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 8: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 9: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📝
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscWordsTyped.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 10: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscGrossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 11: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Words Typed - Penalty) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 12: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {upssscAccuracy.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 13: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 14: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 text-white ${
-                  upssscQualified ? 'bg-emerald-600' : 'bg-red-600'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  upssscQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {upssscQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {upssscRequiredSpeed}
                   </p>
                 </div>
@@ -2996,191 +2819,161 @@ export default function TCSiONTypingTerminalPage() {
             ) : isDelhiPoliceHcm ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-[#6366f1] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (In DP HCM all errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {((result.fullMistakes / Math.max(1, result.totalKeystrokes / 5)) * 100).toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 4: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 5: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 6: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.netWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Keystrokes/5 / Time (min)- Total Errors
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  isQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  isQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {isQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isHindiTest ? 25 : 30}
                   </p>
                 </div>
 
                 {/* Card 12: Marks Obtained */}
-                <div className="bg-[#4f46e5] text-white rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>⭐</span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 text-[#1e4e79]">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Marks Obtained</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {catEval.marksObtained ?? 0}
                   </div>
-                  <p className="text-[10px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Based on Net WPM Score<br/>
                     ≤30:10 | 31-35:12 | 36-40:15 | 41-45:18 | 46-50:21 | &gt;50:25
                   </p>
@@ -3189,193 +2982,160 @@ export default function TCSiONTypingTerminalPage() {
             ) : isDdaJsa ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (In DSSSB all errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      ➖
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {catEval.penaltyWords ?? (result.fullMistakes * 10)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Total Errors) × 10
                   </p>
                 </div>
 
                 {/* Card 4: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {result.errorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 5: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 6: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 7: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 8: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.netWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes/5 - Penalty) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 10: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 11: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 12: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  isQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  isQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {isQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isHindiTest ? 30 : 35}
                   </p>
                 </div>
@@ -3383,177 +3143,147 @@ export default function TCSiONTypingTerminalPage() {
             ) : isDdaSteno ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ddaStenoTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ddaStenoTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (In DSSSB all errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {ddaStenoErrorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 4: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 5: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 6: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ddaStenoWordsTyped.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {ddaStenoNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Error) / Time (min))
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ddaStenoAccuracy.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white sm:col-span-2 lg:col-span-2 ${
-                  ddaStenoQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  ddaStenoQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {ddaStenoQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {ddaStenoRequiredSpeed}
                   </p>
                 </div>
@@ -3561,177 +3291,147 @@ export default function TCSiONTypingTerminalPage() {
             ) : isMpCpct ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {mpCpctTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {mpCpctTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (In MP CPCT all errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {mpCpctErrorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 4: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 5: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 6: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {mpCpctWordsTyped.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {mpCpctNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Error) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {mpCpctAccuracy.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white sm:col-span-2 lg:col-span-2 ${
-                  mpCpctQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  mpCpctQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {mpCpctQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {mpCpctRequiredSpeed} {mpCpctScaledScore > 0 ? `(${mpCpctScaledScore}% Scaled Score)` : ''}
                   </p>
                 </div>
@@ -3739,210 +3439,174 @@ export default function TCSiONTypingTerminalPage() {
             ) : isDhcJja ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Every Error will be counted as full error
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Substitutions, spelling, repetitions, incomplete words, punctuation, spacing, capitalization
                   </p>
                 </div>
 
                 {/* Card 3: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcWordsTyped.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 4: Ignorable Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-[11px]">
-                      🛡️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Ignorable Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcIgnorableRounded.toFixed(1)}
                   </div>
-                  <div className="text-[11px] text-slate-400 leading-tight space-y-0.5">
+                  <div className="text-[11px] text-slate-500 leading-snug space-y-0.5">
                     <div>Actually Happened: {dhcIgnorableRaw.toFixed(2)} | Rounded Off: {dhcIgnorableRounded.toFixed(1)}</div>
                     <div className="text-slate-500 font-medium">3% of (Total Words Typed)</div>
                   </div>
                 </div>
 
                 {/* Card 5: Actual Error */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-[11px]">
-                      📈
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Actual Error</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcActualError.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors - Ignorable Errors
                   </p>
                 </div>
 
                 {/* Card 6: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {dhcErrorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 7: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 8: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 9: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcGrossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 10: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {dhcNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Actual Error) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 11: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {dhcAccuracy.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 12: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time
                   </p>
                 </div>
 
                 {/* Card 13: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  dhcQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  dhcQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {dhcQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ 35
                   </p>
                 </div>
@@ -3950,194 +3614,161 @@ export default function TCSiONTypingTerminalPage() {
             ) : isAllahabadHc ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ahcTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ahcTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors (All errors are counted as full error)
                   </p>
                 </div>
 
                 {/* Card 3: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {ahcErrorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 4: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 5: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 6: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ahcWordsTyped}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Actual words typed (space-separated)
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ahcGrossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {Number.isInteger(ahcNetWpm) ? ahcNetWpm : ahcNetWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Error) / Time (min))
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ahcAccuracy.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Total Marks Obtained */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-[11px]">
-                      ⭐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Marks Obtained</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {ahcMarks.toFixed(2)} / 50
                   </div>
-                  <div className="text-[11px] text-slate-400 leading-tight space-y-0.5">
+                  <div className="text-[11px] text-slate-500 leading-snug space-y-0.5">
                     <div>0.10 marks per correct word (Max 50)</div>
                     <div className="text-slate-500 font-medium">Correct words: {ahcCorrectWords}</div>
                   </div>
                 </div>
 
                 {/* Card 12: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  ahcQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  ahcQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {ahcQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ 25 AND Marks ≥ 25
                   </p>
                 </div>
@@ -4145,209 +3776,173 @@ export default function TCSiONTypingTerminalPage() {
             ) : isCcrasLdcUdc ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors
                   </p>
                 </div>
 
                 {/* Card 3: Ignorable Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-black text-[11px]">
-                      🛡️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Ignorable Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.ignorableMistakes ?? ((result.totalKeystrokes / 5) * 0.05)).toFixed(2)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     5% of (Total Keystrokes Typed / 5)
                   </p>
                 </div>
 
                 {/* Card 4: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      ➖
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {catEval.penaltyWords ?? Math.max(0, Math.round((result.totalMistakes - ((result.totalKeystrokes / 5) * 0.05)) * 10 * 100) / 100)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Total Errors - Ignorable Errors) × 10
                   </p>
                 </div>
 
                 {/* Card 5: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {result.errorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 6: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 7: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 8: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 9: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(0)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 10: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.netWpm.toFixed(0)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Penalty) / Time (min))
                   </p>
                 </div>
 
                 {/* Card 11: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 12: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 13: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  isQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  isQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {isQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isHindiTest ? 30 : 35}
                   </p>
                 </div>
@@ -4355,177 +3950,147 @@ export default function TCSiONTypingTerminalPage() {
             ) : isRssbLdc ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, substitutions, spelling, repetitions, incomplete words (omissions are not counted)
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      ⚙️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors Combining all types of full errors
                   </p>
                 </div>
 
                 {/* Card 3: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-red-600 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#b02a37]">
                     {result.errorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 4: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 5: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 6: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.alignedTypedWords ? result.alignedTypedWords.length : Math.round(result.totalWordsTyped)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Words separated by space in typed text
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(0)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Words Typed / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.netWpm.toFixed(0)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Words Typed - Total Errors) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Words Typed - Total Errors) / Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  (catEval.marksObtained ?? 0) >= 9 ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  (catEval.marksObtained ?? 0) >= 9 ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {(catEval.marksObtained ?? 0) >= 9 ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Marks ≥ 9
                   </p>
                 </div>
@@ -4533,177 +4098,147 @@ export default function TCSiONTypingTerminalPage() {
             ) : isUpPoliceCo ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Half Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Half Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.halfMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Spacing, capitalization, punctuation, transposition, paragraphic, tab errors
                   </p>
                 </div>
 
                 {/* Card 3: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors + Half Errors/2
                   </p>
                 </div>
 
                 {/* Card 4: Total Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📐
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.alignedTypedWords ? result.alignedTypedWords.length : Math.round(result.totalWordsTyped)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Words separated by space in typed text
                   </p>
                 </div>
 
                 {/* Card 5: Correct Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-[11px]">
-                      ✓
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Correct Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {Math.max(0, (result.alignedTypedWords ? result.alignedTypedWords.length : Math.round(result.totalWordsTyped)) - result.totalMistakes)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Words Typed − Total Errors
                   </p>
                 </div>
 
                 {/* Card 6: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 7: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(1)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Words Typed / Time (min)
                   </p>
                 </div>
 
                 {/* Card 8: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.netWpm.toFixed(1)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Total Words Typed - Total Errors) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(1)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Correct Words Typed / Total Words Available in Passage) × 100
                   </p>
                 </div>
 
                 {/* Card 10: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 11: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 text-white ${
-                  isQualified ? 'bg-[#059669]' : 'bg-[#dc2626]'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  isQualified ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-3xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {isQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isHindiTest ? 25 : 30} AND Accuracy ≥ 85%
                   </p>
                 </div>
@@ -4711,209 +4246,173 @@ export default function TCSiONTypingTerminalPage() {
             ) : (isBsfHcm || isCsirJsa) ? (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {isBsfHcm ? bsfTotalErrors : csirTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Additions, omissions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👾
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {isBsfHcm ? bsfTotalErrors : csirTotalErrors}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors
                   </p>
                 </div>
 
                 {/* Card 3: Ignorable Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-black text-[11px]">
-                      👁️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Ignorable Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isBsfHcm ? bsfIgnorable : csirIgnorable).toFixed(2)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     5% of (Total Keystrokes Typed / 5)
                   </p>
                 </div>
 
                 {/* Card 4: Penalty */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      ⛔
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Penalty</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {isBsfHcm ? bsfPenalty : csirPenalty}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Total Errors - Ignorable Errors) × 10
                   </p>
                 </div>
 
                 {/* Card 5: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isBsfHcm ? bsfErrorPercentage : result.errorPercentage).toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Errors / Total Words Typed × 100
                   </p>
                 </div>
 
                 {/* Card 6: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 7: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 8: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      📝
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isBsfHcm ? bsfWordsTyped : csirWordsTyped).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 9: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isBsfHcm ? bsfGrossWpm : result.grossWpm).toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 10: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isBsfHcm ? bsfNetWpm : csirNetWpm).toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     ((Keystrokes/5 - Penalty) / Time (min))
                   </p>
                 </div>
 
                 {/* Card 11: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(isBsfHcm ? bsfAccuracy : csirAccuracy).toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 12: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 13: Qualification */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 text-white ${
-                  (isBsfHcm ? bsfQualified : csirQualified) ? 'bg-emerald-600' : 'bg-red-600'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  (isBsfHcm ? bsfQualified : csirQualified) ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>Qualification</span>
                   </div>
-                  <div className="text-2xl font-black tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {(isBsfHcm ? bsfQualified : csirQualified) ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Net WPM ≥ {isBsfHcm ? bsfRequiredSpeed : csirRequiredSpeed}
                   </p>
                 </div>
@@ -4921,219 +4420,181 @@ export default function TCSiONTypingTerminalPage() {
             ) : (
               <>
                 {/* Card 1: Full Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      !
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Full Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.fullMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Omissions, additions, substitutions, spelling, repetitions, incomplete words
                   </p>
                 </div>
 
                 {/* Card 2: Half Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-[11px]">
-                      ▲
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Half Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.halfMistakes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Spacing, capitalization, punctuation, transposition, paragraphic
                   </p>
                 </div>
 
                 {/* Card 3: Total Errors */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-black text-[11px]">
-                      👥
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Total Errors</span>
                   </div>
-                  <div className="text-3xl font-black text-[#6366f1] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.totalMistakes.toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Full Errors + (Half Errors / 2)
                   </p>
                 </div>
 
                 {/* Card 4: Error Percentage */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-[11px]">
-                      %
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Error Percentage</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.errorPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     {errorPctFormula}
                   </p>
                 </div>
 
                 {/* Card 5: Keystrokes Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌨️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Keystrokes Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.totalKeystrokes}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Letters, numbers, punctuation, spaces
                   </p>
                 </div>
 
                 {/* Card 6: Backspace Pressed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⌫
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Backspace Pressed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {backspaceCount}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Number of backspace key presses
                   </p>
                 </div>
 
                 {/* Card 7: Words Typed */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🔤
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Words Typed</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {(result.totalKeystrokes / 5).toFixed(1)}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Total Keystrokes Typed / 5
                   </p>
                 </div>
 
                 {/* Card 8: Gross WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⏱️
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Gross WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.grossWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Keystrokes Typed / 5) / Time (min)
                   </p>
                 </div>
 
                 {/* Card 9: Net WPM */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      ⚡
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Net WPM</span>
                   </div>
-                  <div className="text-3xl font-black text-[#2563eb] font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-[#1e4e79]">
                     {result.netWpm.toFixed(2)} WPM
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     {netWpmFormula}
                   </p>
                 </div>
 
                 {/* Card 10: Accuracy */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🎯
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Accuracy</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {result.accuracyPercentage.toFixed(2)}%
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     (Net WPM / Gross WPM) × 100
                   </p>
                 </div>
 
                 {/* Card 11: Test Duration */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-between space-y-3">
-                  <div className="flex items-center gap-2 text-slate-700 font-bold text-xs">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-black text-[11px]">
-                      🕒
-                    </span>
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3">
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
                     <span>Test Duration</span>
                   </div>
-                  <div className="text-3xl font-black text-slate-900 font-mono">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums text-slate-900">
                     {formattedDuration}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     Time taken for the test
                   </p>
                 </div>
 
                 {/* Card 12: Primary UR Qualification Banner Card */}
-                <div className={`rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-2 transition-all ${
-                  isSscExam
-                    ? result.errorPercentage <= 7
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-red-600 text-white'
-                    : isQualified 
-                    ? 'bg-gradient-to-br from-[#10b981] to-[#047857] text-white' 
-                    : 'bg-gradient-to-br from-[#ef4444] to-[#b91c1c] text-white'
+                <div className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 px-4 py-3 ${
+                  (isSscExam ? result.errorPercentage <= 7 : isQualified) ? 'text-[#1e7e34]' : 'text-[#b02a37]'
                 }`}>
-                  <div className="flex items-center gap-1.5 text-white/95 font-bold text-xs">
-                    <span>🎖️</span>
+                  <div className="col-start-1 row-start-1 flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                    
                     <span>{isUttrakhandHc ? 'Qualification' : 'UR Qualification'}</span>
                   </div>
-                  <div className="text-2xl font-black text-white tracking-tight">
+                  <div className="col-start-2 row-start-1 row-span-2 text-right text-lg font-bold tabular-nums">
                     {isSscExam
                       ? result.errorPercentage <= 7 ? 'Qualified' : 'Not Qualified'
                       : isQualified ? 'Qualified' : 'Not Qualified'}
                   </div>
-                  <p className="text-[11px] text-white/90 font-medium leading-tight">
+                  <p className="col-start-1 row-start-2 text-[11px] text-slate-500 leading-snug">
                     {urRuleText}
                   </p>
                 </div>
               </>
             )}
           </div>
+          </section>
 
           {/* Dedicated Qualification Card for AIIMS CRE (Matching TypingMitra) */}
           {isAiims && (
             <div className="flex justify-start">
-              <div className={`rounded-xl p-4 shadow-sm w-full sm:w-64 flex flex-col justify-between space-y-2 text-white ${
-                isQualified ? 'bg-emerald-600' : 'bg-red-600'
+              <div className={`p-4 w-full sm:w-64 flex flex-col justify-between space-y-2 text-white ${
+                isQualified ? 'bg-[#1e7e34]' : 'bg-[#b02a37]'
               }`}>
                 <div className="flex items-center gap-1.5 font-bold text-xs">
-                  <span>🎖️</span>
+                  
                   <span>Qualification</span>
                 </div>
-                <div className="text-2xl font-black tracking-tight">
+                <div className="text-2xl font-bold">
                   {isQualified ? 'Qualified' : 'Not Qualified'}
                 </div>
                 <p className="text-[11.5px] text-white/95 font-medium leading-tight">
@@ -5146,14 +4607,14 @@ export default function TCSiONTypingTerminalPage() {
           {/* Dedicated Qualification Card for SSC Exams (Others) (Matching TypingMitra) */}
           {isSscExam && (
             <div className="flex justify-start">
-              <div className={`rounded-xl p-4 shadow-sm w-full sm:w-64 flex flex-col justify-between space-y-2 text-white ${
-                result.errorPercentage <= 10 ? 'bg-emerald-600' : 'bg-red-600'
+              <div className={`p-4 w-full sm:w-64 flex flex-col justify-between space-y-2 text-white ${
+                result.errorPercentage <= 10 ? 'bg-[#1e7e34]' : 'bg-[#b02a37]'
               }`}>
                 <div className="flex items-center gap-1.5 font-bold text-xs">
-                  <span>🎖️</span>
+                  
                   <span>Others</span>
                 </div>
-                <div className="text-2xl font-black tracking-tight">
+                <div className="text-2xl font-bold">
                   {result.errorPercentage <= 10 ? 'Qualified' : 'Not Qualified'}
                 </div>
                 <p className="text-[11.5px] text-white/95 font-medium leading-tight">
@@ -5165,9 +4626,9 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── MARKS-BASED EXAM PANEL (Allahabad HC, RSSB LDC, Delhi Police HCM, Bombay HC) ── */}
           {isMarksExam && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-3">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                <span>🎖️</span>
+                
                 <span>{catConfig.name} — Official Marks Scoring</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -5198,7 +4659,7 @@ export default function TCSiONTypingTerminalPage() {
                 <div className="space-y-3 pt-2">
                   <div className="text-xs font-bold text-purple-900 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <span>🎖️</span>
+                      
                       <span>Delhi Police HCM Official 25-Marks Scorecard (Added to Final Merit List)</span>
                     </span>
                     <span className="text-[11px] font-normal text-purple-700">
@@ -5279,7 +4740,7 @@ export default function TCSiONTypingTerminalPage() {
                 <div className="space-y-3 pt-2">
                   <div className="text-xs font-bold text-indigo-900 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <span>⚖️</span>
+                      
                       <span>High Court of Bombay Clerk Official 20-Marks Scoring Scheme</span>
                     </span>
                     <span className="text-[11px] font-normal text-indigo-700">
@@ -5325,7 +4786,7 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── AIIMS CRE KEYSTROKE PANEL ── */}
           {isAiims && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-3">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800"><span>⌨️</span><span>AIIMS CRE-5 — Keystroke Penalty Formula</span></div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[{label:'Total Keystrokes', val: result.totalKeystrokes, color:'text-slate-800'},
@@ -5350,16 +4811,16 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── MP CPCT SCALED SCORE PANEL ── */}
           {isMpCpct && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800"><span>📊</span><span>MP CPCT — Scaled Score Card</span></div>
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-3">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800"><span>MP CPCT — Scaled Score Card</span></div>
               <div className="flex flex-wrap items-center gap-6 p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="text-center">
                   <div className="text-[10px] text-slate-500">Net WPM</div>
-                  <div className="text-3xl font-black text-blue-700 font-mono">{result.netWpm.toFixed(2)}</div>
+                  <div className="text-2xl font-bold tabular-nums text-blue-700">{result.netWpm.toFixed(2)}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-[10px] text-slate-500">Scaled Score</div>
-                  <div className="text-3xl font-black text-emerald-700 font-mono">{catEval.scaledScorePercentage?.toFixed(2) ?? '0.00'}%</div>
+                  <div className="text-2xl font-bold tabular-nums text-emerald-700">{catEval.scaledScorePercentage?.toFixed(2) ?? '0.00'}%</div>
                 </div>
                 <div className="text-center">
                   <div className="text-[10px] text-slate-500">Qualifying</div>
@@ -5374,10 +4835,10 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── SPMCIL OFFICIAL EVALUATION PANEL (Matching TypingMitra result25.php) ── */}
           {isSpmcil && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-3">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                  <span>🏭</span>
+                  
                   <span>SPMCIL Official Evaluation Scheme (5% / 7% Error Allowance)</span>
                 </div>
                 {/* Category Selection Toggle matching TypingMitra result25.php */}
@@ -5463,9 +4924,9 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── PERMISSIBLE MARGIN PANEL (Delhi HC, Supreme Court) ── */}
           {isPermissibleExam && !isRrbNtpc && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-2">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                <span>🛡️</span>
+                
                 <span>{catConfig.name} — Permissible Margin Evaluation</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -5491,8 +4952,8 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── UPSSSC ACCURACY PANEL ── */}
           {isUpssscJa && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800"><span>🎯</span><span>{catConfig.name} — Accuracy Threshold</span></div>
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800"><span>{catConfig.name} — Accuracy Threshold</span></div>
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-center">
                   <div className="text-[10px] text-slate-500">Net Speed</div>
@@ -5514,7 +4975,7 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── DELHI POLICE AWO/TPO KEYSTROKE PANEL ── */}
           {isDpAwoTpo && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-2">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800"><span>⌨️</span><span>Delhi Police AWO/TPO — 1,000 Key Depressions Target</span></div>
               <div className="grid grid-cols-3 gap-3 text-xs">
                 <div className="p-2.5 rounded bg-slate-50 border border-slate-200 text-center">
@@ -5538,10 +4999,10 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── CHANDIGARH ADMIN OFFICIAL EVALUATION PANEL (Matching TypingMitra result19.php) ── */}
           {isChandigarhAdmin && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                 <span className="flex items-center gap-1.5">
-                  <span>🏛️</span>
+                  
                   <span>Chandigarh Administration Clerk &amp; Steno-Typist Official Evaluation</span>
                 </span>
                 <span className="text-[11px] font-normal text-sky-700">
@@ -5598,10 +5059,10 @@ export default function TCSiONTypingTerminalPage() {
 
           {/* ── PUNJAB & HARYANA HIGH COURT OFFICIAL EVALUATION PANEL (Matching TypingMitra result21.php) ── */}
           {isPunjabHaryanaHc && (
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+            <div className="bg-white p-5 border border-[#cfd6de] space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                 <span className="flex items-center gap-1.5">
-                  <span>⚖️</span>
+                  
                   <span>High Court of Punjab and Haryana — Official Speed Evaluation</span>
                 </span>
                 <span className="text-[11px] font-normal text-indigo-700">
@@ -5656,41 +5117,8 @@ export default function TCSiONTypingTerminalPage() {
             </div>
           )}
 
-          {/* ── UNIVERSAL CRITERIA BREAKDOWN TABLE ── */}
-          {catEval?.criteriaBreakdown && catEval.criteriaBreakdown.length > 0 && (
-            <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-                <span className="text-base">📋</span>
-                <span className="font-bold text-sm text-slate-800">Step-by-Step Calculation — {catConfig.name}</span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <tbody>
-                    {catEval.criteriaBreakdown.map((row: any, i: number) => (
-                      <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                        <td className="px-5 py-2.5 text-slate-600 font-medium w-2/3">{row.label}</td>
-                        <td className={`px-5 py-2.5 font-bold text-right ${
-                          row.status === 'PASS' ? 'text-emerald-600' :
-                          row.status === 'FAIL' ? 'text-red-600' :
-                          'text-slate-800'
-                        }`}>
-                          {String(row.value)}
-                          {row.status === 'PASS' && ' ✅'}
-                          {row.status === 'FAIL' && ' ❌'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="px-5 py-2.5 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-500">
-                Evaluated per official <strong>{catConfig.name}</strong> guidelines. Formula: <em>{catEval.evaluationBadge}</em>
-              </div>
-            </div>
-          )}
-
           {/* Accordion 1: Error Breakdown */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white border border-[#cfd6de] overflow-hidden">
             <button
               type="button"
               onClick={() => setShowErrorBreakdown(!showErrorBreakdown)}
@@ -6189,14 +5617,13 @@ export default function TCSiONTypingTerminalPage() {
           </div>
 
           {/* Accordion 2: Calculation Formulas */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white border border-[#cfd6de] overflow-hidden">
             <button
               type="button"
               onClick={() => setShowCalculationFormulas(!showCalculationFormulas)}
               className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer"
             >
               <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                <span className="text-base">🧮</span>
                 <span>Calculation Formulas</span>
               </div>
               {showCalculationFormulas ? (
@@ -6503,9 +5930,9 @@ export default function TCSiONTypingTerminalPage() {
           </div>
 
           {/* Original Text Section */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 space-y-3">
-            <h2 className="font-bold text-sm text-slate-900">Original Text</h2>
-            <div className="border border-slate-200 rounded-lg p-4 bg-[#fafbfc] text-xs sm:text-sm font-sans leading-relaxed max-h-56 overflow-y-auto">
+          <div className="bg-white border border-[#cfd6de] p-5 space-y-3">
+            <h2 className="font-extrabold text-sm text-slate-900 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600" />{isHindi ? 'मूल गद्यांश' : 'Original passage'}</h2>
+            <div className="border border-slate-300 p-4 bg-[#fafbfc] text-[13px] sm:text-sm font-sans leading-relaxed max-h-72 overflow-y-auto">
               {result.alignedOriginalWords && result.alignedOriginalWords.length > 0 ? (
                 <div className="flex flex-wrap gap-x-1.5 gap-y-1">
                   {result.alignedOriginalWords
@@ -6561,9 +5988,9 @@ export default function TCSiONTypingTerminalPage() {
           </div>
 
           {/* Your Typed Text Section */}
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 space-y-3">
-            <h2 className="font-bold text-sm text-slate-900">Your Typed Text</h2>
-            <div className="border border-slate-200 rounded-lg p-4 bg-[#fafbfc] text-xs sm:text-sm font-sans leading-relaxed max-h-56 overflow-y-auto">
+          <div className="bg-white border border-[#cfd6de] p-5 space-y-3">
+            <h2 className="font-extrabold text-sm text-slate-900 flex items-center gap-2"><Keyboard className="w-4 h-4 text-blue-600" />{isHindi ? 'आपके द्वारा टाइप किया गया' : 'Your typed text'}</h2>
+            <div className="border border-slate-300 p-4 bg-[#fafbfc] text-[13px] sm:text-sm font-sans leading-relaxed max-h-72 overflow-y-auto">
               {result.alignedTypedWords && result.alignedTypedWords.length > 0 ? (
                 <div className="flex flex-wrap gap-x-1.5 gap-y-1">
                   {result.alignedTypedWords.map((tw, idx) => {
@@ -6714,31 +6141,38 @@ export default function TCSiONTypingTerminalPage() {
             )}
           </div>
 
-          {/* Bottom Action Buttons (Matching Screenshot) */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2 pb-8">
-            <Link
-              href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
-              className="px-6 py-2.5 rounded-full bg-[#10b981] hover:bg-[#059669] active:scale-95 text-white text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer"
-            >
-              <span>Back to Passages</span>
-            </Link>
-
-            <Link
-              href="/typing-test/history"
-              className="px-6 py-2.5 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-95 text-white text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer"
-            >
-              <History className="w-4 h-4" />
-              <span>View Test History</span>
-            </Link>
-
-            <button
-              onClick={() => initDemoPhase(test)}
-              className="px-6 py-2.5 rounded-full bg-[#10b981] hover:bg-[#059669] active:scale-95 text-white text-xs sm:text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Retake Test</span>
-            </button>
-          </div>
+          {/* Bottom actions */}
+          {!isEmbed && (
+            <div className="bg-white border border-[#cfd6de] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-semibold text-slate-900">{isHindi ? 'आगे क्या करें?' : 'What would you like to do next?'}</p>
+                <p className="text-xs text-slate-500">{isHindi ? 'दूसरा गद्यांश आज़माएं या यही टेस्ट दोबारा दें।' : 'Practise another passage or retake this test.'}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
+                <Link
+                  href={test.categoryId ? `/typing-test/category/${test.categoryId}` : '/typing-test'}
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded border border-slate-300 bg-white hover:bg-slate-50 text-[#1e4e79] text-[13px] font-semibold"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>{isHindi ? 'सभी गद्यांश' : 'All passages'}</span>
+                </Link>
+                <Link
+                  href="/typing-test"
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded border border-slate-300 bg-white hover:bg-slate-50 text-[#1e4e79] text-[13px] font-semibold"
+                >
+                  <Keyboard className="w-4 h-4" />
+                  <span>{isHindi ? 'सभी परीक्षाएं' : 'All typing exams'}</span>
+                </Link>
+                <button
+                  onClick={() => initDemoPhase(test)}
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded bg-[#1e4e79] hover:bg-[#163c5e] text-white text-[13px] font-semibold cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>{isHindi ? 'पुनः टेस्ट दें' : 'Retake test'}</span>
+                </button>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
@@ -6748,558 +6182,29 @@ export default function TCSiONTypingTerminalPage() {
   // ----------------------------------------------------
   // BREAK PHASE (PHASE 2)
   // ----------------------------------------------------
-  if (phase === 'BREAK') {
-    return (
-      <div className="min-h-screen bg-[#eef2f5] text-slate-800 flex flex-col justify-between font-sans select-none">
-        {/* Top Header with Exact Test Name */}
-        <header className="bg-[#286090] text-white px-4 py-2.5 flex items-center justify-between gap-4 shadow-xs">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h1 className="font-extrabold text-xs sm:text-sm tracking-wide uppercase truncate text-white">
-              {cleanDisplayTitle(test.title || test.titleHi || 'Typing Skill Test')}
-            </h1>
-          </div>
-
-          {/* Center: Mock Test Hub Logo */}
-          <div className="flex items-center justify-center shrink-0 px-2">
-            <Link
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 group cursor-pointer hover:opacity-95 transition"
-              title={t.backToHome}
-            >
-              <div className="bg-white/15 p-1.5 rounded-full shadow-xs flex items-center justify-center h-8 w-8 border border-white/30 shrink-0">
-                <Trophy className="h-4 w-4 text-amber-300" />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="font-black text-xs leading-tight text-white tracking-wider uppercase">
-                  {t.logoTitle}
-                </span>
-                <span className="hidden xs:inline text-[7.5px] text-blue-200 font-extrabold tracking-widest uppercase leading-tight">
-                  {t.logoSub}
-                </span>
-              </div>
-            </Link>
-          </div>
-
-          <div className="flex items-center justify-end gap-4 shrink-0 flex-1">
-            <span className="text-[11px] font-bold text-amber-300 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-400/40 hidden sm:inline">
-              Phase 2: Break Time
-            </span>
-            <button
-              onClick={() => setShowInstructionsModal(true)}
-              className="text-xs text-white hover:underline flex items-center gap-1 cursor-pointer font-semibold"
-            >
-              <Info className="w-3.5 h-3.5 text-[#29b6f6]" />
-              View Instructions
-            </button>
-          </div>
-        </header>
-
-        {/* Break Center Container */}
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-white border border-slate-300 rounded shadow-md p-6 sm:p-8 text-center space-y-6">
-            <div className="inline-block px-3 py-1 bg-amber-100 text-amber-800 font-bold text-xs rounded border border-amber-300 uppercase">
-              Phase 2: Break Time (विश्राम समय)
-            </div>
-
-            <div className="space-y-1.5">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                Demo Test Completed! Please Relax
-              </h2>
-              <p className="text-xs sm:text-sm font-bold text-[#286090]">
-                {cleanDisplayTitle(test.title)}
-              </p>
-              <p className="text-xs text-slate-600 max-w-md mx-auto">
-                The main typing exam will start automatically when the break timer reaches zero.
-              </p>
-            </div>
-
-            {/* Countdown Box */}
-            <div className="p-4 bg-[#f8f9fa] border border-slate-300 rounded inline-block">
-              <div className="text-3xl font-black font-mono text-[#286090]">
-                {formatTcsTime(timeRemaining)}
-              </div>
-              <div className="text-[10px] text-slate-500 font-semibold uppercase mt-0.5">
-                Break Time Left
-              </div>
-            </div>
-
-            <div className="text-left text-xs bg-blue-50 border border-blue-200 p-3.5 rounded space-y-1 text-slate-700">
-              <div className="font-bold text-[#286090]">Main Examination Details:</div>
-              <div>• Total Duration: <strong>{test.mainDurationMinutes} Minutes</strong></div>
-              {isSscCglExam(test) ? (
-                <div>• Result Criteria: <strong>Category-Wise Max Error — UR: 20% | OBC/EWS: 25% | SC/ST: 30%</strong></div>
-              ) : isSscChslExam(test) ? (
-                <div>• Result Criteria: <strong>Category-Wise Max Error — UR & EWS: 7% | Reserved (OBC/SC/ST/PwBD/ESM): 10%</strong> (Net Speed = Net Words ÷ Time)</div>
-              ) : isSscExam(test) ? (
-                <div>• Result Criteria: <strong>Error Percentage &le; {test.maxErrorPercentage}%</strong> (Evaluated strictly on Error %)</div>
-              ) : (
-                <>
-                  <div>• Qualifying Speed: <strong>{test.qualifyingWpm} WPM</strong></div>
-                  <div>• Max Error Allowance: <strong>{test.maxErrorPercentage}%</strong></div>
-                </>
-              )}
-            </div>
-
-            <div>
-              <button
-                onClick={handleFinishBreak}
-                className="px-6 py-2.5 bg-[#31a0e5] hover:bg-[#286090] text-white font-bold text-xs rounded shadow transition cursor-pointer"
-              >
-                Start Main Test Now (Skip Break)
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // ----------------------------------------------------
-  // TCS iON REPLICA TERMINAL (DEMO & MAIN PHASES)
-  // Exact layout as in screenshot
-  // ----------------------------------------------------
-  return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between font-sans select-none">
-      {/* Hidden Audio element for Typing Keystroke Sound */}
-      <audio
-        ref={typingAudioRef}
-        src="/typing-sound.mp3"
-        preload="auto"
-        loop
-      />
-
-      {/* 1. TOP BLUE STRIP */}
-      <div className="h-6 bg-[#286090] w-full" />
-
-      {/* 2. SUB-HEADER / TEST NAME & CANDIDATE ROW (SECTION 1) */}
-      <div className="border-b border-slate-300 bg-[#f8f9fa] px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          {/* Left Side: Test Name */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h2 className="font-extrabold text-xs sm:text-sm text-[#286090] tracking-wide truncate">
-              {cleanDisplayTitle(test.title || testDisplayCode)}
-            </h2>
-          </div>
-
-          {/* Center: Mock Test Hub Logo */}
-          <div className="flex items-center justify-center shrink-0 px-2">
-            <Link
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 group cursor-pointer hover:opacity-95 transition"
-              title={t.backToHome}
-            >
-              <div className="bg-[#E6F4FE] p-1.5 rounded-full shadow-xs flex items-center justify-center h-8 w-8 border border-blue-200/80 shrink-0 group-hover:border-blue-400 transition">
-                <Trophy className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="font-black text-xs leading-tight text-slate-900 tracking-wider uppercase group-hover:text-blue-700 transition">
-                  {t.logoTitle}
-                </span>
-                <span className="hidden xs:inline text-[7.5px] text-blue-600 font-extrabold tracking-widest uppercase leading-tight">
-                  {t.logoSub}
-                </span>
-              </div>
-            </Link>
-          </div>
-
-          {/* Right Side: Digital Countdown Clock & User Profile */}
-          <div className="flex items-center justify-end gap-3 sm:gap-4 shrink-0 flex-1">
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={phase === 'DEMO' ? handleFinishDemo : handleFinishMainTest}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-extrabold text-xs rounded shadow-xs border border-emerald-700 transition cursor-pointer"
-                title={`Admin Quick Submit: Finish ${phase === 'DEMO' ? 'Demo Test' : 'Main Test'} immediately`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                <span>Submit {phase === 'DEMO' ? 'Demo' : 'Test'} (Admin)</span>
-              </button>
-            )}
-
-            <div className="text-sm sm:text-base font-bold text-slate-900 tracking-wide">
-              Time Left: <span className="font-mono">{formatTcsTime(timeRemaining)}</span>
-            </div>
-
-            {/* User Profile Box */}
-            <div className="flex items-center gap-2 bg-white border border-slate-300 p-1.5 rounded shadow-xs">
-              {/* Metallic Avatar silhouette icon */}
-              <div className="w-10 h-10 rounded bg-gradient-to-b from-slate-200 via-slate-300 to-slate-400 border border-slate-300 flex items-center justify-center overflow-hidden shadow-inner shrink-0">
-                <svg className="w-8 h-8 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
-              </div>
-              <div className="text-xs font-bold text-slate-800 pr-2 flex items-center gap-1">
-                <span>{currentUser?.name || 'my user'}</span>
-                {isAdmin && (
-                  <span className="text-[9px] px-1 py-0.2 bg-purple-100 text-purple-800 border border-purple-300 rounded font-black">
-                    ADMIN
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. KEYBOARD LAYOUT BLUE BAR */}
-      <div className="bg-[#337ab7] text-white px-4 py-1.5 text-xs sm:text-sm font-bold shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span>
-              Keyboard Layout: {test.language === 'hi' ? 'Hindi (Mangal / Inscript / Remington)' : 'QWERTY'}
-            </span>
-            <div className="flex items-center gap-1 bg-white/20 px-1.5 py-0.5 rounded border border-white/30 text-xs">
-              <span className="text-[11px] font-medium text-white/90 pr-0.5">Text Size:</span>
-              <button
-                type="button"
-                onClick={handleDecreaseTextSize}
-                disabled={textSize <= 14}
-                className="w-5 h-5 flex items-center justify-center rounded bg-white/25 hover:bg-white/40 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs cursor-pointer"
-                title="Decrease font size (A-)"
-              >
-                A-
-              </button>
-              <button
-                type="button"
-                onClick={handleResetTextSize}
-                className="px-1.5 h-5 flex items-center justify-center rounded bg-white/25 hover:bg-white/40 active:scale-95 text-[11px] font-semibold cursor-pointer"
-                title="Reset default font size (22px)"
-              >
-                {textSize}px
-              </button>
-              <button
-                type="button"
-                onClick={handleIncreaseTextSize}
-                disabled={textSize >= 30}
-                className="w-5 h-5 flex items-center justify-center rounded bg-white/25 hover:bg-white/40 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs cursor-pointer"
-                title="Increase font size (A+)"
-              >
-                A+
-              </button>
-            </div>
-
-            {/* Sound Toggle */}
-            <button
-              type="button"
-              onClick={toggleSound}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded border text-xs font-semibold cursor-pointer transition ${
-                soundEnabled
-                  ? 'bg-emerald-600/90 border-emerald-400 text-white hover:bg-emerald-600 shadow-2xs'
-                  : 'bg-white/15 border-white/30 text-white/80 hover:bg-white/25'
-              }`}
-              title="Toggle Typing Sound (Click to turn on or off)"
-            >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-white" /> : <VolumeX className="w-3.5 h-3.5 text-white/70" />}
-              <span>{soundEnabled ? 'Sound: ON' : 'Sound: OFF'}</span>
-            </button>
-
-            {/* Fullscreen Toggle */}
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded border text-xs font-semibold cursor-pointer transition ${
-                isFullscreen
-                  ? 'bg-indigo-600/90 border-indigo-400 text-white hover:bg-indigo-600 shadow-2xs'
-                  : 'bg-white/15 border-white/30 text-white/80 hover:bg-white/25'
-              }`}
-              title="Toggle Full Screen View"
-            >
-              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 text-white" /> : <Maximize2 className="w-3.5 h-3.5 text-white/70" />}
-              <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen'}</span>
-            </button>
-
-            {/* Delhi Police HCM, DSSSB Steno & Bombay High Court Clerk PDF Download & Paper Mode Buttons */}
-            {(Boolean(
-              (test?.categoryId || '').includes('bombay') ||
-              (test?.title || '').toLowerCase().includes('bombay') ||
-              (test?.categoryId || '').includes('delhi-police-hcm') ||
-              (test?.title || '').toLowerCase().includes('delhi police hcm') ||
-              (test?.categoryId || '').includes('dsssb-stenographer') ||
-              (test?.title || '').toLowerCase().includes('dsssb steno')
-            )) && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleDownloadPassagePdf}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-bold text-xs shadow-xs cursor-pointer transition"
-                  title="Download and print authentic passage paper sheet"
-                >
-                  <Printer className="w-3.5 h-3.5 text-slate-900" />
-                  <span>Download Passage PDF</span>
-                </button>
-
-                {(Boolean(
-                  (test?.categoryId || '').includes('bombay') ||
-                  (test?.title || '').toLowerCase().includes('bombay') ||
-                  (test?.categoryId || '').includes('delhi-police-hcm') ||
-                  (test?.title || '').toLowerCase().includes('delhi police hcm')
-                )) && (
-                  <button
-                    type="button"
-                    onClick={() => setIsPaperMode(!isPaperMode)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded border text-xs font-semibold cursor-pointer transition ${
-                      isPaperMode
-                        ? 'bg-amber-500 border-amber-300 text-slate-950 font-bold shadow-xs'
-                        : 'bg-white/15 border-white/30 text-white/90 hover:bg-white/25'
-                    }`}
-                    title="Simulate paper-to-screen typing test as conducted in official exam"
-                  >
-                    <span>{isPaperMode ? '📄 Paper Mode: ON (Passage Hidden)' : '📄 Paper Mode: OFF'}</span>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <span>
-              Retyping: <span className={isRetypeAllowed ? 'text-emerald-200 font-bold' : 'text-amber-200'}>{isRetypeAllowed ? 'Allowed' : 'Not Allowed'}</span>
-            </span>
-            <span>
-              Backspace: <span className={isBackspaceEnabled ? 'text-emerald-200 font-bold' : 'text-amber-200'}>{isBackspaceEnabled ? 'Unrestricted ✓' : 'Disabled (No Corrections)'}</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. MAIN WORK AREA (SPLIT SCREEN LAYOUT) */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 flex flex-col lg:flex-row gap-4">
-        {/* Left Column: Top Passage Box + Bottom Typing Box */}
-        <div className="flex-1 flex flex-col gap-3">
-          {/* Top Box: Passage to type (or Paper Mode banner) */}
-          {isPaperMode ? (
-            <div className="p-4 bg-amber-50/95 border-2 border-amber-300 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in duration-200">
-              <div className="flex items-center gap-3 text-amber-950">
-                <span className="text-2xl">📄</span>
-                <div>
-                  <div className="font-extrabold text-sm text-amber-900">
-                    {(test?.categoryId || '').includes('bombay') || (test?.title || '').toLowerCase().includes('bombay')
-                      ? '🏛️ Bombay High Court Clerk Paper-to-Screen Mode Active'
-                      : 'Delhi Police HCM Paper Mode Active'}
-                  </div>
-                  <div className="text-amber-800 text-[11px] leading-tight">
-                    {(test?.categoryId || '').includes('bombay') || (test?.title || '').toLowerCase().includes('bombay')
-                      ? 'Passage is hidden on screen to simulate typing from physical printed paper as conducted in official Bombay High Court Clerk exam. Look at your printed sheet / downloaded PDF and type into the enlarged box below.'
-                      : 'Passage is hidden on screen to simulate typing from physical printed paper. Look at your printed sheet and type into the enlarged box below.'}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleDownloadPassagePdf}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-amber-100 border border-amber-300 rounded-md font-bold text-amber-900 cursor-pointer shadow-2xs transition active:scale-95"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Download / Print Passage</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsPaperMode(false)}
-                  className="px-3 py-1.5 bg-[#286090] hover:bg-[#204d74] text-white rounded-md font-bold cursor-pointer shadow-2xs transition active:scale-95"
-                >
-                  👁️ Show Passage On-Screen
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div
-              ref={passageBoxRef}
-              style={{ fontSize: `${textSize}px`, lineHeight: `${Math.round(textSize * 1.6)}px` }}
-              className="tcs-scrollbar h-56 sm:h-64 p-3 bg-white border border-slate-400 rounded overflow-y-auto text-slate-900 font-sans select-none tracking-normal"
-            >
-              {currentPassageText}
-            </div>
-          )}
-
-          {/* Bottom Box: User Typing Area */}
-          <div className={`${isPaperMode ? 'h-[440px] sm:h-[500px]' : 'h-56 sm:h-64'} bg-white border-2 border-slate-800 rounded p-1 transition-all duration-200`}>
-            <textarea
-              ref={typingInputRef}
-              autoFocus
-              value={currentTypedText}
-              placeholder={isPaperMode ? 'Start typing here to begin the test... (Typing from printed paper passage sheet)' : 'Start typing here to begin the test...'}
-              style={{ fontSize: `${textSize}px`, lineHeight: `${Math.round(textSize * 1.6)}px` }}
-              onChange={e => {
-                if (phase === 'DEMO') {
-                  const val = e.target.value;
-                  if (!isBackspaceEnabled) {
-                    if (val.length < demoTypedText.length || !val.startsWith(demoTypedText)) {
-                      if (typingInputRef.current) {
-                        typingInputRef.current.value = demoTypedText;
-                      }
-                      return;
-                    }
-                  }
-                  setDemoTypedText(val);
-                } else {
-                  const val = e.target.value;
-                  // If corrections are disabled, ensure text can only append (strictly monotonic forward progress)
-                  if (!isBackspaceEnabled) {
-                    if (val.length < mainTypedText.length || !val.startsWith(mainTypedText)) {
-                      if (typingInputRef.current) {
-                        typingInputRef.current.value = mainTypedText;
-                      }
-                      return;
-                    }
-                  }
-                  // If retyping is disabled, block typing new words beyond the passage
-                  if (!isRetypeAllowed && passageWordCount > 0) {
-                    const valWords = val.trim().length > 0 ? val.trim().split(/\s+/) : [];
-                    if (valWords.length > passageWordCount && val.length > mainTypedText.length) {
-                      return;
-                    }
-                  }
-                  setMainTypedText(val);
-                }
-              }}
-              onKeyDown={handleKeyDown}
-              onClick={e => {
-                if (!isBackspaceEnabled) {
-                  const el = e.currentTarget;
-                  el.setSelectionRange(el.value.length, el.value.length);
-                }
-              }}
-              onSelect={e => {
-                if (!isBackspaceEnabled) {
-                  const el = e.currentTarget;
-                  if (el.selectionStart !== el.value.length || el.selectionEnd !== el.value.length) {
-                    el.setSelectionRange(el.value.length, el.value.length);
-                  }
-                }
-              }}
-              onCut={e => {
-                e.preventDefault();
-              }}
-              onContextMenu={e => {
-                if (!isBackspaceEnabled) {
-                  e.preventDefault();
-                }
-              }}
-              onPaste={e => {
-                e.preventDefault(); // Exam integrity: strictly prevent pasting
-              }}
-              onDrop={e => {
-                e.preventDefault();
-              }}
-              onDragOver={e => {
-                e.preventDefault();
-              }}
-              className="tcs-scrollbar w-full h-full p-2 bg-transparent resize-none border-none focus:outline-none text-slate-900 font-sans tracking-normal overflow-y-auto"
-              spellCheck={false}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-            />
-          </div>
-
-          {/* Quick Submit / End Test Bar (Admin, CBSE JSA, BSF HCM, CSIR Formula, UPSSSC JA, SSC CGL) */}
-          {(isAdmin || isCbseTest || isBsfTest || isCsirFormulaTest || isUpssscTest || isSscCglTest) && (
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-100 border border-slate-300 rounded-md shadow-2xs">
-              <div className="flex items-center gap-1.5 text-slate-800 text-xs font-bold">
-                <CheckCircle2 className="w-4 h-4 text-[#286090] shrink-0" />
-                <span>
-                  {phase === 'DEMO' ? 'Demo Warm-up Session' : isSscCglTest ? 'SSC CGL Previous Year Examination Session' : isUpssscTest ? 'UPSSSC JA Examination Session' : isCsirFormulaTest ? 'CSIR EXAM New Rules(FORMULA) Session' : isBsfTest ? 'BSF HCM Examination Session' : isCbseSuperintendentTest ? 'CBSE Superintendent Examination Session' : 'CBSE JSA Examination Session'}
-                </span>
-                {isAdmin && (
-                  <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded font-bold border border-purple-300">
-                    Admin
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={phase === 'DEMO' ? handleFinishDemo : handleFinishMainTest}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#286090] hover:bg-[#1f4b72] active:scale-95 text-white font-extrabold text-xs rounded shadow-xs border border-[#1f4b72] transition cursor-pointer"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                <span>{phase === 'DEMO' ? 'Finish Demo Test' : 'End / Submit Typing Test'}</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Instructions Box & Admin Quick Panel */}
-        <div className="w-full lg:w-72 flex flex-col gap-4">
-          {/* Instructions Box with Magenta/Purple Border (exact to screenshot) */}
-          <div className="p-3.5 bg-white border border-[#ab47bc] rounded text-[11px] text-slate-700 leading-relaxed space-y-2 shadow-xs">
-            {test.language === 'hi' ? (
-              <p>
-                हिंदी टाइपिंग सेट करने के लिए <strong>Settings &gt; Time & Language</strong> में जाएं और हिंदी कीबोर्ड जोड़ें। 
-                कीबोर्ड बदलने के लिए <strong className="text-[#e65100]">Windows + Space</strong> दबाएं।
-              </p>
-            ) : (
-              <p>
-                To set up the keyboard for Hindi typing, first go to Settings, then Time & Language, and select Language on your laptop. Install Hindi as a preferred language. After that, press <strong className="text-[#e65100]">Windows + Space</strong> to switch to the Hindi keyboard, but only switch when Hindi typing is required for the test.
-              </p>
-            )}
-            <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-500 space-y-0.5">
-                <div className="flex justify-between">
-                  <span>Retyping:</span>
-                  <strong className={isRetypeAllowed ? 'text-emerald-700 font-semibold' : 'text-slate-600'}>
-                    {isRetypeAllowed ? 'Allowed' : 'Not Allowed'}
-                  </strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Keystrokes:</span>
-                  <strong>{currentTypedText.length}</strong>
-                </div>
-                <div className="flex justify-between">
-                  <span>Words (KS÷5):</span>
-                  <strong className="text-[#286090]">{Math.floor(currentTypedText.length / 5)}</strong>
-                </div>
-              </div>
-          </div>
-
-          {/* Admin Panel in Right Column (Only visible to admins) */}
-          {isAdmin && (
-            <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded text-xs text-slate-700 space-y-2 shadow-xs">
-              <div className="flex items-center gap-1.5 text-emerald-900 font-bold">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Admin Quick Actions</span>
-              </div>
-              <p className="text-[11px] text-emerald-800 leading-snug">
-                As an administrator, you can submit the {phase === 'DEMO' ? 'demo warm-up' : 'main examination'} instantly without waiting for the timer.
-              </p>
-              <button
-                type="button"
-                onClick={phase === 'DEMO' ? handleFinishDemo : handleFinishMainTest}
-                className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-extrabold text-xs rounded shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                <span>Submit {phase === 'DEMO' ? 'Demo Test' : 'Main Test'} Now</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* INSTRUCTIONS MODAL */}
-      {showInstructionsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="allow-mouse-scroll w-full max-w-2xl bg-white rounded border border-slate-300 shadow-2xl p-5 space-y-4 max-h-[85vh] overflow-y-auto text-xs text-slate-800">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-              <h3 className="text-sm font-bold text-[#286090] uppercase">
+  // Instructions dialog — shared by the break screen and the demo/main terminal
+  const renderInstructionsModal = () => (showInstructionsModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="allow-mouse-scroll w-full max-w-2xl bg-white rounded-lg border border-slate-200 shadow-xl p-6 space-y-4 max-h-[85vh] overflow-y-auto text-sm text-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="text-base font-semibold text-slate-900">
                 General Examination Instructions (SSC / Govt DEST Guidelines)
               </h3>
               <button
                 onClick={() => setShowInstructionsModal(false)}
-                className="p-1 rounded text-slate-500 hover:text-slate-900 cursor-pointer"
+                className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-3 leading-relaxed text-slate-700">
-              <div className="p-2.5 bg-blue-50 border border-blue-200 rounded font-semibold text-[#286090]">
+              <div className="px-3 py-2.5 bg-slate-50 border border-slate-200 border-l-4 border-l-[#1e4e79] rounded-md font-medium text-slate-800">
                 {test.title} • Target: {test.qualifyingWpm} WPM • Max Error: {test.maxErrorPercentage}%
               </div>
 
               <div className="space-y-1.5">
-                <h4 className="font-bold text-slate-900">1. Exam Structure & Durations:</h4>
+                <h4 className="font-semibold text-slate-900">1. Exam Structure & Durations:</h4>
                 <ul className="list-disc list-inside space-y-1 text-slate-600 pl-2">
                   <li>Demo Test: <strong>{test.demoDurationMinutes} Minute(s)</strong> warm-up to verify keyboard responsiveness.</li>
                   <li>Break Time: <strong>{test.breakDurationMinutes} Minute(s)</strong> relaxation and keyboard positioning.</li>
@@ -7308,7 +6213,7 @@ export default function TCSiONTypingTerminalPage() {
               </div>
 
               <div className="space-y-1.5">
-                <h4 className="font-bold text-slate-900">
+                <h4 className="font-semibold text-slate-900">
                   2. Evaluation Guidelines {isCbseSuperintendentExam(test) ? '(Official CBSE Superintendent Standard)' : isUpssscJaExam(test) ? '(Official UPSSSC Junior Assistant Standard)' : isCsirFormulaExam(test) ? '(Official CSIR EXAM New Rules Formula)' : isBsfHcmExam(test) ? '(Official BSF HCM Standard)' : isAiimsExam(test) ? '(Official AIIMS CRE CRE-5 Standard)' : isSscExam(test) ? '(Official SSC Standard)' : '(RRB / Standard)'}:
                 </h4>
                 {isCbseSuperintendentExam(test) ? (
@@ -7400,7 +6305,7 @@ export default function TCSiONTypingTerminalPage() {
               </div>
 
               <div className="space-y-1.5">
-                <h4 className="font-bold text-slate-900">3. Keyboard & Rules:</h4>
+                <h4 className="font-semibold text-slate-900">3. Keyboard & Rules:</h4>
                 <ul className="list-disc list-inside space-y-1 text-slate-600 pl-2">
                   <li>
                     {isBackspaceEnabled
@@ -7422,22 +6327,556 @@ export default function TCSiONTypingTerminalPage() {
             <div className="flex justify-end pt-3 border-t border-slate-200">
               <button
                 onClick={() => setShowInstructionsModal(false)}
-                className="px-4 py-1.5 bg-[#337ab7] hover:bg-[#286090] text-white font-bold text-xs rounded cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-9 px-4 text-sm"
               >
                 Close Instructions
               </button>
             </div>
           </div>
         </div>
-      )}
+  ) : null);
+
+  if (phase === 'BREAK') {
+    return (
+      <div className="min-h-screen bg-[#f5f7fa] text-slate-800 flex flex-col justify-between font-sans select-none">
+        {/* Top Header with Exact Test Name */}
+        <header className="bg-white text-slate-800 px-4 py-2.5 flex items-center justify-between gap-4 border-b border-slate-200 border-t-4 border-t-[#1e4e79]">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <h1 className="font-semibold text-sm sm:text-[15px] truncate text-slate-900">
+              {cleanDisplayTitle(test.title || test.titleHi || 'Typing Skill Test')}
+            </h1>
+          </div>
+
+          {/* Center: Mock Test Hub Logo */}
+          <div className="flex items-center justify-center shrink-0 px-2">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 group cursor-pointer hover:opacity-95 transition"
+              title={t.backToHome}
+            >
+              <div className="bg-[#E6F4FE] rounded-md flex items-center justify-center h-8 w-8 shrink-0">
+                <Trophy className="h-4 w-4 text-[#1e4e79]" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-bold text-sm leading-tight text-slate-900">
+                  {t.logoTitle}
+                </span>
+                <span className="hidden xs:inline text-[11px] text-slate-500 leading-tight">
+                  {t.logoSub}
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="flex items-center justify-end gap-4 shrink-0 flex-1">
+            <span className="text-xs font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md ring-1 ring-inset ring-amber-600/20 hidden sm:inline">
+              Phase 2: Break Time
+            </span>
+            <button
+              onClick={() => setShowInstructionsModal(true)}
+              className="text-sm text-[#1e4e79] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <Info className="w-4 h-4" />
+              View Instructions
+            </button>
+          </div>
+        </header>
+
+        {/* Break Center Container */}
+        <main className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-lg p-6 sm:p-8 text-center space-y-6">
+            <div className="inline-block px-2.5 py-0.5 bg-amber-50 text-amber-800 font-medium text-xs rounded-md ring-1 ring-inset ring-amber-600/20">
+              Phase 2: Break Time (विश्राम समय)
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
+                Demo Test Completed! Please Relax
+              </h2>
+              <p className="text-sm font-medium text-[#1e4e79]">
+                {cleanDisplayTitle(test.title)}
+              </p>
+              <p className="text-sm text-slate-500 max-w-md mx-auto">
+                The main typing exam will start automatically when the break timer reaches zero.
+              </p>
+            </div>
+
+            {/* Countdown Box */}
+            <div className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-lg inline-block">
+              <div className="text-3xl font-semibold font-mono tabular-nums text-[#1e4e79]">
+                {formatTcsTime(timeRemaining)}
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                Break Time Left
+              </div>
+            </div>
+
+            <div className="text-left text-sm bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-1 text-slate-700">
+              <div className="font-semibold text-slate-900">Main Examination Details:</div>
+              <div>• Total Duration: <strong>{test.mainDurationMinutes} Minutes</strong></div>
+              {isSscCglExam(test) ? (
+                <div>• Result Criteria: <strong>Category-Wise Max Error — UR: 20% | OBC/EWS: 25% | SC/ST: 30%</strong></div>
+              ) : isSscChslExam(test) ? (
+                <div>• Result Criteria: <strong>Category-Wise Max Error — UR & EWS: 7% | Reserved (OBC/SC/ST/PwBD/ESM): 10%</strong> (Net Speed = Net Words ÷ Time)</div>
+              ) : isSscExam(test) ? (
+                <div>• Result Criteria: <strong>Error Percentage &le; {test.maxErrorPercentage}%</strong> (Evaluated strictly on Error %)</div>
+              ) : (
+                <>
+                  <div>• Qualifying Speed: <strong>{test.qualifyingWpm} WPM</strong></div>
+                  <div>• Max Error Allowance: <strong>{test.maxErrorPercentage}%</strong></div>
+                </>
+              )}
+            </div>
+
+            <div>
+              <button
+                onClick={handleFinishBreak}
+                className="inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-10 px-6 text-sm"
+              >
+                Start Main Test Now (Skip Break)
+              </button>
+            </div>
+          </div>
+        </main>
+
+        {renderInstructionsModal()}
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------
+  // TCS iON REPLICA TERMINAL (DEMO & MAIN PHASES)
+  // Exact layout as in screenshot
+  // ----------------------------------------------------
+  return (
+    <div className="min-h-screen bg-[#f5f7fa] text-slate-900 flex flex-col justify-between font-sans select-none">
+      {/* Hidden Audio element for Typing Keystroke Sound */}
+      <audio
+        ref={typingAudioRef}
+        src="/typing-sound.mp3"
+        preload="auto"
+        loop
+      />
+
+      {/* 1. TOP BLUE STRIP */}
+      <div className="h-1.5 bg-[#1e4e79] w-full" />
+
+      {/* 2. SUB-HEADER / TEST NAME & CANDIDATE ROW (SECTION 1) */}
+      <div className="border-b border-slate-200 bg-white px-4 py-2">
+        <div className="max-w-7xl mx-auto flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-4 gap-y-2">
+          {/* Left Side: Test Name */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <h2 className="font-semibold text-sm sm:text-[15px] text-slate-900 truncate">
+              {cleanDisplayTitle(test.title || testDisplayCode)}
+            </h2>
+          </div>
+
+          {/* Center: Mock Test Hub Logo */}
+          <div className="flex items-center justify-center shrink-0 px-2">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 group cursor-pointer hover:opacity-95 transition"
+              title={t.backToHome}
+            >
+              <div className="bg-[#E6F4FE] rounded-md flex items-center justify-center h-8 w-8 shrink-0">
+                <Trophy className="h-4 w-4 text-[#1e4e79]" />
+              </div>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="font-bold text-sm leading-tight text-slate-900 group-hover:text-[#1e4e79] transition-colors">
+                  {t.logoTitle}
+                </span>
+                <span className="hidden xs:inline text-[11px] text-slate-500 leading-tight">
+                  {t.logoSub}
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Right Side: Digital Countdown Clock & User Profile */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2 sm:gap-3 min-w-0 sm:shrink-0 flex-1">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={phase === 'DEMO' ? handleFinishDemo : handleFinishMainTest}
+                className="inline-flex items-center gap-1.5 h-8 px-3 bg-[#1e7e34] hover:bg-[#186429] text-white font-medium text-xs rounded-md transition-colors cursor-pointer whitespace-nowrap"
+                title={`Admin Quick Submit: Finish ${phase === 'DEMO' ? 'Demo Test' : 'Main Test'} immediately`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                <span>Submit {phase === 'DEMO' ? 'Demo' : 'Test'} (Admin)</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 bg-slate-50 text-sm text-slate-600 whitespace-nowrap">
+              Time Left: <span className={`font-mono font-semibold tabular-nums text-base ${phase === 'MAIN' && timeRemaining <= 60 ? 'text-[#b02a37]' : 'text-[#1e4e79]'}`}>{formatTcsTime(timeRemaining)}</span>
+            </div>
+
+            {/* User Profile Box */}
+            <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 pr-1.5 rounded-md">
+              {/* Metallic Avatar silhouette icon */}
+              <div className="w-9 h-9 rounded-md bg-[#eef3f8] flex items-center justify-center overflow-hidden shrink-0">
+                <svg className="w-6 h-6 text-[#1e4e79]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+              <div className="text-sm font-medium text-slate-800 pr-1 hidden sm:flex items-center gap-1.5 whitespace-nowrap">
+                <span>{currentUser?.name || 'my user'}</span>
+                {isAdmin && (
+                  <span className="text-[11px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded-md font-medium ring-1 ring-inset ring-slate-500/20">
+                    Admin
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. KEYBOARD LAYOUT BLUE BAR */}
+      <div className="bg-[#1e4e79] text-white px-4 py-1.5 text-xs sm:text-sm font-medium">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span>
+              Keyboard Layout: {test.language === 'hi' ? 'Hindi (Mangal / Inscript / Remington)' : 'QWERTY'}
+            </span>
+            <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded-md border border-white/20 text-xs">
+              <span className="text-xs text-white/80 pr-0.5">Text Size:</span>
+              <button
+                type="button"
+                onClick={handleDecreaseTextSize}
+                disabled={textSize <= 14}
+                className="w-6 h-5 flex items-center justify-center rounded bg-white/15 hover:bg-white hover:text-[#1e4e79] disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs cursor-pointer transition-colors"
+                title="Decrease font size (A-)"
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                onClick={handleResetTextSize}
+                className="px-1.5 h-5 flex items-center justify-center rounded bg-white/15 hover:bg-white hover:text-[#1e4e79] text-[11px] font-medium tabular-nums cursor-pointer transition-colors"
+                title="Reset default font size (22px)"
+              >
+                {textSize}px
+              </button>
+              <button
+                type="button"
+                onClick={handleIncreaseTextSize}
+                disabled={textSize >= 30}
+                className="w-6 h-5 flex items-center justify-center rounded bg-white/15 hover:bg-white hover:text-[#1e4e79] disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-xs cursor-pointer transition-colors"
+                title="Increase font size (A+)"
+              >
+                A+
+              </button>
+            </div>
+
+            {/* Sound Toggle */}
+            <button
+              type="button"
+              onClick={toggleSound}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-xs font-medium cursor-pointer transition-colors ${
+                soundEnabled
+                  ? 'bg-white border-white text-[#1e4e79]'
+                  : 'bg-white/10 border-white/20 text-white/85 hover:bg-white/20'
+              }`}
+              title="Toggle Typing Sound (Click to turn on or off)"
+            >
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-white/70" />}
+              <span>{soundEnabled ? 'Sound: ON' : 'Sound: OFF'}</span>
+            </button>
+
+            {/* Fullscreen Toggle */}
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-xs font-medium cursor-pointer transition-colors ${
+                isFullscreen
+                  ? 'bg-white border-white text-[#1e4e79]'
+                  : 'bg-white/10 border-white/20 text-white/85 hover:bg-white/20'
+              }`}
+              title="Toggle Full Screen View"
+            >
+              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5 text-white/70" />}
+              <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen'}</span>
+            </button>
+
+            {/* Delhi Police HCM, DSSSB Steno & Bombay High Court Clerk PDF Download & Paper Mode Buttons */}
+            {(Boolean(
+              (test?.categoryId || '').includes('bombay') ||
+              (test?.title || '').toLowerCase().includes('bombay') ||
+              (test?.categoryId || '').includes('delhi-police-hcm') ||
+              (test?.title || '').toLowerCase().includes('delhi police hcm') ||
+              (test?.categoryId || '').includes('dsssb-stenographer') ||
+              (test?.title || '').toLowerCase().includes('dsssb steno')
+            )) && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleDownloadPassagePdf}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-white/10 border border-white/20 hover:bg-white/20 text-white font-medium text-xs cursor-pointer transition-colors"
+                  title="Download and print authentic passage paper sheet"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Download Passage PDF</span>
+                </button>
+
+                {(Boolean(
+                  (test?.categoryId || '').includes('bombay') ||
+                  (test?.title || '').toLowerCase().includes('bombay') ||
+                  (test?.categoryId || '').includes('delhi-police-hcm') ||
+                  (test?.title || '').toLowerCase().includes('delhi police hcm')
+                )) && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPaperMode(!isPaperMode)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-xs font-medium cursor-pointer transition-colors ${
+                      isPaperMode
+                        ? 'bg-white border-white text-[#1e4e79]'
+                        : 'bg-white/10 border-white/20 text-white/85 hover:bg-white/20'
+                    }`}
+                    title="Simulate paper-to-screen typing test as conducted in official exam"
+                  >
+                    <span>{isPaperMode ? 'Paper Mode: ON (Passage Hidden)' : 'Paper Mode: OFF'}</span>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-4 text-xs font-medium text-white/85">
+            <span>
+              Retyping: <span className={isRetypeAllowed ? 'text-white font-semibold' : 'text-amber-200 font-semibold'}>{isRetypeAllowed ? 'Allowed' : 'Not Allowed'}</span>
+            </span>
+            <span>
+              Backspace: <span className={isBackspaceEnabled ? 'text-white font-semibold' : 'text-amber-200 font-semibold'}>{isBackspaceEnabled ? 'Unrestricted' : 'Disabled (No Corrections)'}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. MAIN WORK AREA (SPLIT SCREEN LAYOUT) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 flex flex-col lg:flex-row gap-4">
+        {/* Left Column: Top Passage Box + Bottom Typing Box */}
+        <div className="flex-1 flex flex-col gap-3">
+          {/* Top Box: Passage to type (or Paper Mode banner) */}
+          {isPaperMode ? (
+            <div className="p-4 bg-white border border-slate-200 border-l-4 border-l-amber-500 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3 text-slate-800">
+                <Printer className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <div className="font-semibold text-sm text-slate-900">
+                    {(test?.categoryId || '').includes('bombay') || (test?.title || '').toLowerCase().includes('bombay')
+                      ? 'Bombay High Court Clerk Paper-to-Screen Mode Active'
+                      : 'Delhi Police HCM Paper Mode Active'}
+                  </div>
+                  <div className="text-slate-500 text-xs leading-snug mt-0.5">
+                    {(test?.categoryId || '').includes('bombay') || (test?.title || '').toLowerCase().includes('bombay')
+                      ? 'Passage is hidden on screen to simulate typing from physical printed paper as conducted in official Bombay High Court Clerk exam. Look at your printed sheet / downloaded PDF and type into the enlarged box below.'
+                      : 'Passage is hidden on screen to simulate typing from physical printed paper. Look at your printed sheet and type into the enlarged box below.'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDownloadPassagePdf}
+                  className="inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium rounded-md transition-colors cursor-pointer h-8 px-3 text-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Download / Print Passage</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPaperMode(false)}
+                  className="inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-8 px-3 text-xs"
+                >
+                  Show Passage On-Screen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              ref={passageBoxRef}
+              style={{ fontSize: `${textSize}px`, lineHeight: `${Math.round(textSize * 1.6)}px` }}
+              className="tcs-scrollbar h-56 sm:h-64 p-4 bg-white border border-slate-200 rounded-lg overflow-y-auto text-slate-900 font-sans select-none tracking-normal"
+            >
+              {currentPassageText}
+            </div>
+          )}
+
+          {/* Bottom Box: User Typing Area */}
+          <div className={`${isPaperMode ? 'h-[440px] sm:h-[500px]' : 'h-56 sm:h-64'} bg-white border border-slate-300 rounded-lg p-1.5 transition-colors focus-within:border-[#1e4e79] focus-within:ring-2 focus-within:ring-[#1e4e79]/15`}>
+            <textarea
+              ref={typingInputRef}
+              autoFocus
+              value={currentTypedText}
+              placeholder={isPaperMode ? 'Start typing here to begin the test... (Typing from printed paper passage sheet)' : 'Start typing here to begin the test...'}
+              style={{ fontSize: `${textSize}px`, lineHeight: `${Math.round(textSize * 1.6)}px` }}
+              onChange={e => {
+                if (phase === 'DEMO') {
+                  const val = e.target.value;
+                  if (!isBackspaceEnabled) {
+                    if (val.length < demoTypedText.length || !val.startsWith(demoTypedText)) {
+                      if (typingInputRef.current) {
+                        typingInputRef.current.value = demoTypedText;
+                      }
+                      return;
+                    }
+                  }
+                  setDemoTypedText(val);
+                } else {
+                  const val = e.target.value;
+                  // If corrections are disabled, ensure text can only append (strictly monotonic forward progress)
+                  if (!isBackspaceEnabled) {
+                    if (val.length < mainTypedText.length || !val.startsWith(mainTypedText)) {
+                      if (typingInputRef.current) {
+                        typingInputRef.current.value = mainTypedText;
+                      }
+                      return;
+                    }
+                  }
+                  // If retyping is disabled, block typing new words beyond the passage
+                  if (!isRetypeAllowed && passageWordCount > 0) {
+                    const valWords = val.trim().length > 0 ? val.trim().split(/\s+/) : [];
+                    if (valWords.length > passageWordCount && val.length > mainTypedText.length) {
+                      return;
+                    }
+                  }
+                  setMainTypedText(val);
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              onClick={e => {
+                if (!isBackspaceEnabled) {
+                  const el = e.currentTarget;
+                  el.setSelectionRange(el.value.length, el.value.length);
+                }
+              }}
+              onSelect={e => {
+                if (!isBackspaceEnabled) {
+                  const el = e.currentTarget;
+                  if (el.selectionStart !== el.value.length || el.selectionEnd !== el.value.length) {
+                    el.setSelectionRange(el.value.length, el.value.length);
+                  }
+                }
+              }}
+              onCut={e => {
+                e.preventDefault();
+              }}
+              onContextMenu={e => {
+                if (!isBackspaceEnabled) {
+                  e.preventDefault();
+                }
+              }}
+              onPaste={e => {
+                e.preventDefault(); // Exam integrity: strictly prevent pasting
+              }}
+              onDrop={e => {
+                e.preventDefault();
+              }}
+              onDragOver={e => {
+                e.preventDefault();
+              }}
+              className="tcs-scrollbar w-full h-full p-2.5 bg-transparent resize-none border-none focus:outline-none text-slate-900 placeholder:text-slate-400 font-sans tracking-normal overflow-y-auto"
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+            />
+          </div>
+
+          {/* Quick Submit / End Test Bar (Admin, CBSE JSA, BSF HCM, CSIR Formula, UPSSSC JA, SSC CGL) */}
+          {(isAdmin || isCbseTest || isBsfTest || isCsirFormulaTest || isUpssscTest || isSscCglTest) && (
+            <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 bg-white border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-1.5 text-slate-800 text-sm font-medium">
+                <CheckCircle2 className="w-4 h-4 text-[#1e4e79] shrink-0" />
+                <span>
+                  {phase === 'DEMO' ? 'Demo Warm-up Session' : isSscCglTest ? 'SSC CGL Previous Year Examination Session' : isUpssscTest ? 'UPSSSC JA Examination Session' : isCsirFormulaTest ? 'CSIR EXAM New Rules(FORMULA) Session' : isBsfTest ? 'BSF HCM Examination Session' : isCbseSuperintendentTest ? 'CBSE Superintendent Examination Session' : 'CBSE JSA Examination Session'}
+                </span>
+                {isAdmin && (
+                  <span className="text-[11px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-medium ring-1 ring-inset ring-slate-500/20">
+                    Admin
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={phase === 'DEMO' ? handleFinishDemo : handleFinishMainTest}
+                className="inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-9 px-4 text-sm"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                <span>{phase === 'DEMO' ? 'Finish Demo Test' : 'End / Submit Typing Test'}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Instructions Box & Admin Quick Panel */}
+        <div className="w-full lg:w-72 flex flex-col gap-4">
+          {/* Instructions Box with Magenta/Purple Border (exact to screenshot) */}
+          <div className="p-4 bg-white border border-slate-200 border-t-4 border-t-[#1e4e79] rounded-lg text-xs text-slate-600 leading-relaxed space-y-2.5">
+            {test.language === 'hi' ? (
+              <p>
+                हिंदी टाइपिंग सेट करने के लिए <strong>Settings &gt; Time & Language</strong> में जाएं और हिंदी कीबोर्ड जोड़ें। 
+                कीबोर्ड बदलने के लिए <strong className="text-[#1e4e79]">Windows + Space</strong> दबाएं।
+              </p>
+            ) : (
+              <p>
+                To set up the keyboard for Hindi typing, first go to Settings, then Time & Language, and select Language on your laptop. Install Hindi as a preferred language. After that, press <strong className="text-[#1e4e79]">Windows + Space</strong> to switch to the Hindi keyboard, but only switch when Hindi typing is required for the test.
+              </p>
+            )}
+            <div className="pt-2.5 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+                <div className="flex justify-between">
+                  <span>Retyping:</span>
+                  <strong className={isRetypeAllowed ? 'text-[#1e7e34] font-semibold' : 'text-slate-700 font-semibold'}>
+                    {isRetypeAllowed ? 'Allowed' : 'Not Allowed'}
+                  </strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Keystrokes:</span>
+                  <strong className="text-slate-800 font-semibold tabular-nums">{currentTypedText.length}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Words (KS÷5):</span>
+                  <strong className="text-[#1e4e79] font-semibold tabular-nums">{Math.floor(currentTypedText.length / 5)}</strong>
+                </div>
+              </div>
+          </div>
+
+          {/* Admin Panel in Right Column (Only visible to admins) */}
+          {isAdmin && (
+            <div className="p-4 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 space-y-2.5">
+              <div className="flex items-center gap-1.5 text-slate-900 font-semibold text-sm">
+                <ShieldCheck className="w-4 h-4 text-[#1e7e34] shrink-0" />
+                <span>Admin Quick Actions</span>
+              </div>
+              <p className="text-xs text-slate-500 leading-snug">
+                As an administrator, you can submit the {phase === 'DEMO' ? 'demo warm-up' : 'main examination'} instantly without waiting for the timer.
+              </p>
+              <button
+                type="button"
+                onClick={phase === 'DEMO' ? handleFinishDemo : handleFinishMainTest}
+                className="w-full h-9 px-3 bg-[#1e7e34] hover:bg-[#186429] text-white font-medium text-sm rounded-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                <span>Submit {phase === 'DEMO' ? 'Demo Test' : 'Main Test'} Now</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* INSTRUCTIONS MODAL */}
+      {renderInstructionsModal()}
 
       {/* CLEAN & PLAIN KEYSTROKES POPUP MODAL */}
       {summaryModal?.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-2xs animate-in fade-in duration-150">
-          <div className="w-full max-w-sm bg-white border border-slate-300 rounded-lg shadow-xl p-5 space-y-4 text-slate-800 animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-white border border-slate-200 rounded-lg shadow-xl p-6 space-y-4 text-slate-800 animate-in zoom-in-95 duration-150">
             {/* Header */}
-            <div className="border-b border-slate-200 pb-2.5">
-              <h3 className="text-sm font-bold text-[#286090] uppercase tracking-wide">
+            <div className="border-b border-slate-200 pb-3">
+              <h3 className="text-base font-semibold text-slate-900">
                 {summaryModal.phase === 'DEMO'
                   ? (isHindi ? 'डेमो टेस्ट सबमिशन सारांश' : 'Demo Test Submission')
                   : (isHindi ? 'मुख्य टेस्ट सबमिशन सारांश' : 'Typing Test Submission Summary')}
@@ -7445,16 +6884,16 @@ export default function TCSiONTypingTerminalPage() {
             </div>
 
             {/* Content Info Box */}
-            <div className="bg-slate-50 border border-slate-200 rounded p-4 text-center space-y-1 text-xs">
-              <div className="text-slate-600 font-medium">
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center space-y-1 text-xs">
+              <div className="text-slate-500 text-sm">
                 {isHindi ? 'कुल दबाए गए की-स्ट्रोक्स' : 'Total Keystrokes Pressed'}
               </div>
-              <div className="font-mono font-black text-2xl text-[#286090]">
+              <div className="font-mono font-semibold tabular-nums text-3xl text-[#1e4e79]">
                 {summaryModal.keystrokes}
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-500 text-center">
+            <p className="text-sm text-slate-500 text-center">
               {summaryModal.phase === 'DEMO'
                 ? (isHindi ? 'विश्राम (ब्रेक) समय शुरू करने के लिए OK पर क्लिक करें।' : 'Click OK to proceed to the break countdown.')
                 : (isHindi ? 'अपना अंतिम परिणाम देखने के लिए OK पर क्लिक करें।' : 'Click OK to view your evaluation scorecard.')}
@@ -7464,7 +6903,7 @@ export default function TCSiONTypingTerminalPage() {
             <div className="flex justify-center pt-1">
               <button
                 onClick={handleConfirmSummaryOk}
-                className="px-8 py-2 bg-[#286090] hover:bg-[#1f4b72] text-white font-bold text-xs rounded shadow transition active:scale-95 cursor-pointer select-none"
+                className="inline-flex items-center justify-center gap-1.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-medium rounded-md transition-colors cursor-pointer h-9 px-10 text-sm select-none"
                 autoFocus
               >
                 OK

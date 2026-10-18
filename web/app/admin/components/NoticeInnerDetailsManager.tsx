@@ -140,7 +140,7 @@ export default function NoticeInnerDetailsManager({
   // Quick Action: Insert Responsive Vacancy Table Template
   const handleInsertTableTemplate = () => {
     const template = `
-<div class="notice-table-wrapper overflow-x-auto max-w-full my-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900">
+<div class="notice-table-wrapper overflow-x-auto max-w-full my-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs bg-white dark:bg-slate-900">
   <table class="w-full text-left">
     <thead>
       <tr class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">
@@ -152,7 +152,7 @@ export default function NoticeInnerDetailsManager({
     <tbody>
       <tr>
         <td class="p-3 border font-bold">Post Designation</td>
-        <td class="p-3 border font-extrabold text-blue-600">Total Posts</td>
+        <td class="p-3 border font-semibold text-[#1e4e79]">Total Posts</td>
         <td class="p-3 border">Bachelor's Degree in relevant discipline from a recognized University.</td>
       </tr>
     </tbody>
@@ -199,13 +199,13 @@ export default function NoticeInnerDetailsManager({
 
       const data = await res.json();
       if (data.success) {
-        showToast('✅ Notice inner details updated & synced to Tigris Object Storage!');
+        showToast('Notice inner details updated & synced to Tigris Object Storage!');
         if (onRefreshNotices) onRefreshNotices();
       } else {
-        showToast(`❌ Error saving notice: ${data.error || 'Unknown error'}`);
+        showToast(`Error saving notice: ${data.error || 'Unknown error'}`);
       }
     } catch (err: any) {
-      showToast(`❌ Save failed: ${err.message}`);
+      showToast(`Save failed: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -240,18 +240,18 @@ export default function NoticeInnerDetailsManager({
       {/* ======================================================== */}
       {/* 1. TOP BANNER & STATS */}
       {/* ======================================================== */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white p-6 rounded-3xl shadow-lg border border-slate-800 relative overflow-hidden">
+      <div className="bg-[#1e4e79] text-white p-6 rounded-lg shadow-lg border border-slate-800 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded-md bg-blue-500/30 text-blue-200 text-[10px] font-extrabold uppercase tracking-wider border border-blue-400/30">
+              <span className="px-2.5 py-0.5 rounded-md bg-blue-500/30 text-blue-200 text-xs font-semibold border border-blue-400/30">
                 Full Control Suite
               </span>
-              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/30 text-emerald-200 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-400/30">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/30 text-emerald-200 text-xs font-semibold border border-emerald-400/30">
                 Tigris Cloud Powered (0 Egress)
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2.5">
+            <h2 className="text-xl md:text-2xl font-semibold flex items-center gap-2.5">
               <Layers className="h-6 w-6 text-blue-400" /> Notification Inner Details & Breakdown Editor
             </h2>
             <p className="text-xs text-blue-200/80 font-medium max-w-2xl mt-1">
@@ -264,13 +264,13 @@ export default function NoticeInnerDetailsManager({
               type="button"
               onClick={handleSyncRojgar}
               disabled={isSyncing}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs rounded-md shadow-lg transition-all cursor-pointer disabled:opacity-50"
               title="Sync latest live jobs, results and admit cards from RojgarResult"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{isSyncing ? 'Syncing...' : 'Sync Live Alerts'}</span>
             </button>
-            <span className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-xs font-black">
+            <span className="px-4 py-2 rounded-lg bg-white/10 border border-white/15 text-xs font-semibold">
               {noticesList.length} Total Notifications
             </span>
           </div>
@@ -280,14 +280,14 @@ export default function NoticeInnerDetailsManager({
       {/* ======================================================== */}
       {/* 2. TOP SECTION: NOTIFICATION EXPLORER DIRECTORY */}
       {/* ======================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-4">
         
         {/* Controls: Search + Categories */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <Bell className="h-5 w-5 text-[#1e4e79] dark:text-blue-400" />
             <div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 Notification Directory
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -305,7 +305,7 @@ export default function NoticeInnerDetailsManager({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search notification title or ID..."
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md pl-10 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-[#1e4e79]"
               />
             </div>
 
@@ -321,9 +321,9 @@ export default function NoticeInnerDetailsManager({
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition cursor-pointer shrink-0 ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer shrink-0 ${
                     selectedCategory === cat.id
-                      ? 'bg-blue-600 text-white shadow-xs'
+                      ? 'bg-[#1e4e79] text-white shadow-xs'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
@@ -335,10 +335,10 @@ export default function NoticeInnerDetailsManager({
         </div>
 
         {/* High-Density Notification Table */}
-        <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl max-h-[360px] overflow-y-auto">
+        <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg max-h-[360px] overflow-y-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800/90 backdrop-blur-md z-10">
-              <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+            <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800/90 z-10">
+              <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold text-xs">
                 <th className="py-3 px-4">Status / ID</th>
                 <th className="py-3 px-4">Category</th>
                 <th className="py-3 px-4">Heading Title</th>
@@ -363,16 +363,16 @@ export default function NoticeInnerDetailsManager({
                     >
                       <td className="py-2.5 px-4 font-mono text-[11px]">
                         <div className="flex items-center gap-2">
-                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isSelected ? 'bg-blue-600 animate-pulse' : 'bg-emerald-500'}`} />
+                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isSelected ? 'bg-[#1e4e79] animate-pulse' : 'bg-emerald-500'}`} />
                           <span className="font-semibold text-slate-600 dark:text-slate-400">{notice.id}</span>
                         </div>
                       </td>
                       <td className="py-2.5 px-4">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+                        <span className={`inline-block px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${
                           notice.category === 'result' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800' :
                           notice.category === 'admit_card' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800' :
                           notice.category === 'answer_key' ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800' :
-                          'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
+                          'bg-blue-100 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-400 border-blue-300 dark:border-blue-800'
                         }`}>
                           {notice.type || notice.category}
                         </span>
@@ -393,10 +393,10 @@ export default function NoticeInnerDetailsManager({
                             e.stopPropagation();
                             handleSelectNotice(notice);
                           }}
-                          className={`px-3 py-1 rounded-lg text-xs font-black transition cursor-pointer inline-flex items-center gap-1 ${
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1 ${
                             isSelected
-                              ? 'bg-blue-600 text-white shadow-xs'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-blue-600'
+                              ? 'bg-[#1e4e79] text-white shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 hover:text-[#1e4e79]'
                           }`}
                         >
                           <FileEdit className="h-3 w-3" />
@@ -424,32 +424,32 @@ export default function NoticeInnerDetailsManager({
       {/* ======================================================== */}
       <div ref={editorSectionRef} className="space-y-4">
         {selectedNoticeId ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-5">
             
             {/* Top Toolbar */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 text-[10px] font-mono font-bold">
+                  <span className="px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-400 text-xs font-mono font-bold">
                     ID: {selectedNoticeId}
                   </span>
                   <span className="text-xs text-slate-400 font-semibold">
                     tigris://notices/html/{selectedNoticeId}.html
                   </span>
                 </div>
-                <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white mt-1">
+                <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white mt-1">
                   {editorTitle}
                 </h3>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 {/* Editor View Modes */}
-                <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center gap-1 border border-slate-200 dark:border-slate-700">
+                <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-md flex items-center gap-1 border border-slate-200 dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => setEditorMode('split')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      editorMode === 'split' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'
+                      editorMode === 'split' ? 'bg-white dark:bg-slate-900 text-[#1e4e79] shadow-xs' : 'text-slate-500'
                     }`}
                   >
                     Split View
@@ -458,7 +458,7 @@ export default function NoticeInnerDetailsManager({
                     type="button"
                     onClick={() => setEditorMode('code')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      editorMode === 'code' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'
+                      editorMode === 'code' ? 'bg-white dark:bg-slate-900 text-[#1e4e79] shadow-xs' : 'text-slate-500'
                     }`}
                   >
                     Code
@@ -467,7 +467,7 @@ export default function NoticeInnerDetailsManager({
                     type="button"
                     onClick={() => setEditorMode('preview')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      editorMode === 'preview' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-500'
+                      editorMode === 'preview' ? 'bg-white dark:bg-slate-900 text-[#1e4e79] shadow-xs' : 'text-slate-500'
                     }`}
                   >
                     Live Preview
@@ -479,7 +479,7 @@ export default function NoticeInnerDetailsManager({
                   type="button"
                   onClick={handleSaveNoticeContent}
                   disabled={isSaving}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition active:scale-95 shadow-md cursor-pointer disabled:opacity-50"
+                  className="bg-[#1e4e79] hover:bg-[#163c5e] text-white px-6 py-2.5 rounded-md text-xs font-semibold flex items-center gap-2 transition shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   <span>{isSaving ? 'Saving to Tigris...' : 'Save & Publish'}</span>
@@ -488,22 +488,22 @@ export default function NoticeInnerDetailsManager({
             </div>
 
             {/* Notice Metadata Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-1">Heading Title</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Heading Title</label>
                 <input
                   type="text"
                   value={editorTitle}
                   onChange={(e) => setEditorTitle(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-1">Category</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Category</label>
                 <select
                   value={editorCategory}
                   onChange={(e) => setEditorCategory(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                 >
                   <option value="notice">Latest Jobs (Notice)</option>
                   <option value="result">Results & Merits</option>
@@ -512,37 +512,37 @@ export default function NoticeInnerDetailsManager({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-1">Application Last Date</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Application Last Date</label>
                 <input
                   type="text"
                   value={editorLastDate}
                   onChange={(e) => setEditorLastDate(e.target.value)}
                   placeholder="e.g. 25/08/2026"
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-1">Direct Portal URL</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Direct Portal URL</label>
                 <input
                   type="text"
                   value={editorUrl}
                   onChange={(e) => setEditorUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
             </div>
 
             {/* Quick Actions & Search Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-950/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-xs">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase mr-1">Quick Tools:</span>
+                <span className="text-xs font-semibold text-slate-400 mr-1">Quick Tools:</span>
                 <button
                   type="button"
                   onClick={handleStripShortDesc}
                   className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
-                  🧹 Strip Short Description
+                  Strip Short Description
                 </button>
                 <button
                   type="button"
@@ -563,15 +563,15 @@ export default function NoticeInnerDetailsManager({
               <button
                 type="button"
                 onClick={() => setShowFindReplace(!showFindReplace)}
-                className="px-3.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-extrabold transition cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-semibold transition cursor-pointer"
               >
-                🔍 Find & Replace
+                Find & Replace
               </button>
             </div>
 
             {/* Find & Replace Bar */}
             {showFindReplace && (
-              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/60 p-3 rounded-2xl flex flex-col sm:flex-row items-center gap-2">
+              <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/60 p-3 rounded-lg flex flex-col sm:flex-row items-center gap-2">
                 <input
                   type="text"
                   value={findText}
@@ -589,7 +589,7 @@ export default function NoticeInnerDetailsManager({
                 <button
                   type="button"
                   onClick={handlePerformReplaceAll}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg text-xs transition cursor-pointer shrink-0"
+                  className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold px-5 py-2 rounded-lg text-xs transition cursor-pointer shrink-0"
                 >
                   Replace All
                 </button>
@@ -599,7 +599,7 @@ export default function NoticeInnerDetailsManager({
             {/* Core Editor & Preview Area */}
             {isLoadingContent ? (
               <div className="py-32 text-center space-y-3">
-                <RefreshCw className="h-8 w-8 text-blue-600 animate-spin mx-auto" />
+                <RefreshCw className="h-8 w-8 text-[#1e4e79] animate-spin mx-auto" />
                 <p className="text-xs font-bold text-slate-500">Fetching inner details from Tigris Object Storage...</p>
               </div>
             ) : (
@@ -617,7 +617,7 @@ export default function NoticeInnerDetailsManager({
                       onChange={(e) => setEditorHtml(e.target.value)}
                       placeholder="Paste or write notice breakdown HTML here..."
                       rows={22}
-                      className="w-full bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-2xl border border-slate-800 focus:outline-none focus:border-blue-500 leading-relaxed resize-y no-scrollbar shadow-inner"
+                      className="w-full bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-lg border border-slate-800 focus:outline-none focus:border-[#1e4e79] leading-relaxed resize-y no-scrollbar shadow-inner"
                     />
                   </div>
                 )}
@@ -626,11 +626,11 @@ export default function NoticeInnerDetailsManager({
                 {(editorMode === 'split' || editorMode === 'preview') && (
                   <div className="space-y-2 flex flex-col">
                     <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
-                      <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-blue-500" /> Live Client Preview</span>
-                      <span className="text-emerald-500 font-extrabold">Matches Live App & Web</span>
+                      <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-[#1e4e79]" /> Live Client Preview</span>
+                      <span className="text-emerald-500 font-semibold">Matches Live App & Web</span>
                     </div>
                     
-                    <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl max-h-[520px] overflow-y-auto no-scrollbar space-y-4 shadow-inner">
+                    <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-6 rounded-lg max-h-[520px] overflow-y-auto no-scrollbar space-y-4 shadow-inner">
                       {editorHtml ? (
                         <div 
                           className="notice-custom-body text-xs text-slate-800 dark:text-slate-200"
@@ -650,12 +650,12 @@ export default function NoticeInnerDetailsManager({
 
           </div>
         ) : (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-16 text-center shadow-xs space-y-4">
-            <div className="h-16 w-16 bg-blue-50 dark:bg-blue-950/50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto border border-blue-200 dark:border-blue-800">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-16 text-center shadow-xs space-y-4">
+            <div className="h-16 w-16 bg-blue-50 dark:bg-blue-950/50 text-[#1e4e79] rounded-lg flex items-center justify-center mx-auto border border-blue-200 dark:border-blue-800">
               <FileEdit className="h-8 w-8" />
             </div>
             <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Select a Notification from the Directory Above</h3>
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Select a Notification from the Directory Above</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 font-medium">
                 Click any notification row in the directory table on top to load, inspect, rewrite, clean, or format its recruitment breakdown details right here.
               </p>

@@ -1,17 +1,21 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../AuthContext';
-import { useRouter } from 'next/navigation';
+import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../../AuthContext';
+import { useRouter, usePathname } from 'next/navigation';
+import { TEST_SERIES_BASE, buildTestSeriesPath, resolveTestSeriesPath, testSeriesSegments } from '../../lib/testSeriesUrl';
 import Link from 'next/link';
-import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen, Zap, History, Layers, LayoutGrid } from 'lucide-react';
-import { generateExamSession, EXPLANATIONS, getLocalizedName } from '../lib/examUtils';
-import { TRANSLATIONS } from '../translations';
-import { useIsMobile } from '../useIsMobile';
-import HomeSupportWidget from '../components/HomeSupportWidget';
+import { BookOpen, ShieldAlert, Award, ArrowLeft, Search, GraduationCap, ChevronRight, Check, Sun, Moon, Bookmark, Trash2, ChevronUp, ChevronDown, Menu, TrendingUp, Coins, MapPin, Sparkles, Trophy, Star, Clock, UploadCloud, FolderOpen, Zap, History, Layers, LayoutGrid, HelpCircle } from 'lucide-react';
+import { generateExamSession, EXPLANATIONS, getLocalizedName } from '../../lib/examUtils';
+import { TRANSLATIONS } from '../../translations';
+import { useIsMobile } from '../../useIsMobile';
+import HomeSupportWidget from '../../components/HomeSupportWidget';
+import { SiteHeader, PageTitle, btnSecondary } from '../../components/SiteUI';
+import MockTestsTour, { requestTestsTourStart } from '../../components/MockTestsTour';
+import BookmarkedQuestions from '../../components/BookmarkedQuestions';
 
-import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
-import { formatTestMarkingScheme } from '../lib/markingUtils';
+import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
+import { formatTestMarkingScheme } from '../../lib/markingUtils';
 
 const renderTestMarkingSchemePill = (test: MockTestItem) => {
   return null;
@@ -47,8 +51,8 @@ const renderSectionalTimingPill = (test: MockTestItem, lang: string = 'en') => {
   const timingText = timingsArr.length > 0 ? `${timingsArr.join('m, ')}m` : (isHi ? 'सक्षम' : 'ENABLED');
 
   return (
-    <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[8px] font-black px-2 py-0.5 rounded-md border border-purple-500/20 uppercase tracking-wider font-mono flex items-center gap-1">
-      ⚡ {isHi ? 'अनुभागीय समय' : 'SECTIONAL TIMING'}: {timingText}
+    <span className="bg-purple-500/10 text-purple-700 dark:bg-purple-500/5 dark:text-purple-300 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-purple-500/20 font-mono flex items-center gap-1">
+      {isHi ? 'अनुभागीय समय' : 'Sectional timing'}: {timingText}
     </span>
   );
 };
@@ -64,14 +68,14 @@ const renderLastAttemptMarks = (attempts: any[], lang: string = 'en') => {
 
   return (
     <div className="flex items-center justify-center self-center my-auto shrink-0 mx-auto sm:mx-3">
-      <div className="inline-flex items-center justify-center gap-1.5 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 px-3 py-1 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-2xs">
+      <div className="inline-flex items-center justify-center gap-1.5 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 px-3 py-1 rounded-md text-xs font-bold text-slate-700 dark:text-slate-200 shadow-2xs">
         <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-          🏆 {isHi ? 'पिछला प्रयास:' : 'Last Attempt:'}
+          {isHi ? 'पिछला प्रयास:' : 'Last Attempt:'}
         </span>
-        <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono text-xs">
+        <span className="font-semibold text-[#1e4e79] dark:text-blue-400 font-mono text-xs">
           {score}/{maxScore}
         </span>
-        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
           {isHi ? 'अंक' : 'marks'}
         </span>
       </div>
@@ -91,7 +95,7 @@ const getCategoryTheme = (catId: string | null) => {
       iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
       badgeBg: 'bg-orange-50 dark:bg-orange-950/45 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
       gradient: 'from-orange-500 to-amber-500',
-      glow: 'shadow-orange-500/10 dark:shadow-orange-500/5',
+      glow: '',
       accentGlow: 'rgba(249,115,22,0.12)'
     };
   }
@@ -104,7 +108,7 @@ const getCategoryTheme = (catId: string | null) => {
       iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
       badgeBg: 'bg-indigo-50 dark:bg-indigo-950/45 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30',
       gradient: 'from-indigo-500 to-blue-550',
-      glow: 'shadow-indigo-500/10 dark:shadow-indigo-500/5',
+      glow: '',
       accentGlow: 'rgba(99,102,241,0.12)'
     };
   }
@@ -117,7 +121,7 @@ const getCategoryTheme = (catId: string | null) => {
       iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       badgeBg: 'bg-emerald-50 dark:bg-emerald-950/45 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
       gradient: 'from-emerald-500 to-teal-500',
-      glow: 'shadow-emerald-500/10 dark:shadow-emerald-500/5',
+      glow: '',
       accentGlow: 'rgba(16,185,129,0.12)'
     };
   }
@@ -130,7 +134,7 @@ const getCategoryTheme = (catId: string | null) => {
       iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       badgeBg: 'bg-amber-50 dark:bg-amber-950/45 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
       gradient: 'from-amber-500 to-orange-500',
-      glow: 'shadow-amber-500/10 dark:shadow-amber-500/5',
+      glow: '',
       accentGlow: 'rgba(245,158,11,0.12)'
     };
   }
@@ -143,7 +147,7 @@ const getCategoryTheme = (catId: string | null) => {
       iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
       badgeBg: 'bg-sky-50 dark:bg-sky-950/45 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/30',
       gradient: 'from-sky-500 to-indigo-500',
-      glow: 'shadow-sky-500/10 dark:shadow-sky-500/5',
+      glow: '',
       accentGlow: 'rgba(14,165,233,0.12)'
     };
   }
@@ -175,7 +179,7 @@ const getSubCatIcon = (name: string, logoUrl?: string | null) => {
   if (n.includes('ntpc') || n.includes('group d') || n.includes('alp') || n.includes('si')) return <Trophy className="h-5.5 w-5.5 text-indigo-500" />;
   if (n.includes('net') || n.includes('science')) return <GraduationCap className="h-5.5 w-5.5 text-sky-500" />;
   if (n.includes('chsl') || n.includes('mts') || n.includes('phase')) return <BookOpen className="h-5.5 w-5.5 text-amber-500" />;
-  return <GraduationCap className="h-5.5 w-5.5 text-blue-600" />;
+  return <GraduationCap className="h-5.5 w-5.5 text-[#1e4e79]" />;
 };
 
 export default function MockTestsCatalog() {
@@ -195,6 +199,28 @@ export default function MockTestsCatalog() {
   const testSeriesCatalog = React.useMemo(() => {
     return (examCatalog || []).filter(cat => cat.id !== 'practice_series' && !cat.id.startsWith('ps_')).sort((a: any, b: any) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   }, [examCatalog]);
+
+  // Tour: one real path through the catalog (category → exam → series that has tests)
+  const tourTarget = React.useMemo(() => {
+    // Prefer well-known categories as the example, then fall back to catalog order
+    const preferred = ['ssc', 'railways'];
+    const ordered = [...testSeriesCatalog].sort((a, b) => {
+      const ia = preferred.indexOf(a.id); const ib = preferred.indexOf(b.id);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+    for (const cat of ordered) {
+      for (const sub of cat.subCategories || []) {
+        for (const ss of (sub as any).subSubCategories || []) {
+          if ((ss.tests || []).length > 0) return { catId: cat.id as string, examId: sub.id as string, seriesId: ss.id as string };
+        }
+      }
+    }
+    for (const cat of ordered) {
+      const sub = (cat.subCategories || []).find(sc => (sc.tests || []).length > 0);
+      if (sub) return { catId: cat.id as string, examId: sub.id as string, seriesId: null as string | null };
+    }
+    return { catId: (testSeriesCatalog[0]?.id ?? null) as string | null, examId: null as string | null, seriesId: null as string | null };
+  }, [testSeriesCatalog]);
 
   const filteredSidebarCatalog = React.useMemo(() => {
     const q = sidebarSearch.toLowerCase().trim();
@@ -377,120 +403,79 @@ export default function MockTestsCatalog() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   const [activeSubSubId, setActiveSubSubId] = useState<string | null>(null);
 
-  // Reset active sub-subcategory when subcategory changes, but bypass on initial mount to allow query param loading
-  const isInitialSubCat = React.useRef(true);
-  const skipSubSubResetRef = React.useRef(false);
-  React.useEffect(() => {
-    if (isInitialSubCat.current) {
-      isInitialSubCat.current = false;
-      return;
-    }
-    if (skipSubSubResetRef.current) {
-      skipSubSubResetRef.current = false;
-      return;
-    }
-    setActiveSubSubId(null);
-  }, [selectedSubCategory]);
+  // ── URL <-> view state ─────────────────────────────────────────────────────
+  // Every level has its own address (like the typing test pages):
+  //   /mock-tests/{category}/{exam}/{series}
+  // The URL is applied to state on load, on back/forward and on links; user clicks
+  // update state, and state is then written back to the URL as a new history entry.
+  const pathname = usePathname() || TEST_SERIES_BASE;
+  const appliedPathRef = React.useRef<string | null>(null); // path that matches the current state
 
-  // Hash synchronization and back button tracking for mobile view screen-by-screen
+  // URL -> state
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash === '#bookmarks') {
-        setShowBookmarks(true);
-      } else if (hash.startsWith('#exam-')) {
-        const rawExamStr = hash.replace('#exam-', '');
-        let foundCatId: string | null = null;
-        let foundSubId: string | null = null;
-        let foundSubSubId: string | null = null;
-
-        for (const cat of testSeriesCatalog) {
-          for (const sub of cat.subCategories || []) {
-            if (rawExamStr === sub.id) {
-              foundCatId = cat.id;
-              foundSubId = sub.id;
-              break;
-            }
-            if (rawExamStr.startsWith(`${sub.id}-`)) {
-              foundCatId = cat.id;
-              foundSubId = sub.id;
-              foundSubSubId = rawExamStr.replace(`${sub.id}-`, '');
-              break;
-            }
-            for (const ss of (sub.subSubCategories || [])) {
-              if (rawExamStr === `${sub.id}_${ss.id}` || rawExamStr === ss.id) {
-                foundCatId = cat.id;
-                foundSubId = sub.id;
-                foundSubSubId = ss.id;
-                break;
-              }
-            }
-            if (foundSubId) break;
-          }
-          if (foundSubId) break;
-        }
-
-        setShowBookmarks(false);
-        if (foundCatId) setSelectedCategory(foundCatId);
-        if (foundSubId) {
-          skipSubSubResetRef.current = true;
-          setSelectedSubCategory(foundSubId);
-          setActiveSubSubId(foundSubSubId);
-        }
-      } else if (hash.startsWith('#category-')) {
-        const catId = hash.replace('#category-', '');
-        setShowBookmarks(false);
-        setSelectedCategory(catId);
-        setSelectedSubCategory(null);
-      } else {
-        setShowBookmarks(false);
-        setSelectedCategory(null);
-        setSelectedSubCategory(null);
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-
-    // Initial load: parse query params, but check hash first (hash takes precedence on reload if present)
-    const initialHash = window.location.hash;
-    if (initialHash) {
-      handleHashChange();
-    } else {
+    if (typeof window === 'undefined' || testSeriesCatalog.length === 0) return;
+    let segments = testSeriesSegments(pathname);
+    let isLegacyLink = false;
+    if (segments.length === 0) {
+      // Old links: /mock-tests?cat=..&sub=..&subsub=..
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('cat');
-      const sub = params.get('sub');
-      const subsub = params.get('subsub');
       if (cat) {
-        setSelectedCategory(cat);
-        if (sub) {
-          setSelectedSubCategory(sub);
-          if (subsub) {
-            setActiveSubSubId(subsub);
-          }
-        }
+        segments = [cat, params.get('sub') || '', params.get('subsub') || ''].filter(Boolean);
+        isLegacyLink = true;
       }
     }
+    const r = resolveTestSeriesPath(testSeriesCatalog, segments);
+    const resolvedPath = buildTestSeriesPath(r.categoryId, r.examId, r.seriesId);
+    appliedPathRef.current = resolvedPath;
+    setSelectedCategory(r.categoryId);
+    setSelectedSubCategory(r.examId);
+    setActiveSubSubId(r.seriesId);
+    // Rewrite old query links, raw ids and old hashes to the clean address. Unknown
+    // segments are left alone in case a fresher catalog still arrives.
+    const keepHash = window.location.hash === '#bookmarks' ? '#bookmarks' : '';
+    if ((r.exact || isLegacyLink) && (window.location.pathname !== resolvedPath || window.location.search || window.location.hash !== keepHash)) {
+      window.history.replaceState(window.history.state, '', resolvedPath + keepHash);
+    }
+  }, [pathname, testSeriesCatalog]);
 
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, [testSeriesCatalog]);
+  // state -> URL
+  useEffect(() => {
+    if (typeof window === 'undefined' || appliedPathRef.current === null) return;
+    const target = buildTestSeriesPath(selectedCategory, selectedSubCategory, activeSubSubId);
+    if (target === appliedPathRef.current) return;
+    appliedPathRef.current = target;
+    window.history.pushState(null, '', target);
+  }, [selectedCategory, selectedSubCategory, activeSubSubId]);
+
+  // Page title follows the open category / exam / series
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const cat = testSeriesCatalog.find(c => c.id === selectedCategory);
+    const exam = cat?.subCategories?.find(sc => sc.id === selectedSubCategory);
+    const series = (exam as any)?.subSubCategories?.find((ss: any) => ss.id === activeSubSubId);
+    const parts = [series?.title || series?.name, exam?.name, cat?.name].filter(Boolean);
+    document.title = parts.length ? `${parts.join(' - ')} | Test Series | Mock Test Hub` : 'Test Series | Mock Test Hub';
+  }, [testSeriesCatalog, selectedCategory, selectedSubCategory, activeSubSubId]);
+
+  // Bookmarks view keeps its #bookmarks hash so back closes it
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onHash = () => setShowBookmarks(window.location.hash === '#bookmarks');
+    if (window.location.hash === '#bookmarks') setShowBookmarks(true);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   const handleCategorySelect = (catId: string) => {
     setSelectedCategory(catId);
     setSelectedSubCategory(null);
-    if (typeof window !== 'undefined') {
-      window.location.hash = `category-${catId}`;
-    }
+    setActiveSubSubId(null);
   };
 
   const handleSubCategorySelect = (subCatId: string) => {
     setSelectedSubCategory(subCatId);
-    if (typeof window !== 'undefined') {
-      window.location.hash = `exam-${subCatId}`;
-    }
+    setActiveSubSubId(null);
   };
 
   const handleOpenRecentCategory = (catId: string, subCatId: string, subSubId?: string | null) => {
@@ -503,45 +488,21 @@ export default function MockTestsCatalog() {
         targetSubSubId = withTests ? withTests.id : sub.subSubCategories[0].id;
       }
     }
-
-    skipSubSubResetRef.current = true;
-    setSelectedCategory(catId);
-    setSelectedSubCategory(subCatId);
-    setActiveSubSubId(targetSubSubId || null);
-    
-    if (typeof window !== 'undefined') {
-      window.location.hash = targetSubSubId ? `exam-${subCatId}-${targetSubSubId}` : `exam-${subCatId}`;
-    }
+    setShowBookmarks(false);
+    setSelectedCategory(catId || null);
+    setSelectedSubCategory(subCatId || null);
+    setActiveSubSubId(subCatId ? (targetSubSubId || null) : null);
   };
 
   const handleCategoryBack = () => {
-    if (typeof window !== 'undefined') {
-      if (window.location.hash.startsWith('#category-')) {
-        window.history.back();
-      } else {
-        setSelectedCategory(null);
-        window.location.hash = '';
-      }
-    } else {
-      setSelectedCategory(null);
-    }
+    setSelectedCategory(null);
+    setSelectedSubCategory(null);
+    setActiveSubSubId(null);
   };
 
   const handleSubCategoryBack = () => {
-    if (typeof window !== 'undefined') {
-      if (window.location.hash.startsWith('#exam-')) {
-        window.history.back();
-      } else {
-        setSelectedSubCategory(null);
-        if (selectedCategory) {
-          window.location.hash = `category-${selectedCategory}`;
-        } else {
-          window.location.hash = '';
-        }
-      }
-    } else {
-      setSelectedSubCategory(null);
-    }
+    setSelectedSubCategory(null);
+    setActiveSubSubId(null);
   };
 
   const handleToggleBookmarks = () => {
@@ -570,101 +531,8 @@ export default function MockTestsCatalog() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [upgradePopupOpen, setUpgradePopupOpen] = useState(false);
   const [requiredTierInfo, setRequiredTierInfo] = useState<string>('');
-
   const [showBookmarks, setShowBookmarks] = useState<boolean>(false);
-  const [expandedBookmarks, setExpandedBookmarks] = useState<Record<string, boolean>>({});
-  // Cache: testId -> list of questions (from API for custom tests, or demo fallback)
-  const [bookmarkQsCache, setBookmarkQsCache] = useState<Record<string, any[]>>({});
-  const [bookmarkQsLoading, setBookmarkQsLoading] = useState(false);
 
-  const toggleExpandBookmark = (qId: string) => {
-    setExpandedBookmarks(prev => ({
-      ...prev,
-      [qId]: !prev[qId]
-    }));
-  };
-
-  // Fetch custom questions for each unique testId in bookmarks when the bookmark panel opens
-  useEffect(() => {
-    if (!showBookmarks || !currentUser?.bookmarkedQuestions?.length) return;
-
-    const uniqueTestIds = [...new Set(currentUser.bookmarkedQuestions.map(b => b.testId))];
-    const missingIds = uniqueTestIds.filter(id => !bookmarkQsCache[id]);
-    if (missingIds.length === 0) return;
-
-    setBookmarkQsLoading(true);
-    Promise.all(
-      missingIds.map(async (testId) => {
-        try {
-          const res = await fetch('/api/db', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
-          });
-          const data = await res.json();
-          if (data.success && data.questions?.length) {
-            return { testId, questions: data.questions };
-          }
-        } catch (e) { /* ignore */ }
-        // Fallback: use demo session questions
-        const session = generateExamSession(testId, examCatalog);
-        return { testId, questions: session.questions };
-      })
-    ).then(results => {
-      const newCache: Record<string, any[]> = {};
-      results.forEach(r => { if (r) newCache[r.testId] = r.questions; });
-      setBookmarkQsCache(prev => ({ ...prev, ...newCache }));
-      setBookmarkQsLoading(false);
-    });
-  }, [showBookmarks, currentUser?.bookmarkedQuestions]);
-
-  // Helper: find a question from the cache by testId + questionId
-  const findBookmarkedQuestion = useCallback((testId: string, questionId: string) => {
-    const questions = bookmarkQsCache[testId];
-    if (!questions || !Array.isArray(questions)) return null;
-    const targetStr = String(questionId || '').trim();
-    return questions.find((q: any, idx: number) => {
-      if (!q) return false;
-      const qIdStr = String(q.id || q.questionId || q._id || `q_${idx + 1}` || `q_custom_${idx}`).trim();
-      return qIdStr === targetStr || String(idx + 1) === targetStr || (targetStr.startsWith('q_custom_') && targetStr === `q_custom_${idx}`);
-    }) || null;
-  }, [bookmarkQsCache]);
-
-  // Trigger MathJax typesetting whenever bookmarks are expanded.
-  // Awaits startup.promise to ensure config is applied before typeset runs.
-  useEffect(() => {
-    let active = true;
-    let pollTimeoutId: any = null;
-
-    const runTypeset = async (MathJax: any) => {
-      if (!active) return;
-      try {
-        if (MathJax.startup?.promise) await MathJax.startup.promise;
-        if (!active) return;
-        await MathJax.typesetPromise();
-      } catch (err) {
-        if (active) console.warn('MathJax typesetting failed:', err);
-      }
-    };
-
-    const waitAndTypeset = () => {
-      if (!active) return;
-      const MathJax = (window as any).MathJax;
-      if (MathJax?.typesetPromise) {
-        runTypeset(MathJax);
-      } else if (typeof window !== 'undefined') {
-        pollTimeoutId = setTimeout(waitAndTypeset, 150);
-      }
-    };
-
-    waitAndTypeset();
-
-    return () => {
-      active = false;
-      if (pollTimeoutId) clearTimeout(pollTimeoutId);
-    };
-  }, [expandedBookmarks]);
-  
   const handleStartExam = (test: MockTestItem) => {
     if (!currentUser) {
       router.push('/auth');
@@ -724,13 +592,45 @@ export default function MockTestsCatalog() {
       return;
     }
 
-    clearOngoingSession(test.id);
-    router.push(`/exam/${test.id}`);
+    // Wait for the saved progress to be deleted, or the test could resume from it
+    clearOngoingSession(test.id).finally(() => router.push(`/exam/${test.id}`));
   };
 
 
 
   const { isMobile, isMounted } = useIsMobile();
+
+  const tourResetToRoot = React.useCallback(() => {
+    setShowBookmarks(false);
+    setExamSearchQuery('');
+    setSidebarSearch('');
+    setSelectedCategory(null);
+    setSelectedSubCategory(null);
+    setActiveSubSubId(null);
+  }, []);
+  const tourOpenCategory = React.useCallback(() => {
+    setSelectedCategory(tourTarget.catId);
+    setSelectedSubCategory(null);
+    setActiveSubSubId(null);
+  }, [tourTarget]);
+  const tourOpenExam = React.useCallback(() => {
+    setSelectedSubCategory(tourTarget.examId);
+    setActiveSubSubId(null);
+  }, [tourTarget]);
+  const tourOpenSeries = React.useCallback(() => {
+    if (tourTarget.seriesId) setActiveSubSubId(tourTarget.seriesId);
+  }, [tourTarget]);
+  const testsTour = (
+    <MockTestsTour
+      ready={mounted && testSeriesCatalog.length > 0 && !!tourTarget.catId}
+      atRoot={selectedCategory === null && !showBookmarks}
+      hasSeries={!!tourTarget.seriesId}
+      resetToRoot={tourResetToRoot}
+      openCategory={tourOpenCategory}
+      openExam={tourOpenExam}
+      openSeries={tourOpenSeries}
+    />
+  );
 
   if (!mounted) return null;
 
@@ -753,67 +653,30 @@ export default function MockTestsCatalog() {
     const activeCategoryObj = filteredCatalog.find(c => c.id === selectedCategory);
 
     return (
-      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 mobile-fade-in">
+      <div className="flex-1 flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 mobile-fade-in">
         
-        {/* MOBILE HEADER */}
-        <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/" className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm shrink-0 cursor-pointer">
-              <ArrowLeft className="h-4 w-4" /> {t.navHome}
-            </Link>
-
-            {/* Show Mocktest Hub logo after back to home button */}
-            <div className="flex items-center gap-1.5 pl-2.5 border-l border-slate-200 dark:border-slate-800 shrink-0">
-              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="font-black text-[10px] tracking-wider text-slate-900 dark:text-white uppercase leading-none">
-                Mocktest Hub
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {/* Bookmarked Questions Button */}
-            <button
-              onClick={handleToggleBookmarks}
-              className={`p-1.5 rounded-lg flex items-center justify-center gap-1 border text-[10px] font-bold transition h-8 ${
-                showBookmarks 
-                  ? 'bg-yellow-500 border-yellow-500 text-white shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
-              }`}
-              title={t.bookmarks}
-            >
-              <Bookmark className={`h-3.5 w-3.5 ${showBookmarks ? 'fill-white' : ''}`} />
-              {currentUser?.bookmarkedQuestions?.length ? (
-                <span className="bg-red-500 text-white rounded-full text-[8px] px-1 py-0.5 font-bold leading-none">
-                  {currentUser.bookmarkedQuestions.length}
-                </span>
-              ) : null}
+        <SiteHeader />
+        <PageTitle
+          crumbs={[{ label: language === 'hi' ? 'होम' : 'Home', href: '/' }, { label: language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series' }]}
+          title={language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
+          actions={<>
+            <button type="button" onClick={handleToggleBookmarks} data-tour="ts-bookmarks" className={`${btnSecondary} ${showBookmarks ? '!border-[#1e4e79] !text-[#1e4e79] dark:!text-blue-300' : ''}`} title={t.bookmarks}>
+              <Bookmark className={`h-4 w-4 ${showBookmarks ? 'fill-current' : ''}`} />
+              {t.bookmarks}
+              {currentUser?.bookmarkedQuestions?.length ? <span className="text-xs text-slate-500">({currentUser.bookmarkedQuestions.length})</span> : null}
             </button>
-            {/* Language Selector */}
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-              className="px-1.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900  text-[10px] font-bold outline-none"
-            >
-              <option value="en">EN</option>
-              <option value="hi">हिं</option>
-            </select>
-
-            {/* Theme switcher */}
-            <button 
-              onClick={toggleTheme}
-              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 "
-            >
-              {theme === 'light' ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+            <button type="button" onClick={requestTestsTourStart} className={btnSecondary} title={language === 'hi' ? 'यह कैसे काम करता है' : 'How it works'}>
+              <HelpCircle className="h-4 w-4" />
+              <span className="sr-only sm:not-sr-only">{language === 'hi' ? 'गाइड' : 'How it works'}</span>
             </button>
-          </div>
-        </header>
+          </>}
+        />
 
         <main className="flex-1 p-4 flex flex-col gap-5">
           
           {/* SEARCH FILTER (Hidden when sub category is open) */}
           {selectedSubCategory === null && (
-            <div className="relative w-full">
+            <div data-tour="ts-search" className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                 <Search className="h-4 w-4" />
               </div>
@@ -822,138 +685,27 @@ export default function MockTestsCatalog() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.searchMocksPlaceholder}
-                className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
+                className="w-full bg-white dark:bg-slate-950 rounded-md pl-10 pr-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm"
               />
             </div>
           )}
 
           {/* RENDER BOOKMARKS OVERLAY VIEW */}
           {showBookmarks ? (
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm space-y-4">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-lg shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-                <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase flex items-center gap-1">
+                <h3 className="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-1">
                   <Bookmark className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Bookmarked Questions ({currentUser?.bookmarkedQuestions?.length || 0})
                 </h3>
                 <button
                   onClick={handleCloseBookmarks}
-                  className="text-[10px] text-blue-600 font-bold"
+                  className="text-xs text-[#1e4e79] font-bold"
                 >
                   Back to List
                 </button>
               </div>
 
-              {(!currentUser?.bookmarkedQuestions || currentUser.bookmarkedQuestions.length === 0) ? (
-                <div className="text-center py-8 text-slate-400 text-xs">
-                  No bookmarked questions yet. Click bookmarks inside mock sittings solutions to review here.
-                </div>
-              ) : bookmarkQsLoading ? (
-                <div className="text-center py-8 text-slate-400 text-xs flex flex-col items-center gap-2">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-                  Loading bookmarked questions...
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {currentUser.bookmarkedQuestions.map((bm) => {
-                    const rawQ = findBookmarkedQuestion(bm.testId, bm.questionId);
-                    if (!rawQ) return null;
-
-                    // Normalise: API raw format has textEn/optionsEn; engine format has content.en
-                    const questionTextEn = rawQ.textEn || rawQ.content?.en?.questionText || '';
-                    const questionTextHi = rawQ.textHi || rawQ.content?.hi?.questionText || questionTextEn;
-                    const optionsEn: string[] = rawQ.optionsEn || rawQ.content?.en?.options || [];
-                    const optionsHi: string[] = rawQ.optionsHi || rawQ.content?.hi?.options || optionsEn;
-                    const correctIdx: number = rawQ.correctIndex !== undefined ? rawQ.correctIndex : (rawQ.correctOptionIndex ?? 0);
-                    const questionText = language === 'hi' ? questionTextHi : questionTextEn;
-                    const options = language === 'hi' ? optionsHi : optionsEn;
-
-                    const isExpanded = !!expandedBookmarks[bm.questionId];
-                    const explanationEn = rawQ.explanationEn || rawQ.content?.en?.explanationText || EXPLANATIONS[bm.questionId]?.en || '';
-                    const explanationHi = rawQ.explanationHi || rawQ.content?.hi?.explanationText || EXPLANATIONS[bm.questionId]?.hi || explanationEn;
-                    const questionExplanation = language === 'hi' ? explanationHi : explanationEn;
-
-                    // Find test title from catalog
-                    let testTitle = bm.testId;
-                    for (const cat of examCatalog) {
-                      for (const sub of cat.subCategories || []) {
-                        const found = (sub.tests || []).find((t: any) => t.id === bm.testId);
-                        if (found) { testTitle = found.title; break; }
-                        for (const ss of sub.subSubCategories || []) {
-                          const f2 = (ss.tests || []).find((t: any) => t.id === bm.testId);
-                          if (f2) { testTitle = f2.title; break; }
-                        }
-                      }
-                    }
-
-                    return (
-                      <div
-                        key={bm.questionId}
-                        className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900  text-xs"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[8px] bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400 font-extrabold px-1.5 py-0.5 rounded uppercase truncate max-w-[60%]">
-                            {testTitle}
-                          </span>
-                          <button
-                            onClick={() => toggleBookmark(bm.testId, bm.questionId)}
-                            className="p-1 rounded text-red-500 hover:bg-red-50"
-                            title="Remove Bookmark"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        <p className={`font-bold text-slate-800 dark:text-slate-200 mt-2 ${isExpanded ? 'line-clamp-none' : 'line-clamp-2'}`} dangerouslySetInnerHTML={{ __html: questionText }} />
-
-                        <button
-                          onClick={() => toggleExpandBookmark(bm.questionId)}
-                          className="mt-3 flex items-center gap-1 text-[9px] text-blue-600 font-extrabold uppercase hover:underline"
-                        >
-                          {isExpanded ? <>Collapse Solution <ChevronUp className="h-3 w-3" /></> : <>Reveal Solved Options <ChevronDown className="h-3 w-3" /></>}
-                        </button>
-
-                        {isExpanded && (
-                          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
-                            {options.length > 0 && (
-                              <div className="space-y-1.5">
-                                <p className="font-extrabold text-[9px] text-slate-400 uppercase">Multiple Choice Options:</p>
-                                {options.map((opt, oIdx) => {
-                                  const text = typeof opt === 'string' ? opt : (opt as any).text || String(opt);
-                                  const isCorrect = oIdx === correctIdx;
-                                  return (
-                                    <div
-                                      key={oIdx}
-                                      className={`p-2 rounded-lg text-[10px] font-semibold flex items-center justify-between border ${
-                                        isCorrect 
-                                          ? 'bg-green-50 border-green-300 text-green-800 dark:bg-green-950/20 dark:border-green-900/60 dark:text-green-300' 
-                                          : 'bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                                      }`}
-                                    >
-                                      <span dangerouslySetInnerHTML={{ __html: text }} />
-                                      {isCorrect && <Check className="h-3 w-3 text-green-600 shrink-0" />}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                            
-                            {questionExplanation && (
-                              <div className="bg-yellow-50/50 dark:bg-yellow-950/10 border border-yellow-200 dark:border-yellow-900/40 p-2.5 rounded-lg">
-                                <p className="font-extrabold text-[9px] text-yellow-800 dark:text-yellow-400 uppercase">
-                                  {language === 'hi' ? 'विस्तृत व्याख्या और अवधारणा:' : 'Detailed Explanation & Concept:'}
-                                </p>
-                                <div 
-                                  className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed mt-1 font-medium markup-content"
-                                  dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionExplanation) }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <BookmarkedQuestions />
             </div>
           ) : (
             <>
@@ -966,20 +718,20 @@ export default function MockTestsCatalog() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                          <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
                             <History className="h-4 w-4" />
                           </div>
                           <div>
-                            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                            <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                               {language === 'hi' ? 'आपके हालिया टेस्ट' : 'Your Recent Tests'}
                             </h3>
-                            <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold">
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">
                               {language === 'hi' ? 'हाल ही में दिए गए अंतिम 5 टेस्ट' : 'Last 5 attempted or ongoing mock tests'}
                             </p>
                           </div>
                         </div>
 
-                        <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full ">
+                        <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full">
                           {recentTests.length} / 5 {language === 'hi' ? 'टेस्ट' : 'Tests'}
                         </span>
                       </div>
@@ -992,11 +744,11 @@ export default function MockTestsCatalog() {
                             <div 
                               key={session.id || test.id}
                               onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
-                              className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6),0_0_16px_rgba(59,130,246,0.15)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.02] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between min-h-[95px] min-w-[210px] w-[210px] shrink-0 cursor-pointer active:translate-y-0 active:scale-[0.99] relative z-0 hover:z-10"
+                              className="bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3 shadow-2xs transition-all duration-300 hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between min-h-[95px] min-w-[210px] w-[210px] shrink-0 cursor-pointer relative z-0 hover:z-10"
                             >
                               <div>
                                 <div className="flex items-center justify-between gap-1 mb-1">
-                                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                  <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
                                     isOngoing 
                                       ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60'
                                       : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60'
@@ -1005,13 +757,13 @@ export default function MockTestsCatalog() {
                                   </span>
                                   
                                   {session.score !== undefined && (
-                                    <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                                    <span className="text-[11px] font-semibold text-[#1e4e79] dark:text-blue-400 font-mono">
                                       {session.score}/{session.maxScore || test.maxMarks}
                                     </span>
                                   )}
                                 </div>
 
-                                <h4 className="font-extrabold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
+                                <h4 className="font-semibold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
                                   {getLocalizedName(test, language)}
                                 </h4>
                               </div>
@@ -1022,7 +774,7 @@ export default function MockTestsCatalog() {
                                     e.stopPropagation();
                                     handleStartExam(test);
                                   }}
-                                  className="mt-2.5 w-full py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[9.5px] text-center shadow-2xs cursor-pointer transition active:scale-95"
+                                  className="mt-2.5 w-full py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] text-center shadow-2xs cursor-pointer transition"
                                 >
                                   {language === 'hi' ? 'फिर शुरू करें' : 'Resume'}
                                 </button>
@@ -1033,14 +785,14 @@ export default function MockTestsCatalog() {
                                       e.stopPropagation();
                                       handleReattemptExam(test);
                                     }}
-                                    className="flex-1 py-1 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-[9px] text-center shadow-2xs cursor-pointer transition active:scale-95 truncate"
+                                    className="flex-1 py-1 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-[11px] text-center shadow-2xs cursor-pointer transition truncate"
                                   >
                                     {language === 'hi' ? 'पुनः प्रयास' : 'Reattempt'}
                                   </button>
                                   <Link
                                     href={`/exam/${test.id}/analysis`}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="flex-1 py-1 px-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[9px] text-center shadow-2xs transition active:scale-95 border border-blue-600 block truncate"
+                                    className="flex-1 py-1 px-1 rounded-lg bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-[11px] text-center shadow-2xs transition border border-[#1e4e79] block truncate"
                                   >
                                     {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
                                   </Link>
@@ -1055,10 +807,10 @@ export default function MockTestsCatalog() {
 
                   {/* EXAM CATEGORIES SECTION */}
                   <div className="mb-1">
-                    <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                    <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                       Exam Categories
                     </h2>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Select a category to explore mock tests
                     </p>
                   </div>
@@ -1073,11 +825,12 @@ export default function MockTestsCatalog() {
                       return (
                         <button
                           key={cat.id}
+                          data-tour={cat.id === tourTarget.catId ? 'ts-category' : undefined}
                           onClick={() => handleCategorySelect(cat.id)}
-                          className="w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6)] hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer active:scale-95"
+                          className="w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer"
                         >
                           {/* Logo/Icon Container */}
-                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-3 bg-white transition duration-300">
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-3 bg-white transition duration-300">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -1085,7 +838,7 @@ export default function MockTestsCatalog() {
                                 className="w-full h-full object-contain p-1"
                               />
                             ) : (
-                              <div className="text-blue-500">
+                              <div className="text-[#1e4e79]">
                                 {isSsc && <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
                                 {isRailways && <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />}
                                 {isBanking && <Coins className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />}
@@ -1095,10 +848,10 @@ export default function MockTestsCatalog() {
                               </div>
                             )}
                           </div>
-                          <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-800 dark:text-slate-100 mb-2 leading-snug line-clamp-2">
+                          <h4 className="font-semibold text-[11px] sm:text-xs md:text-sm text-slate-800 dark:text-slate-100 mb-2 leading-snug line-clamp-2">
                             {getLocalizedName(cat, language)}
                           </h4>
-                          <p className="text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
+                          <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border border-slate-100 dark:border-slate-800">
                             {cat.subCategories?.length || 0} Exams
                           </p>
                         </button>
@@ -1112,28 +865,27 @@ export default function MockTestsCatalog() {
                   <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-200/80 dark:border-slate-800">
                     <button
                       onClick={handleCategoryBack}
-                      className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-blue-600 dark:text-blue-400 font-black text-[11px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm shrink-0"
+                      className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-[#1e4e79] dark:text-blue-400 font-semibold text-[11px] px-3.5 py-1.5 rounded-md cursor-pointer shadow-sm shrink-0"
                     >
                       <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Back to Categories'}
                     </button>
                     
-                    <h2 className="text-sm font-black text-slate-900 dark:text-white truncate text-right">
+                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white truncate text-right">
                       {getLocalizedName(activeCategoryObj, language)}
                     </h2>
                   </div>
 
                   {!activeCategoryObj?.subCategories || activeCategoryObj.subCategories.length === 0 ? (
-                    <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                    <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
                       <div className="relative inline-flex items-center justify-center">
-                        <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-                        <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
-                          <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                        <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-lg bg-[#1e4e79] text-white flex items-center justify-center shadow-lg">
+                          <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8" />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                          {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                          {language === 'hi' ? 'जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : 'Uploading Mock Tests Soon!'}
                         </h3>
                         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
                           {language === 'hi'
@@ -1155,8 +907,9 @@ export default function MockTestsCatalog() {
                         return (
                           <button
                             key={subCat.id}
+                            data-tour={subCat.id === tourTarget.examId ? 'ts-exam' : undefined}
                             onClick={() => handleSubCategorySelect(subCat.id)}
-                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6)] hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer group active:scale-95"
+                            className="relative overflow-hidden w-full flex flex-col items-center text-center p-4 sm:p-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer group"
                           >
                             {/* Radial Glow on Hover */}
                             <div 
@@ -1165,22 +918,22 @@ export default function MockTestsCatalog() {
                             />
 
                             {/* Icon Container */}
-                            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-105 shadow-sm overflow-hidden bg-white border border-slate-100">
+                            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center mb-3 transition-all duration-300 shadow-sm overflow-hidden bg-white border border-slate-100">
                               {getSubCatIcon(subCat.name, subCat.logoUrl || activeCategoryObj?.logoUrl)}
                             </div>
 
                             {/* Exam Title */}
-                            <h4 className="font-extrabold text-[11px] sm:text-xs md:text-sm text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
+                            <h4 className="font-semibold text-[11px] sm:text-xs md:text-sm text-slate-900 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug line-clamp-2">
                               {getLocalizedName(subCat, language)}
                             </h4>
 
                             {/* Test Count Badge */}
-                            <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg}`}>
+                            <span className={`text-[11px] sm:text-xs font-semibold px-2 py-0.5 sm:px-3.5 sm:py-1.5 rounded-full border transition-all duration-300 ${themeInfo.badgeBg}`}>
                               {countStr}
                             </span>
 
                             {/* Practice CTA Prompt */}
-                            <div className="flex items-center gap-1 text-[9px] uppercase font-black text-blue-600 dark:text-blue-400 tracking-wider mt-4 opacity-90 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#1e4e79] dark:text-blue-400 mt-4 opacity-90 group-hover:opacity-100 transition-opacity duration-200">
                               {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"}
                               <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 duration-200" />
                             </div>
@@ -1226,7 +979,7 @@ export default function MockTestsCatalog() {
                                 handleSubCategoryBack();
                               }
                             }}
-                            className="btn-3d btn-3d-slate flex items-center gap-1.5 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-blue-600 dark:text-blue-400 font-black text-[11px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm shrink-0"
+                            className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-[#1e4e79] dark:text-blue-400 font-semibold text-[11px] px-3.5 py-1.5 rounded-md cursor-pointer shadow-sm shrink-0"
                           >
                             <ArrowLeft className="h-4 w-4" />
                             {activeSubSubId !== null
@@ -1234,23 +987,22 @@ export default function MockTestsCatalog() {
                               : (language === 'hi' ? 'सभी परीक्षाएं' : 'Back to Exams')}
                           </button>
 
-                          <h2 className="text-sm font-black text-slate-900 dark:text-white truncate text-right">
+                          <h2 className="text-sm font-semibold text-slate-900 dark:text-white truncate text-right">
                             {getLocalizedName(activeSubCat, language)}
                           </h2>
                         </div>
 
                         {groups.length === 0 && fallbackTests.length === 0 ? (
-                          <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                          <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
                             <div className="relative inline-flex items-center justify-center">
-                              <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-                              <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
-                                <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                              <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-lg bg-[#1e4e79] text-white flex items-center justify-center shadow-lg">
+                                <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8" />
                               </div>
                             </div>
 
                             <div className="space-y-2">
-                              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                                {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                                {language === 'hi' ? 'जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : 'Uploading Mock Tests Soon!'}
                               </h3>
                               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
                                 {language === 'hi'
@@ -1263,7 +1015,7 @@ export default function MockTestsCatalog() {
                           /* Sub-subcategory List Page: ONLY sub-subcategories in list format matching mock test card format */
                           <div className="space-y-3">
                             <div className="mb-1">
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
                                 {language === 'hi' ? 'अभ्यास परीक्षा शुरू करने के लिए एक टेस्ट सीरीज चुनें:' : 'Select a test series to start practicing:'}
                               </p>
                             </div>
@@ -1277,50 +1029,51 @@ export default function MockTestsCatalog() {
                                 return (
                                   <button
                                     key={group.id}
+                                    data-tour={group.id === tourTarget.seriesId ? 'ts-series' : undefined}
                                     onClick={() => setActiveSubSubId(group.id)}
-                                    className="bg-white dark:bg-slate-950  hover:border-slate-300 dark:hover:border-slate-700 p-3 sm:p-3.5 rounded-xl flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-md text-left w-full cursor-pointer"
+                                    className="bg-white dark:bg-slate-950 hover:border-slate-300 dark:hover:border-slate-700 p-3 sm:p-3.5 rounded-md flex flex-row justify-between gap-2.5 group transition-all shadow-sm hover:shadow-sm text-left w-full cursor-pointer"
                                   >
                                     {/* Left details */}
                                     <div className="flex-1 flex flex-col justify-between min-w-0">
                                       <div>
                                         {/* Icon Container */}
-                                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
+                                        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-md flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition duration-300">
                                           {getSubCatIcon(group.name, activeCategoryObj?.logoUrl)}
                                         </div>
 
                                         {/* Sub-Sub Category Title on left side */}
-                                        <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                        <h4 className="font-semibold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
                                           {getLocalizedName(group.name, language)}
                                         </h4>
 
                                         {/* Test Count Badge */}
-                                        <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                                        <span className="text-[11px] sm:text-[11px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
                                           {countStr}
                                         </span>
                                       </div>
 
                                       {/* CTA Prompt */}
-                                      <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                                      <div className="flex items-center gap-1 text-[#1e4e79] dark:text-blue-400 font-bold text-[11px] mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
                                         {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
                                       </div>
                                     </div>
 
                                     {/* Right side series info panel (replacing raw test list) */}
                                     <div className="border-l border-slate-200/60 dark:border-slate-800/60 pl-2.5 flex flex-col justify-center min-w-[100px] sm:min-w-[115px] max-w-[130px] shrink-0">
-                                      <span className="text-[7.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+                                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5">
                                         {language === 'hi' ? 'सीरीज विवरण' : 'Series Details'}
                                       </span>
-                                      <div className="flex flex-col gap-1 text-[8.5px] font-bold text-slate-600 dark:text-slate-300">
-                                        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                                      <div className="flex flex-col gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                                        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                                           <Check className="h-2.5 w-2.5 shrink-0" />
                                           <span>{language === 'hi' ? 'फुल व सेक्शनल' : 'Full & Sectional'}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold">
-                                          <Sparkles className="h-2.5 w-2.5 shrink-0 text-blue-500" />
+                                        <div className="flex items-center gap-1 text-[#1e4e79] dark:text-blue-400 font-semibold">
+                                          <Sparkles className="h-2.5 w-2.5 shrink-0 text-[#1e4e79]" />
                                           <span>{language === 'hi' ? 'नवीनतम पैटर्न' : 'Latest Pattern'}</span>
                                         </div>
                                         <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                          <span className="text-[9px]">🌐</span>
+                                          <span className="text-[11px]"></span>
                                           <span>{language === 'hi' ? 'अंग्रेजी व हिंदी' : 'English & Hindi'}</span>
                                         </div>
                                       </div>
@@ -1338,9 +1091,9 @@ export default function MockTestsCatalog() {
                               const activeGroup = groups.find(g => g.id === activeSubSubId);
                               if (!activeGroup || activeGroup.tests.length === 0) {
                                 return (
-                                  <div className="text-center py-8 px-4 bg-white dark:bg-slate-950 rounded-2xl space-y-2">
-                                    <Clock className="h-6 w-6 text-blue-500 mx-auto animate-pulse" />
-                                    <h4 className="text-xs font-black text-slate-800 dark:text-white">
+                                  <div className="text-center py-8 px-4 bg-white dark:bg-slate-950 rounded-lg space-y-2">
+                                    <Clock className="h-6 w-6 text-[#1e4e79] mx-auto animate-pulse" />
+                                    <h4 className="text-xs font-semibold text-slate-800 dark:text-white">
                                       {language === 'hi' ? 'कोई मॉक टेस्ट नहीं मिला' : 'No Mock Tests Found'}
                                     </h4>
                                   </div>
@@ -1374,30 +1127,31 @@ export default function MockTestsCatalog() {
 
                                     return (
                                       <div
+                                        data-tour="ts-test"
                                         key={test.id}
-                                        className={`border border-slate-200/90 dark:border-slate-800 p-4.5 rounded-2xl shadow-xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between items-start gap-4 w-full relative z-0 hover:z-10 ${cardStyle}`}
+                                        className={`border border-slate-200/90 dark:border-slate-800 p-4.5 rounded-lg shadow-xs transition-all duration-300 hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between items-start gap-4 w-full relative z-0 hover:z-10 ${cardStyle}`}
                                       >
                                         <div className="space-y-1.5 flex-1 w-full text-left">
                                            <div className="flex items-center justify-between gap-1.5 w-full">
                                              <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                                                {isTestPremium ? (
-                                                 <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 uppercase tracking-wider">
+                                                 <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[11px] font-semibold px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60">
                                                    PRO
                                                  </span>
                                                ) : (
-                                                 <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                                 <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[11px] font-semibold px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60">
                                                    FREE
                                                  </span>
                                                )}
 
                                                {ongoing && (
-                                                 <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                 <span className="flex items-center gap-1 text-[11px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-semibold">
                                                    PAUSED
                                                  </span>
                                                )}
 
                                                {completed && (
-                                                 <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                                 <span className="flex items-center gap-1 text-[11px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-semibold">
                                                    ✓ ATTEMPTED
                                                  </span>
                                                )}
@@ -1407,29 +1161,29 @@ export default function MockTestsCatalog() {
                                              </div>
 
                                              {latestAttempt && (
-                                               <div className="inline-flex items-center gap-1 bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-900/60 px-2 py-0.5 rounded-lg text-[8.5px] font-bold text-slate-700 dark:text-slate-200 shrink-0 font-mono ml-auto">
-                                                 <span className="text-[8px] font-semibold text-slate-500 dark:text-slate-400">
-                                                   🏆 {language === 'hi' ? 'अंक:' : 'Score:'}
+                                               <div className="inline-flex items-center gap-1 bg-blue-50/90 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-900/60 px-2 py-0.5 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 shrink-0 font-mono ml-auto">
+                                                 <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                                   {language === 'hi' ? 'अंक:' : 'Score:'}
                                                  </span>
-                                                 <span className="font-extrabold text-blue-600 dark:text-blue-400 text-[9px]">
+                                                 <span className="font-semibold text-[#1e4e79] dark:text-blue-400 text-[11px]">
                                                    {latestAttempt.score ?? 0}/{latestAttempt.maxScore ?? test.maxMarks}
                                                  </span>
                                                </div>
                                              )}
                                            </div>
 
-                                          <h4 className="font-extrabold text-xs text-slate-800 dark:text-white leading-snug">
+                                          <h4 className="font-semibold text-xs text-slate-800 dark:text-white leading-snug">
                                             {getLocalizedName(test, language)}
                                           </h4>
                                           
-                                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
                                             <span>{test.questionsCount} Qs</span>
                                             <span>•</span>
                                             <span>{test.durationMinutes} Mins</span>
                                             <span>•</span>
                                             <span>{test.maxMarks} Marks</span>
                                             <span>•</span>
-                                            <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 EN, HI</span>
+                                            <span className="text-[#1e4e79] dark:text-blue-400 font-medium">EN, HI</span>
                                           </div>
 
                                           {renderTestMarkingSchemePill(test)}
@@ -1440,13 +1194,13 @@ export default function MockTestsCatalog() {
                                             <>
                                               <button
                                                 onClick={() => handleStartExam(test)}
-                                                className="btn-3d btn-3d-yellow flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
+                                                className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-md text-xs text-center shadow-sm cursor-pointer"
                                               >
                                                 Resume Test
                                               </button>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
+                                                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-md text-xs cursor-pointer shrink-0"
                                               >
                                                 Reset
                                               </button>
@@ -1455,13 +1209,13 @@ export default function MockTestsCatalog() {
                                             <>
                                               <Link
                                                 href={`/exam/${test.id}/analysis`}
-                                                className="btn-3d btn-3d-blue flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
+                                                className="flex-1 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2 rounded-md text-xs text-center shadow-sm block"
                                               >
                                                 View Analysis
                                               </Link>
                                               <button
                                                 onClick={() => handleReattemptExam(test)}
-                                                className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-xl text-[10px] cursor-pointer shrink-0"
+                                                className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-2.5 py-2 rounded-md text-xs cursor-pointer shrink-0"
                                               >
                                                 Reattempt
                                               </button>
@@ -1469,7 +1223,7 @@ export default function MockTestsCatalog() {
                                           ) : (
                                             <button
                                               onClick={() => handleStartExam(test)}
-                                              className={`btn-3d btn-3d-blue flex-1 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
+                                              className={`flex-1 text-white font-bold py-2 rounded-md text-xs text-center shadow-sm cursor-pointer ${
                                                 hasPass 
                                                   ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                                   : 'bg-yellow-600 hover:bg-yellow-700'
@@ -1514,29 +1268,30 @@ export default function MockTestsCatalog() {
 
                               return (
                                 <div
+                                  data-tour="ts-test"
                                   key={test.id}
-                                  className={`border border-slate-200/90 dark:border-slate-800 p-4.5 rounded-2xl shadow-xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between items-start gap-4 w-full relative z-0 hover:z-10 ${cardStyle}`}
+                                  className={`border border-slate-200/90 dark:border-slate-800 p-4.5 rounded-lg shadow-xs transition-all duration-300 hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between items-start gap-4 w-full relative z-0 hover:z-10 ${cardStyle}`}
                                 >
                                   <div className="space-y-1.5 flex-1 w-full text-left">
                                     <div className="flex flex-wrap items-center gap-1.5">
                                       {isTestPremium ? (
-                                        <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 uppercase tracking-wider">
+                                        <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 text-[11px] font-semibold px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60">
                                           PRO
                                         </span>
                                       ) : (
-                                        <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60 uppercase tracking-wider">
+                                        <span className="bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 text-[11px] font-semibold px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/60">
                                           FREE
                                         </span>
                                       )}
 
                                       {ongoing && (
-                                        <span className="flex items-center gap-1 text-[8px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                        <span className="flex items-center gap-1 text-[11px] bg-orange-50 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border border-orange-200 dark:border-orange-900/60 px-1.5 py-0.5 rounded font-semibold">
                                           PAUSED
                                         </span>
                                       )}
 
                                       {completed && (
-                                        <span className="flex items-center gap-1 text-[8px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-black uppercase">
+                                        <span className="flex items-center gap-1 text-[11px] bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-400 border border-green-200 dark:border-green-900/60 px-1.5 py-0.5 rounded font-semibold">
                                           ✓ ATTEMPTED
                                         </span>
                                       )}
@@ -1544,18 +1299,18 @@ export default function MockTestsCatalog() {
                                       {renderTestMarkingSchemePill(test)}
                                     </div>
 
-                                    <h4 className="font-extrabold text-xs text-slate-800 dark:text-white leading-snug">
+                                    <h4 className="font-semibold text-xs text-slate-800 dark:text-white leading-snug">
                                       {test.title}
                                     </h4>
 
-                                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
                                       <span>{test.questionsCount} Qs</span>
                                       <span>•</span>
                                       <span>{test.durationMinutes} Mins</span>
                                       <span>•</span>
                                       <span>{test.maxMarks} Marks</span>
                                       <span>•</span>
-                                      <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 EN, HI</span>
+                                      <span className="text-[#1e4e79] dark:text-blue-400 font-medium">EN, HI</span>
                                     </div>
 
                                     {renderSectionalTimingPill(test, language)}
@@ -1568,13 +1323,13 @@ export default function MockTestsCatalog() {
                                       <>
                                         <button
                                           onClick={() => handleStartExam(test)}
-                                          className="btn-3d btn-3d-yellow flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer"
+                                          className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-md text-xs text-center shadow-sm cursor-pointer"
                                         >
                                           Resume Test
                                         </button>
                                         <button
                                           onClick={() => handleReattemptExam(test)}
-                                          className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
+                                          className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-md text-xs cursor-pointer"
                                         >
                                           Reset
                                         </button>
@@ -1583,13 +1338,13 @@ export default function MockTestsCatalog() {
                                       <>
                                         <Link
                                           href={`/exam/${test.id}/analysis`}
-                                          className="btn-3d btn-3d-blue flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm block"
+                                          className="flex-1 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2 rounded-md text-xs text-center shadow-sm block"
                                         >
                                           View Analysis
                                         </Link>
                                         <button
                                           onClick={() => handleReattemptExam(test)}
-                                          className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-xl text-[10px]  cursor-pointer"
+                                          className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-md text-xs cursor-pointer"
                                         >
                                           Reattempt
                                         </button>
@@ -1597,7 +1352,7 @@ export default function MockTestsCatalog() {
                                     ) : (
                                       <button
                                         onClick={() => handleStartExam(test)}
-                                        className={`w-full text-white font-bold py-2 rounded-xl text-[10px] text-center shadow-sm cursor-pointer ${
+                                        className={`w-full text-white font-bold py-2 rounded-md text-xs text-center shadow-sm cursor-pointer ${
                                           hasPass 
                                             ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                             : 'bg-yellow-600 hover:bg-yellow-700'
@@ -1624,11 +1379,11 @@ export default function MockTestsCatalog() {
 
         {/* Upgrade subscription modal (mobile adapted) */}
         {upgradePopupOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm p-0">
-            <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-200">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0">
+            <div className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-xl p-6 w-full max-w-md shadow-2xl animate-in slide-in-from-bottom duration-200">
               <div className="flex items-center gap-2.5 text-yellow-600 mb-4">
                 <ShieldAlert className="h-5.5 w-5.5" />
-                <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
+                <h4 className="font-semibold text-xs text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
               </div>
               
               <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed mb-6 font-semibold">
@@ -1638,13 +1393,13 @@ export default function MockTestsCatalog() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handlePurchasePass}
-                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-xl text-xs font-bold shadow transition"
+                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-md text-xs font-bold shadow transition"
                 >
                   Simulate Unlock Now
                 </button>
                 <button
                   onClick={() => setUpgradePopupOpen(false)}
-                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-xs font-bold"
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-3 rounded-md text-xs font-bold"
                 >
                   Cancel
                 </button>
@@ -1653,110 +1408,35 @@ export default function MockTestsCatalog() {
           </div>
         )}
 
+        {testsTour}
       </div>
     );
   }
 
   return (
-    <div className="h-screen max-h-screen w-full flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
+    <div className="h-screen max-h-screen w-full flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
       
-      {/* Navbar header */}
-      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 sm:px-6 lg:px-8 flex items-center justify-between relative shadow-xs z-30">
-        <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
-          {/* Back button on top left corner */}
-          <Link 
-            href="/" 
-            className="btn-3d btn-3d-slate flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
-            title={t.backToHome}
-          >
-            <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">{t.backToHome}</span>
-            <span className="sm:hidden">{t.navHome}</span>
-          </Link>
-
-          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800 shrink-0"></span>
-
-          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 min-w-0">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-8.5 w-8.5 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-4.5 w-4.5 lg:h-5.5 lg:w-5.5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
-              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-1 lg:ml-3">
-            <Link href="/typing-test" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}</span>
-            </Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{language === 'hi' ? 'सूचनाएं एवं अपडेट्स' : 'Notices & Announcements'}</span>
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Language selector */}
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
-            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
-          </select>
-
-          {/* Bookmarked Questions Button */}
-          <button
-            onClick={() => setShowBookmarks(!showBookmarks)}
-            className={`p-2 rounded-xl flex items-center justify-center gap-1.5 border px-2.5 sm:px-3 py-1.5 lg:py-2 text-xs font-bold transition-all active:scale-95 cursor-pointer select-none h-8.5 ${
-              showBookmarks 
-                ? 'bg-yellow-500 border-yellow-500 text-white shadow-md shadow-yellow-500/20'
-                : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
-            }`}
-            title={t.bookmarks}
-          >
-            <Bookmark className={`h-3.5 w-3.5 ${showBookmarks ? 'fill-white' : ''}`} />
-            <span className="hidden md:inline">{t.bookmarks}</span>
-            {currentUser?.bookmarkedQuestions?.length ? (
-              <span className="bg-red-500 text-white rounded-full text-[9px] px-1.5 py-0.5">
-                {currentUser.bookmarkedQuestions.length}
-              </span>
-            ) : null}
-          </button>
-
-          {/* Theme switcher */}
-          <button 
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-        </div>
-      </header>
+      <SiteHeader fluid />
 
       {/* Main split-pane content */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         
         {/* Left Side: Exam Categories Navigation Sidebar */}
-        <aside className="w-full md:w-56 lg:w-64 xl:w-72 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-20 h-full min-h-0 overflow-hidden">
-          <div className="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xs z-10">
+        <aside className="w-full md:w-56 lg:w-64 xl:w-72 bg-[#f5f7fa] dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-20 h-full min-h-0 overflow-hidden">
+          <div className="px-4 pt-4 pb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+              <BookOpen className="h-4.5 w-4.5 text-[#1e4e79] dark:text-blue-400" />
+              <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
                 {language === 'hi' ? 'परीक्षा श्रेणियां' : 'Exam Categories'}
               </h3>
             </div>
-            <span className="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
+            <span className="text-xs font-medium bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md ring-1 ring-inset ring-slate-300 dark:ring-slate-700 tabular-nums">
               {filteredSidebarCatalog.length}
             </span>
           </div>
 
           {/* Search bar in place of All Categories button at the top */}
-          <div className="p-2.5 pb-1.5 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30">
+          <div className="px-3 pb-2">
             <div className="relative w-full">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                 <Search className="h-3.5 w-3.5" />
@@ -1766,7 +1446,7 @@ export default function MockTestsCatalog() {
                 value={sidebarSearch}
                 onChange={(e) => setSidebarSearch(e.target.value)}
                 placeholder={language === 'hi' ? 'श्रेणी खोजें...' : 'Search categories...'}
-                className="w-full bg-white dark:bg-slate-900  rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full h-9 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md pl-8.5 pr-8 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] focus:ring-2 focus:ring-[#1e4e79]/15 dark:focus:border-blue-400 transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               {sidebarSearch && (
                 <button
@@ -1779,13 +1459,37 @@ export default function MockTestsCatalog() {
             </div>
           </div>
 
-          <div className="p-2.5 space-y-1 flex-1 overflow-y-auto min-h-0 no-scrollbar">
+          <div className="px-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={handleToggleBookmarks}
+              data-tour="ts-bookmarks"
+              className={`w-full flex items-center justify-between gap-2 px-3 h-9 rounded-md text-sm border transition-colors cursor-pointer shadow-[0_1px_2px_rgba(15,23,42,0.05)] ${
+                showBookmarks
+                  ? 'bg-[#eef3f8] dark:bg-slate-800 border-[#1e4e79]/40 text-[#1e4e79] dark:text-blue-300 font-medium'
+                  : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <span className="flex items-center gap-2"><Bookmark className={`h-4 w-4 ${showBookmarks ? 'fill-current' : ''}`} />{t.bookmarks}</span>
+              {currentUser?.bookmarkedQuestions?.length ? <span className="text-xs text-slate-500 dark:text-slate-400">{currentUser.bookmarkedQuestions.length}</span> : null}
+            </button>
+            <button
+              type="button"
+              onClick={requestTestsTourStart}
+              className="mt-2 w-full flex items-center justify-center gap-1.5 h-8 rounded-md text-sm text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <HelpCircle className="h-4 w-4" />
+              {language === 'hi' ? 'यह कैसे काम करता है' : 'How it works'}
+            </button>
+          </div>
+          <div data-tour="ts-sidebar" className="p-3 flex-1 overflow-y-auto min-h-0 no-scrollbar">
             {filteredSidebarCatalog.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+              <div className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
                 {language === 'hi' ? 'कोई श्रेणी नहीं मिली' : 'No categories found'}
               </div>
             ) : (
-              filteredSidebarCatalog.map(cat => {
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-[0_1px_2px_rgba(15,23,42,0.05)] overflow-hidden divide-y divide-slate-200 dark:divide-slate-800">
+              {filteredSidebarCatalog.map(cat => {
                 const isSelected = selectedCategory === cat.id && !showBookmarks;
                 const isSsc = cat.id === 'ssc';
                 const isRailways = cat.id === 'railways';
@@ -1802,18 +1506,18 @@ export default function MockTestsCatalog() {
                       setActiveSubSubId(null);
                       setShowBookmarks(false);
                     }}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 transform-gpu hover:-translate-y-0.5 hover:scale-[1.015] hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4),0_0_10px_rgba(59,130,246,0.1)] text-xs font-bold cursor-pointer active:translate-y-0 active:scale-98 group ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors text-xs cursor-pointer group ${
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 shadow-xs'
-                        : 'hover:bg-white dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border border-transparent hover:border-slate-200 dark:hover:border-slate-700/80'
+                        ? 'bg-[#eef3f8] dark:bg-slate-800/70 text-[#1e4e79] dark:text-blue-300 shadow-[inset_3px_0_0_0_#1e4e79]'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-[#f5f7fa] dark:hover:bg-slate-800/50'
                     }`}
                   >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white border border-slate-100 overflow-hidden shrink-0 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
                       {cat.logoUrl ? (
                         <img src={cat.logoUrl} alt={cat.name} className="w-full h-full object-contain p-1" />
                       ) : (
-                        <div className="text-blue-600">
+                        <div className="text-[#1e4e79]">
                           {isSsc && <Award className="h-4 w-4 text-orange-500" />}
                           {isRailways && <TrendingUp className="h-4 w-4 text-indigo-500" />}
                           {isBanking && <Coins className="h-4 w-4 text-emerald-500" />}
@@ -1824,185 +1528,46 @@ export default function MockTestsCatalog() {
                       )}
                     </div>
                     <div className="truncate">
-                      <p className={`text-xs leading-tight truncate ${isSelected ? 'font-extrabold text-blue-900 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>
+                      <p className={`text-[13px] leading-tight truncate ${isSelected ? 'font-semibold text-[#1e4e79] dark:text-blue-300' : 'text-slate-800 dark:text-slate-200 font-medium'}`}>
                         {getLocalizedName(cat, language)}
                       </p>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {cat.subCategories?.length || 0} {language === 'hi' ? 'परीक्षाएं' : 'Exams'}
                       </p>
                     </div>
                   </div>
                   <ChevronRight className={`h-3.5 w-3.5 shrink-0 transition-transform ${
-                    isSelected ? 'text-blue-600 dark:text-blue-400 translate-x-0.5' : 'text-slate-400 opacity-40'
+                    isSelected ? 'text-[#1e4e79] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300'
                   }`} />
                 </button>
               );
-            }))}
+            })}
+              </div>
+            )}
           </div>
         </aside>
 
         {/* Right Side Content (Tests list/details) */}
-        <main className="flex-1 min-w-0 p-3 sm:p-4 md:p-5 overflow-y-auto edu-grid-pattern relative h-full min-h-0 no-scrollbar">
+        <main className="flex-1 min-w-0 p-3 sm:p-4 md:p-5 overflow-y-auto relative h-full min-h-0 no-scrollbar">
           {showBookmarks ? (
             <div>
               {/* Bookmarked Questions Header */}
               <div className="mb-6">
-                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Bookmark className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                   {t.bookmarkTitle}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t.bookmarkDesc}</p>
               </div>
 
-              {/* Bookmarked List */}
-              {(!currentUser || !currentUser.bookmarkedQuestions || currentUser.bookmarkedQuestions.length === 0) ? (
-                <div className="text-center py-16 bg-white dark:bg-slate-950  rounded-2xl shadow-sm">
-                  <Bookmark className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                  <p className="text-slate-600 dark:text-slate-400 text-sm font-bold">{t.noBookmarks}</p>
-                  <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t.noBookmarksDesc}</p>
-                </div>
-              ) : bookmarkQsLoading ? (
-                <div className="text-center py-16 bg-white dark:bg-slate-950  rounded-2xl shadow-sm flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-                  <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold">Loading bookmarked questions...</p>
-                </div>
-              ) : (
-                <div className="space-y-4 max-w-4xl">
-                  {currentUser.bookmarkedQuestions.map((bm, index) => {
-                    const rawQ = findBookmarkedQuestion(bm.testId, bm.questionId);
-                    if (!rawQ) return null;
-
-                    // Normalise: API raw format uses textEn/optionsEn; engine format uses content.en
-                    const questionTextEn = rawQ.textEn || rawQ.content?.en?.questionText || '';
-                    const questionTextHi = rawQ.textHi || rawQ.content?.hi?.questionText || questionTextEn;
-                    const optionsEn: string[] = rawQ.optionsEn || rawQ.content?.en?.options || [];
-                    const optionsHi: string[] = rawQ.optionsHi || rawQ.content?.hi?.options || optionsEn;
-                    const correctIdx: number = rawQ.correctIndex !== undefined ? rawQ.correctIndex : (rawQ.correctOptionIndex ?? 0);
-                    const explanationEn: string = rawQ.explanationEn || EXPLANATIONS[bm.questionId]?.en || '';
-                    const explanationHi: string = rawQ.explanationHi || EXPLANATIONS[bm.questionId]?.hi || '';
-
-                    // Find test title from catalog
-                    let testTitle = bm.testId;
-                    for (const cat of examCatalog) {
-                      for (const sub of cat.subCategories || []) {
-                        const found = (sub.tests || []).find((t: any) => t.id === bm.testId);
-                        if (found) { testTitle = found.title; break; }
-                        for (const ss of (sub as any).subSubCategories || []) {
-                          const f2 = (ss.tests || []).find((t: any) => t.id === bm.testId);
-                          if (f2) { testTitle = f2.title; break; }
-                        }
-                      }
-                    }
-
-                    const isExpanded = !!expandedBookmarks[bm.questionId];
-
-                    return (
-                      <div key={bm.questionId} className="bg-white dark:bg-slate-950  rounded-xl p-5 shadow-sm transition-all">
-                        <div 
-                          className="flex items-center justify-between cursor-pointer select-none"
-                          onClick={() => toggleExpandBookmark(bm.questionId)}
-                        >
-                          <div className="flex-1 min-w-0 pr-4">
-                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                              <span className="bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-900 px-2 py-0.5 rounded text-[9px] font-bold text-blue-600 dark:text-blue-400 truncate max-w-xs">
-                                {testTitle}
-                              </span>
-                              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider font-mono">
-                                Q #{index + 1}
-                              </span>
-                            </div>
-                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextEn) }} />
-                          </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleBookmark(bm.testId, bm.questionId);
-                              }}
-                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer"
-                              title="Remove Bookmark"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                            {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-500" /> : <ChevronDown className="h-4 w-4 text-slate-500" />}
-                          </div>
-                        </div>
-
-                        {isExpanded && (
-                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/60 space-y-4">
-                            {/* Question Text */}
-                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4  rounded text-xs leading-relaxed text-slate-800 dark:text-slate-200">
-                              <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">Question (English):</p>
-                              <div className="font-normal mb-3 markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextEn) }} />
-                              {questionTextHi && questionTextHi !== questionTextEn && (<>
-                                <p className="font-bold text-blue-600 dark:text-blue-400 mb-1">प्रश्न (Hindi):</p>
-                                <div className="font-normal markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(questionTextHi) }} />
-                              </>)}
-                            </div>
-
-                            {/* Options with Highlighted Correct Answer */}
-                            {optionsEn.length > 0 && (
-                              <div>
-                                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Options & Correct Answer</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                  {optionsEn.map((opt, oIdx) => {
-                                    const textEn = typeof opt === 'string' ? opt : (opt as any).text || String(opt);
-                                    const rawHiOpt = optionsHi[oIdx];
-                                    const textHi = typeof rawHiOpt === 'string' ? rawHiOpt : (rawHiOpt as any)?.text || textEn;
-                                    const isCorrect = oIdx === correctIdx;
-
-                                    return (
-                                      <div 
-                                        key={oIdx} 
-                                        className={`p-3 rounded-lg border text-xs flex flex-col gap-1 ${
-                                          isCorrect 
-                                            ? 'bg-green-50 border-green-300 dark:bg-green-950/20 dark:border-green-900/60 text-green-800 dark:text-green-300 font-semibold' 
-                                            : 'bg-white border-slate-200 dark:bg-slate-900/40 dark:border-slate-800 text-slate-700 dark:text-slate-400'
-                                        }`}
-                                      >
-                                        <div className="flex items-center justify-between">
-                                          <span className="flex items-center gap-1">Option {oIdx + 1}: <span dangerouslySetInnerHTML={{ __html: processQuestionHtml(textEn) }} /></span>
-                                          {isCorrect && <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
-                                        </div>
-                                        {textHi !== textEn && <span className="text-[10px] opacity-80 mt-0.5 flex items-center gap-1">हिंदी: <span dangerouslySetInnerHTML={{ __html: processQuestionHtml(textHi) }} /></span>}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Solution Explanation */}
-                            {(explanationEn || explanationHi) && (
-                              <div className="bg-blue-50/40 dark:bg-blue-950/10 p-4 border border-blue-100 dark:border-blue-900/45 rounded-xl">
-                                <p className="text-[11px] font-bold text-blue-700 dark:text-blue-400 mb-3 uppercase tracking-wide">{t.explanation}</p>
-                                <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
-                                  {explanationEn && <div>
-                                    <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.englishExplanation}</p>
-                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(explanationEn) }} />
-                                  </div>}
-                                  {explanationHi && <div className="pt-3 border-t border-blue-100/50 dark:border-blue-950/20">
-                                    <p className="font-bold text-[10px] text-blue-700 dark:text-blue-500 mb-1">{t.hindiExplanation}</p>
-                                    <div className="markup-content" dangerouslySetInnerHTML={{ __html: processQuestionHtml(explanationHi) }} />
-                                  </div>}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <BookmarkedQuestions />
             </div>
           ) : selectedCategory === null ? (
             <>
               <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div>
-                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-[#1e4e79]" />
                     {language === 'hi' ? 'परीक्षा श्रेणियाँ' : 'Exam Categories'}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -2020,7 +1585,7 @@ export default function MockTestsCatalog() {
                     value={examSearchQuery}
                     onChange={(e) => setExamSearchQuery(e.target.value)}
                     placeholder={language === 'hi' ? 'परीक्षाएं खोजें...' : 'Search exams, categories...'}
-                    className="w-full bg-white dark:bg-slate-950  rounded-xl pl-9.5 pr-8 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    className="w-full bg-white dark:bg-slate-950 rounded-md pl-9.5 pr-8 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] focus:ring-1 focus:ring-[#1e4e79]/15 transition-all font-semibold shadow-2xs placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   {examSearchQuery && (
                     <button
@@ -2038,20 +1603,20 @@ export default function MockTestsCatalog() {
                 <div className="mb-6 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+                      <div className="bg-blue-50 dark:bg-blue-950/60 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
                         <History className="h-4 w-4" />
                       </div>
                       <div>
-                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                        <h3 className="text-xs font-semibold text-slate-900 dark:text-white">
                           {language === 'hi' ? 'आपके हालिया टेस्ट' : 'Your Recent Tests'}
                         </h3>
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">
                           {language === 'hi' ? 'हाल ही में दिए गए अंतिम 5 टेस्ट' : 'Last 5 attempted or ongoing mock tests'}
                         </p>
                       </div>
                     </div>
 
-                    <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full ">
+                    <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full">
                       {recentTests.length} / 5 {language === 'hi' ? 'टेस्ट' : 'Tests'}
                     </span>
                   </div>
@@ -2064,11 +1629,11 @@ export default function MockTestsCatalog() {
                         <div 
                           key={session.id || test.id}
                           onClick={() => handleOpenRecentCategory(catId, subCatId, subSubId)}
-                          className="min-w-[175px] sm:min-w-[190px] min-[1080px]:min-w-0 flex-1 shrink-0 min-[1080px]:shrink bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_12px_24px_-4px_rgba(0,0,0,0.6),0_0_16px_rgba(59,130,246,0.15)] transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.02] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between min-h-[88px] cursor-pointer active:translate-y-0 active:scale-[0.99] relative z-0 hover:z-10 group"
+                          className="min-w-[175px] sm:min-w-[190px] min-[1080px]:min-w-0 flex-1 shrink-0 min-[1080px]:shrink bg-slate-50/80 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3 shadow-2xs transition-all duration-300 hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col justify-between min-h-[88px] cursor-pointer relative z-0 hover:z-10 group"
                         >
                           <div>
                             <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                              <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
                                 isOngoing 
                                   ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60'
                                   : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60'
@@ -2077,13 +1642,13 @@ export default function MockTestsCatalog() {
                               </span>
                               
                               {session.score !== undefined && (
-                                <span className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                                <span className="text-[11px] font-semibold text-[#1e4e79] dark:text-blue-400 font-mono">
                                   {session.score}/{session.maxScore || test.maxMarks}
                                 </span>
                               )}
                             </div>
 
-                            <h4 className="font-extrabold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
+                            <h4 className="font-semibold text-[11px] text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug" title={getLocalizedName(test, language)}>
                               {getLocalizedName(test, language)}
                             </h4>
                           </div>
@@ -2094,7 +1659,7 @@ export default function MockTestsCatalog() {
                                 e.stopPropagation();
                                 handleStartExam(test);
                               }}
-                              className="mt-2.5 w-full py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[9.5px] text-center shadow-2xs cursor-pointer transition active:scale-95"
+                              className="mt-2.5 w-full py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] text-center shadow-2xs cursor-pointer transition"
                             >
                               {language === 'hi' ? 'फिर शुरू करें' : 'Resume'}
                             </button>
@@ -2105,14 +1670,14 @@ export default function MockTestsCatalog() {
                                   e.stopPropagation();
                                   handleReattemptExam(test);
                                 }}
-                                className="flex-1 py-1 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-extrabold text-[9px] text-center shadow-2xs cursor-pointer transition active:scale-95 truncate"
+                                className="flex-1 py-1 px-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-[11px] text-center shadow-2xs cursor-pointer transition truncate"
                               >
                                 {language === 'hi' ? 'पुनः प्रयास' : 'Reattempt'}
                               </button>
                               <Link
                                 href={`/exam/${test.id}/analysis`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex-1 py-1 px-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[9px] text-center shadow-2xs transition active:scale-95 border border-blue-600 block truncate"
+                                className="flex-1 py-1 px-1 rounded-lg bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-[11px] text-center shadow-2xs transition border border-[#1e4e79] block truncate"
                               >
                                 {language === 'hi' ? 'विश्लेषण' : 'Analysis'}
                               </Link>
@@ -2136,17 +1701,19 @@ export default function MockTestsCatalog() {
                   return (
                     <button
                       key={cat.id}
+                      data-tour={cat.id === tourTarget.catId ? 'ts-category' : undefined}
                       onClick={() => {
                         setSelectedCategory(cat.id);
                         setSelectedSubCategory(null);
+                        setActiveSubSubId(null);
                       }}
-                      className="bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 dark:hover:border-blue-400/40 active:translate-y-0 active:scale-[0.99] relative"
+                      className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-lg flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 hover:border-blue-500/40 dark:hover:border-blue-400/40 relative"
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Logo/Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-md flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:shadow-sm">
                             {cat.logoUrl ? (
                               <img
                                 src={cat.logoUrl}
@@ -2154,7 +1721,7 @@ export default function MockTestsCatalog() {
                                 className="w-full h-full object-contain p-1"
                               />
                             ) : (
-                              <div className="text-blue-500">
+                              <div className="text-[#1e4e79]">
                                 {isSsc && <Award className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-orange-500" />}
                                 {isRailways && <TrendingUp className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-indigo-500" />}
                                 {isBanking && <Coins className="h-6 w-6 sm:h-6.5 sm:w-6.5 text-emerald-500" />}
@@ -2164,15 +1731,15 @@ export default function MockTestsCatalog() {
                               </div>
                             )}
                           </div>
-                          <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                          <h4 className="font-semibold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors truncate">
                             {getLocalizedName(cat, language)}
                           </h4>
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                          <span className="text-[11px] sm:text-[11px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
                             {cat.subCategories?.length || 0} Exams
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-200 dark:border-slate-800/60 w-full">
+                        <div className="flex items-center gap-1 text-[#1e4e79] dark:text-blue-400 font-bold text-[11px] mt-3 pt-1.5 border-t border-slate-200 dark:border-slate-800/60 w-full">
                           {language === 'hi' ? "कैटेगरी देखें" : "View Category"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
                         </div>
                       </div>
@@ -2180,12 +1747,12 @@ export default function MockTestsCatalog() {
                       {/* Right side subcategories */}
                       {cat.subCategories && cat.subCategories.length > 0 && (
                         <div className="border-l border-slate-200/50 dark:border-slate-800/40 pl-2.5 flex flex-col justify-center min-w-[100px] max-w-[125px] shrink-0">
-                          <span className="text-[7.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">Exams List</span>
+                          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Exams List</span>
                           <div className="flex flex-col gap-1">
                             {cat.subCategories.slice(0, 5).map((sub: any) => (
                               <div key={sub.id} className="flex items-center gap-1">
                                 <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"></div>
-                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(sub, language)}>
+                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(sub, language)}>
                                   {getLocalizedName(formatSubCategoryName(sub.name), language)}
                                 </span>
                               </div>
@@ -2203,7 +1770,7 @@ export default function MockTestsCatalog() {
               <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className="btn-3d btn-3d-slate flex items-center gap-2 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-400/60 px-4 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer shadow-sm shrink-0"
+                  className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-400/60 px-4 py-2 rounded-md text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer shadow-sm shrink-0"
                 >
                   <ArrowLeft className="h-4 w-4" /> {language === 'hi' ? 'श्रेणियों पर वापस जाएं' : 'Back to Categories'}
                 </button>
@@ -2219,7 +1786,7 @@ export default function MockTestsCatalog() {
                       value={examSearchQuery}
                       onChange={(e) => setExamSearchQuery(e.target.value)}
                       placeholder={language === 'hi' ? 'इस श्रेणी में खोजें...' : 'Search in this category...'}
-                      className="w-full bg-white dark:bg-slate-950  rounded-xl pl-10 pr-10 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-semibold shadow-sm"
+                      className="w-full bg-white dark:bg-slate-950 rounded-md pl-10 pr-10 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] focus:ring-2 focus:ring-[#1e4e79]/15 transition-all font-semibold shadow-sm"
                     />
                     {examSearchQuery && (
                       <button
@@ -2232,9 +1799,9 @@ export default function MockTestsCatalog() {
                   </div>
 
                   <div className="text-right">
-                    <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
                       {getLocalizedName(currentCategoryObj, language)}
-                      <BookOpen className="h-5 w-5 text-blue-500" />
+                      <BookOpen className="h-5 w-5 text-[#1e4e79]" />
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       {language === 'hi' ? TRANSLATIONS.hi.subCatDesc : TRANSLATIONS.en.subCatDesc}
@@ -2244,17 +1811,16 @@ export default function MockTestsCatalog() {
               </div>
 
               {getFilteredSubCategories.length === 0 ? (
-                <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
                   <div className="relative inline-flex items-center justify-center">
-                    <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-                    <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
-                      <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                    <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-lg bg-[#1e4e79] text-white flex items-center justify-center shadow-lg">
+                      <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                      {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                      {language === 'hi' ? 'जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : 'Uploading Mock Tests Soon!'}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
                       {language === 'hi'
@@ -2284,30 +1850,31 @@ export default function MockTestsCatalog() {
                   return (
                     <button
                       key={subCat.id}
-                      onClick={() => setSelectedSubCategory(subCat.id)}
-                      className="bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 dark:hover:border-blue-400/40 active:translate-y-0 active:scale-[0.99] relative"
+                      data-tour={subCat.id === tourTarget.examId ? 'ts-exam' : undefined}
+                      onClick={() => { setSelectedSubCategory(subCat.id); setActiveSubSubId(null); }}
+                      className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-lg flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 hover:border-blue-500/40 dark:hover:border-blue-400/40 relative"
                     >
                       {/* Left details */}
                       <div className="flex-1 flex flex-col justify-between min-w-0">
                         <div>
                           {/* Icon Container */}
-                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-md flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:shadow-sm">
                             {getSubCatIcon(subCat.name, subCat.logoUrl || currentCategoryObj?.logoUrl)}
                           </div>
 
                           {/* Exam Title */}
-                          <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                          <h4 className="font-semibold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
                             {getLocalizedName(subCat, language)}
                           </h4>
 
                           {/* Test Count Badge */}
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                          <span className="text-[11px] sm:text-[11px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
                             {countStr}
                           </span>
                         </div>
 
                         {/* CTA Prompt */}
-                        <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                        <div className="flex items-center gap-1 text-[#1e4e79] dark:text-blue-400 font-bold text-[11px] mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
                           {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
                         </div>
                       </div>
@@ -2315,12 +1882,12 @@ export default function MockTestsCatalog() {
                       {/* Right side sub-subcategories / test series list */}
                       {subSubList && subSubList.length > 0 && (
                         <div className="border-l border-slate-200/50 dark:border-slate-800/40 pl-2.5 flex flex-col justify-center min-w-[100px] max-w-[125px] shrink-0">
-                          <span className="text-[7.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">Series List</span>
+                          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5">Series List</span>
                           <div className="flex flex-col gap-1">
                             {subSubList.slice(0, 5).map((itemTitle: string, idx: number) => (
                               <div key={idx} className="flex items-center gap-1">
                                 <div className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"></div>
-                                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(itemTitle, language)}>
+                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate max-w-[85px]" title={getLocalizedName(itemTitle, language)}>
                                   {getLocalizedName(formatSubCategoryName(itemTitle), language)}
                                 </span>
                               </div>
@@ -2367,7 +1934,7 @@ export default function MockTestsCatalog() {
                             setSelectedSubCategory(null);
                           }
                         }}
-                        className="btn-3d btn-3d-slate flex items-center gap-2 bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-400/60 px-4 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer shadow-sm shrink-0"
+                        className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/60 dark:hover:border-blue-400/60 px-4 py-2 rounded-md text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer shadow-sm shrink-0"
                       >
                         <ArrowLeft className="h-4 w-4" />
                         {activeSubSubId !== null
@@ -2377,20 +1944,20 @@ export default function MockTestsCatalog() {
 
                       {currentCategoryObj?.logoUrl && (
                         <div className="flex-1 flex justify-center items-center">
-                          <div className="bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+                          <div className="bg-white p-1.5 rounded-lg border border-slate-100 shadow-sm">
                             <img 
                               src={currentCategoryObj.logoUrl} 
                               alt={`${currentCategoryObj.name} logo`} 
-                              className="h-14 sm:h-16 w-auto max-h-20 object-contain rounded-xl"
+                              className="h-14 sm:h-16 w-auto max-h-20 object-contain rounded-md"
                             />
                           </div>
                         </div>
                       )}
 
                       <div className="text-right">
-                        <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2 justify-end">
                           {getLocalizedName(activeSubCat, language)}
-                          <BookOpen className="h-5 w-5 text-blue-500" />
+                          <BookOpen className="h-5 w-5 text-[#1e4e79]" />
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           {t.testSeriesDesc}
@@ -2399,17 +1966,16 @@ export default function MockTestsCatalog() {
                     </div>
 
                     {groups.length === 0 && fallbackTests.length === 0 ? (
-                      <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
+                      <div className="text-center py-10 sm:py-14 px-4 sm:px-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg shadow-sm space-y-3 sm:space-y-4 max-w-xl mx-auto my-4 sm:my-6">
                         <div className="relative inline-flex items-center justify-center">
-                          <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-xl animate-pulse" />
-                          <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30">
-                            <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 animate-bounce" />
+                          <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-lg bg-[#1e4e79] text-white flex items-center justify-center shadow-lg">
+                            <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8" />
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                            {language === 'hi' ? '🚀 जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : '🚀 Uploading Mock Tests Soon!'}
+                          <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
+                            {language === 'hi' ? 'जल्द ही नए मॉक टेस्ट अपलोड हो रहे हैं!' : 'Uploading Mock Tests Soon!'}
                           </h3>
                           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
                             {language === 'hi'
@@ -2442,50 +2008,51 @@ export default function MockTestsCatalog() {
                             return (
                               <button
                                 key={group.id}
+                                data-tour={group.id === tourTarget.seriesId ? 'ts-series' : undefined}
                                 onClick={() => setActiveSubSubId(group.id)}
-                                className="bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-2xl flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-500/40 dark:hover:border-blue-400/40 active:translate-y-0 active:scale-[0.99] relative"
+                                className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 sm:p-3.5 rounded-lg flex flex-row justify-between gap-2.5 group text-left w-full cursor-pointer transition-all duration-300 hover:border-blue-500/40 dark:hover:border-blue-400/40 relative"
                               >
                                 {/* Left details */}
                                 <div className="flex-1 flex flex-col justify-between min-w-0">
                                   <div>
                                     {/* Icon Container */}
-                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-0.5 group-hover:shadow-md">
+                                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-md flex items-center justify-center border border-slate-100 shadow-sm overflow-hidden mb-2 bg-white transition-all duration-300 group-hover:shadow-sm">
                                       {getSubCatIcon(group.name, currentCategoryObj?.logoUrl)}
                                     </div>
 
                                     {/* Sub-Sub Category Title on left side */}
-                                    <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
+                                    <h4 className="font-semibold text-[11px] sm:text-xs text-slate-900 dark:text-white mb-1 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors leading-snug line-clamp-2">
                                       {getLocalizedName(group.name, language)}
                                     </h4>
 
                                     {/* Test Count Badge */}
-                                    <span className="text-[8px] sm:text-[9px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
+                                    <span className="text-[11px] sm:text-[11px] text-slate-400 dark:text-slate-400 font-bold bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-100 dark:border-slate-800">
                                       {countStr}
                                     </span>
                                   </div>
 
                                   {/* CTA Prompt */}
-                                  <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold text-[8.5px] uppercase tracking-wider mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
+                                  <div className="flex items-center gap-1 text-[#1e4e79] dark:text-blue-400 font-bold text-[11px] mt-3 pt-1.5 border-t border-slate-100 dark:border-slate-800/60 w-full">
                                     {language === 'hi' ? "तैयारी शुरू करें" : "Start Practice"} <ChevronRight className="h-2.5 w-2.5 transition group-hover:translate-x-0.5" />
                                   </div>
                                 </div>
 
                                 {/* Right side series info panel (replacing raw test list) */}
                                 <div className="border-l border-slate-200/60 dark:border-slate-800/60 pl-2.5 flex flex-col justify-center min-w-[100px] sm:min-w-[115px] max-w-[130px] shrink-0">
-                                  <span className="text-[7.5px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+                                  <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mb-1.5">
                                     {language === 'hi' ? 'सीरीज विवरण' : 'Series Details'}
                                   </span>
-                                  <div className="flex flex-col gap-1 text-[8.5px] font-bold text-slate-600 dark:text-slate-300">
-                                    <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-extrabold">
+                                  <div className="flex flex-col gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                                    <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                                       <Check className="h-2.5 w-2.5 shrink-0" />
                                       <span>{language === 'hi' ? 'फुल व सेक्शनल' : 'Full & Sectional'}</span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-semibold">
-                                      <Sparkles className="h-2.5 w-2.5 shrink-0 text-blue-500" />
+                                    <div className="flex items-center gap-1 text-[#1e4e79] dark:text-blue-400 font-semibold">
+                                      <Sparkles className="h-2.5 w-2.5 shrink-0 text-[#1e4e79]" />
                                       <span>{language === 'hi' ? 'नवीनतम पैटर्न' : 'Latest Pattern'}</span>
                                     </div>
                                     <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                      <span className="text-[9px]">🌐</span>
+                                      <span className="text-[11px]"></span>
                                       <span>{language === 'hi' ? 'अंग्रेजी व हिंदी' : 'English & Hindi'}</span>
                                     </div>
                                   </div>
@@ -2506,10 +2073,11 @@ export default function MockTestsCatalog() {
                               return (
                                 <button
                                   key={group.id}
+                                  data-tour={group.id === tourTarget.seriesId ? 'ts-series' : undefined}
                                   onClick={() => setActiveSubSubId(group.id)}
-                                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
+                                  className={`px-4 py-2 rounded-md text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
                                     isSelected
-                                      ? 'bg-blue-600 border-blue-600 text-white shadow-sm font-extrabold'
+                                      ? 'bg-[#1e4e79] border-[#1e4e79] text-white shadow-sm font-semibold'
                                       : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
                                   }`}
                                 >
@@ -2525,11 +2093,11 @@ export default function MockTestsCatalog() {
                           const activeGroup = groups.find(g => g.id === activeSubSubId);
                           if (!activeGroup || activeGroup.tests.length === 0) {
                             return (
-                              <div className="text-center py-10 sm:py-12 px-4 sm:px-6 bg-gradient-to-b from-slate-50/80 to-white dark:from-slate-950 dark:to-slate-900/60  rounded-2xl space-y-3 max-w-xl mx-auto my-2">
-                                <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
+                              <div className="text-center py-10 sm:py-12 px-4 sm:px-6 bg-white dark:bg-slate-900 rounded-lg space-y-3 max-w-xl mx-auto my-2">
+                                <div className="h-12 w-12 rounded-lg bg-blue-500/10 text-[#1e4e79] dark:text-blue-400 flex items-center justify-center mx-auto shadow-sm">
                                   <Clock className="h-6 w-6 animate-pulse" />
                                 </div>
-                                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                                <h4 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                                   {language === 'hi' ? 'इस श्रेणी में अभी कोई टेस्ट उपलब्ध नहीं है' : 'No tests available in this series yet.'}
                                 </h4>
                               </div>
@@ -2573,48 +2141,49 @@ export default function MockTestsCatalog() {
 
                                 return (
                                   <div
+                                    data-tour="ts-test"
                                     key={test.id}
-                                    className={`backdrop-blur-sm border border-slate-200/90 dark:border-slate-800 p-5 rounded-2xl shadow-xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full relative overflow-hidden z-0 hover:z-10 ${cardColorStyle} ${cardGlow}`}
+                                    className={` border border-slate-200/90 dark:border-slate-800 p-5 rounded-lg shadow-xs transition-all duration-300 hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full relative overflow-hidden z-0 hover:z-10 ${cardColorStyle} ${cardGlow}`}
                                   >
                                     <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-slate-400/5 pointer-events-none" />
                                     <div className="space-y-1.5 flex-1 w-full text-left">
                                       <div className="flex flex-wrap items-center gap-2">
                                         {isTestPremium ? (
-                                          <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
+                                          <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-amber-500/20">
                                             {language === 'hi' ? 'प्रो' : 'PRO'}
                                           </span>
                                         ) : (
-                                          <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider">
+                                          <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-emerald-500/20">
                                             {language === 'hi' ? 'मुफ़्त' : 'FREE'}
                                           </span>
                                         )}
 
                                         {ongoing && (
-                                          <span className="flex items-center gap-1 text-[8px] bg-orange-500/10 text-orange-700 dark:bg-orange-500/5 dark:text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-black uppercase">
+                                          <span className="flex items-center gap-1 text-[11px] bg-orange-500/10 text-orange-700 dark:bg-orange-500/5 dark:text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-semibold">
                                             ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
                                           </span>
                                         )}
                                         
                                         {completed && (
-                                          <span className="flex items-center gap-1 text-[8px] bg-blue-500/10 text-blue-700 dark:bg-blue-500/5 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-black uppercase">
+                                          <span className="flex items-center gap-1 text-[11px] bg-blue-500/10 text-[#1e4e79] dark:bg-blue-500/5 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-semibold">
                                             ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                           </span>
                                         )}
                                         {renderSectionalTimingPill(test, language)}
                                       </div>
 
-                                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
+                                      <h4 className="font-semibold text-sm text-slate-900 dark:text-white leading-snug">
                                         {test.title}
                                       </h4>
 
-                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
                                         <span>{test.questionsCount} Qs</span>
                                         <span>•</span>
                                         <span>{test.durationMinutes} Mins</span>
                                         <span>•</span>
                                         <span>{test.maxMarks} Marks</span>
                                         <span>•</span>
-                                        <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
+                                        <span className="text-[#1e4e79] dark:text-blue-400 font-medium">English, Hindi</span>
                                       </div>
                                     </div>
 
@@ -2625,13 +2194,13 @@ export default function MockTestsCatalog() {
                                         <>
                                           <button
                                             onClick={() => handleStartExam(test)}
-                                            className="btn-3d btn-3d-yellow flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                            className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-xs text-center shadow-sm cursor-pointer"
                                           >
                                             Resume Test
                                           </button>
                                           <button
                                             onClick={() => handleReattemptExam(test)}
-                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-xs cursor-pointer"
                                           >
                                             Reset
                                           </button>
@@ -2640,13 +2209,13 @@ export default function MockTestsCatalog() {
                                         <>
                                           <Link
                                             href={`/exam/${test.id}/analysis`}
-                                            className="btn-3d btn-3d-blue flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                            className="flex-1 sm:w-32 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2 rounded-lg text-xs text-center shadow-sm block"
                                           >
                                             View Analysis
                                           </Link>
                                           <button
                                             onClick={() => handleReattemptExam(test)}
-                                            className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                            className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-xs cursor-pointer"
                                           >
                                             {t.reattempt}
                                           </button>
@@ -2654,7 +2223,7 @@ export default function MockTestsCatalog() {
                                       ) : (
                                         <button
                                           onClick={() => handleStartExam(test)}
-                                          className={`btn-3d btn-3d-blue w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                          className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-xs text-center shadow-sm cursor-pointer ${
                                             hasPass 
                                               ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                               : 'bg-yellow-600 hover:bg-yellow-700'
@@ -2708,48 +2277,49 @@ export default function MockTestsCatalog() {
 
                           return (
                             <div
+                              data-tour="ts-test"
                               key={test.id}
-                              className={`backdrop-blur-sm border border-slate-200/90 dark:border-slate-800 p-5 rounded-2xl shadow-xs transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.015] hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_14px_28px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(59,130,246,0.15)] hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full relative overflow-hidden z-0 hover:z-10 ${cardColorStyle} ${cardGlow}`}
+                              className={` border border-slate-200/90 dark:border-slate-800 p-5 rounded-lg shadow-xs transition-all duration-300 hover:border-blue-400/60 dark:hover:border-blue-500/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full relative overflow-hidden z-0 hover:z-10 ${cardColorStyle} ${cardGlow}`}
                             >
                               <div className="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-slate-400/5 pointer-events-none" />
                               <div className="space-y-1.5 flex-1 w-full text-left">
                                 <div className="flex flex-wrap items-center gap-2">
                                   {isTestPremium ? (
-                                    <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-amber-500/20 uppercase tracking-wider">
+                                    <span className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-amber-500/20">
                                       {language === 'hi' ? 'प्रो' : 'PRO'}
                                     </span>
                                   ) : (
-                                    <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider">
+                                    <span className="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-emerald-500/20">
                                       {language === 'hi' ? 'मुफ़्त' : 'FREE'}
                                     </span>
                                   )}
 
                                   {ongoing && (
-                                    <span className="flex items-center gap-1 text-[8px] bg-orange-500/10 text-orange-700 dark:bg-orange-500/5 dark:text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-black uppercase">
+                                    <span className="flex items-center gap-1 text-[11px] bg-orange-500/10 text-orange-700 dark:bg-orange-500/5 dark:text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-md font-semibold">
                                       ⏸ {language === 'hi' ? 'रुका हुआ' : 'PAUSED'}
                                     </span>
                                   )}
                                   
                                   {completed && (
-                                    <span className="flex items-center gap-1 text-[8px] bg-blue-500/10 text-blue-700 dark:bg-blue-500/5 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-black uppercase">
+                                    <span className="flex items-center gap-1 text-[11px] bg-blue-500/10 text-[#1e4e79] dark:bg-blue-500/5 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-md font-semibold">
                                       ✓ {language === 'hi' ? 'प्रयास किया गया' : 'ATTEMPTED'}
                                     </span>
                                   )}
                                   {renderSectionalTimingPill(test, language)}
                                 </div>
 
-                                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">
+                                <h4 className="font-semibold text-sm text-slate-900 dark:text-white leading-snug">
                                   {test.title}
                                 </h4>
 
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400 font-bold pt-0.5">
                                   <span>{test.questionsCount} Qs</span>
                                   <span>•</span>
                                   <span>{test.durationMinutes} Mins</span>
                                   <span>•</span>
                                   <span>{test.maxMarks} Marks</span>
                                   <span>•</span>
-                                  <span className="text-blue-600 dark:text-blue-400 font-medium">🌐 English, Hindi</span>
+                                  <span className="text-[#1e4e79] dark:text-blue-400 font-medium">English, Hindi</span>
                                 </div>
                               </div>
 
@@ -2760,13 +2330,13 @@ export default function MockTestsCatalog() {
                                   <>
                                     <button
                                       onClick={() => handleStartExam(test)}
-                                      className="btn-3d btn-3d-yellow flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm cursor-pointer"
+                                      className="flex-1 sm:w-32 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded-lg text-xs text-center shadow-sm cursor-pointer"
                                     >
                                       Resume Test
                                     </button>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-xs cursor-pointer"
                                     >
                                       Reset
                                     </button>
@@ -2775,13 +2345,13 @@ export default function MockTestsCatalog() {
                                   <>
                                     <Link
                                       href={`/exam/${test.id}/analysis`}
-                                      className="btn-3d btn-3d-blue flex-1 sm:w-32 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-[10px] text-center shadow-sm block"
+                                      className="flex-1 sm:w-32 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2 rounded-lg text-xs text-center shadow-sm block"
                                     >
                                       View Analysis
                                     </Link>
                                     <button
                                       onClick={() => handleReattemptExam(test)}
-                                      className="btn-3d btn-3d-slate bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-[10px] cursor-pointer"
+                                      className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold px-3 py-2 rounded-lg text-xs cursor-pointer"
                                     >
                                       {t.reattempt}
                                     </button>
@@ -2789,7 +2359,7 @@ export default function MockTestsCatalog() {
                                 ) : (
                                   <button
                                     onClick={() => handleStartExam(test)}
-                                    className={`btn-3d btn-3d-blue w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-[10px] text-center shadow-sm cursor-pointer ${
+                                    className={`w-full sm:w-44 text-white font-bold py-2.5 rounded-lg text-xs text-center shadow-sm cursor-pointer ${
                                       hasPass 
                                         ? 'bg-[#1C3D5A] hover:bg-slate-800' 
                                         : 'bg-yellow-600 hover:bg-yellow-700'
@@ -2814,11 +2384,11 @@ export default function MockTestsCatalog() {
 
       {/* Subscription Upgrade Overlay Dialog */}
       {upgradePopupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900  rounded-xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200 text-slate-800 dark:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-md p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in duration-200 text-slate-800 dark:text-white">
             <div className="flex items-center gap-3 text-yellow-600 dark:text-yellow-500 mb-4">
               <ShieldAlert className="h-6 w-6" />
-              <h4 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
+              <h4 className="font-semibold text-sm text-slate-900 dark:text-white">Unlock Gated Mock Test</h4>
             </div>
             
             <p className="text-slate-600 dark:text-slate-300 text-xs leading-relaxed mb-6 font-semibold">
@@ -2834,7 +2404,7 @@ export default function MockTestsCatalog() {
               </button>
               <button
                 onClick={handlePurchasePass}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-yellow-900/20 cursor-pointer"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg cursor-pointer"
               >
                 Simulate Unlock Now
               </button>
@@ -2844,6 +2414,7 @@ export default function MockTestsCatalog() {
       )}
 
       {/* Floating Support Action Menu */}
+      {testsTour}
       <HomeSupportWidget variant="expandable" />
     </div>
   );

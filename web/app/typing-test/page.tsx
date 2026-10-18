@@ -35,9 +35,146 @@ import {
   Scale,
   Train,
   Layers,
-  Filter
+  Filter,
+  GraduationCap,
+  HelpCircle,
+  X
 } from 'lucide-react';
 import { TypingTest, TypingCategory, TypingAttempt, TypingPassage } from '../lib/typingTypes';
+import { SiteHeader, SiteFooter, PageTitle, SectionCard, Field, StatusBadge, btnPrimary, btnSecondary, inputCls, pageBg, container } from '../components/SiteUI';
+import { TypingHubTour, requestTypingTourStart } from '../components/TypingTour';
+import { resetStaleTypingLocalData } from '../lib/typingLocalReset';
+
+// Category theme styling matching mocktest exam categories tiles
+const getCategoryTheme = (catId: string, name: string) => {
+  const lower = (catId + ' ' + name).toLowerCase();
+  if (lower.includes('ssc')) {
+    return {
+      color: 'orange',
+      bg: 'bg-orange-50/50 dark:bg-orange-950/15',
+      border: 'border-orange-100 dark:border-orange-900/30',
+      hoverBorder: 'hover:border-orange-400 dark:hover:border-orange-600',
+      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+      badgeBg: 'bg-orange-50 dark:bg-orange-950/45 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
+      gradient: 'from-orange-500 to-amber-500',
+      glow: 'shadow-orange-500/10 dark:shadow-orange-500/5',
+      accentGlow: 'rgba(249,115,22,0.12)',
+      tag: 'SSC Typing',
+      tagHi: 'एसएससी टाइपिंग'
+    };
+  }
+  if (lower.includes('railway') || lower.includes('rrb') || lower.includes('ntpc')) {
+    return {
+      color: 'indigo',
+      bg: 'bg-indigo-50/50 dark:bg-indigo-950/15',
+      border: 'border-indigo-100 dark:border-indigo-900/30',
+      hoverBorder: 'hover:border-indigo-400 dark:hover:border-indigo-600',
+      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+      badgeBg: 'bg-indigo-50 dark:bg-indigo-950/45 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30',
+      gradient: 'from-indigo-500 to-blue-550',
+      glow: 'shadow-indigo-500/10 dark:shadow-indigo-500/5',
+      accentGlow: 'rgba(99,102,241,0.12)',
+      tag: 'RRB NTPC',
+      tagHi: 'रेलवे टाइपिंग'
+    };
+  }
+  if (lower.includes('court') || lower.includes('clerk') || lower.includes('jca') || lower.includes('hc') || lower.includes('jja')) {
+    return {
+      color: 'sky',
+      bg: 'bg-sky-50/50 dark:bg-sky-950/15',
+      border: 'border-sky-100 dark:border-sky-900/30',
+      hoverBorder: 'hover:border-sky-400 dark:hover:border-sky-600',
+      iconBg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400',
+      badgeBg: 'bg-sky-50 dark:bg-sky-950/45 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-900/30',
+      gradient: 'from-sky-500 to-indigo-500',
+      glow: 'shadow-sky-500/10 dark:shadow-sky-500/5',
+      accentGlow: 'rgba(14,165,233,0.12)',
+      tag: 'Court / Clerk',
+      tagHi: 'कोर्ट / क्लर्क'
+    };
+  }
+  if (lower.includes('dsssb') || lower.includes('delhi')) {
+    return {
+      color: 'emerald',
+      bg: 'bg-emerald-50/50 dark:bg-emerald-950/15',
+      border: 'border-emerald-100 dark:border-emerald-900/30',
+      hoverBorder: 'hover:border-emerald-400 dark:hover:border-emerald-600',
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      badgeBg: 'bg-emerald-50 dark:bg-emerald-950/45 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
+      gradient: 'from-emerald-500 to-teal-500',
+      glow: 'shadow-emerald-500/10 dark:shadow-emerald-500/5',
+      accentGlow: 'rgba(16,185,129,0.12)',
+      tag: 'DSSSB Delhi',
+      tagHi: 'डीएसएसएसबी'
+    };
+  }
+  if (lower.includes('police') || lower.includes('upsssc') || lower.includes('rssb') || lower.includes('rvunl') || lower.includes('cpct')) {
+    return {
+      color: 'amber',
+      bg: 'bg-amber-50/50 dark:bg-amber-950/15',
+      border: 'border-amber-100 dark:border-amber-900/30',
+      hoverBorder: 'hover:border-amber-400 dark:hover:border-amber-600',
+      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      badgeBg: 'bg-amber-50 dark:bg-amber-950/45 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/30',
+      gradient: 'from-amber-500 to-orange-500',
+      glow: 'shadow-amber-500/10 dark:shadow-amber-500/5',
+      accentGlow: 'rgba(245,158,11,0.12)',
+      tag: 'Police / State',
+      tagHi: 'राज्य / पुलिस'
+    };
+  }
+  if (lower.includes('jsa') || lower.includes('csir') || lower.includes('kvs') || lower.includes('nvs') || lower.includes('emrs') || lower.includes('cbse') || lower.includes('aiims') || lower.includes('secretariat')) {
+    return {
+      color: 'purple',
+      bg: 'bg-purple-50/50 dark:bg-purple-950/15',
+      border: 'border-purple-100 dark:border-purple-900/30',
+      hoverBorder: 'hover:border-purple-400 dark:hover:border-purple-600',
+      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+      badgeBg: 'bg-purple-50 dark:bg-purple-950/45 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-900/30',
+      gradient: 'from-purple-500 to-pink-500',
+      glow: 'shadow-purple-500/10 dark:shadow-purple-500/5',
+      accentGlow: 'rgba(168,85,247,0.12)',
+      tag: 'Secretariat / JSA',
+      tagHi: 'सचिवालय / जेएसए'
+    };
+  }
+  return {
+    color: 'blue',
+    bg: 'bg-blue-50/50 dark:bg-blue-950/15',
+    border: 'border-blue-200 dark:border-blue-900/30',
+    hoverBorder: 'hover:border-blue-400 dark:hover:border-blue-600',
+    iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    badgeBg: 'bg-blue-50 dark:bg-blue-950/45 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/30',
+    gradient: 'from-blue-500 to-indigo-550',
+    glow: 'shadow-blue-500/10 dark:shadow-blue-500/5',
+    accentGlow: 'rgba(59,130,246,0.12)',
+    tag: 'Typing Drill',
+    tagHi: 'टाइपिंग अभ्यास'
+  };
+};
+
+const getCategoryIcon = (id: string, name: string, logoUrl?: string | null) => {
+  if (logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt={`${name} logo`}
+        className="w-full h-full object-contain p-1"
+        onError={(e) => {
+          (e.target as HTMLElement).style.display = 'none';
+        }}
+      />
+    );
+  }
+  const lower = (id + ' ' + name).toLowerCase();
+  if (lower.includes('ssc')) return <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />;
+  if (lower.includes('railway') || lower.includes('rrb') || lower.includes('ntpc')) return <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500" />;
+  if (lower.includes('court') || lower.includes('clerk') || lower.includes('jca') || lower.includes('hc') || lower.includes('jja')) return <Scale className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />;
+  if (lower.includes('dsssb') || lower.includes('delhi')) return <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />;
+  if (lower.includes('police') || lower.includes('upsssc') || lower.includes('rssb') || lower.includes('rvunl') || lower.includes('cpct')) return <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-amber-500" />;
+  if (lower.includes('jsa') || lower.includes('csir') || lower.includes('cbse') || lower.includes('secretariat') || lower.includes('aiims')) return <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />;
+  return <Keyboard className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />;
+};
 
 export default function TypingTestPortalPage() {
   const { currentUser, language, setLanguage, theme, toggleTheme } = useAuth();
@@ -66,6 +203,7 @@ export default function TypingTestPortalPage() {
   useEffect(() => {
     let active = true;
     setIsMounted(true);
+    resetStaleTypingLocalData();
 
     // 1. Instant client-side hydration from cache
     try {
@@ -204,132 +342,53 @@ export default function TypingTestPortalPage() {
     router.push(`/typing-test/${customTest.id}`);
   };
 
+  const filterTabs = [
+    { id: 'ALL', label: isHindi ? 'सभी परीक्षाएं' : 'All exams' },
+    { id: 'SSC', label: 'SSC (CGL, CHSL)' },
+    { id: 'COURTS', label: isHindi ? 'उच्च न्यायालय एवं क्लर्क' : 'High Courts & Clerks' },
+    { id: 'DSSSB', label: 'DSSSB & Delhi' },
+    { id: 'STATE_POLICE', label: isHindi ? 'पुलिस एवं राज्य परीक्षाएं' : 'Police & State exams' },
+    { id: 'SECRETARIAT', label: isHindi ? 'सचिवालय एवं JSA' : 'Secretariat & JSA' },
+  ];
+
+  // Tour example exam: SSC CGL typing if available, otherwise the first exam
+  const typingTourTargetId: string | null = categories.find(c => c.id === 'ssc-cgl-typing')?.id ?? categories[0]?.id ?? null;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 transition-colors" suppressHydrationWarning>
-      {/* Navbar header */}
-      <header className="h-18 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs" suppressHydrationWarning>
-        <div className="flex items-center gap-2.5 sm:gap-4 lg:gap-6 min-w-0">
-          <Link 
-            href="/" 
-            className="btn-3d btn-3d-slate flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide shadow-sm shrink-0 cursor-pointer"
-            title={t.backToHome}
-          >
-            <ArrowLeft className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">{t.backToHome}</span>
-            <span className="sm:hidden">{t.navHome}</span>
-          </Link>
+    <div className={`min-h-screen flex flex-col ${pageBg} font-sans`} suppressHydrationWarning>
+      <SiteHeader />
 
-          <span className="h-6 w-[1px] bg-slate-200 dark:border-slate-800 shrink-0"></span>
-
-          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 min-w-0">
-            <div className="bg-[#E6F4FE] p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-8.5 w-8.5 lg:h-10 lg:w-10 border border-blue-200/60 shrink-0">
-              <Trophy className="h-4.5 w-4.5 lg:h-5.5 lg:w-5.5 text-blue-600" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
-              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-600 dark:text-slate-400 shrink-0 ml-1 lg:ml-3">
-            <Link href="/typing-test" className="text-blue-600 dark:text-blue-400 font-extrabold whitespace-nowrap">
-              <span>{isHindi ? 'टाइपिंग परीक्षा' : 'Typing Exams'}</span>
-            </Link>
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{t.navTestSeries}</span>
-            </Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{language === 'hi' ? 'सूचनाएं एवं अपडेट्स' : 'Notices & Updates'}</span>
-            </Link>
-          </nav>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0" suppressHydrationWarning>
-          {/* Profile Button */}
-          <Link
-            href={currentUser ? "/profile" : "/auth"}
-            suppressHydrationWarning
-            className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer active:scale-95 shadow-2xs"
-            title={currentUser ? (language === 'hi' ? 'मेरी प्रोफाइल' : 'Profile') : (language === 'hi' ? 'लॉग इन' : 'Login')}
-          >
-            <User className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline" suppressHydrationWarning>{currentUser ? (language === 'hi' ? 'प्रोफाइल' : 'Profile') : (language === 'hi' ? 'लॉग इन' : 'Login')}</span>
-          </Link>
-
-          {/* Language selector */}
-          <select
-            suppressHydrationWarning
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
-            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
-          </select>
-
-          {/* Theme switcher */}
-          <button 
-            suppressHydrationWarning
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+      <PageTitle
+        crumbs={[{ label: isHindi ? 'होम' : 'Home', href: '/' }, { label: isHindi ? 'टाइपिंग टेस्ट' : 'Typing Tests' }]}
+        title={isHindi ? 'टाइपिंग टेस्ट' : 'Typing Tests'}
+        subtitle={isHindi
+          ? 'सरकारी भर्ती परीक्षाओं के आधिकारिक पैटर्न पर आधारित कंप्यूटर टाइपिंग टेस्ट का अभ्यास करें।'
+          : 'Practise computer typing tests built on the official pattern of each government recruitment exam.'}
+        actions={<>
+          <button type="button" onClick={requestTypingTourStart} className={btnSecondary} suppressHydrationWarning>
+            <HelpCircle className="h-4 w-4" />
+            {isHindi ? 'यह कैसे काम करता है' : 'How it works'}
           </button>
-        </div>
-      </header>
+          <button type="button" onClick={() => setShowCustomModal(true)} className={btnSecondary} suppressHydrationWarning>
+            <Keyboard className="h-4 w-4" />
+            {isHindi ? 'कस्टम अभ्यास' : 'Custom practice'}
+          </button>
+        </>}
+      />
 
-      
-
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 space-y-8" suppressHydrationWarning>
-        {/* Search & Category Filter Controls */}
-        <div className="space-y-4" suppressHydrationWarning>
-          {/* Main Centered Search Bar */}
-          <div className="max-w-xl mx-auto">
-            <div className="relative shadow-md rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" suppressHydrationWarning>
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                <Search className="h-5 w-5" />
-              </div>
-              <input
-                suppressHydrationWarning
-                type="text"
-                value={categorySearch}
-                onChange={e => setCategorySearch(e.target.value)}
-                placeholder="Search exams (e.g. SSC, NTPC, JSA, High Court, Delhi Police...)"
-                className="w-full pl-12 pr-10 py-3.5 text-sm bg-transparent text-slate-900 dark:text-white focus:outline-none placeholder:text-slate-400"
-              />
-              {categorySearch && (
-                <button
-                  suppressHydrationWarning
-                  onClick={() => setCategorySearch('')}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold cursor-pointer"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="flex items-center justify-center gap-1.5 flex-wrap" suppressHydrationWarning>
-            {[
-              { id: 'ALL', label: 'All Exams' },
-              { id: 'SSC', label: 'SSC (CGL, CHSL)' },
-              { id: 'RAILWAYS', label: 'RRB NTPC' },
-              { id: 'COURTS', label: 'High Courts & Clerks' },
-              { id: 'DSSSB', label: 'DSSSB & Delhi' },
-              { id: 'STATE_POLICE', label: 'Police & State Exams' },
-              { id: 'SECRETARIAT', label: 'Secretariat & JSA' },
-            ].map(tab => (
+      <main className={`${container} w-full py-6 pb-12 space-y-5`} suppressHydrationWarning>
+        {/* Search + filters */}
+        <div data-tour="tt-filters" className="flex flex-col lg:flex-row lg:items-center gap-3 justify-between" suppressHydrationWarning>
+          <div className="flex flex-wrap gap-1.5">
+            {filterTabs.map(tab => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setSelectedFilterTab(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`h-8 px-3 rounded-md text-sm border transition-colors cursor-pointer ${
                   selectedFilterTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-[#1e4e79] border-[#1e4e79] text-white'
+                    : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
                 suppressHydrationWarning
               >
@@ -337,202 +396,148 @@ export default function TypingTestPortalPage() {
               </button>
             ))}
           </div>
+          <div className="relative w-full lg:w-80 shrink-0" suppressHydrationWarning>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            <input
+              suppressHydrationWarning
+              type="text"
+              value={categorySearch}
+              onChange={e => setCategorySearch(e.target.value)}
+              placeholder={isHindi ? 'परीक्षा खोजें (जैसे SSC, NTPC, JSA)' : 'Search exams (e.g. SSC, NTPC, JSA)'}
+              className={`${inputCls} pl-9 pr-8`}
+            />
+            {categorySearch && (
+              <button
+                suppressHydrationWarning
+                type="button"
+                onClick={() => setCategorySearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Category Cards Grid */}
+        <p className="text-sm text-slate-500 dark:text-slate-400" suppressHydrationWarning>
+          {isLoading && categories.length === 0
+            ? (isHindi ? 'परीक्षाएं लोड हो रही हैं…' : 'Loading exams…')
+            : (isHindi ? `${filteredCategories.length} परीक्षाएं` : `${filteredCategories.length} exams`)}
+        </p>
+
+        {/* Exam grid */}
         {isLoading && categories.length === 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
-              <div key={n} className="h-64 rounded-3xl bg-slate-200 dark:bg-slate-800/60 animate-pulse border border-slate-200 dark:border-slate-800" />
+              <div key={n} className="h-[88px] rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse" />
             ))}
           </div>
         ) : filteredCategories.length === 0 ? (
-          <div className="text-center py-20 px-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
-            <Search className="w-12 h-12 text-slate-400 mx-auto" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No exams found</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Try searching with different keywords</p>
-          </div>
+          <SectionCard>
+            <div className="py-8 text-center">
+              <Search className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto" />
+              <p className="mt-3 text-sm font-medium text-slate-800 dark:text-slate-200">{isHindi ? 'कोई परीक्षा नहीं मिली' : 'No exams found'}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{isHindi ? 'कोई दूसरा शब्द खोजें।' : 'Try a different search term or filter.'}</p>
+            </div>
+          </SectionCard>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredCategories.map(cat => (
-              <div
-                key={cat.id}
-                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 p-6 flex flex-col items-center text-center justify-between group"
-              >
-                <div className="flex flex-col items-center w-full space-y-3.5">
-                  {/* Category Logo Container */}
-                  <div className="w-20 h-20 rounded-full bg-white border-2 border-slate-200/90 dark:border-slate-700/80 shadow-xs flex items-center justify-center p-2 shrink-0 transition-transform duration-300 group-hover:scale-105">
-                    {cat.logoUrl ? (
-                      <img
-                        src={cat.logoUrl}
-                        alt={cat.name}
-                        loading="lazy"
-                        className="w-full h-full object-contain rounded-full"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <Keyboard className="w-8 h-8 text-blue-600" />
-                    )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredCategories.map(cat => {
+              const themeInfo = getCategoryTheme(cat.id, cat.name);
+              const catAttempts = userAttempts.filter(a => (a.categoryName || '').toLowerCase() === cat.id.toLowerCase()).length;
+              return (
+                <Link
+                  key={cat.id}
+                  data-tour={cat.id === typingTourTargetId ? 'tt-exam' : undefined}
+                  href={`/typing-test/category/${cat.id}`}
+                  prefetch={true}
+                  className="group flex items-start gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm transition"
+                >
+                  <div className="w-11 h-11 rounded-md border border-slate-200 dark:border-slate-700 bg-white flex items-center justify-center overflow-hidden shrink-0 p-1">
+                    {getCategoryIcon(cat.id, cat.name, cat.logoUrl)}
                   </div>
-
-                  {/* Category Title */}
-                  <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-snug line-clamp-2 min-h-[2.75rem] flex items-center justify-center">
-                    {cat.name}
-                  </h3>
-                </div>
-
-                {/* Practice Now Button */}
-                <div className="mt-5 w-full">
-                  <Link
-                    href={`/typing-test/category/${cat.id}`}
-                    prefetch={true}
-                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-6 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
-                  >
-                    <Keyboard className="w-4 h-4" />
-                    <span>Practice Now</span>
-                  </Link>
-                </div>
-              </div>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300">
+                      {isHindi && cat.nameHi ? cat.nameHi : cat.name}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                      <StatusBadge tone="slate">{isHindi ? themeInfo.tagHi : themeInfo.tag}</StatusBadge>
+                      {isMounted && catAttempts > 0 && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{catAttempts} {isHindi ? 'प्रयास' : catAttempts === 1 ? 'attempt' : 'attempts'}</span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 shrink-0 mt-0.5" />
+                </Link>
+              );
+            })}
           </div>
         )}
 
-        {/* Quick Custom Drill Trigger */}
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
-          <div className="space-y-1 text-center sm:text-left">
-            <h3 className="text-lg font-black">{isHindi ? 'अपना खुद का टाइपिंग गद्यांश अभ्यास करें' : 'Practice with Custom Passage Text'}</h3>
-            <p className="text-xs text-blue-100">{isHindi ? 'अपना खुद का टेक्स्ट पेस्ट करें और कस्टम टाइमर के साथ तुरंत अभ्यास शुरू करें।' : 'Paste any editorial or custom text and practice with real-time speed & error analysis.'}</p>
+        {/* Custom practice */}
+        <section data-tour="tt-custom" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">{isHindi ? 'अपने गद्यांश से अभ्यास करें' : 'Practise with your own passage'}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{isHindi ? 'कोई भी टेक्स्ट पेस्ट करें और स्पीड व त्रुटि विश्लेषण के साथ अभ्यास करें।' : 'Paste any editorial or text and practise with full speed and error analysis.'}</p>
           </div>
-          <button
-            onClick={() => setShowCustomModal(true)}
-            className="px-5 py-2.5 rounded-full bg-white text-blue-700 font-extrabold text-xs shadow-md hover:bg-blue-50 transition active:scale-95 cursor-pointer whitespace-nowrap"
-            suppressHydrationWarning
-          >
-            + {isHindi ? 'कस्टम ड्रिल बनाएं' : 'Create Custom Drill'}
+          <button type="button" onClick={() => setShowCustomModal(true)} className={`${btnPrimary} self-start sm:self-auto shrink-0`} suppressHydrationWarning>
+            {isHindi ? 'कस्टम अभ्यास बनाएं' : 'Create custom drill'}
           </button>
-        </div>
+        </section>
       </main>
 
-      {/* FOOTER (Identical to Home Page with full details) */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 py-8 px-6 md:px-12 mt-16 text-center text-xs text-slate-500 dark:text-slate-400 shrink-0">
-        <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
-        <p className="mt-1 text-[11px]">Developed to simulate real-world government selection computer based assessments.</p>
-        <div className="mt-3 flex items-center justify-center gap-4">
-          <Link
-            href="/contact"
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
-          >
-            {isHindi ? 'हमसे संपर्क करें' : 'Contact Us'}
-          </Link>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <Link
-            href="/terms"
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
-          >
-            {isHindi ? 'नियम और शर्तें' : 'Terms & Conditions'}
-          </Link>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <Link
-            href="/privacy"
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
-          >
-            {isHindi ? 'गोपनीयता नीति' : 'Privacy Policy'}
-          </Link>
-        </div>
-      </footer>
+      <SiteFooter />
+      <TypingHubTour
+        ready={!isLoading && categories.length > 0}
+        targetId={typingTourTargetId}
+        resetFilters={() => { setSelectedFilterTab('ALL'); setCategorySearch(''); }}
+      />
 
-      {/* Custom Practice Modal */}
+      {/* Custom practice dialog */}
       {showCustomModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4" suppressHydrationWarning>
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <Keyboard className="w-5 h-5 text-blue-600" />
-                <span>{isHindi ? 'कस्टम टाइपिंग अभ्यास' : 'Custom Typing Drill'}</span>
-              </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-slate-900 rounded-lg max-w-xl w-full shadow-xl border border-slate-200 dark:border-slate-800" suppressHydrationWarning>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">{isHindi ? 'कस्टम टाइपिंग अभ्यास' : 'Custom typing drill'}</h3>
               <button
+                type="button"
                 onClick={() => setShowCustomModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold"
+                className="h-8 w-8 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                aria-label="Close"
                 suppressHydrationWarning
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  {isHindi ? 'टाइपिंग गद्यांश टेक्स्ट:' : 'Passage Text:'}
-                </label>
+            <div className="px-6 py-5 space-y-4">
+              <Field label={isHindi ? 'गद्यांश' : 'Passage text'}>
                 <textarea
                   rows={6}
                   value={customPassageText}
                   onChange={e => setCustomPassageText(e.target.value)}
-                  placeholder="Paste your custom paragraph here..."
-                  className="w-full p-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500 text-xs"
+                  placeholder={isHindi ? 'अपना गद्यांश यहां पेस्ट करें…' : 'Paste your paragraph here…'}
+                  className={`${inputCls} h-auto py-2 leading-relaxed`}
                 />
-              </div>
-
+              </Field>
               <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {isHindi ? 'डेमो समय (मिनट):' : 'Demo (Min):'}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={customDemoDuration}
-                    onChange={e => setCustomDemoDuration(Number(e.target.value))}
-                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {isHindi ? 'ब्रेक समय (मिनट):' : 'Break (Min):'}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    value={customBreakDuration}
-                    onChange={e => setCustomBreakDuration(Number(e.target.value))}
-                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    {isHindi ? 'मुख्य परीक्षा (मिनट):' : 'Main Exam (Min):'}
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={customDuration}
-                    onChange={e => setCustomDuration(Number(e.target.value))}
-                    className="w-full p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold"
-                  />
-                </div>
+                <Field label={isHindi ? 'डेमो (मिनट)' : 'Demo (min)'}>
+                  <input type="number" step="0.5" min="0" value={customDemoDuration} onChange={e => setCustomDemoDuration(Number(e.target.value))} className={inputCls} />
+                </Field>
+                <Field label={isHindi ? 'ब्रेक (मिनट)' : 'Break (min)'}>
+                  <input type="number" step="0.5" min="0" value={customBreakDuration} onChange={e => setCustomBreakDuration(Number(e.target.value))} className={inputCls} />
+                </Field>
+                <Field label={isHindi ? 'मुख्य टेस्ट (मिनट)' : 'Main test (min)'}>
+                  <input type="number" min="1" max="60" value={customDuration} onChange={e => setCustomDuration(Number(e.target.value))} className={inputCls} />
+                </Field>
               </div>
             </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowCustomModal(false)}
-                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs"
-                suppressHydrationWarning
-              >
-                Cancel
+            <div className="px-6 py-3 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 rounded-b-lg flex justify-end gap-2">
+              <button type="button" onClick={() => setShowCustomModal(false)} className={btnSecondary} suppressHydrationWarning>
+                {isHindi ? 'रद्द करें' : 'Cancel'}
               </button>
-              <button
-                onClick={handleStartCustomPractice}
-                disabled={!customPassageText.trim()}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs disabled:opacity-50 cursor-pointer"
-                suppressHydrationWarning
-              >
-                Start Custom Drill
+              <button type="button" onClick={handleStartCustomPractice} disabled={!customPassageText.trim()} className={btnPrimary} suppressHydrationWarning>
+                {isHindi ? 'अभ्यास शुरू करें' : 'Start drill'}
               </button>
             </div>
           </div>

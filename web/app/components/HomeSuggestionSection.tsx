@@ -33,23 +33,23 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
   const categories = [
     {
       id: 'General',
-      label: isHindi ? '💡 सामान्य सुझाव (General Suggestion)' : '💡 General Suggestion',
+      label: isHindi ? 'सामान्य सुझाव (General Suggestion)' : 'General Suggestion',
     },
     {
       id: 'New Exam Request',
-      label: isHindi ? '📚 नई परीक्षा का अनुरोध (New Exam Request)' : '📚 New Exam Request',
+      label: isHindi ? 'नई परीक्षा का अनुरोध (New Exam Request)' : 'New Exam Request',
     },
     {
       id: 'Feature Request',
-      label: isHindi ? '⚡ नई सुविधा का अनुरोध (Feature Request)' : '⚡ Feature Request',
+      label: isHindi ? 'नई सुविधा का अनुरोध (Feature Request)' : 'Feature Request',
     },
     {
       id: 'UI/UX Improvement',
-      label: isHindi ? '🎨 डिज़ाइन व लेआउट सुधार (UI/UX Improvement)' : '🎨 UI/UX Improvement',
+      label: isHindi ? 'डिज़ाइन व लेआउट सुधार (UI/UX Improvement)' : 'UI/UX Improvement',
     },
     {
       id: 'Bug Report',
-      label: isHindi ? '🐛 त्रुटि / प्रश्न समाधान रिपोर्ट (Bug Report)' : '🐛 Bug Report',
+      label: isHindi ? 'त्रुटि / प्रश्न समाधान रिपोर्ट (Bug Report)' : 'Bug Report',
     }
   ];
 
@@ -90,28 +90,28 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in duration-200">
+    <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 rounded-lg md:rounded-lg border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in duration-200">
       
       {/* 1. TOP HEADER BAR */}
-      <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 bg-gradient-to-r from-amber-50/80 via-white to-orange-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-slate-850 flex items-center justify-between gap-3 shrink-0">
+      <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0 shadow-2xs"
+            className="p-2 rounded-md bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition cursor-pointer shrink-0 shadow-2xs"
             title={isHindi ? 'मुख्य पृष्ठ पर वापस जाएं' : 'Back to Home'}
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
 
-          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-[#1e4e79] text-white flex items-center justify-center shadow-md shrink-0">
             <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
 
           <div className="min-w-0">
-            <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white truncate">
+            <h2 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate">
               {isHindi ? 'सुझाव पेटिका एवं फीचर अनुरोध' : 'Candidate Suggestion Box & Feedback'}
             </h2>
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs sm:text-xs text-slate-500 dark:text-slate-400 truncate">
               {isHindi ? 'मॉक टेस्ट हब को बेहतर बनाने के लिए अपने विचार सीधे एडमिन को भेजें' : 'Share your suggestions and test requests directly with our team'}
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
 
         <button
           onClick={onBack}
-          className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition cursor-pointer"
+          className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition cursor-pointer"
         >
           <span>{isHindi ? 'मुख्य पृष्ठ' : 'Back to Home'}</span>
         </button>
@@ -128,11 +128,11 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
       {/* 2. AUTH CHECK: ONLY LOGGED-IN USERS CAN ACCESS */}
       {!currentUser ? (
         <div className="flex-1 p-6 flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-4">
-          <div className="h-16 w-16 rounded-3xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-900/40 shadow-inner">
+          <div className="h-16 w-16 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-900/40 shadow-inner">
             <Lock className="h-8 w-8" />
           </div>
           <div className="space-y-1.5">
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">
               {isHindi ? 'सुझाव भेजने के लिए लॉगिन आवश्यक है' : 'Login Required to Access Suggestion Box'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -144,13 +144,13 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
           <div className="flex items-center gap-3 pt-2 w-full">
             <Link
               href="/auth"
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs text-center shadow-md transition"
+              className="flex-1 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs text-center shadow-md transition"
             >
               {isHindi ? 'लॉग इन करें' : 'Log In'}
             </Link>
             <button
               onClick={onBack}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
+              className="px-4 py-2.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
             >
               {isHindi ? 'मुख्य पृष्ठ' : 'Home'}
             </button>
@@ -160,13 +160,13 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-6 bg-slate-50/40 dark:bg-slate-950/30">
           
           {submittedSuccess ? (
-            <div className="max-w-xl mx-auto py-12 px-6 bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-800/80 rounded-3xl text-center space-y-4 shadow-md animate-in zoom-in-95 duration-200">
+            <div className="max-w-xl mx-auto py-12 px-6 bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-800/80 rounded-lg text-center space-y-4 shadow-md animate-in zoom-in-95 duration-200">
               <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto shadow-inner">
                 <CheckCircle className="h-9 w-9" />
               </div>
               <div className="space-y-1.5">
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                  {isHindi ? 'धन्यवाद! आपका सुझाव प्राप्त हो गया है 🎉' : 'Thank You! Your Suggestion Has Been Submitted 🎉'}
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  {isHindi ? 'धन्यवाद! आपका सुझाव प्राप्त हो गया है ' : 'Thank You! Your Suggestion Has Been Submitted '}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                   {isHindi
@@ -177,13 +177,13 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
               <div className="flex items-center justify-center gap-3 pt-4">
                 <button
                   onClick={() => setSubmittedSuccess(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-extrabold text-slate-800 dark:text-slate-200 transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition cursor-pointer"
                 >
                   {isHindi ? 'एक और सुझाव भेजें' : 'Send Another Suggestion'}
                 </button>
                 <button
                   onClick={onBack}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-extrabold text-white transition shadow-sm cursor-pointer"
+                  className="px-5 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-xs font-semibold text-white transition shadow-sm cursor-pointer"
                 >
                   {isHindi ? 'मुख्य पृष्ठ पर लौटें' : 'Return to Home'}
                 </button>
@@ -194,14 +194,14 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
               
               {/* 1. Category Dropdown Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider block">
+                <label className="text-xs font-semibold text-slate-900 dark:text-white block">
                   {isHindi ? 'सुझाव की श्रेणी चुनें (Select Category)' : 'Select Category'}
                 </label>
                 <div className="relative">
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 cursor-pointer pr-10 shadow-2xs"
+                    className="w-full appearance-none bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-4 py-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 cursor-pointer pr-10 shadow-2xs"
                   >
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white py-2">
@@ -224,7 +224,7 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
                       <User className="h-3.5 w-3.5 text-slate-400" />
                       <span>{isHindi ? 'अभ्यर्थी का नाम (Name)' : 'Candidate Name'}</span>
                     </label>
-                    <span className="text-[9px] font-bold text-slate-400 flex items-center gap-0.5">
+                    <span className="text-[11px] font-bold text-slate-400 flex items-center gap-0.5">
                       <Lock className="h-2.5 w-2.5" />
                       <span>{isHindi ? 'अपरिवर्तनीय' : 'Verified'}</span>
                     </span>
@@ -235,7 +235,7 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
                       readOnly
                       disabled
                       value={currentUser.name || 'Candidate'}
-                      className="w-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold cursor-not-allowed select-none opacity-90"
+                      className="w-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold cursor-not-allowed select-none opacity-90"
                     />
                   </div>
                 </div>
@@ -247,7 +247,7 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
                       <Mail className="h-3.5 w-3.5 text-slate-400" />
                       <span>{isHindi ? 'ईमेल आईडी (Email)' : 'Registered Email'}</span>
                     </label>
-                    <span className="text-[9px] font-bold text-slate-400 flex items-center gap-0.5">
+                    <span className="text-[11px] font-bold text-slate-400 flex items-center gap-0.5">
                       <Lock className="h-2.5 w-2.5" />
                       <span>{isHindi ? 'अपरिवर्तनीय' : 'Verified'}</span>
                     </span>
@@ -258,7 +258,7 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
                       readOnly
                       disabled
                       value={currentUser.email || (isHindi ? 'पंजीकृत ईमेल उपलब्ध नहीं' : 'No email registered')}
-                      className="w-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold cursor-not-allowed select-none opacity-90"
+                      className="w-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md px-3.5 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold cursor-not-allowed select-none opacity-90"
                     />
                   </div>
                 </div>
@@ -266,7 +266,7 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
 
               {/* 3. Detailed Suggestion Textarea */}
               <div className="space-y-1.5 pt-1">
-                <label className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider block">
+                <label className="text-xs font-semibold text-slate-900 dark:text-white block">
                   {isHindi ? 'अपना सुझाव या अनुरोध विस्तार से लिखें' : 'Describe Your Suggestion or Request in Detail'}
                 </label>
                 <textarea
@@ -278,28 +278,28 @@ export default function HomeSuggestionSection({ onBack }: HomeSuggestionSectionP
                       ? 'कृपया विस्तार से बताएं कि आप कौन सी परीक्षा का टेस्ट सीरीज चाहते हैं, किस नए फीचर की आवश्यकता है अथवा कौन सा सुधार होना चाहिए...'
                       : 'Please explain in detail what test series, features, improvements or suggestions you would like us to introduce...'
                   }
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-none leading-relaxed placeholder:text-slate-400 shadow-2xs"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 resize-none leading-relaxed placeholder:text-slate-400 shadow-2xs"
                 />
               </div>
 
               {/* 4. Action Buttons */}
               <div className="flex items-center justify-between gap-3 pt-2">
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                  {isHindi ? '🔒 आपका सुझाव सुरक्षित रूप से एडमिन टीम तक पहुंचेगा' : '🔒 Suggestions are sent directly to MockTest Hub developers.'}
+                <p className="text-xs text-slate-400 dark:text-slate-500">
+                  {isHindi ? 'आपका सुझाव सुरक्षित रूप से एडमिन टीम तक पहुंचेगा' : 'Suggestions are sent directly to MockTest Hub developers.'}
                 </p>
 
                 <div className="flex items-center gap-3 shrink-0">
                   <button
                     type="button"
                     onClick={onBack}
-                    className="px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
+                    className="px-4.5 py-2.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
                   >
                     {isHindi ? 'रद्द करें' : 'Cancel'}
                   </button>
                   <button
                     type="submit"
                     disabled={!message.trim() || submitting}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                    className="px-6 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                   >
                     {submitting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

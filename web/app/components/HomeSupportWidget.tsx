@@ -191,8 +191,8 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[999] font-sans select-none flex flex-col items-end gap-3">
       {/* SUGGESTION BOX MODAL DIALOG */}
       {suggestionModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden text-left">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 sm:p-8 max-w-md w-full shadow-2xl relative overflow-hidden text-left">
             <button
               onClick={() => setSuggestionModalOpen(false)}
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
@@ -205,7 +205,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                 <div className="h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md">
                   <CheckCircle className="h-8 w-8" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-white">
                   {language === 'hi' ? 'धन्यवाद! सुझाव भेजा गया' : 'Thank You! Suggestion Sent'}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
@@ -217,27 +217,27 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
             ) : (
               <form onSubmit={handleSuggestionSubmit} className="space-y-4">
                 <div className="flex items-center gap-3.5 mb-2">
-                  <div className="h-12 w-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-inner">
+                  <div className="h-12 w-12 rounded-lg bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-inner">
                     <Lightbulb className="h-6 w-6 animate-pulse" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-slate-800 dark:text-white">
+                    <h3 className="text-base font-semibold text-slate-800 dark:text-white">
                       {language === 'hi' ? 'सुझाव पेटिका' : 'Suggestion Box'}
                     </h3>
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
                       {language === 'hi' ? 'मॉकटेस्ट हब टीम को प्रतिक्रिया भेजें' : 'Share feedback with MockTest Hub Team'}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-slate-400 dark:text-slate-500">
                     {language === 'hi' ? 'श्रेणी चुनें' : 'Choose Category'}
                   </label>
                   <select
                     value={suggCategory}
                     onChange={(e) => setSuggCategory(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl px-4.5 py-3 text-xs font-bold border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-md px-4.5 py-3 text-xs font-bold border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500"
                   >
                     <option value="General">General Suggestion / सामान्य सुझाव</option>
                     <option value="New Exam Request">New Exam Request / नई परीक्षा का अनुरोध</option>
@@ -248,7 +248,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-semibold text-slate-400 dark:text-slate-500">
                     {language === 'hi' ? 'आपका सुझाव' : 'Your Suggestion'}
                   </label>
                   <textarea
@@ -256,7 +256,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                     value={suggMessage}
                     onChange={(e) => setSuggMessage(e.target.value)}
                     placeholder={language === 'hi' ? 'यहाँ अपना सुझाव या अनुरोध विस्तार से लिखें...' : 'Write your suggestion or feedback in detail...'}
-                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-2xl px-4.5 py-3 text-xs font-medium border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500 resize-none placeholder:text-slate-400"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-lg px-4.5 py-3 text-xs font-medium border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-amber-500 resize-none placeholder:text-slate-400"
                   />
                 </div>
 
@@ -264,14 +264,14 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                   <button
                     type="button"
                     onClick={() => setSuggestionModalOpen(false)}
-                    className="px-4.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold text-xs transition cursor-pointer"
+                    className="px-4.5 py-2.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-xs transition cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={!suggMessage.trim() || suggSubmitting}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] disabled:opacity-50 text-white font-semibold text-xs shadow-md transition cursor-pointer flex items-center gap-2"
                   >
                     <Send className="h-3.5 w-3.5" />
                     <span>{suggSubmitting ? 'Submitting...' : 'Submit Suggestion'}</span>
@@ -285,28 +285,28 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
 
       {/* CHAT OVERLAY WINDOW */}
       {chatOpen && (
-        <div className="fixed bottom-24 right-3 left-3 sm:left-auto sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[380px] h-[480px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 z-[9999] text-left">
+        <div className="fixed bottom-24 right-3 left-3 sm:left-auto sm:right-6 w-[calc(100vw-1.5rem)] sm:w-[380px] h-[480px] max-h-[75vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 z-[9999] text-left">
           {/* Header */}
-          <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-md">
+          <div className="p-4 bg-[#1e4e79] text-white flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center font-black border border-white/30 text-white shadow-inner">
+                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center font-semibold border border-white/30 text-white shadow-inner">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
-                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-blue-600"></span>
+                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border border-[#1e4e79]"></span>
               </div>
               <div>
-                <h4 className="text-sm font-extrabold tracking-wide uppercase">
+                <h4 className="text-sm font-semibold">
                   {language === 'hi' ? 'तकनीकी सहायता टीम' : 'Live Chat Support'}
                 </h4>
-                <p className="text-[10px] text-blue-100 font-medium">
+                <p className="text-xs text-blue-100 font-medium">
                   {language === 'hi' ? 'सहायता प्रतिनिधि ऑनलाइन हैं' : 'Live Chat Representative is online'}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setChatOpen(false)}
-              className="p-1.5 hover:bg-white/10 rounded-xl transition cursor-pointer"
+              className="p-1.5 hover:bg-white/10 rounded-md transition cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -316,11 +316,11 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50 dark:bg-slate-950/40">
             {messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-                <p className="text-3xl animate-bounce">👋</p>
+                <p className="text-3xl"></p>
                 <h5 className="text-xs font-bold text-slate-800 dark:text-white">
                   {language === 'hi' ? 'तकनीकी सहायता टीम से बात करें' : 'Chat with Technical Support'}
                 </h5>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 max-w-[200px] leading-relaxed">
+                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[200px] leading-relaxed">
                   {language === 'hi' ? 'तकनीकी टीम से सवाल पूछें या सहायता प्राप्त करें।' : 'Send your question below to chat directly with our technical team.'}
                 </p>
               </div>
@@ -333,20 +333,20 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                     className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] p-3.5 rounded-2xl text-xs font-medium shadow-xs leading-relaxed ${
+                      className={`max-w-[80%] p-3.5 rounded-lg text-xs font-medium shadow-xs leading-relaxed ${
                         isUser
-                          ? 'bg-blue-600 text-white rounded-br-xs'
+                          ? 'bg-[#1e4e79] text-white rounded-br-xs'
                           : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-xs'
                       }`}
                     >
                       {!isUser && (
-                        <p className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
+                        <p className="text-[11px] font-semibold text-[#1e4e79] dark:text-blue-400 mb-1">
                           Technical Support
                         </p>
                       )}
                       <p className="whitespace-pre-wrap break-words">{msg.message}</p>
                       <div
-                        className={`flex items-center gap-1 mt-1 text-[8.5px] font-bold ${
+                        className={`flex items-center gap-1 mt-1 text-[11px] font-bold ${
                           isUser ? 'justify-end text-blue-100' : 'justify-start text-slate-400'
                         }`}
                       >
@@ -354,12 +354,12 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
                         {isUser && (
                           <span
                             className={`inline-flex items-center gap-0.5 ml-1 ${
-                              msg.isRead ? 'text-sky-300 font-extrabold' : 'text-blue-200/60 font-medium'
+                              msg.isRead ? 'text-sky-300 font-semibold' : 'text-blue-200/60 font-medium'
                             }`}
                             title={msg.isRead ? 'Seen by Support Team' : 'Delivered'}
                           >
                             <CheckCheck className={`h-3 w-3 ${msg.isRead ? 'text-sky-300 stroke-[2.5]' : 'text-blue-200/60 stroke-[1.8]'}`} />
-                            <span className="text-[7.5px] uppercase">{msg.isRead ? 'Seen' : 'Delivered'}</span>
+                            <span className="text-[11px]">{msg.isRead ? 'Seen' : 'Delivered'}</span>
                           </span>
                         )}
                       </div>
@@ -378,12 +378,12 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
               placeholder={language === 'hi' ? 'यहाँ संदेश लिखें...' : 'Type message here...'}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-2xl px-4 py-2.5 text-xs font-medium focus:outline-none border border-transparent focus:border-blue-500"
+              className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg px-4 py-2.5 text-xs font-medium focus:outline-none border border-transparent focus:border-[#1e4e79]"
             />
             <button
               type="submit"
               disabled={!inputText.trim() || sending}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white p-2.5 rounded-2xl transition cursor-pointer shrink-0 shadow-md active:scale-95 flex items-center justify-center"
+              className="bg-[#1e4e79] hover:bg-[#163c5e] disabled:opacity-50 text-white p-2.5 rounded-lg transition cursor-pointer shrink-0 shadow-md flex items-center justify-center"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
@@ -400,17 +400,17 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
               setSuggestionModalOpen(false);
               setChatOpen(prev => !prev);
             }}
-            className="relative group flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
+            className="relative group flex items-center gap-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full shadow-xl transition-all duration-300 cursor-pointer border border-white/20"
           >
             <div className="relative flex items-center justify-center">
               <MessageSquare className="h-4.5 w-4.5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 animate-bounce">
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[11px] font-semibold h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white dark:border-slate-900">
                   {unreadCount}
                 </span>
               )}
             </div>
-            <span className="font-extrabold text-[10px] tracking-wider uppercase hidden sm:inline-block">
+            <span className="font-semibold text-xs hidden sm:inline-block">
               {language === 'hi' ? 'मॉकटेस्ट हब टीम' : 'MockTest Hub Team'}
             </span>
           </button>
@@ -423,17 +423,17 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
               setSuggestionModalOpen(false);
               setChatOpen(prev => !prev);
             }}
-            className="group flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 w-12 hover:w-48 rounded-full shadow-xl transition-all duration-300 cursor-pointer border border-white/20 px-3.5 overflow-hidden gap-3"
+            className="group flex items-center bg-[#1e4e79] hover:bg-[#163c5e] text-white h-12 w-12 hover:w-48 rounded-full shadow-xl transition-all duration-300 cursor-pointer border border-white/20 px-3.5 overflow-hidden gap-3"
           >
             <div className="relative flex items-center justify-center shrink-0">
               <MessageSquare className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 animate-bounce">
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[11px] font-semibold h-4.5 min-w-[18px] px-1 rounded-full flex items-center justify-center border border-white dark:border-slate-900">
                   {unreadCount}
                 </span>
               )}
             </div>
-            <span className="font-extrabold text-[10px] tracking-wider uppercase whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="font-semibold text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               {language === 'hi' ? 'मॉकटेस्ट हब टीम' : 'MockTest Hub Team'}
             </span>
           </button>

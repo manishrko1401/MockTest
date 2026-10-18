@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
+import { requireCronOrAdmin } from '../../../lib/serverAuth';
 import { uploadNoticeHtmlToTigris } from '../../../lib/tigrisNoticeStorage';
 import { extractDirectLink, extractLastDate, extractNoticeContent } from '../../../lib/noticeExtractor';
 import crypto from 'crypto';
@@ -49,14 +50,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
     const forceResync = searchParams.get('force') === 'true' || searchParams.get('resync') === 'true';
-    const authHeader = request.headers.get('authorization');
-    const isAuthorized = !process.env.CRON_SECRET ||
-      secret === process.env.CRON_SECRET ||
-      authHeader === `Bearer ${process.env.CRON_SECRET}` ||
-      request.method === 'POST';
-
-    if (!isAuthorized) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    // Scheduled run (CRON_SECRET) or an admin; ?secret= kept for manual runs
+    const secretMatches = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET;
+    if (!secretMatches) {
+      const denied = await requireCronOrAdmin(request);
+      if (denied) return denied;
     }
 
     console.log(`Cron Sync started (forceResync: ${forceResync})...`);

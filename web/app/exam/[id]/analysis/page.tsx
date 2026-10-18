@@ -1,5 +1,6 @@
 "use client";
 
+import { buildTestSeriesPath } from '../../../lib/testSeriesUrl';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
 import { generateExamSession, EXPLANATIONS } from '../../../lib/examUtils';
@@ -26,8 +27,10 @@ import {
   User,
   Clock,
   Check,
-  Menu
+  Menu,
+  BookOpen
 } from 'lucide-react';
+import { SiteHeader, SiteFooter, SectionCard, StatusBadge, btnPrimary, btnSecondary, pageBg, container } from '../../../components/SiteUI';
 import { TRANSLATIONS } from '../../../translations';
 
 import { processQuestionHtml, decodeHtml } from '../../../lib/mathUtils';
@@ -219,11 +222,7 @@ export default function ExamSolutionAnalysisPage() {
     const context = getCatalogContext();
     if (context) {
       const { categoryId, subCategoryId, subSubCategoryId } = context;
-      let url = `/mock-tests?cat=${categoryId}&sub=${subCategoryId}`;
-      if (subSubCategoryId) {
-        url += `&subsub=${subSubCategoryId}`;
-      }
-      router.push(url);
+      router.push(buildTestSeriesPath(categoryId, subCategoryId, subSubCategoryId));
     } else {
       if (typeof window !== 'undefined' && window.history.length > 1) {
         router.back();
@@ -332,10 +331,13 @@ export default function ExamSolutionAnalysisPage() {
 
   if (!mounted || loadingCustomQs) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans">
-        <div className="text-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-slate-600 dark:text-slate-400 font-bold">Loading Analysis Dashboard...</p>
+      <div className={`min-h-screen flex flex-col ${pageBg} font-sans`}>
+        <SiteHeader />
+        <div className="flex-1 flex items-center justify-center py-24">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#1e4e79] border-t-transparent mx-auto"></div>
+            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Loading analysis…</p>
+          </div>
         </div>
       </div>
     );
@@ -343,15 +345,19 @@ export default function ExamSolutionAnalysisPage() {
 
   if (!currentUser) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100">
-        <div className="text-center p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl max-w-sm shadow-xl">
-          <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4 animate-bounce" />
-          <h3 className="font-extrabold text-sm uppercase tracking-wider mb-2">Authentication Required</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mb-6">Please log in to your account to review solutions and mock exam statistics.</p>
-          <Link href="/auth" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg text-xs tracking-wider uppercase transition-all shadow-lg active:scale-95">
-            Log In
-          </Link>
+      <div className={`min-h-screen flex flex-col ${pageBg} font-sans`}>
+        <SiteHeader />
+        <div className={`${container} w-full flex-1 py-16`}>
+          <SectionCard className="max-w-md mx-auto">
+            <div className="text-center py-4 space-y-3">
+              <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">Login required</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Please log in to your account to review solutions and mock test statistics.</p>
+              <Link href="/auth" className={btnPrimary}>Log in</Link>
+            </div>
+          </SectionCard>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -367,22 +373,24 @@ export default function ExamSolutionAnalysisPage() {
 
   if (!sessionRecord) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100">
-        <div className="text-center p-8 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl max-w-md shadow-xl">
-          <ShieldAlert className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-          <h3 className="font-extrabold text-sm uppercase tracking-wider mb-2">No Session Records Found</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mb-6">
-            You have not attempted this test yet, or the exam was cleared by an administrator. Please sit for the mock test first.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/mock-tests" className="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold py-2 px-5 rounded-lg text-xs tracking-wider uppercase transition-all active:scale-95">
-              Browse Exams
-            </Link>
-            <Link href={`/exam/${testId}`} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg text-xs tracking-wider uppercase transition-all active:scale-95 shadow-md shadow-blue-500/25">
-              Start Test Now
-            </Link>
-          </div>
+      <div className={`min-h-screen flex flex-col ${pageBg} font-sans`}>
+        <SiteHeader />
+        <div className={`${container} w-full flex-1 py-16`}>
+          <SectionCard className="max-w-md mx-auto">
+            <div className="text-center py-4 space-y-3">
+              <ShieldAlert className="h-8 w-8 text-slate-400 mx-auto" />
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">No attempts found</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                You have not attempted this test yet, or the attempt was cleared by an administrator. Please take the mock test first.
+              </p>
+              <div className="flex gap-2 justify-center pt-1">
+                <Link href="/mock-tests" className={btnSecondary}>Browse tests</Link>
+                <Link href={`/exam/${testId}`} className={btnPrimary}>Start test</Link>
+              </div>
+            </div>
+          </SectionCard>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -844,6 +852,12 @@ export default function ExamSolutionAnalysisPage() {
   })();
 
   const isSolutionView = viewMode === 'solution' && !isMobile;
+  const isHi = language === 'hi';
+  const totals = sectionalAnalysis.reduce(
+    (acc, sec) => ({ correct: acc.correct + sec.correct, incorrect: acc.incorrect + sec.incorrect, unattempted: acc.unattempted + sec.unattempted }),
+    { correct: 0, incorrect: 0, unattempted: 0 }
+  );
+  const scorePct = sessionRecord.maxScore > 0 ? Math.min(100, Math.max(0, (sessionRecord.score / sessionRecord.maxScore) * 100)) : 0;
   const switchSection = (sectionIdx: number) => {
     const sec = examSession.sections[sectionIdx];
     if (!sec) return;
@@ -857,7 +871,7 @@ export default function ExamSolutionAnalysisPage() {
   return (
     <div className={isSolutionView
       ? "flex h-screen w-screen flex-col overflow-hidden bg-slate-200/90 dark:bg-slate-950 font-sans select-none text-xs leading-normal text-slate-800 dark:text-slate-200"
-      : "flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200 select-none pb-12"
+      : `flex-1 flex flex-col ${pageBg} font-sans min-h-screen select-none ${viewMode === 'solution' ? 'pb-16' : ''}`
     }>
       <MathJaxLoader />
 
@@ -941,337 +955,236 @@ export default function ExamSolutionAnalysisPage() {
           </div>
         </header>
       ) : (
-        <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/80 backdrop-blur-md px-3 sm:px-6 md:px-12 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center gap-2.5 sm:gap-4 md:gap-5 min-w-0">
-            {/* Back to Test Series Button in the far left corner before logo */}
-            <button
-              onClick={handleBackToTestSeries}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/60 border border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800 text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs tracking-wide transition-all active:scale-95 cursor-pointer shrink-0 shadow-2xs"
-              title={language === 'hi' ? 'टेस्ट सीरीज पर वापस जाएं' : 'Back to Test Series'}
-            >
-              <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300 shrink-0" /> 
-              <span className="hidden sm:inline">{language === 'hi' ? 'टेस्ट सीरीज' : 'Back to Test Series'}</span>
-              <span className="inline sm:hidden">{language === 'hi' ? 'वापस' : 'Back'}</span>
-            </button>
-
-            <span className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
-
-            {/* Mock Test Hub Logo */}
-            <Link href="/" className="flex items-center gap-2 md:gap-3 shrink-0 group">
-              <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 sm:p-2 rounded-full shadow-sm flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0 group-hover:scale-105 transition-transform">
-                <Trophy className="h-4 w-4 sm:h-5.5 sm:w-5.5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="hidden md:block">
-                <h1 className="font-extrabold text-xs sm:text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{language === 'hi' ? 'मॉक टेस्ट हब' : 'MOCK TEST HUB'}</h1>
-                <p className="text-[8px] sm:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase leading-none mt-0.5">{language === 'hi' ? 'परीक्षा की तैयारी' : 'EXAM PREPARATION'}</p>
-              </div>
-            </Link>
-
-            <span className="hidden md:inline h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0"></span>
-
-            {/* Test Title & Subtitle */}
-            <div className="flex flex-col min-w-0">
-              <span className="font-extrabold text-xs md:text-sm text-slate-900 dark:text-white leading-tight truncate max-w-[180px] sm:max-w-[280px] md:max-w-md">{examSession.testTitle}</span>
-              <span className="hidden md:inline text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{language === 'hi' ? 'समाधान और विश्लेषण डैशबोर्ड' : 'Solution & Analysis Dashboard'}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4 shrink-0 ml-4">
-            {/* Lang Selector */}
-            <div className="flex items-center gap-1 md:gap-1.5">
-              <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0 hidden sm:inline" />
-              <select
-                value={lang}
-                onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
-                className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-1.5 md:px-2.5 py-1 outline-none text-[11px] md:text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold transition-colors"
-              >
-                <option value="en">English</option>
-                <option value="hi">हिंदी</option>
-              </select>
-            </div>
-
-            {/* Theme switcher */}
-            <button 
-              onClick={toggleTheme}
-              className="p-1.5 md:p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800 shrink-0"
-              title={theme === 'light' ? t.themeDark : t.themeLight}
-            >
-              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </button>
-          </div>
-        </header>
-      )}
-
-      {/* 2. MAIN ANALYSIS DASHBOARD (2-COLUMN LAYOUT WITH VERTICAL ATTEMPTS SIDEBAR ON LEFT) */}
-      <div className={`max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          
-          {/* LEFT SIDEBAR: Attempts & Previous Attempts (Vertical layout) */}
-          <aside className="w-full lg:w-80 shrink-0 space-y-4">
-            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-sm sticky top-18">
-              <div className="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-                    <HistoryIcon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                      {language === 'hi' ? 'प्रयास और इतिहास' : 'Attempts & History'}
-                    </h3>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
-                      {attempts.length} {attempts.length === 1 ? (language === 'hi' ? 'प्रयास' : 'Attempt') : (language === 'hi' ? 'प्रयास' : 'Attempts')}
+        <>
+          <SiteHeader />
+          {viewMode === 'analysis' ? (
+            <div className="bg-transparent">
+              <div className={`${container} pt-6 pb-1`}>
+                <nav className="text-xs text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5 flex-wrap">
+                  <Link href="/" className="hover:text-slate-800 dark:hover:text-slate-200">{isHi ? 'होम' : 'Home'}</Link>
+                  <ChevronRight className="h-3 w-3" />
+                  <button type="button" onClick={handleBackToTestSeries} className="hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer">{isHi ? 'टेस्ट सीरीज' : 'Test Series'}</button>
+                  <ChevronRight className="h-3 w-3" />
+                  <span className="text-slate-700 dark:text-slate-300">{isHi ? 'परिणाम विश्लेषण' : 'Result analysis'}</span>
+                </nav>
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white leading-snug">{examSession.testTitle}</h1>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                      {getAttemptLabel(selectedAttemptIdx, attempts.length, language)}
+                      {sessionRecord.date ? ` · ${sessionRecord.date}` : ''}
+                      {' · '}{isHi ? 'समाधान और विश्लेषण' : 'Solutions & analysis'}
                     </p>
                   </div>
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <button type="button" onClick={handleBackToTestSeries} className={btnSecondary}>
+                      <ArrowLeft className="h-4 w-4" />
+                      {isHi ? 'टेस्ट सीरीज' : 'Back to Test Series'}
+                    </button>
+                    <label className="inline-flex items-center gap-2 h-9 pl-3 pr-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300">
+                      <Globe className="h-4 w-4 text-slate-400" />
+                      <span className="sr-only">{isHi ? 'प्रश्नों की भाषा' : 'Question language'}</span>
+                      <select
+                        value={lang}
+                        onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
+                        className="h-7 bg-transparent text-sm text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer pr-1"
+                      >
+                        <option value="en">English</option>
+                        <option value="hi">हिंदी</option>
+                      </select>
+                    </label>
+                    <button type="button" onClick={() => setViewMode('solution')} className={btnPrimary}>
+                      <BookOpen className="h-4 w-4" />
+                      {isHi ? 'समाधान देखें' : 'View solutions'}
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+              <div className="px-4 py-2.5 flex items-center justify-between gap-3">
+                <button type="button" onClick={() => setViewMode('analysis')} className={`${btnSecondary} h-8 px-3 text-xs`}>
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  {isHi ? 'डैशबोर्ड' : 'Dashboard'}
+                </button>
+                <span className="min-w-0 flex-1 text-sm font-medium text-slate-900 dark:text-white truncate text-center">{examSession.testTitle}</span>
+                <select
+                  value={lang}
+                  onChange={(e) => handleLangChange(e.target.value as 'en' | 'hi')}
+                  className="h-8 px-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 cursor-pointer"
+                  aria-label="Question language"
+                >
+                  <option value="en">English</option>
+                  <option value="hi">हिंदी</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
-              {/* Vertical Stack of Attempts */}
-              <div className="space-y-3 max-h-[calc(100vh-220px)] overflow-y-auto p-1.5 -m-1.5">
+      {/* 2. MAIN ANALYSIS DASHBOARD */}
+      <div className={`${container} w-full py-6 ${viewMode === 'analysis' ? 'block' : 'hidden'}`}>
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] items-start">
+
+          {/* Attempts */}
+          <aside className="lg:sticky lg:top-20">
+            <SectionCard
+              title={isHi ? 'प्रयास' : 'Attempts'}
+              description={`${attempts.length} ${attempts.length === 1 ? (isHi ? 'प्रयास' : 'attempt') : (isHi ? 'प्रयास' : 'attempts')}`}
+              bodyClass="p-0"
+            >
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[calc(100vh-260px)] overflow-y-auto">
                 {attempts.map((att, idx) => {
                   const isSelected = selectedAttemptIdx === idx;
-                  const acc = typeof att.accuracy === 'number' ? att.accuracy : 0;
-                  const accColor = acc >= 75 ? 'text-green-600 dark:text-green-400' : (acc >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400');
-                  
                   return (
-                    <button
-                      key={att.id || idx}
-                      onClick={() => setSelectedAttemptIdx(idx)}
-                      className={`w-full p-3 sm:p-3.5 rounded-2xl text-left transition-all duration-200 transform-gpu hover:-translate-y-1 hover:shadow-md border-2 flex flex-col gap-2 cursor-pointer active:translate-y-0 ${
-                        isSelected
-                          ? 'bg-blue-50/90 dark:bg-blue-950/40 border-blue-500 dark:border-blue-500 shadow-sm hover:shadow-blue-500/20'
-                          : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200/90 dark:border-slate-800/80 hover:border-blue-400/50 dark:hover:border-blue-500/40 hover:bg-white dark:hover:bg-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                    <li key={att.id || idx}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAttemptIdx(idx)}
+                        className={`w-full text-left px-5 py-3 transition-colors cursor-pointer ${
                           isSelected
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                        }`}>
-                          {getAttemptLabel(idx, attempts.length, language)}
+                            ? 'bg-[#eef3f8] dark:bg-slate-800/70 shadow-[inset_3px_0_0_0_#1e4e79]'
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                        }`}
+                      >
+                        <span className="flex items-center justify-between gap-2">
+                          <span className={`text-sm ${isSelected ? 'font-semibold text-[#1e4e79] dark:text-blue-300' : 'font-medium text-slate-800 dark:text-slate-200'}`}>
+                            {getAttemptLabel(idx, attempts.length, language)}
+                          </span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{att.date || (isHi ? 'हाल ही में' : 'Recent')}</span>
                         </span>
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
-                          {att.date || 'Recent'}
+                        <span className="mt-1 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                          <span>{isHi ? 'अंक' : 'Score'} <strong className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{att.score}</strong>/{att.maxScore}</span>
+                          <span>{isHi ? 'सटीकता' : 'Accuracy'} <strong className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">{att.accuracy}%</strong></span>
                         </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-slate-200/50 dark:border-slate-800/60">
-                        <div>
-                          <span className="text-[8.5px] font-bold uppercase text-slate-400 dark:text-slate-500 block">
-                            {language === 'hi' ? 'अंक (Score)' : 'Score'}
-                          </span>
-                          <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
-                            {att.score} <span className="text-[10px] text-slate-400 font-normal">/ {att.maxScore}</span>
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[8.5px] font-bold uppercase text-slate-400 dark:text-slate-500 block">
-                            {language === 'hi' ? 'सटीकता' : 'Accuracy'}
-                          </span>
-                          <span className={`text-xs font-black ${accColor}`}>
-                            {att.accuracy}%
-                          </span>
-                        </div>
-                      </div>
-
-                      {isSelected && (
-                        <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 pt-0.5">
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span>{language === 'hi' ? 'सक्रिय अवलोकन' : 'Currently Viewing'}</span>
-                        </div>
-                      )}
-                    </button>
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
-            </div>
+              </ul>
+            </SectionCard>
           </aside>
 
-          {/* RIGHT MAIN CONTENT: Metrics, Benchmark & Subject Breakdown */}
-          <main className="flex-1 min-w-0 space-y-6 w-full">
-            
-            {/* Stats Overview Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white dark:bg-slate-900/60 border-2 border-slate-200/90 dark:border-slate-800 p-5 rounded-3xl shadow-sm">
-              <div className="flex items-center gap-3 border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
-                <div className="bg-blue-500/10 p-2.5 rounded-xl text-blue-600 dark:text-blue-400">
-                  <Award className="h-5 w-5" />
+          <main className="min-w-0 space-y-6">
+
+            {/* Score summary */}
+            <SectionCard title={isHi ? 'परिणाम सारांश' : 'Result summary'} bodyClass="p-0">
+              <dl className="grid grid-cols-2 md:grid-cols-4 divide-slate-200 dark:divide-slate-800 [&>div]:border-slate-200 dark:[&>div]:border-slate-800">
+                <div className="px-5 py-4 border-b md:border-b-0 border-r">
+                  <dt className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><Award className="h-3.5 w-3.5" />{t.analysisScore}</dt>
+                  <dd className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">
+                    {sessionRecord.score}<span className="text-sm font-normal text-slate-500"> / {sessionRecord.maxScore}</span>
+                  </dd>
+                  <div className="mt-2 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="h-full rounded-full bg-[#1e4e79] dark:bg-blue-400" style={{ width: `${scorePct}%` }} />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisScore}</p>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">
-                    {sessionRecord.score} <span className="text-xs text-slate-500 font-bold font-sans">/ {sessionRecord.maxScore}</span>
-                  </h4>
+                <div className="px-5 py-4 border-b md:border-b-0 md:border-r">
+                  <dt className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />{t.analysisAccuracy}</dt>
+                  <dd className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">{sessionRecord.accuracy}%</dd>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{isHi ? 'प्रयास किए गए प्रश्नों पर' : 'Of attempted questions'}</p>
                 </div>
+                <div className="px-5 py-4 border-r">
+                  <dt className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><Timer className="h-3.5 w-3.5" />{t.analysisTimeTaken}</dt>
+                  <dd className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">{formatDuration(computedTimeTakenSeconds)}</dd>
+                  {(sessionRecord as any).durationMinutes ? (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{isHi ? 'कुल समय' : 'Allowed'}: {(sessionRecord as any).durationMinutes} {isHi ? 'मिनट' : 'min'}</p>
+                  ) : null}
+                </div>
+                <div className="px-5 py-4">
+                  <dt className="text-xs text-slate-500 dark:text-slate-400">{isHi ? 'प्रश्न' : 'Questions'}</dt>
+                  <dd className="mt-1.5 space-y-1 text-sm">
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400">{isHi ? 'सही' : 'Correct'}</span><strong className="font-semibold text-[#1e7e34] dark:text-green-400 tabular-nums">{totals.correct}</strong></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400">{isHi ? 'गलत' : 'Wrong'}</span><strong className="font-semibold text-[#b02a37] dark:text-red-400 tabular-nums">{totals.incorrect}</strong></div>
+                    <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400">{isHi ? 'छोड़े गए' : 'Skipped'}</span><strong className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">{totals.unattempted}</strong></div>
+                  </dd>
+                </div>
+              </dl>
+              <div className="px-5 sm:px-6 py-3 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 rounded-b-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {isHi ? 'हर प्रश्न का सही उत्तर और व्याख्या देखें।' : 'Review every question with the correct answer and explanation.'}
+                </p>
+                <button type="button" onClick={() => setViewMode('solution')} className={`${btnPrimary} shrink-0`}>
+                  <HelpCircle className="h-4 w-4" />
+                  {isHi ? 'सविस्तार समाधान देखें' : 'View detailed solutions'}
+                </button>
               </div>
+            </SectionCard>
 
-              <div className="flex items-center gap-3 sm:border-r border-slate-200 dark:border-slate-800/80 pr-4 last:border-0">
-                <div className="bg-green-500/10 p-2.5 rounded-xl text-green-600 dark:text-green-400">
-                  <CheckCircle2 className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisAccuracy}</p>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{sessionRecord.accuracy}%</h4>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 col-span-2 sm:col-span-1 border-t sm:border-t-0 pt-3 sm:pt-0">
-                <div className="bg-purple-500/10 p-2.5 rounded-xl text-purple-600 dark:text-purple-400">
-                  <Timer className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">{t.analysisTimeTaken}</p>
-                  <h4 className="text-base font-black text-slate-900 dark:text-white mt-0.5">{formatDuration(computedTimeTakenSeconds)}</h4>
-                </div>
-              </div>
-            </div>
-
-            {/* Solution Navigation Banner Button */}
-            <button
-              onClick={() => setViewMode('solution')}
-              className="btn-3d btn-3d-blue w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 border border-blue-500/10 text-xs md:text-sm cursor-pointer"
-            >
-              <HelpCircle className="h-4.5 w-4.5" />
-              {language === 'hi' ? 'सविस्तार समाधान और व्याख्या देखें' : 'View Detailed Solutions & Explanation'}
-            </button>
-
-            {/* Testbook Equivalent Benchmarking Card */}
+            {/* Benchmark */}
             {sessionRecord.testbookRank && sessionRecord.mockTest && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-indigo-950/10 border-2 border-blue-100 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-600 text-white p-3 rounded-2xl shadow-lg shadow-blue-500/20">
-                      <Award className="h-6 w-6" />
+              <SectionCard
+                title={lang === 'hi' ? 'तुलनात्मक रैंक' : 'Comparative rank'}
+                description={lang === 'hi' ? 'अन्य अभ्यर्थियों के प्रदर्शन के आधार पर सांख्यिकीय अनुमान।' : 'Statistical projection based on other candidates’ performance.'}
+                action={<StatusBadge tone={isCutoffCleared ? 'green' : 'amber'}>{isCutoffCleared ? (lang === 'hi' ? 'कटऑफ पार' : 'Above cut-off') : (lang === 'hi' ? 'कटऑफ से कम' : 'Below cut-off')}</StatusBadge>}
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: lang === 'hi' ? 'अनुमानित रैंक' : 'Estimated rank', value: <>#{sessionRecord.testbookRank}<span className="text-sm font-normal text-slate-500"> / {sessionRecord.mockTest.testbookTotalUsers}</span></> },
+                    { label: lang === 'hi' ? 'प्रतिशतक' : 'Percentile', value: <>{sessionRecord.testbookPercentile}%</> },
+                    { label: lang === 'hi' ? 'कटऑफ' : 'Cut-off', value: <>{cutoffScore}</> },
+                    { label: lang === 'hi' ? 'टॉपर स्कोर' : 'Topper score', value: <>{sessionRecord.mockTest.testbookTopperScore}</> },
+                  ].map((item, i) => (
+                    <div key={i} className="rounded-md border border-slate-200 dark:border-slate-800 px-4 py-3">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{item.label}</div>
+                      <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-white tabular-nums">{item.value}</div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                        {lang === 'hi' ? 'टेस्टबुक समकक्ष रैंक' : 'Equivalent Testbook Rank'}
-                      </h4>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {lang === 'hi' 
-                          ? 'टेस्टबुक के परीक्षणकर्ताओं के डेटा के आधार पर सांख्यिकीय अनुमान।' 
-                          : 'Statistical projection based on Testbook performance parameters.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-6 items-center flex-wrap">
-                    <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm text-center min-w-[120px]">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'अनुमानित रैंक' : 'EST. RANK'}</span>
-                      <h3 className="text-lg font-black text-blue-600 dark:text-blue-400 mt-0.5">
-                        #{sessionRecord.testbookRank} <span className="text-[11px] text-slate-400 font-normal">/ {sessionRecord.mockTest.testbookTotalUsers}</span>
-                      </h3>
-                    </div>
-
-                    <div className="bg-white dark:bg-slate-950 px-5 py-3 rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-sm text-center min-w-[120px]">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{lang === 'hi' ? 'प्रतिशतक (Percentile)' : 'PERCENTILE'}</span>
-                      <h3 className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
-                        {sessionRecord.testbookPercentile}%
-                      </h3>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Benchmarking Scale */}
-                <div className="mt-6 border-t border-slate-200/60 dark:border-slate-800/80 pt-6">
-                  <h5 className="font-extrabold text-[10px] text-slate-500 uppercase tracking-widest mb-3">
-                    {lang === 'hi' ? 'प्रदर्शन बेंचमार्किंग' : 'PERFORMANCE BENCHMARKING'}
-                  </h5>
-                  
-                  <div className="relative pt-6 pb-2">
-                    <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full relative">
-                      <div 
-                        className="absolute h-full bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-700 dark:to-slate-650 rounded-full"
+                {/* Benchmarking scale */}
+                <div className="mt-6">
+                  <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-8">{lang === 'hi' ? 'प्रदर्शन तुलना' : 'Where you stand'}</h3>
+                  <div className="relative">
+                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full relative">
+                      <div
+                        className="absolute h-full bg-slate-300 dark:bg-slate-600 rounded-full"
                         style={{
                           left: `${Math.max(0, Math.min(100, (sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100))}%`,
                           right: `${Math.max(0, Math.min(100, 100 - (sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100))}%`
                         }}
                       />
-
-                      <div 
-                        className={`absolute h-full rounded-full ${isCutoffCleared ? 'bg-gradient-to-r from-blue-500 to-green-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-gradient-to-r from-blue-500 to-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'}`}
-                        style={{
-                          left: 0,
-                          width: `${Math.min(100, Math.max(0, (sessionRecord.score / sessionRecord.maxScore) * 100))}%`
-                        }}
+                      <div
+                        className={`absolute h-full rounded-full ${isCutoffCleared ? 'bg-[#1e7e34]' : 'bg-[#1e4e79]'}`}
+                        style={{ left: 0, width: `${Math.min(100, Math.max(0, (sessionRecord.score / sessionRecord.maxScore) * 100))}%` }}
                       />
-
-                      {/* Mark: Cutoff Score */}
-                      <div 
-                        className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
-                        style={{ left: `${(cutoffScore / sessionRecord.maxScore) * 100}%` }}
-                      >
-                        <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
-                          {lang === 'hi' ? 'कटऑफ: ' : 'Cutoff: '} {cutoffScore}
-                        </span>
-                        <div className="w-[1.5px] h-6 bg-amber-500 mt-1"></div>
+                      {[
+                        { at: cutoffScore, label: `${lang === 'hi' ? 'कटऑफ' : 'Cut-off'} ${cutoffScore}`, cls: 'text-amber-800 bg-amber-50 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-300', line: 'bg-amber-500' },
+                        { at: sessionRecord.mockTest.testbookAverageScore, label: `${lang === 'hi' ? 'औसत' : 'Avg'} ${sessionRecord.mockTest.testbookAverageScore}`, cls: 'text-slate-600 bg-slate-50 ring-slate-500/20 dark:bg-slate-800 dark:text-slate-300', line: 'bg-slate-400' },
+                        { at: sessionRecord.mockTest.testbookTopperScore, label: `${lang === 'hi' ? 'टॉपर' : 'Topper'} ${sessionRecord.mockTest.testbookTopperScore}`, cls: 'text-green-700 bg-green-50 ring-green-600/20 dark:bg-green-950/40 dark:text-green-400', line: 'bg-green-600' },
+                      ].map((m, i) => (
+                        <div key={i} className="absolute -top-7 -translate-x-1/2 flex flex-col items-center" style={{ left: `${Math.max(0, Math.min(100, (m.at / sessionRecord.maxScore) * 100))}%` }}>
+                          <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ring-1 ring-inset whitespace-nowrap ${m.cls}`}>{m.label}</span>
+                          <span className={`w-px h-4 mt-0.5 ${m.line}`} />
+                        </div>
+                      ))}
+                      <div className="absolute top-3 -translate-x-1/2 flex flex-col items-center z-10" style={{ left: `${Math.max(0, Math.min(100, (sessionRecord.score / sessionRecord.maxScore) * 100))}%` }}>
+                        <span className="w-px h-2 bg-[#1e4e79] dark:bg-blue-400" />
+                        <span className="text-[11px] font-semibold text-white bg-[#1e4e79] px-2 py-0.5 rounded whitespace-nowrap">{lang === 'hi' ? 'आप' : 'You'} {sessionRecord.score}</span>
                       </div>
-                      
-                      {/* Mark: Average Score */}
-                      <div 
-                        className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
-                        style={{ left: `${(sessionRecord.mockTest.testbookAverageScore / sessionRecord.maxScore) * 100}%` }}
-                      >
-                        <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                          {lang === 'hi' ? 'औसत: ' : 'Avg: '} {sessionRecord.mockTest.testbookAverageScore}
-                        </span>
-                        <div className="w-[1.5px] h-6 bg-slate-400 mt-1"></div>
-                      </div>
-
-                      {/* Mark: User Score */}
-                      <div 
-                        className="absolute top-[-30px] transform -translate-x-1/2 flex flex-col items-center z-10"
-                        style={{ left: `${(sessionRecord.score / sessionRecord.maxScore) * 100}%` }}
-                      >
-                        <span className="text-[9px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-full shadow-md shadow-blue-500/20">
-                          {lang === 'hi' ? 'आपका स्कोर: ' : 'You: '} {sessionRecord.score}
-                        </span>
-                        <div className="w-2 h-2 rounded-full bg-blue-600 border border-white dark:border-slate-900 mt-0.5"></div>
-                        <div className="w-[1.5px] h-3.5 bg-blue-600"></div>
-                      </div>
-
-                      {/* Mark: Topper Score */}
-                      <div 
-                        className="absolute top-[-24px] transform -translate-x-1/2 flex flex-col items-center"
-                        style={{ left: `${(sessionRecord.mockTest.testbookTopperScore / sessionRecord.maxScore) * 100}%` }}
-                      >
-                        <span className="text-[9px] font-bold text-green-600 bg-green-50 dark:bg-green-950/40 px-1.5 py-0.5 rounded border border-green-200 dark:border-green-900/50">
-                          {lang === 'hi' ? 'टॉपर: ' : 'Topper: '} {sessionRecord.mockTest.testbookTopperScore}
-                        </span>
-                        <div className="w-[1.5px] h-6 bg-green-500 mt-1"></div>
-                      </div>
-
                     </div>
-                    
-                    <div className="flex justify-between mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider font-sans">
-                      <span>0 {lang === 'hi' ? 'अंक' : 'Marks'}</span>
-                      <span>{sessionRecord.maxScore} {lang === 'hi' ? 'अंक' : 'Marks'}</span>
+                    <div className="flex justify-between mt-9 text-xs text-slate-500 dark:text-slate-400">
+                      <span>0</span>
+                      <span>{sessionRecord.maxScore} {lang === 'hi' ? 'अंक' : 'marks'}</span>
                     </div>
                   </div>
                 </div>
-
-              </div>
+              </SectionCard>
             )}
 
             {/* CBAT T-Score Result — Station Master CBAT (Psycho Test) */}
             {cbatTScoreResult && (
-              <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-                <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    <Award className="h-4.5 w-4.5 text-blue-500" />
-                    {cbatTScoreResult.isFullCbat
-                      ? (lang === 'hi' ? 'CBAT समग्र टी-स्कोर परिणाम (पूर्ण मॉक)' : 'CBAT Full Mock T-Score Result')
-                      : (lang === 'hi' ? 'CBAT अनुभागीय टी-स्कोर परिणाम' : 'CBAT Sectional T-Score Result')}
-                  </span>
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                    {cbatTScoreResult.isFullCbat
-                      ? (lang === 'hi' ? 'सभी 5 बैटरियां' : 'All 5 Batteries')
-                      : (lang === 'hi' ? 'एकल बैटरी' : 'Single Battery')}
-                  </span>
-                </h4>
-
-                <div className="mt-3 mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-start gap-2">
+              <SectionCard
+                title={cbatTScoreResult.isFullCbat
+                  ? (lang === 'hi' ? 'CBAT समग्र टी-स्कोर परिणाम (पूर्ण मॉक)' : 'CBAT full mock T-score result')
+                  : (lang === 'hi' ? 'CBAT अनुभागीय टी-स्कोर परिणाम' : 'CBAT sectional T-score result')}
+                action={<StatusBadge tone="slate">{cbatTScoreResult.isFullCbat ? (lang === 'hi' ? 'सभी 5 बैटरियां' : 'All 5 batteries') : (lang === 'hi' ? 'एकल बैटरी' : 'Single battery')}</StatusBadge>}
+              >
+                <div className="mb-5 flex items-start gap-2.5 rounded-md border border-amber-200 dark:border-amber-900/60 border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/30 px-4 py-3">
                   <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <p className="text-[10.5px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                  <p className="text-sm text-amber-900 dark:text-amber-300 leading-relaxed">
                     {lang === 'hi'
                       ? 'यह एक अनुमानित टी-स्कोर है। वास्तविक RRB टी-स्कोर उस शिफ्ट के सभी वास्तविक अभ्यर्थियों के औसत (Mean) और मानक विचलन (SD) पर निर्भर करता है, जो केवल RRB के पास होता है। यहाँ माना गया Mean/SD केवल अभ्यास हेतु अनुमानित है, आधिकारिक परिणाम नहीं।'
                       : 'This is an estimated T-Score for practice only. The official RRB T-Score depends on the real Mean and Standard Deviation of every candidate in your actual exam shift — data only RRB has. The Mean/SD used here are assumed reference values, not the official exam-day statistics.'}
@@ -1280,23 +1193,21 @@ export default function ExamSolutionAnalysisPage() {
 
                 <div className={`grid gap-4 ${cbatTScoreResult.sections.length === 1 ? 'grid-cols-1 max-w-md' : 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
                   {cbatTScoreResult.sections.map(sec => (
-                    <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between shadow-xs">
-                      <div>
-                        <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 truncate">{sec.name}</h5>
-                        <div className="flex justify-between items-center mt-3">
-                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{lang === 'hi' ? 'कच्चा स्कोर' : 'Raw Score'}</span>
-                          <span className="text-xs font-black text-slate-700 dark:text-slate-300">{sec.rawScore} / {sec.maxMarks}</span>
-                        </div>
+                    <div key={sec.name} className="rounded-md border border-slate-200 dark:border-slate-800 p-4">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white truncate">{sec.name}</div>
+                      <div className="mt-2 flex justify-between text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'कच्चा स्कोर' : 'Raw score'}</span>
+                        <span className="font-medium text-slate-800 dark:text-slate-200 tabular-nums">{sec.rawScore} / {sec.maxMarks}</span>
                       </div>
-                      <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between">
+                      <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
                         <div>
-                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">T-Score</span>
-                          <span className={`text-lg font-black ${sec.qualified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{sec.tScore}</span>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">T-Score</div>
+                          <div className={`text-xl font-semibold tabular-nums ${sec.qualified ? 'text-[#1e7e34] dark:text-green-400' : 'text-[#b02a37] dark:text-red-400'}`}>{sec.tScore}</div>
                         </div>
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full ${sec.qualified ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
+                        <StatusBadge tone={sec.qualified ? 'green' : 'red'}>
                           {sec.qualified ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                           {sec.qualified ? (lang === 'hi' ? 'उत्तीर्ण (≥42)' : 'Qualified (≥42)') : (lang === 'hi' ? 'अनुत्तीर्ण (<42)' : `Below ${CBAT_QUALIFYING_TSCORE}`)}
-                        </span>
+                        </StatusBadge>
                       </div>
                     </div>
                   ))}
@@ -1304,41 +1215,39 @@ export default function ExamSolutionAnalysisPage() {
 
                 {cbatTScoreResult.isFullCbat ? (
                   <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'समग्र टी-स्कोर' : 'Composite T-Score'}</span>
-                      <span className="text-xl font-black text-slate-800 dark:text-slate-200">{cbatTScoreResult.compositeTScore} <span className="text-xs font-bold text-slate-400">/ {CBAT_MAX_COMPOSITE}</span></span>
+                    <div className="rounded-md border border-slate-200 dark:border-slate-800 p-4">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'समग्र टी-स्कोर' : 'Composite T-score'}</div>
+                      <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white tabular-nums">{cbatTScoreResult.compositeTScore} <span className="text-sm font-normal text-slate-500">/ {CBAT_MAX_COMPOSITE}</span></div>
                     </div>
-                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'मेरिट स्केल (30 में से)' : 'Merit Scale (out of 30)'}</span>
-                      <span className="text-xl font-black text-slate-800 dark:text-slate-200">{cbatTScoreResult.meritScoreOutOf30}</span>
+                    <div className="rounded-md border border-slate-200 dark:border-slate-800 p-4">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'मेरिट स्केल (30 में से)' : 'Merit scale (out of 30)'}</div>
+                      <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white tabular-nums">{cbatTScoreResult.meritScoreOutOf30}</div>
                     </div>
-                    <div className={`p-4 rounded-2xl border ${cbatTScoreResult.overallQualified ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900'}`}>
-                      <span className="text-[9px] font-bold uppercase tracking-wider block text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'समग्र परिणाम' : 'Overall Result'}</span>
-                      <span className={`text-xl font-black ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-                        {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण' : 'Qualified') : (lang === 'hi' ? 'अनुत्तीर्ण' : 'Not Qualified')}
-                      </span>
+                    <div className={`rounded-md border p-4 ${cbatTScoreResult.overallQualified ? 'bg-[#eaf6ec] border-green-200 dark:bg-green-950/30 dark:border-green-900' : 'bg-[#fbeaec] border-red-200 dark:bg-red-950/30 dark:border-red-900'}`}>
+                      <div className="text-xs text-slate-600 dark:text-slate-400">{lang === 'hi' ? 'समग्र परिणाम' : 'Overall result'}</div>
+                      <div className={`mt-1 text-xl font-semibold ${cbatTScoreResult.overallQualified ? 'text-[#1e7e34] dark:text-green-400' : 'text-[#b02a37] dark:text-red-400'}`}>
+                        {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण' : 'Qualified') : (lang === 'hi' ? 'अनुत्तीर्ण' : 'Not qualified')}
+                      </div>
                       {!cbatTScoreResult.overallQualified && (
-                        <p className="text-[9px] text-red-600 dark:text-red-400 mt-1">{lang === 'hi' ? 'किसी भी एक बैटरी में 42 से कम स्कोर पूरे CBAT को अनुत्तीर्ण कर देता है।' : 'Any single battery below 42 fails the entire CBAT — no compensation across batteries.'}</p>
+                        <p className="text-xs text-[#b02a37] dark:text-red-400 mt-1">{lang === 'hi' ? 'किसी भी एक बैटरी में 42 से कम स्कोर पूरे CBAT को अनुत्तीर्ण कर देता है।' : 'Any single battery below 42 fails the entire CBAT — no compensation across batteries.'}</p>
                       )}
                     </div>
                   </div>
                 ) : (
                   <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col justify-between">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">{lang === 'hi' ? 'न्यूनतम अर्हक टी-स्कोर' : 'Qualifying Cutoff'}</span>
-                        <span className="text-xl font-black text-slate-800 dark:text-slate-200">{CBAT_QUALIFYING_TSCORE} <span className="text-xs font-bold text-slate-400">/ 80</span></span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                    <div className="rounded-md border border-slate-200 dark:border-slate-800 p-4">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'न्यूनतम अर्हक टी-स्कोर' : 'Qualifying cut-off'}</div>
+                      <div className="mt-1 text-xl font-semibold text-slate-900 dark:text-white tabular-nums">{CBAT_QUALIFYING_TSCORE} <span className="text-sm font-normal text-slate-500">/ 80</span></div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         {lang === 'hi' ? 'इस व्यक्तिगत बैटरी में उत्तीर्ण होने के लिए न्यूनतम 42 टी-स्कोर अनिवार्य है।' : 'A minimum T-Score of 42 is required to qualify in this individual battery.'}
                       </p>
                     </div>
-                    <div className={`p-4 rounded-2xl border ${cbatTScoreResult.overallQualified ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-900' : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900'}`}>
-                      <span className="text-[9px] font-bold uppercase tracking-wider block text-slate-500 dark:text-slate-400">{lang === 'hi' ? 'बैटरी परिणाम' : 'Battery Result'}</span>
-                      <span className={`text-xl font-black ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-                        {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण (≥42)' : 'Qualified (≥42)') : (lang === 'hi' ? 'अनुत्तीर्ण (<42)' : `Below ${CBAT_QUALIFYING_TSCORE} (Not Qualified)`)}
-                      </span>
-                      <p className={`text-[10px] mt-1 ${cbatTScoreResult.overallQualified ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <div className={`rounded-md border p-4 ${cbatTScoreResult.overallQualified ? 'bg-[#eaf6ec] border-green-200 dark:bg-green-950/30 dark:border-green-900' : 'bg-[#fbeaec] border-red-200 dark:bg-red-950/30 dark:border-red-900'}`}>
+                      <div className="text-xs text-slate-600 dark:text-slate-400">{lang === 'hi' ? 'बैटरी परिणाम' : 'Battery result'}</div>
+                      <div className={`mt-1 text-xl font-semibold ${cbatTScoreResult.overallQualified ? 'text-[#1e7e34] dark:text-green-400' : 'text-[#b02a37] dark:text-red-400'}`}>
+                        {cbatTScoreResult.overallQualified ? (lang === 'hi' ? 'उत्तीर्ण (≥42)' : 'Qualified (≥42)') : (lang === 'hi' ? 'अनुत्तीर्ण (<42)' : `Below ${CBAT_QUALIFYING_TSCORE} (Not qualified)`)}
+                      </div>
+                      <p className={`text-xs mt-1 ${cbatTScoreResult.overallQualified ? 'text-[#1e7e34] dark:text-green-400' : 'text-[#b02a37] dark:text-red-400'}`}>
                         {cbatTScoreResult.overallQualified
                           ? (lang === 'hi' ? 'आपने इस बैटरी में अर्हक टी-स्कोर (≥42) सफलतापूर्वक प्राप्त कर लिया है।' : 'You have qualified in this battery with a T-Score of 42 or higher.')
                           : (lang === 'hi' ? 'इस बैटरी में आपका टी-स्कोर 42 से कम है। कृपया अधिक अभ्यास करें।' : 'Your T-Score in this battery is below 42. More practice is recommended.')}
@@ -1346,67 +1255,75 @@ export default function ExamSolutionAnalysisPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </SectionCard>
             )}
 
-            {/* Subject-wise Breakdown Section */}
-            <div className="bg-white dark:bg-slate-900 border-2 border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-              <h4 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800/60 pb-2 flex items-center gap-2">
-                <Award className="h-4.5 w-4.5 text-blue-500" /> {lang === 'hi' ? 'विषयवार प्रदर्शन विश्लेषण' : 'Subject-wise Performance Breakdown'}
-              </h4>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
-                {sectionalAnalysis.map((sec) => {
-                  const maxSecScore = sec.total * sec.positiveMark;
-                  const scorePercent = maxSecScore > 0 ? Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100)) : 0;
-                  const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
-                  const accuracyColor = secAccuracy >= 75 ? 'text-green-600 dark:text-green-400' : (secAccuracy >= 50 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400');
-                  const barColor = secAccuracy >= 75 ? 'bg-green-500' : (secAccuracy >= 50 ? 'bg-blue-500' : 'bg-red-500');
-
-                  return (
-                    <div key={sec.name} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4.5 rounded-2xl flex flex-col justify-between hover:shadow-md transition-all duration-200 relative overflow-hidden group">
-                      <div className="absolute -top-6 -right-6 w-12 h-12 rounded-full bg-slate-500/5 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                      
-                      <div>
-                        <h5 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 truncate">{sec.name}</h5>
-                        <div className="flex justify-between items-center mt-3">
-                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{lang === 'hi' ? 'स्कोर' : 'SCORE'}</span>
-                          <span className="text-xs font-black text-blue-600 dark:text-blue-400">{sec.score.toFixed(2)} / {maxSecScore.toFixed(0)}</span>
-                        </div>
-
-                        <div className="w-full bg-slate-200 dark:bg-slate-900 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${scorePercent}%` }} />
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-3.5 border-t border-slate-200/60 dark:border-slate-800/80 space-y-2">
-                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                          <span>{lang === 'hi' ? 'सटीकता' : 'Accuracy'}:</span>
-                          <span className={`font-black ${accuracyColor}`}>{secAccuracy.toFixed(0)}%</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                          <span>{lang === 'hi' ? 'सही / गलत' : 'Correct / Wrong'}:</span>
-                          <span className="font-mono text-[10px] font-extrabold"><strong className="text-green-600 dark:text-green-400">{sec.correct}</strong> / <strong className="text-red-500">{sec.incorrect}</strong></span>
-                        </div>
-                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                          <span>{lang === 'hi' ? 'छोड़े गए' : 'Unattempted'}:</span>
-                          <span className="font-extrabold text-slate-500 dark:text-slate-400">{sec.unattempted}</span>
-                        </div>
-                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                          <span>{lang === 'hi' ? 'मार्किंग' : 'Marking'}:</span>
-                          <span className="font-extrabold"><strong className="text-green-600">+{sec.positiveMark}</strong> / <strong className="text-red-500">−{sec.negativeMark}</strong></span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Subject-wise breakdown */}
+            <SectionCard
+              title={lang === 'hi' ? 'विषयवार प्रदर्शन' : 'Section-wise performance'}
+              description={lang === 'hi' ? 'हर अनुभाग में अंक, सटीकता और प्रश्नों की स्थिति।' : 'Score, accuracy and question status for each section.'}
+              bodyClass="p-0"
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[640px]">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-900/60 text-left text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                      <th className="px-5 py-2.5 font-medium">{lang === 'hi' ? 'अनुभाग' : 'Section'}</th>
+                      <th className="px-3 py-2.5 font-medium">{lang === 'hi' ? 'अंक' : 'Score'}</th>
+                      <th className="px-3 py-2.5 font-medium text-right">{lang === 'hi' ? 'सटीकता' : 'Accuracy'}</th>
+                      <th className="px-3 py-2.5 font-medium text-right">{lang === 'hi' ? 'सही' : 'Correct'}</th>
+                      <th className="px-3 py-2.5 font-medium text-right">{lang === 'hi' ? 'गलत' : 'Wrong'}</th>
+                      <th className="px-3 py-2.5 font-medium text-right">{lang === 'hi' ? 'छोड़े' : 'Skipped'}</th>
+                      <th className="px-5 py-2.5 font-medium text-right">{lang === 'hi' ? 'मार्किंग' : 'Marking'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {sectionalAnalysis.map((sec) => {
+                      const maxSecScore = sec.total * sec.positiveMark;
+                      const scorePercent = maxSecScore > 0 ? Math.min(100, Math.max(0, (sec.score / maxSecScore) * 100)) : 0;
+                      const secAccuracy = sec.attempted > 0 ? (sec.correct / sec.attempted) * 100 : 0;
+                      const accTone = secAccuracy >= 75 ? 'text-[#1e7e34] dark:text-green-400' : (secAccuracy >= 50 ? 'text-slate-800 dark:text-slate-200' : 'text-[#b02a37] dark:text-red-400');
+                      return (
+                        <tr key={sec.name} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30">
+                          <td className="px-5 py-3 font-medium text-slate-900 dark:text-white">{sec.name}</td>
+                          <td className="px-3 py-3">
+                            <div className="tabular-nums text-slate-800 dark:text-slate-200">{sec.score.toFixed(2)} <span className="text-slate-400">/ {maxSecScore.toFixed(0)}</span></div>
+                            <div className="mt-1 h-1.5 w-28 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                              <div className="h-full rounded-full bg-[#1e4e79] dark:bg-blue-400" style={{ width: `${scorePercent}%` }} />
+                            </div>
+                          </td>
+                          <td className={`px-3 py-3 text-right font-semibold tabular-nums ${accTone}`}>{secAccuracy.toFixed(0)}%</td>
+                          <td className="px-3 py-3 text-right tabular-nums text-[#1e7e34] dark:text-green-400">{sec.correct}</td>
+                          <td className="px-3 py-3 text-right tabular-nums text-[#b02a37] dark:text-red-400">{sec.incorrect}</td>
+                          <td className="px-3 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{sec.unattempted}</td>
+                          <td className="px-5 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">+{sec.positiveMark} / −{sec.negativeMark}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  {sectionalAnalysis.length > 1 && (
+                    <tfoot>
+                      <tr className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 font-medium">
+                        <td className="px-5 py-3 text-slate-900 dark:text-white">{lang === 'hi' ? 'कुल' : 'Total'}</td>
+                        <td className="px-3 py-3 tabular-nums text-slate-900 dark:text-white">{sessionRecord.score} <span className="text-slate-400 font-normal">/ {sessionRecord.maxScore}</span></td>
+                        <td className="px-3 py-3 text-right tabular-nums text-slate-900 dark:text-white">{sessionRecord.accuracy}%</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-[#1e7e34] dark:text-green-400">{totals.correct}</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-[#b02a37] dark:text-red-400">{totals.incorrect}</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{totals.unattempted}</td>
+                        <td className="px-5 py-3" />
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
               </div>
-            </div>
+            </SectionCard>
 
           </main>
         </div>
       </div>
-      
+
+      {viewMode === 'analysis' && <SiteFooter />}
+
       <section className={isSolutionView
         ? "flex flex-row flex-1 overflow-hidden bg-[#F1F5F9] w-full h-full pb-16 flex"
         : `max-w-6xl w-full mx-auto px-6 mt-6 flex flex-col lg:flex-row gap-8 items-start pb-24 ${viewMode === 'solution' ? 'flex' : 'hidden'}`

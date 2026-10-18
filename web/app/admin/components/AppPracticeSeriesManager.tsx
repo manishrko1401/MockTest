@@ -828,13 +828,13 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
   return (
     <div className="space-y-6">
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 text-white rounded-3xl p-6 shadow-md flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div className="bg-[#1e4e79] text-white rounded-lg p-6 shadow-md flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div className="space-y-1">
-          <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase px-2.5 py-0.5 rounded-full border border-amber-500/30">
+          <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 font-semibold text-xs px-2.5 py-0.5 rounded-full border border-amber-500/30">
             <Zap className="h-3 w-3 text-amber-400 fill-amber-400" />
             App Practice Series Portal
           </span>
-          <h2 className="text-xl font-black text-white tracking-tight">
+          <h2 className="text-xl font-semibold text-white">
             App Practice Series Manager
           </h2>
           <p className="text-xs text-blue-100 font-medium max-w-xl">
@@ -843,11 +843,11 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
         </div>
 
         {/* 5-Tab Navigation Bar */}
-        <div className="flex flex-wrap bg-white/10 backdrop-blur-md p-1 rounded-2xl border border-white/20 shrink-0 gap-1">
+        <div className="flex flex-wrap bg-white/10 p-1 rounded-lg border border-white/20 shrink-0 gap-1">
           <button
             onClick={() => setManagerTab('create_cat')}
-            className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-              managerTab === 'create_cat' ? 'bg-white text-blue-600 shadow-sm' : 'text-white hover:bg-white/10'
+            className={`px-3 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              managerTab === 'create_cat' ? 'bg-white text-[#1e4e79] shadow-sm' : 'text-white hover:bg-white/10'
             }`}
           >
             <FolderPlus className="h-4 w-4" />
@@ -855,8 +855,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
           </button>
           <button
             onClick={() => setManagerTab('create_sub')}
-            className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-              managerTab === 'create_sub' ? 'bg-white text-blue-600 shadow-sm' : 'text-white hover:bg-white/10'
+            className={`px-3 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              managerTab === 'create_sub' ? 'bg-white text-[#1e4e79] shadow-sm' : 'text-white hover:bg-white/10'
             }`}
           >
             <Layers className="h-4 w-4" />
@@ -864,8 +864,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
           </button>
           <button
             onClick={() => setManagerTab('create_section')}
-            className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-              managerTab === 'create_section' ? 'bg-white text-blue-600 shadow-sm' : 'text-white hover:bg-white/10'
+            className={`px-3 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              managerTab === 'create_section' ? 'bg-white text-[#1e4e79] shadow-sm' : 'text-white hover:bg-white/10'
             }`}
           >
             <FileText className="h-4 w-4" />
@@ -873,8 +873,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
           </button>
           <button
             onClick={() => setManagerTab('create_test')}
-            className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-              managerTab === 'create_test' ? 'bg-white text-blue-600 shadow-sm' : 'text-white hover:bg-white/10'
+            className={`px-3 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              managerTab === 'create_test' ? 'bg-white text-[#1e4e79] shadow-sm' : 'text-white hover:bg-white/10'
             }`}
           >
             <PlusCircle className="h-4 w-4" />
@@ -882,8 +882,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
           </button>
           <button
             onClick={() => setManagerTab('importer')}
-            className={`px-3 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-              managerTab === 'importer' ? 'bg-white text-blue-600 shadow-sm' : 'text-white hover:bg-white/10'
+            className={`px-3 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              managerTab === 'importer' ? 'bg-white text-[#1e4e79] shadow-sm' : 'text-white hover:bg-white/10'
             }`}
           >
             <Database className="h-4 w-4" />
@@ -894,10 +894,10 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
       {/* TAB 1: PRACTICE CATEGORIES */}
       {managerTab === 'create_cat' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <FolderPlus className="h-4 w-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <FolderPlus className="h-4 w-4 text-[#1e4e79]" />
               Manage App Practice Categories
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -915,7 +915,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 placeholder="e.g. Active / Passive Voice Practice"
-                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-bold"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-[#1e4e79] font-bold"
               />
             </div>
 
@@ -928,14 +928,14 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 value={newCatDesc}
                 onChange={(e) => setNewCatDesc(e.target.value)}
                 placeholder="e.g. High-yield topic-wise drills & practice sets"
-                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-[#1e4e79] font-medium"
               />
             </div>
 
             <button
               type="submit"
               disabled={creatingCat}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs rounded-md shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
               <PlusCircle className="h-4 w-4" />
               <span>{creatingCat ? 'Creating...' : 'Create Practice Category'}</span>
@@ -944,7 +944,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
           {/* List of Existing Practice Categories */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+            <h4 className="font-semibold text-xs text-slate-900 dark:text-white">
               Existing Practice Categories ({practiceCatalog.length})
             </h4>
 
@@ -953,12 +953,12 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 const isEditing = editingCatId === cat.id;
 
                 return (
-                  <div key={cat.id} className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-3 shadow-xs">
+                  <div key={cat.id} className="bg-slate-50 dark:bg-slate-950 p-5 rounded-lg border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-3 shadow-xs">
                     {isEditing ? (
                       <div className="space-y-3">
-                        <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Editing Category</span>
+                        <span className="text-xs font-semibold text-[#1e4e79] dark:text-blue-400">Editing Category</span>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 mb-1">Category Name</label>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Category Name</label>
                           <input
                             type="text"
                             value={editCatName}
@@ -967,7 +967,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 mb-1">Description</label>
+                          <label className="block text-xs font-bold text-slate-500 mb-1">Description</label>
                           <input
                             type="text"
                             value={editCatDesc}
@@ -979,7 +979,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                         <div className="flex items-center gap-2 pt-1">
                           <button
                             onClick={() => handleSaveEditCategory(cat.id)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 rounded-lg text-xs flex items-center justify-center gap-1 cursor-pointer"
+                            className="flex-1 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-1.5 rounded-lg text-xs flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <Save className="h-3.5 w-3.5" /> Save
                           </button>
@@ -994,14 +994,14 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     ) : (
                       <>
                         <div className="space-y-1">
-                          <h5 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            <Target className="h-4 w-4 text-blue-600 shrink-0" />
+                          <h5 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                            <Target className="h-4 w-4 text-[#1e4e79] shrink-0" />
                             <span>{cat.name}</span>
                           </h5>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                             {cat.description || 'Topic-wise practice category'}
                           </p>
-                          <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 block pt-1">
+                          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 block pt-1">
                             Sub Categories: {cat.subCategories?.length || 0}
                           </span>
                         </div>
@@ -1013,13 +1013,13 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                               setEditCatName(cat.name);
                               setEditCatDesc(cat.description || '');
                             }}
-                            className="flex-1 bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                            className="flex-1 bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-[#1e4e79] dark:text-blue-400 font-bold py-1.5 px-3 rounded-md border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                           >
                             <Edit className="h-3.5 w-3.5" /> Edit
                           </button>
                           <button
                             onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                            className="bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/40 text-red-500 font-bold py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                            className="bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/40 text-red-500 font-bold py-1.5 px-3 rounded-md border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" /> Delete
                           </button>
@@ -1036,10 +1036,10 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
       {/* TAB 2: SUB CATEGORIES (EXAMS) */}
       {managerTab === 'create_sub' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <Layers className="h-4 w-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="h-4 w-4 text-[#1e4e79]" />
               Manage Practice Sub Categories (Exams)
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -1055,7 +1055,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               <select
                 value={selectedCatId}
                 onChange={(e) => setSelectedCatId(e.target.value)}
-                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold focus:outline-none focus:border-[#1e4e79] cursor-pointer"
               >
                 <option value="">— Select Practice Category —</option>
                 {practiceCatalog.map((cat) => (
@@ -1074,14 +1074,14 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                   value={newSubName}
                   onChange={(e) => setNewSubName(e.target.value)}
                   placeholder="e.g. Active / Passive Voice Practice Exam"
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-bold"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-[#1e4e79] font-bold"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={creatingSub || !selectedCatId}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs rounded-md shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>{creatingSub ? 'Creating...' : 'Create Sub Category'}</span>
@@ -1091,7 +1091,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
           {/* Table of Sub Categories */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+            <h4 className="font-semibold text-xs text-slate-900 dark:text-white">
               Sub Categories in "{activeCategoryObj?.name || 'Selected Category'}" ({activeSubCategories.length})
             </h4>
 
@@ -1099,7 +1099,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               {activeSubCategories.map((sub: any) => {
                 const isEditing = editingSubId === sub.id;
                 return (
-                  <div key={sub.id} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                  <div key={sub.id} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-md border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
                     {isEditing ? (
                       <div className="flex items-center gap-2 flex-1">
                         <input
@@ -1110,7 +1110,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                         />
                         <button
                           onClick={() => handleSaveEditSubCategory(sub.id)}
-                          className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
+                          className="bg-[#1e4e79] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
                         >
                           Save
                         </button>
@@ -1125,7 +1125,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       <>
                         <div>
                           <span className="font-bold text-xs text-slate-900 dark:text-white">{sub.name}</span>
-                          <span className="text-[10px] text-slate-500 block">Sections: {sub.subSubCategories?.length || 0}</span>
+                          <span className="text-xs text-slate-500 block">Sections: {sub.subSubCategories?.length || 0}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -1134,7 +1134,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                               setEditingSubId(sub.id);
                               setEditSubName(sub.name);
                             }}
-                            className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer"
+                            className="text-[#1e4e79] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer"
                           >
                             Edit
                           </button>
@@ -1157,10 +1157,10 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
       {/* TAB 3: SECTIONS (TEST SERIES) */}
       {managerTab === 'create_section' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <FileText className="h-4 w-4 text-[#1e4e79]" />
               Manage Practice Sections (Test Series)
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -1180,7 +1180,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     setSelectedCatId(e.target.value);
                     setSelectedSubId('');
                   }}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                 >
                   <option value="">— Select Category —</option>
                   {practiceCatalog.map((cat) => (
@@ -1196,7 +1196,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 <select
                   value={selectedSubId}
                   onChange={(e) => setSelectedSubId(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                 >
                   <option value="">— Select Sub Category —</option>
                   {activeSubCategories.map((sub: any) => (
@@ -1216,14 +1216,14 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                   value={newSecName}
                   onChange={(e) => setNewSecName(e.target.value)}
                   placeholder="e.g. Active / Passive Voice Practice Series"
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-bold"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-[#1e4e79] font-bold"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={creatingSec || !selectedSubId}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs rounded-md shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>{creatingSec ? 'Creating...' : 'Create Practice Section'}</span>
@@ -1233,7 +1233,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
           {/* Table of Sections */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+            <h4 className="font-semibold text-xs text-slate-900 dark:text-white">
               Sections in "{activeSubObj?.name || 'Selected Sub Category'}" ({activeSections.length})
             </h4>
 
@@ -1241,7 +1241,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               {activeSections.map((sec: any) => {
                 const isEditing = editingSecId === sec.id;
                 return (
-                  <div key={sec.id} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                  <div key={sec.id} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-md border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
                     {isEditing ? (
                       <div className="flex items-center gap-2 flex-1">
                         <input
@@ -1252,7 +1252,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                         />
                         <button
                           onClick={() => handleSaveEditSection(sec.id)}
-                          className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
+                          className="bg-[#1e4e79] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
                         >
                           Save
                         </button>
@@ -1267,7 +1267,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       <>
                         <div>
                           <span className="font-bold text-xs text-slate-900 dark:text-white">{sec.name || sec.title}</span>
-                          <span className="text-[10px] text-slate-500 block">Tests: {sec.tests?.length || 0}</span>
+                          <span className="text-xs text-slate-500 block">Tests: {sec.tests?.length || 0}</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -1276,7 +1276,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                               setEditingSecId(sec.id);
                               setEditSecName(sec.name || sec.title);
                             }}
-                            className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer"
+                            className="text-[#1e4e79] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer"
                           >
                             Edit
                           </button>
@@ -1299,10 +1299,10 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
       {/* TAB 4: PRACTICE TESTS MANAGEMENT */}
       {managerTab === 'create_test' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <PlusCircle className="h-4 w-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <PlusCircle className="h-4 w-4 text-[#1e4e79]" />
               Manage Practice Tests
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
@@ -1322,7 +1322,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     setSelectedSubId('');
                     setSelectedSecId('');
                   }}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold cursor-pointer"
                 >
                   <option value="">— Select Category —</option>
                   {practiceCatalog.map((cat) => (
@@ -1339,7 +1339,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     setSelectedSubId(e.target.value);
                     setSelectedSecId('');
                   }}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold cursor-pointer"
                 >
                   <option value="">— Select Sub Category —</option>
                   {activeSubCategories.map((sub: any) => (
@@ -1353,7 +1353,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 <select
                   value={selectedSecId}
                   onChange={(e) => setSelectedSecId(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold cursor-pointer"
                 >
                   <option value="">— Select Section —</option>
                   {activeSections.map((sec: any) => (
@@ -1374,47 +1374,47 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                   value={newTestTitle}
                   onChange={(e) => setNewTestTitle(e.target.value)}
                   placeholder="e.g. Practice Questions Set 1 (Active / Passive Voice)"
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold"
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">Questions Count</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Questions Count</label>
                   <input
                     type="number"
                     value={newTestQsCount}
                     onChange={(e) => setNewTestQsCount(Number(e.target.value))}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">Duration (Mins)</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Duration (Mins)</label>
                   <input
                     type="number"
                     value={newTestDuration}
                     onChange={(e) => setNewTestDuration(Number(e.target.value))}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">Max Marks</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Max Marks</label>
                   <input
                     type="number"
                     value={newTestMaxMarks}
                     onChange={(e) => setNewTestMaxMarks(Number(e.target.value))}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1">Required Pass</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Required Pass</label>
                   <select
                     value={newTestRequiredTier}
                     onChange={(e) => setNewTestRequiredTier(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold cursor-pointer"
                   >
                     <option value="None">Free (None)</option>
                     <option value="Testbook Pass">Pass</option>
@@ -1426,7 +1426,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               <button
                 type="submit"
                 disabled={creatingTest}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs rounded-md shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>{creatingTest ? 'Creating...' : 'Create Practice Test'}</span>
@@ -1436,7 +1436,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
           {/* Table of Practice Tests */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+            <h4 className="font-semibold text-xs text-slate-900 dark:text-white">
               Tests in Selected Section ({activeTests.length})
             </h4>
 
@@ -1444,7 +1444,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               {activeTests.map((test: any) => {
                 const isEditing = editingTestId === test.id;
                 return (
-                  <div key={test.id} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div key={test.id} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-md border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     {isEditing ? (
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-1 w-full">
                         <input
@@ -1456,7 +1456,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleSaveEditTest(test.id)}
-                            className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
+                            className="bg-[#1e4e79] text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
                           >
                             Save
                           </button>
@@ -1472,7 +1472,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       <>
                         <div className="space-y-1">
                           <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white block">{test.title}</span>
-                          <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-semibold">
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-semibold">
                             <span>{test.questionsCount || 25} Qs</span>
                             <span>•</span>
                             <span>{test.durationMinutes || 20} Mins</span>
@@ -1490,7 +1490,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                               setManagerTab('importer');
                               showToast(`Selected "${test.title}" for Question Importer.`);
                             }}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer"
                           >
                             <Database className="h-3.5 w-3.5" /> Import Questions
                           </button>
@@ -1501,7 +1501,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                               setEditTestPositiveMarks(test.positiveMarks ?? 2);
                               setEditTestNegativeMarks(test.negativeMarks ?? 0.5);
                             }}
-                            className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
+                            className="text-[#1e4e79] hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer"
                           >
                             Edit
                           </button>
@@ -1526,17 +1526,17 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
       {managerTab === 'importer' && (
         <div className="space-y-6">
           {/* STEP 1: Select Target Test / Category */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <span className="h-6 w-6 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center">1</span>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+              <span className="h-6 w-6 rounded-full bg-[#1e4e79] text-white font-semibold text-xs flex items-center justify-center">1</span>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 Select Target Practice Test / Category
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
                   Target Category *
                 </label>
                 <select
@@ -1547,7 +1547,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     setSelectedSecId('');
                     setSelectedTestId('');
                   }}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-3 text-xs text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                 >
                   <option value="">— Select Target Practice Category —</option>
                   {practiceCatalog.map((cat) => (
@@ -1557,13 +1557,13 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               </div>
 
               <div>
-                <label className="block text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5">
                   Target Specific Practice Test (Optional)
                 </label>
                 <select
                   value={selectedTestId}
                   onChange={(e) => setSelectedTestId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-3 text-xs text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                 >
                   <option value="">Default Test (`{selectedCatId || 'category'}_default`)</option>
                   {activeTests.map((t: any) => (
@@ -1575,20 +1575,20 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
           </div>
 
           {/* STEP 2: Input Method (JSON vs Interactive Form) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-2">
-                <span className="h-6 w-6 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center">2</span>
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                <span className="h-6 w-6 rounded-full bg-[#1e4e79] text-white font-semibold text-xs flex items-center justify-center">2</span>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                   Choose Question Input Method
                 </h3>
               </div>
 
-              <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => setImporterMode('json')}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
-                    importerMode === 'json' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  className={`px-4 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    importerMode === 'json' ? 'bg-[#1e4e79] text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
                   <FileText className="h-4 w-4" />
@@ -1596,8 +1596,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 </button>
                 <button
                   onClick={() => setImporterMode('form')}
-                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
-                    importerMode === 'form' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  className={`px-4 py-2 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    importerMode === 'form' ? 'bg-[#1e4e79] text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                   }`}
                 >
                   <PlusCircle className="h-4 w-4" />
@@ -1609,13 +1609,13 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
             {importerMode === 'json' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                  <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
                     Paste JSON Questions Array `[...]`
                   </label>
                   <button
                     type="button"
                     onClick={handleLoadSampleJson}
-                    className="text-xs text-blue-600 dark:text-blue-400 font-extrabold hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-[#1e4e79] dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Load Sample JSON Template
@@ -1640,11 +1640,11 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
   }
 ]`}
                   rows={10}
-                  className="w-full p-4 bg-slate-950 text-emerald-400 font-mono text-xs border border-slate-800 rounded-2xl focus:outline-none focus:border-blue-500 shadow-inner resize-y"
+                  className="w-full p-4 bg-slate-950 text-emerald-400 font-mono text-xs border border-slate-800 rounded-lg focus:outline-none focus:border-[#1e4e79] shadow-inner resize-y"
                 />
 
                 {jsonError && (
-                  <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-3.5 rounded-2xl flex items-center gap-2.5 text-xs text-rose-700 dark:text-rose-300 font-semibold">
+                  <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-3.5 rounded-lg flex items-center gap-2.5 text-xs text-rose-700 dark:text-rose-300 font-semibold">
                     <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
                     <span>{jsonError}</span>
                   </div>
@@ -1653,7 +1653,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleVerifyJson}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-2xl shadow-sm active:scale-95 transition cursor-pointer flex items-center gap-2"
+                    className="px-6 py-3 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs rounded-lg shadow-sm transition cursor-pointer flex items-center gap-2"
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Verify JSON & Load Preview</span>
@@ -1674,7 +1674,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       onChange={(e) => setFormTextEn(e.target.value)}
                       placeholder="Type question in English..."
                       rows={3}
-                      className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium"
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-[#1e4e79] font-medium"
                     />
                   </div>
 
@@ -1687,7 +1687,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       onChange={(e) => setFormTextHi(e.target.value)}
                       placeholder="हिंदी में प्रश्न दर्ज करें..."
                       rows={3}
-                      className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-medium"
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-[#1e4e79] font-medium"
                     />
                   </div>
                 </div>
@@ -1699,7 +1699,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt1En}
                       onChange={(e) => setOpt1En(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                   <div>
@@ -1708,7 +1708,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt1Hi}
                       onChange={(e) => setOpt1Hi(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
 
@@ -1718,7 +1718,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt2En}
                       onChange={(e) => setOpt2En(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                   <div>
@@ -1727,7 +1727,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt2Hi}
                       onChange={(e) => setOpt2Hi(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
 
@@ -1737,7 +1737,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt3En}
                       onChange={(e) => setOpt3En(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                   <div>
@@ -1746,7 +1746,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt3Hi}
                       onChange={(e) => setOpt3Hi(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
 
@@ -1756,7 +1756,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt4En}
                       onChange={(e) => setOpt4En(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                   <div>
@@ -1765,7 +1765,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       type="text"
                       value={opt4Hi}
                       onChange={(e) => setOpt4Hi(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                 </div>
@@ -1777,7 +1777,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                   <select
                     value={formCorrectIndex}
                     onChange={(e) => setFormCorrectIndex(Number(e.target.value))}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold cursor-pointer"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-bold cursor-pointer"
                   >
                     <option value={0}>Option 1 (A)</option>
                     <option value={1}>Option 2 (B)</option>
@@ -1796,7 +1796,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       onChange={(e) => setFormExplanationEn(e.target.value)}
                       placeholder="Detailed explanation..."
                       rows={2}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                   <div>
@@ -1808,14 +1808,14 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       onChange={(e) => setFormExplanationHi(e.target.value)}
                       placeholder="विस्तृत व्याख्या..."
                       rows={2}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-medium"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md text-xs font-medium"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold text-xs rounded-md shadow-xs cursor-pointer flex items-center gap-2"
                 >
                   <PlusCircle className="h-4 w-4" />
                   <span>Add Question to List</span>
@@ -1826,21 +1826,21 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
           {/* STEP 3: Live Questions Previewer & Upload */}
           {parsedQuestions.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm space-y-5">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div className="flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center">3</span>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                  <span className="h-6 w-6 rounded-full bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center">3</span>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                     Verified Live Questions Preview ({parsedQuestions.length} Questions)
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-md border border-slate-200 dark:border-slate-800">
                     <button
                       onClick={() => setPreviewLanguage('en')}
                       className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${
-                        previewLanguage === 'en' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400'
+                        previewLanguage === 'en' ? 'bg-[#1e4e79] text-white' : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       English
@@ -1848,7 +1848,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     <button
                       onClick={() => setPreviewLanguage('hi')}
                       className={`px-3 py-1 rounded-lg text-xs font-bold cursor-pointer ${
-                        previewLanguage === 'hi' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400'
+                        previewLanguage === 'hi' ? 'bg-[#1e4e79] text-white' : 'text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       हिंदी
@@ -1863,7 +1863,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
-                    <span className="text-xs font-extrabold px-2">
+                    <span className="text-xs font-semibold px-2">
                       {previewIndex + 1} / {parsedQuestions.length}
                     </span>
                     <button
@@ -1878,8 +1878,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
               </div>
 
               {activePreviewQuestion && (
-                <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-                  <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed">
+                <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-4">
+                  <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed">
                     Q{previewIndex + 1}. {previewLanguage === 'hi' ? activePreviewQuestion.questionText.hi : activePreviewQuestion.questionText.en}
                   </h4>
 
@@ -1889,7 +1889,7 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                       return (
                         <div
                           key={idx}
-                          className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
+                          className={`p-3 rounded-md border text-xs font-bold flex items-center justify-between ${
                             isCorrect
                               ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
                               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
@@ -1903,8 +1903,8 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
                   </div>
 
                   {(activePreviewQuestion.explanation.en || activePreviewQuestion.explanation.hi) && (
-                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3.5 rounded-xl text-xs space-y-1">
-                      <span className="font-black text-amber-800 dark:text-amber-400 uppercase tracking-wider text-[10px] block">
+                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3.5 rounded-md text-xs space-y-1">
+                      <span className="font-semibold text-amber-800 dark:text-amber-400 text-xs block">
                         Detailed Solution & Explanation:
                       </span>
                       <p className="text-slate-700 dark:text-slate-300 font-medium leading-relaxed whitespace-pre-line">
@@ -1917,13 +1917,13 @@ export const AppPracticeSeriesManager: React.FC<AppPracticeSeriesManagerProps> =
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-500">
-                  Target Category / Test: <strong className="text-blue-600 dark:text-blue-400">{selectedTestId || `${selectedCatId || activeCategoryObj?.id || 'default'}_default`}</strong>
+                  Target Category / Test: <strong className="text-[#1e4e79] dark:text-blue-400">{selectedTestId || `${selectedCatId || activeCategoryObj?.id || 'default'}_default`}</strong>
                 </span>
 
                 <button
                   onClick={handleIngestQuestions}
                   disabled={ingesting || (!selectedCatId && !activeCategoryObj?.id)}
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-md active:scale-95 transition cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-md transition cursor-pointer disabled:opacity-50 flex items-center gap-2"
                 >
                   <Database className="h-4 w-4" />
                   <span>{ingesting ? 'Uploading Questions...' : `Confirm & Save ${parsedQuestions.length} Questions`}</span>

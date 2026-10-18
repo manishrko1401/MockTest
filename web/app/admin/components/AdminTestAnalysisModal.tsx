@@ -107,28 +107,28 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-6 overflow-y-auto">
       <MathJaxLoader />
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg max-w-5xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
 
         {/* MODAL HEADER */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-800/50">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0 shadow-sm">
+            <div className="p-2.5 rounded-md bg-[#1e4e79] text-white shrink-0 shadow-sm">
               <BarChart2 className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white truncate">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white truncate">
                   {data?.mockTest?.title || 'Mock Test Analysis'}
                 </h3>
                 {data?.mockTest?.examName && (
-                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/40">
-                    📁 {data.mockTest.examName}
+                  <span className="text-xs font-bold text-[#1e4e79] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-900/40">
+                    {data.mockTest.examName}
                   </span>
                 )}
                 {data?.session?.status && (
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                     data.session.status === 'COMPLETED'
                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
                       : data.session.status === 'AUTO_SUBMITTED'
@@ -142,8 +142,8 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
               {/* Candidate Details Subtitle */}
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
-                <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                  <User className="h-3.5 w-3.5 text-blue-500" />
+                <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                  <User className="h-3.5 w-3.5 text-[#1e4e79]" />
                   {data?.user?.fullName || 'Candidate'}
                 </span>
                 <span>•</span>
@@ -153,7 +153,7 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
                 {data?.user?.candidateCode && (
                   <>
                     <span>•</span>
-                    <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-bold">
+                    <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-bold">
                       ID: {data.user.candidateCode}
                     </span>
                   </>
@@ -162,7 +162,7 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
                   <>
                     <span>•</span>
                     <span className="text-[11px]">
-                      📅 {new Date(data.session.startedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(data.session.startedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </span>
                   </>
                 )}
@@ -197,13 +197,13 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
           {loading ? (
             <div className="py-24 text-center">
-              <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent mb-3"></div>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-[#1e4e79] border-t-transparent mb-3"></div>
+              <p className="text-xs text-slate-500 font-bold">
                 Loading test analysis & questions responses...
               </p>
             </div>
           ) : error ? (
-            <div className="p-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl text-center text-red-600 dark:text-red-400">
+            <div className="p-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-md text-center text-red-600 dark:text-red-400">
               <AlertCircle className="h-8 w-8 mx-auto mb-2" />
               <p className="text-sm font-bold">{error}</p>
             </div>
@@ -214,76 +214,76 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
               {/* SUMMARY KPI METRIC BAR */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {/* Score */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Final Score</p>
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-slate-400">Final Score</p>
                   <div className="flex items-baseline gap-1 mt-1">
-                    <span className="text-xl font-black text-blue-600 dark:text-blue-400">
+                    <span className="text-xl font-semibold text-[#1e4e79] dark:text-blue-400">
                       {data.summary.finalScore}
                     </span>
                     <span className="text-[11px] text-slate-400 font-bold">
                       / {data.summary.maxMarks}
                     </span>
                   </div>
-                  <p className="text-[9px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     {data.summary.maxMarks > 0 ? `${Math.round((data.summary.finalScore / data.summary.maxMarks) * 100)}% marks` : ''}
                   </p>
                 </div>
 
                 {/* Accuracy */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Accuracy</p>
-                  <h5 className={`text-xl font-black mt-1 ${
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-slate-400">Accuracy</p>
+                  <h5 className={`text-xl font-semibold mt-1 ${
                     data.summary.accuracyPercentage >= 85
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : data.summary.accuracyPercentage >= 65
-                      ? 'text-blue-600 dark:text-blue-400'
+                      ? 'text-[#1e4e79] dark:text-blue-400'
                       : 'text-amber-600 dark:text-amber-400'
                   }`}>
                     {data.summary.accuracyPercentage}%
                   </h5>
-                  <p className="text-[9px] text-slate-500 mt-0.5">Attempt accuracy</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Attempt accuracy</p>
                 </div>
 
                 {/* Correct Answers */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase flex items-center gap-1">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" /> Correct
                   </p>
-                  <h5 className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                  <h5 className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                     {data.summary.correctCount}
                   </h5>
-                  <p className="text-[9px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     +{Math.round(data.summary.correctCount * (data.session.positiveMarks || 2))} marks earned
                   </p>
                 </div>
 
                 {/* Incorrect Answers */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase flex items-center gap-1">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1">
                     <XCircle className="h-3 w-3" /> Incorrect
                   </p>
-                  <h5 className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
+                  <h5 className="text-xl font-semibold text-rose-600 dark:text-rose-400 mt-1">
                     {data.summary.incorrectCount}
                   </h5>
-                  <p className="text-[9px] text-slate-500 mt-0.5">Negative deductions</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Negative deductions</p>
                 </div>
 
                 {/* Skipped */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Unattempted</p>
-                  <h5 className="text-xl font-black text-slate-700 dark:text-slate-300 mt-1">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-slate-400">Unattempted</p>
+                  <h5 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mt-1">
                     {data.summary.skippedCount}
                   </h5>
-                  <p className="text-[9px] text-slate-500 mt-0.5">Skipped questions</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Skipped questions</p>
                 </div>
 
                 {/* Time Spent */}
-                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Time Spent</p>
-                  <h5 className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-1 truncate">
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-md border border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-semibold text-slate-400">Time Spent</p>
+                  <h5 className="text-xl font-semibold text-indigo-600 dark:text-indigo-400 mt-1 truncate">
                     {formatSeconds(data.summary.timeSpentSeconds)}
                   </h5>
-                  <p className="text-[9px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Duration: {data.session.durationMinutes} mins
                   </p>
                 </div>
@@ -291,19 +291,19 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
               {/* SECTION-WISE BREAKDOWN TABLE */}
               {data.sections && data.sections.length > 0 && (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden">
                   <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                      <Layers className="h-3.5 w-3.5 text-blue-500" /> Section-wise Performance Breakdown
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Layers className="h-3.5 w-3.5 text-[#1e4e79]" /> Section-wise Performance Breakdown
                     </span>
-                    <span className="text-[10px] text-slate-400 font-semibold">
+                    <span className="text-xs text-slate-400 font-semibold">
                       {data.sections.length} Sections
                     </span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="bg-slate-50/40 dark:bg-slate-800/20 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                        <tr className="bg-slate-50/40 dark:bg-slate-800/20 text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
                           <th className="py-2.5 px-3">Section</th>
                           <th className="py-2.5 px-3 text-center">Questions</th>
                           <th className="py-2.5 px-3 text-center">Attempted</th>
@@ -339,7 +339,7 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
                             <td className="py-2.5 px-3 text-center font-mono text-slate-400">
                               {sec.skipped}
                             </td>
-                            <td className="py-2.5 px-3 text-center font-mono font-black text-blue-600 dark:text-blue-400">
+                            <td className="py-2.5 px-3 text-center font-mono font-semibold text-[#1e4e79] dark:text-blue-400">
                               {sec.score}
                             </td>
                             <td className="py-2.5 px-3 text-center font-mono font-bold">
@@ -357,7 +357,7 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
               )}
 
               {/* QUESTION PALETTE & REVIEW INTERFACE */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden space-y-4 p-4 sm:p-5">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden space-y-4 p-4 sm:p-5">
                 {/* Control bar */}
                 <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                   {/* Status filter tabs */}
@@ -424,16 +424,16 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
                     <div className="flex items-center gap-1 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-950">
                       <button
                         onClick={() => setLanguage('en')}
-                        className={`px-2 py-1 text-[11px] font-black rounded ${
-                          language === 'en' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-700'
+                        className={`px-2 py-1 text-[11px] font-semibold rounded ${
+                          language === 'en' ? 'bg-[#1e4e79] text-white' : 'text-slate-500 hover:text-slate-700'
                         }`}
                       >
                         EN
                       </button>
                       <button
                         onClick={() => setLanguage('hi')}
-                        className={`px-2 py-1 text-[11px] font-black rounded ${
-                          language === 'hi' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-700'
+                        className={`px-2 py-1 text-[11px] font-semibold rounded ${
+                          language === 'hi' ? 'bg-[#1e4e79] text-white' : 'text-slate-500 hover:text-slate-700'
                         }`}
                       >
                         HI
@@ -444,22 +444,22 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
                 {/* QUESTION NUMBER PALETTE GRID */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold">
                     <span>Jump to Question ({filteredQuestions.length} shown)</span>
-                    <span className="text-[10px] lowercase text-slate-400 font-normal">
+                    <span className="text-xs lowercase text-slate-400 font-normal">
                       Click any number to view attempt & explanation
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto p-2 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                  <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto p-2 bg-slate-50 dark:bg-slate-950/60 rounded-md border border-slate-100 dark:border-slate-800/80">
                     {filteredQuestions.map((q: any, fIdx: number) => {
                       const isCurrent = fIdx === activeQuestionIdx;
                       return (
                         <button
                           key={q.id || fIdx}
                           onClick={() => setActiveQuestionIdx(fIdx)}
-                          className={`h-7 min-w-[28px] px-1.5 rounded-lg text-xs font-black transition cursor-pointer flex items-center justify-center ${
+                          className={`h-7 min-w-[28px] px-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center justify-center ${
                             isCurrent
-                              ? 'ring-2 ring-blue-500 scale-105 z-10 font-extrabold shadow-md '
+                              ? 'ring-2 ring-blue-500 scale-105 z-10 font-semibold shadow-md '
                               : ''
                           } ${
                             q.status === 'correct'
@@ -479,11 +479,11 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
                 {/* ACTIVE QUESTION CARD */}
                 {currentQuestion ? (
-                  <div className="mt-4 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 space-y-5 bg-white dark:bg-slate-900/90 shadow-sm">
+                  <div className="mt-4 border border-slate-200 dark:border-slate-800 rounded-md p-4 sm:p-5 space-y-5 bg-white dark:bg-slate-900/90 shadow-sm">
                     {/* Question Header */}
                     <div className="flex items-center justify-between gap-3 flex-wrap pb-3 border-b border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-black text-xs">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#1e4e79] text-white font-semibold text-xs">
                           Question #{currentQuestion.questionNumber}
                         </span>
                         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
@@ -493,7 +493,7 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
                       <div className="flex items-center gap-2 flex-wrap text-xs">
                         {/* Status Badge */}
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           currentQuestion.status === 'correct'
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
                             : currentQuestion.status === 'incorrect'
@@ -551,7 +551,7 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
                     {/* Options List */}
                     <div className="space-y-2.5 pt-2">
-                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                      <p className="text-xs font-semibold text-slate-400">
                         Options & Candidate Response:
                       </p>
                       {(() => {
@@ -574,10 +574,10 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
                           return (
                             <div
                               key={optIdx}
-                              className={`p-3 rounded-xl border transition flex items-start justify-between gap-3 text-xs leading-relaxed ${optionClass}`}
+                              className={`p-3 rounded-md border transition flex items-start justify-between gap-3 text-xs leading-relaxed ${optionClass}`}
                             >
                               <div className="flex items-start gap-2.5">
-                                <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${
+                                <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
                                   isCorrect
                                     ? 'bg-emerald-600 text-white'
                                     : isSelectedByCandidate
@@ -591,18 +591,18 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
+                              <div className="flex items-center gap-1.5 shrink-0 text-xs">
                                 {isSelectedByCandidate && (
-                                  <span className={`px-2 py-0.5 rounded-full font-black flex items-center gap-1 ${
+                                  <span className={`px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 ${
                                     isCorrect
                                       ? 'bg-emerald-600 text-white'
                                       : 'bg-rose-600 text-white'
                                   }`}>
-                                    👤 Candidate Selected
+                                    Candidate Selected
                                   </span>
                                 )}
                                 {isCorrect && (
-                                  <span className="px-2 py-0.5 rounded-full font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 flex items-center gap-1">
+                                  <span className="px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 flex items-center gap-1">
                                     <Check className="h-3 w-3" /> Correct Answer
                                   </span>
                                 )}
@@ -615,8 +615,8 @@ export function AdminTestAnalysisModal({ sessionId, onClose, showToast }: AdminT
 
                     {/* Detailed Explanation / Solution Box */}
                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                      <div className="bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl p-4 space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                      <div className="bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-md p-4 space-y-2">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1e4e79] dark:text-blue-300">
                           <HelpCircle className="h-4 w-4" /> Explanation & Concept Solution:
                         </div>
                         <div className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 select-text">

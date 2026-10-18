@@ -32,6 +32,164 @@ import {
 } from '../../lib/typingStore';
 
 // Persistent OTP Cache in global to survive Next.js dev server hot-reloads
+import {
+  AUTH_COOKIE,
+  readCookie,
+  authCookie,
+  getRequester,
+  createWebSession,
+  revokeWebSession,
+  revokeAllWebSessions,
+  hashPassword,
+  verifyPassword,
+  isPasswordHash,
+} from '../../lib/serverAuth';
+
+// -----------------------------------------------------------------------------
+// Who may call each action (see ACCESS CONTROL in POST). Not listed = refused.
+// -----------------------------------------------------------------------------
+type ActionAccess =
+  | { level: 'public'; optionalIdentity?: boolean }
+  | { level: 'user'; staffOnBehalf?: string[] }
+  | { level: 'staff'; roles: string[] };
+
+const CONTENT_ROLES = ['TEST_CREATOR'];
+const SUPPORT_ROLES = ['SUPPORT_TEAM'];
+const NOTICE_ROLES = ['NOTICES_MANAGER'];
+
+const ACTION_ACCESS: Record<string, ActionAccess> = {
+  // Public
+  'login': { level: 'public' },
+  'signup': { level: 'public' },
+  'google-auth': { level: 'public' },
+  'logout': { level: 'public' },
+  'request-password-reset': { level: 'public' },
+  'confirm-password-reset': { level: 'public' },
+  'bootstrap': { level: 'public' },
+  'catalog-sync': { level: 'public' },
+  'get-tests-by-series': { level: 'public' },
+  'get-custom-questions': { level: 'public' },
+  'get-single-notice-content': { level: 'public' },
+  'get-typing-categories': { level: 'public', optionalIdentity: true },
+  'get-typing-passages': { level: 'public' },
+  'get-typing-tests': { level: 'public', optionalIdentity: true },
+  'get-typing-test-by-id': { level: 'public', optionalIdentity: true },
+  'evaluate-typing': { level: 'public' },
+  'ping': { level: 'public', optionalIdentity: true },
+  'submit-suggestion': { level: 'public', optionalIdentity: true },
+  'report-question': { level: 'public', optionalIdentity: true },
+
+  // Logged-in user, own account
+  'get-user-details': { level: 'user' },
+  'update-profile': { level: 'user' },
+  'update-password': { level: 'user' },
+  'update-tracked-jobs': { level: 'user' },
+  'claim-pass-pro': { level: 'user' },
+  'complete-tour': { level: 'user' },
+  'toggle-bookmark': { level: 'user' },
+  'add-attempt': { level: 'user' },
+  'save-exam-progress': { level: 'user' },
+  'get-exam-progress': { level: 'user' },
+  'save-ongoing-session': { level: 'user' },
+  'clear-ongoing-session': { level: 'user' },
+  'get-session-responses': { level: 'user' },
+  'save-practice-attempt': { level: 'user' },
+  'get-practice-attempts': { level: 'user' },
+  'get-referred-friends': { level: 'user' },
+  'save-typing-attempt': { level: 'user' },
+  'get-user-typing-attempts': { level: 'user' },
+  'get-typing-attempt-by-id': { level: 'user' },
+  'get-support-messages': { level: 'user', staffOnBehalf: SUPPORT_ROLES },
+  'get-unread-support-count': { level: 'user', staffOnBehalf: SUPPORT_ROLES },
+  'send-support-message': { level: 'user', staffOnBehalf: SUPPORT_ROLES },
+  'locker-get-docs': { level: 'user' },
+  'locker-save-meta': { level: 'user' },
+  'locker-delete-doc': { level: 'user' },
+  'locker-update-drive-status': { level: 'user' },
+  'locker-disconnect-drive': { level: 'user' },
+  'locker-set-pin': { level: 'user' },
+  'locker-verify-pin': { level: 'user' },
+  'locker-change-pin': { level: 'user' },
+  'locker-reset-pin-with-password': { level: 'user' },
+  'locker-send-reset-otp': { level: 'user' },
+  'locker-verify-otp-and-reset-pin': { level: 'user' },
+
+  // Staff: ADMIN only
+  'admin-data': { level: 'staff', roles: [...SUPPORT_ROLES, ...CONTENT_ROLES, ...NOTICE_ROLES] }, // non-admins get a reduced list
+  'save-profile-admin': { level: 'staff', roles: [] },
+  'reset-attempt': { level: 'staff', roles: [] },
+  'reset-referrals': { level: 'staff', roles: [] },
+  'get-attempts': { level: 'staff', roles: [] },
+  'get-session-analysis': { level: 'staff', roles: [] },
+  'db-stats': { level: 'staff', roles: [] },
+  'delete-all-typing-tests': { level: 'staff', roles: [] },
+  'delete-reported-question': { level: 'staff', roles: [] },
+
+  // Staff: test content
+  'add-category': { level: 'staff', roles: CONTENT_ROLES },
+  'create-category': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-category': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-category': { level: 'staff', roles: CONTENT_ROLES },
+  'add-subcategory': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-subcategory': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-subcategory': { level: 'staff', roles: CONTENT_ROLES },
+  'add-subsubcategory': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-subsubcategory': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-subsubcategory': { level: 'staff', roles: CONTENT_ROLES },
+  'add-mocktest': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-mocktest-title': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-mocktest': { level: 'staff', roles: CONTENT_ROLES },
+  'save-section-rules': { level: 'staff', roles: CONTENT_ROLES },
+  'save-custom-questions': { level: 'staff', roles: CONTENT_ROLES },
+  'bulk-import-questions': { level: 'staff', roles: CONTENT_ROLES },
+  'reorder-categories': { level: 'staff', roles: CONTENT_ROLES },
+  'reorder-subcategories': { level: 'staff', roles: CONTENT_ROLES },
+  'reorder-subsubcategories': { level: 'staff', roles: CONTENT_ROLES },
+  'reorder-mocktests': { level: 'staff', roles: CONTENT_ROLES },
+  'refresh-catalog': { level: 'staff', roles: [...CONTENT_ROLES, ...NOTICE_ROLES] },
+  'create-typing-category': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-typing-category': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-typing-category': { level: 'staff', roles: CONTENT_ROLES },
+  'create-typing-passage': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-typing-passage': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-typing-passage': { level: 'staff', roles: CONTENT_ROLES },
+  'create-typing-test': { level: 'staff', roles: CONTENT_ROLES },
+  'create-bulk-typing-tests': { level: 'staff', roles: CONTENT_ROLES },
+  'edit-typing-test': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-typing-test': { level: 'staff', roles: CONTENT_ROLES },
+  'clear-typing-cache': { level: 'staff', roles: CONTENT_ROLES },
+  'get-admin-typing-attempts': { level: 'staff', roles: CONTENT_ROLES },
+  'delete-typing-attempt': { level: 'staff', roles: CONTENT_ROLES },
+
+  // Staff: support
+  'get-support-users': { level: 'staff', roles: SUPPORT_ROLES },
+  'delete-support-conversation': { level: 'staff', roles: SUPPORT_ROLES },
+  'edit-support-message': { level: 'staff', roles: SUPPORT_ROLES },
+  'get-suggestions': { level: 'staff', roles: SUPPORT_ROLES },
+  'update-suggestion-status': { level: 'staff', roles: SUPPORT_ROLES },
+  'delete-suggestion': { level: 'staff', roles: SUPPORT_ROLES },
+  'admin-get-locker-stats': { level: 'staff', roles: SUPPORT_ROLES },
+  'admin-delete-locker-doc': { level: 'staff', roles: SUPPORT_ROLES },
+  'admin-disconnect-user-locker': { level: 'staff', roles: SUPPORT_ROLES },
+
+  // Staff: notices
+  'add-notice': { level: 'staff', roles: NOTICE_ROLES },
+  'edit-notice': { level: 'staff', roles: NOTICE_ROLES },
+  'delete-notice': { level: 'staff', roles: NOTICE_ROLES },
+};
+
+function actionAccess(action: string): ActionAccess | null {
+  return Object.prototype.hasOwnProperty.call(ACTION_ACCESS, action) ? ACTION_ACCESS[action] : null;
+}
+
+/** Account fields that must never leave the server. */
+function stripSecrets<T extends Record<string, any>>(u: T): T {
+  if (!u || typeof u !== 'object') return u;
+  const { password, passwordHash, ...rest } = u as any;
+  if ('lockerPin' in rest) rest.lockerPin = rest.lockerPin ? 'set' : null; // the page only needs to know a PIN exists
+  return rest;
+}
+
 const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
 if (process.env.NODE_ENV !== 'production') {
   (global as any).otpCache = otpCache;
@@ -48,10 +206,10 @@ if (process.env.NODE_ENV !== 'production') {
 const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
 let schemaPatched = false;
 
-const catalogCache: { examCatalog: any; noticesList: any; noticesLastFetched: number | null } = 
+const catalogCache: { examCatalog: any; noticesList: any; noticesLastFetched: number | null; etag?: string | null } = 
   (global as any).catalogCache && (global as any).catalogCache.noticesLastFetched !== undefined
     ? (global as any).catalogCache
-    : { examCatalog: null, noticesList: null, noticesLastFetched: null };
+    : { examCatalog: null, noticesList: null, noticesLastFetched: null, etag: null };
 if (process.env.NODE_ENV !== 'production') {
   (global as any).catalogCache = catalogCache;
 }
@@ -118,7 +276,8 @@ async function touchUserLastSeen(userId?: string, platform?: string): Promise<vo
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { action, data } = body;
+    const { action } = body;
+    let data = body.data;
 
     if (!action) {
       return NextResponse.json({ success: false, error: 'No action provided' }, { status: 400 });
@@ -126,138 +285,89 @@ export async function POST(request: Request) {
 
     // Lazy / Action-Based Online Presence Tracking
     // Extract userId from any position in the request body
-    const activeUserId = 
-      data?.userId ||
-      data?.id ||
-      body?.userId ||
-      body?.id ||
-      null;
-    const activePlatform = 
-      data?.source ||
-      data?.platform ||
-      body?.source ||
-      body?.platform ||
-      'web';
-
-    // Fire-and-forget: update lastSeen without blocking the response
-    if (activeUserId && action !== 'ping') {
-      touchUserLastSeen(activeUserId, activePlatform); // Intentionally NOT awaited
+    // =========================================================================
+    // ACCESS CONTROL. Every action has an access level; anything not listed is refused.
+    //   public  — anyone (login, catalog, public content)
+    //   user    — a logged-in user, acting on their own account (data.userId is set to
+    //             theirs). ADMIN may act on any account; SUPPORT_TEAM on support chats.
+    //   staff   — the staff roles listed for the action (ADMIN always included)
+    // Who is calling comes only from getRequester() (login cookie / app session id);
+    // user ids sent by the client are never trusted.
+    // =========================================================================
+    const ACCESS = actionAccess(action);
+    if (!ACCESS) {
+      return NextResponse.json({ success: false, error: `Invalid action: ${action}` }, { status: 400 });
     }
 
-    // Handle dedicated ping action first (lightest possible action)
-    if (action === 'ping') {
-      const pingUserId = data?.userId || body?.userId;
-      const pingPlatform = data?.platform || body?.platform || 'web';
-      if (pingUserId) {
-        await touchUserLastSeen(pingUserId, pingPlatform); // Awaited so it's confirmed
+    const requester = ACCESS.level === 'public' && !ACCESS.optionalIdentity ? null : await getRequester(request, body);
+    const requesterUserId: string | null = requester?.id || null;
+    const requesterRole = requester?.role || null;
+    const isRequesterAdmin = requesterRole === 'ADMIN';
+
+    if (requester && action !== 'ping') {
+      touchUserLastSeen(requester.id, (data?.source || data?.platform || body?.source || body?.platform || 'web')); // not awaited
+    }
+
+    if (ACCESS.level !== 'public' && !requester) {
+      return NextResponse.json({ success: false, error: 'Please log in again.', code: 'AUTH_REQUIRED' }, { status: 401 });
+    }
+
+    if (ACCESS.level === 'staff') {
+      const allowed = isRequesterAdmin || (!!requesterRole && ACCESS.roles.includes(requesterRole));
+      if (!allowed) {
+        console.warn(`Blocked staff action ${action} by ${requesterUserId} (${requesterRole})`);
+        return NextResponse.json({ success: false, error: 'Forbidden: you do not have access to this.' }, { status: 403 });
       }
+    }
+
+    if (ACCESS.level === 'user') {
+      if (!data || typeof data !== 'object') data = {};
+      const targetUserId = data.userId ?? body?.userId;
+      const actingForOther = targetUserId && targetUserId !== requesterUserId;
+      const mayActForOthers = isRequesterAdmin || (!!requesterRole && (ACCESS.staffOnBehalf || []).includes(requesterRole));
+      if (actingForOther && !mayActForOthers) {
+        console.warn(`Blocked ${action} targeting ${targetUserId} by ${requesterUserId}`);
+        return NextResponse.json({ success: false, error: 'Forbidden: Unauthorized action' }, { status: 403 });
+      }
+      if (!targetUserId) data.userId = requesterUserId;
+    }
+
+    // Fields that give staff powers inside a handler are honoured only for staff
+    const isSupportStaff = isRequesterAdmin || requesterRole === 'SUPPORT_TEAM';
+    if (data && typeof data === 'object') {
+      if (action === 'send-support-message' && !isSupportStaff) data.sender = 'STUDENT';
+      if (action === 'get-support-messages' && !isSupportStaff) delete data.readerRole;
+      // Reports and suggestions are filed under the caller's own account (or anonymously)
+      if (action === 'report-question' || action === 'submit-suggestion') data.userId = requesterUserId || null;
+    }
+
+    if (action === 'ping') {
+      if (requester) await touchUserLastSeen(requester.id, data?.platform || body?.platform || 'web');
       return NextResponse.json({ success: true });
     }
 
-    // =========================================================================
-    // SECURITY HARDENING: Role & Session Validations
-    // =========================================================================
-    const adminActions = [
-      'admin-data', 'get-attempts', 'get-session-analysis', 'get-suggestions', 
-      'update-suggestion-status', 'delete-suggestion', 
-      'delete-reported-question', 'get-support-users', 
-      'delete-support-conversation', 'edit-support-message',
-      'add-notice', 'delete-notice', 
-      'add-category', 'create-category', 'edit-category', 'delete-category',
-      'add-subcategory', 'edit-subcategory', 'delete-subcategory',
-      'add-subsubcategory', 'edit-subsubcategory', 'delete-subsubcategory',
-      'add-mocktest', 'edit-mocktest-title', 'delete-mocktest', 'save-section-rules',
-      'save-custom-questions', 'bulk-import-questions', 'save-profile-admin', 'db-stats',
-      'admin-get-locker-stats', 'admin-delete-locker-doc', 'admin-disconnect-user-locker',
-      'create-typing-category', 'edit-typing-category', 'delete-typing-category',
-      'create-typing-passage', 'edit-typing-passage', 'delete-typing-passage',
-      'create-typing-test', 'create-bulk-typing-tests', 'edit-typing-test', 'delete-typing-test'
-    ];
-
-    const userOwnedActions = [
-      'update-profile', 'update-password', 'toggle-bookmark', 
-      'add-attempt', 'save-ongoing-session', 'clear-ongoing-session',
-      'get-support-messages', 'get-unread-support-count', 'send-support-message', 'get-user-details',
-      'claim-pass-pro', 'update-tracked-jobs',
-      'locker-get-docs', 'locker-save-meta', 'locker-delete-doc',
-      'locker-update-drive-status', 'locker-disconnect-drive',
-      'locker-set-pin', 'locker-verify-pin', 'locker-change-pin', 'locker-reset-pin-with-password',
-      'locker-send-reset-otp', 'locker-verify-otp-and-reset-pin'
-    ];
-
-    // Helper: Parse cookie manually
-    const getCookieValue = (cookieStr: string, name: string): string | null => {
-      const match = cookieStr.match(new RegExp(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`));
-      return match ? match[2] : null;
-    };
-
-    const cookieHeader = request.headers.get('cookie') || '';
-    const webUserId = getCookieValue(cookieHeader, 'tb_user_id');
-
-    let isRequesterAdmin = false;
-    let requesterUserId: string | null = null;
-
-    // 1. Resolve requester identity and check if admin
-    if (request.headers.get('x-admin-key') === 'super_secret_admin_key_2026') {
-      isRequesterAdmin = true;
-    } else if (webUserId) {
-      requesterUserId = webUserId;
-      const webUser = await prisma.user.findUnique({
-        where: { id: webUserId },
-        select: { role: true }
-      });
-      if (webUser && webUser.role !== 'STUDENT') {
-        isRequesterAdmin = true;
-      }
-    } else {
-      const explicitUserId = request.headers.get('x-user-id') || data?.userId || body?.userId;
-      if (explicitUserId) {
-        const explicitUser = await prisma.user.findUnique({
-          where: { id: explicitUserId },
-          select: { id: true, role: true }
-        });
-        if (explicitUser) {
-          requesterUserId = explicitUser.id;
-          if (explicitUser.role !== 'STUDENT') {
-            isRequesterAdmin = true;
-          }
-        }
-      }
-      if (!isRequesterAdmin) {
-        const reqSessionId = data?.sessionId || body?.sessionId;
-        if (reqSessionId) {
-          const sessionUser = await prisma.user.findFirst({
-            where: { currentSessionId: reqSessionId },
-            select: { id: true, role: true }
-          });
-          if (sessionUser) {
-            requesterUserId = sessionUser.id;
-            if (sessionUser.role !== 'STUDENT') {
-              isRequesterAdmin = true;
-            }
-          }
-        }
-      }
+    if (action === 'logout') {
+      await revokeWebSession(readCookie(request, AUTH_COOKIE)).catch(() => {});
+      const res = NextResponse.json({ success: true });
+      res.headers.append('Set-Cookie', authCookie(null));
+      return res;
     }
 
-    // 2. Validate Admin Actions
-    if (adminActions.includes(action)) {
-      if (!isRequesterAdmin) {
-        console.warn(`Blocked unauthorized admin action: ${action} by user: ${requesterUserId}`);
-        return NextResponse.json({ success: false, error: 'Forbidden: Admin role required' }, { status: 403 });
-      }
-    }
-
-    // 3. Validate User-Owned Actions
-    if (userOwnedActions.includes(action)) {
-      const targetUserId = data?.userId || body?.userId;
-      if (targetUserId) {
-        const isSelf = requesterUserId === targetUserId || action === 'claim-pass-pro';
-        if (!isSelf && !isRequesterAdmin) {
-          console.warn(`Blocked unauthorized action: ${action} targeting: ${targetUserId} by user: ${requesterUserId}`);
-          return NextResponse.json({ success: false, error: 'Forbidden: Unauthorized action' }, { status: 403 });
+    // Successful sign-in: start a website login session (HttpOnly cookie)
+    if (action === 'login' || action === 'signup' || action === 'google-auth') {
+      const res = action === 'login' ? await handleLogin(data, request)
+        : action === 'signup' ? await handleSignup(data, request)
+        : await handleGoogleAuth(data, request);
+      try {
+        const json = await res.clone().json();
+        if (json?.success && json.user?.id) {
+          await revokeWebSession(readCookie(request, AUTH_COOKIE)).catch(() => {});
+          res.headers.append('Set-Cookie', authCookie(await createWebSession(json.user.id, request)));
         }
+      } catch (err) {
+        console.error('Failed to start login session:', err);
       }
+      return res;
     }
 
     if (action) {
@@ -274,6 +384,7 @@ export async function POST(request: Request) {
       if (writeActions.includes(action)) {
         catalogCache.examCatalog = null;
         catalogCache.noticesList = null;
+        catalogCache.etag = null;
       }
     }
 
@@ -299,15 +410,19 @@ export async function POST(request: Request) {
       case 'update-tracked-jobs':
         return await handleUpdateTrackedJobs(data);
       case 'update-password':
-        return await handleUpdatePassword(data);
+        return await handleUpdatePassword(data, readCookie(request, AUTH_COOKIE));
       case 'claim-pass-pro':
-        return await handleClaimPassPro(data, requesterUserId);
+        return await handleClaimPassPro(data, requesterUserId, isRequesterAdmin);
       case 'save-profile-admin':
-        return await handleSaveProfileAdmin(data, requesterUserId, !!webUserId);
+        return await handleSaveProfileAdmin(data, requesterUserId, !!readCookie(request, AUTH_COOKIE));
       case 'toggle-bookmark':
         return await handleToggleBookmark(data);
       case 'add-attempt':
         return await handleAddAttempt(data, request);
+      case 'save-exam-progress':
+        return await handleSaveExamProgress(data);
+      case 'get-exam-progress':
+        return await handleGetExamProgress(data);
       case 'save-ongoing-session':
         return await handleSaveOngoingSession(data, request);
       case 'clear-ongoing-session':
@@ -385,11 +500,13 @@ export async function POST(request: Request) {
       case 'reset-referrals':
         return await handleResetReferrals();
       case 'get-user-details':
-        return await handleGetUserDetails(data);
+        return await handleGetUserDetails(data, requesterUserId);
+      case 'complete-tour':
+        return await handleCompleteTour(data, requesterUserId);
       case 'get-session-responses':
         return await handleGetSessionResponses(data);
       case 'admin-data':
-        return await handleAdminData(data);
+        return await handleAdminData(requesterRole);
       case 'get-attempts':
         return await handleGetAttempts();
       case 'get-session-analysis':
@@ -440,8 +557,13 @@ export async function POST(request: Request) {
       // ==========================================
       // Typing Test Module Handlers (async Prisma)
       // ==========================================
-      case 'get-typing-categories':
-        return NextResponse.json({ success: true, categories: await getTypingCategories() });
+      // Categories set Inactive in the admin panel are hidden from the website (with their tests).
+      // Staff see everything when the admin panel asks for it (includeInactive).
+      case 'get-typing-categories': {
+        const all = await getTypingCategories();
+        const showInactive = !!data?.includeInactive && (isRequesterAdmin || requesterRole === 'TEST_CREATOR');
+        return NextResponse.json({ success: true, categories: showInactive ? all : all.filter(c => c.isActive !== false) });
+      }
       case 'create-typing-category':
       case 'edit-typing-category':
         return NextResponse.json({ success: true, category: await saveTypingCategory(data || body?.category || body) });
@@ -459,12 +581,26 @@ export async function POST(request: Request) {
       case 'get-typing-tests': {
         const catId = data?.categoryId || body?.categoryId;
         const isLight = data?.light !== undefined ? Boolean(data.light) : true;
-        const tests = await getTypingTests({ categoryId: catId, light: isLight });
-        const categories = await getTypingCategories();
+        const allTests = await getTypingTests({ categoryId: catId, light: isLight });
+        const allCategories = await getTypingCategories();
+        const showInactive = !!data?.includeInactive && (isRequesterAdmin || requesterRole === 'TEST_CREATOR');
+        if (showInactive) return NextResponse.json({ success: true, tests: allTests, categories: allCategories });
+        const categories = allCategories.filter(c => c.isActive !== false);
+        const activeIds = new Set(categories.map(c => c.id));
+        const tests = allTests.filter(t => activeIds.has(t.categoryId));
         return NextResponse.json({ success: true, tests, categories });
       }
-      case 'get-typing-test-by-id':
-        return NextResponse.json({ success: true, test: await getTypingTestById(data?.id || body?.id) });
+      case 'get-typing-test-by-id': {
+        const test = await getTypingTestById(data?.id || body?.id);
+        // A test whose category is Inactive can't be opened from the website (staff still can)
+        if (test && !(isRequesterAdmin || (requesterRole && requesterRole !== 'STUDENT'))) {
+          const category = (await getTypingCategories()).find(c => c.id === test.categoryId);
+          if (category && category.isActive === false) {
+            return NextResponse.json({ success: false, error: 'This typing test is not available.' }, { status: 404 });
+          }
+        }
+        return NextResponse.json({ success: true, test });
+      }
       case 'create-typing-test':
       case 'edit-typing-test':
         return NextResponse.json({ success: true, test: await saveTypingTest(data || body?.test || body) });
@@ -486,7 +622,7 @@ export async function POST(request: Request) {
       case 'get-user-typing-attempts':
         return NextResponse.json({ success: true, attempts: await getUserTypingAttempts(data?.userId || body?.userId || requesterUserId || undefined, data?.testId || body?.testId || undefined) });
       case 'get-typing-attempt-by-id':
-        return await handleGetTypingAttemptById(data?.id || body?.id || data?.attemptId || body?.attemptId);
+        return await handleGetTypingAttemptById(data?.id || body?.id || data?.attemptId || body?.attemptId, requesterUserId, isRequesterAdmin || requesterRole === 'TEST_CREATOR');
       case 'get-admin-typing-attempts':
         return await handleGetAdminTypingAttempts(data || body);
       case 'delete-typing-attempt':
@@ -763,6 +899,26 @@ async function handleGetTestsBySeries(data: {
 
 
 async function handleBootstrap(req?: Request) {
+  // PERF: Use memory cache if populated and fresh (30 min TTL — catalog changes only via admin)
+  // Generate a deterministic ETag from the cache timestamp so clients can skip re-fetching.
+  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < 30 * 60 * 1000);
+  if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList && isNoticesCacheFresh) {
+    const etag = catalogCache.etag || `"cat-${catalogCache.noticesLastFetched}"`;
+    // PERF: If client sends matching ETag, return 304 — zero egress for catalog data
+    const clientETag = req?.headers?.get('If-None-Match');
+    if (clientETag && clientETag === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' }
+      });
+    }
+    return NextResponse.json(
+      { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
+      { headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' } }
+    );
+  }
+
+  // Cache miss: make sure the database has been seeded (cheap count, only on a cold cache)
   // Check if categories are empty, if so, run seed
   const categoryCount = await prisma.category.count();
   if (categoryCount === 0) {
@@ -780,7 +936,7 @@ async function handleBootstrap(req?: Request) {
         mobile: '9123456789',
         referralCode: 'TB-VIKRAM-2291',
         role: 'TEST_CREATOR',
-        passwordHash: 'password123',
+        passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       }
     });
 
@@ -795,7 +951,7 @@ async function handleBootstrap(req?: Request) {
         mobile: '9888777666',
         referralCode: 'TB-SUPPORT-7712',
         role: 'SUPPORT_TEAM',
-        passwordHash: 'password123',
+        passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       }
     });
 
@@ -810,29 +966,11 @@ async function handleBootstrap(req?: Request) {
         mobile: '9999000011',
         referralCode: 'TB-NOTICES-5541',
         role: 'NOTICES_MANAGER',
-        passwordHash: 'password123',
+        passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       }
     });
   }
 
-  // PERF: Use memory cache if populated and fresh (30 min TTL — catalog changes only via admin)
-  // Generate a deterministic ETag from the cache timestamp so clients can skip re-fetching.
-  const isNoticesCacheFresh = catalogCache.noticesLastFetched && (Date.now() - catalogCache.noticesLastFetched < 30 * 60 * 1000);
-  if (catalogCache.examCatalog && catalogCache.examCatalog.length > 0 && catalogCache.noticesList && isNoticesCacheFresh) {
-    const etag = `"cat-${catalogCache.noticesLastFetched}"`;
-    // PERF: If client sends matching ETag, return 304 — zero egress for catalog data
-    const clientETag = req?.headers?.get('If-None-Match');
-    if (clientETag && clientETag === etag) {
-      return new NextResponse(null, {
-        status: 304,
-        headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' }
-      });
-    }
-    return NextResponse.json(
-      { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
-      { headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' } }
-    );
-  }
 
   // Fetch all users list is now disabled in public bootstrap to reduce egress and fix security vulnerability.
   // Admins will fetch this data separately using the 'admin-data' action.
@@ -900,10 +1038,12 @@ async function handleBootstrap(req?: Request) {
   // Fetch Exam Catalog using optimized memory assembler
   const examCatalog = await getCompiledExamCatalog();
 
-  // Populate cache
+  // Populate cache. The ETag is a hash of the content, so every server instance
+  // returns the same tag for the same data and browsers get 304s across instances.
   catalogCache.examCatalog = examCatalog;
   catalogCache.noticesList = noticesList;
   catalogCache.noticesLastFetched = Date.now();
+  catalogCache.etag = `"cat-${crypto.createHash('sha1').update(JSON.stringify([noticesList, examCatalog])).digest('base64url').slice(0, 27)}"`;
 
   // Fetch Reported Questions is now disabled in public bootstrap.
   // Admins will fetch this data separately using the 'admin-data' action.
@@ -911,7 +1051,14 @@ async function handleBootstrap(req?: Request) {
 
   // PERF: Generate ETag from cache timestamp for conditional GET support.
   // Clients that send a matching If-None-Match receive 304 (zero body = zero egress).
-  const freshETag = `"cat-${catalogCache.noticesLastFetched ?? Date.now()}"`;
+  const freshETag = catalogCache.etag || `"cat-${catalogCache.noticesLastFetched ?? Date.now()}"`;
+  const clientETag = req?.headers?.get('If-None-Match');
+  if (clientETag && clientETag === freshETag) {
+    return new NextResponse(null, {
+      status: 304,
+      headers: { 'ETag': freshETag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' }
+    });
+  }
 
   return NextResponse.json(
     { success: true, usersList, noticesList, examCatalog, reportedQuestionsList },
@@ -1121,6 +1268,10 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
 async function handleSignup(data: any, request?: Request) {
   const { name, email, mobile, password, referralCodeInput, turnstileToken } = data;
 
+  if (typeof password !== 'string' || password.trim().length < 6) {
+    return NextResponse.json({ success: false, error: 'Password must be at least 6 characters.' }, { status: 400 });
+  }
+
   // 1. Honeypot check: Automated bots fill hidden input fields
   if (isHoneypotTriggered(data)) {
     console.warn('[BOT_PROTECTION] Honeypot triggered during signup attempt. Silently rejecting bot.');
@@ -1206,7 +1357,7 @@ async function handleSignup(data: any, request?: Request) {
       fullName: name.trim(),
       email: trimmedEmail,
       mobile: mobile.trim(),
-      passwordHash: password || 'password123',
+      passwordHash: await hashPassword(password),
       referralCode,
       referredBy: referredByCode,
       referralsCount: 0,
@@ -1239,6 +1390,12 @@ async function handleSignup(data: any, request?: Request) {
       isBlocked: newUser.isBlocked,
       coins: newUser.coins,
       referralCoinsCredited: newUser.referralCoinsCredited,
+      tourCompletedAt: null,
+      noticesTourCompletedAt: null,
+      testsTourCompletedAt: null,
+      typingTourCompletedAt: null,
+      lockerTourCompletedAt: null,
+      profileTourCompletedAt: null,
       testSessions: [],
       bookmarkedQuestions: [],
     },
@@ -1304,7 +1461,7 @@ async function handleLogin(data: any, request?: Request) {
     return NextResponse.json({ success: false, error: 'This user account is blocked by the administrator.' }, { status: 403 });
   }
 
-  if (!password || user.passwordHash !== password) {
+  if (!password || !(await verifyPassword(password, user.passwordHash))) {
     const currentAttempt = attempt || { count: 0, lockedUntil: 0 };
     currentAttempt.count += 1;
     if (currentAttempt.count >= 5) {
@@ -1326,6 +1483,13 @@ async function handleLogin(data: any, request?: Request) {
 
   // Clear attempts tracker on success
   loginAttempts.delete(trimmedEmail);
+
+  // Older accounts still hold the plain password: replace it with a hash now. Only in
+  // production — dev shares this database with the live site, whose deployed code may
+  // not read hashes yet.
+  if (process.env.NODE_ENV === 'production' && !isPasswordHash(user.passwordHash)) {
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash: await hashPassword(password) } }).catch(() => {});
+  }
 
   // If the client already has a valid session ID for this user (e.g., app restart / background re-auth),
   // reuse the existing session to avoid invalidating it unnecessarily.
@@ -1360,12 +1524,12 @@ async function handleLogin(data: any, request?: Request) {
     subscriptionExpiresAt: user.subscriptionExpiresAt,
     registeredDate: formatDateTime(user.createdAt),
     isBlocked: user.isBlocked,
-    password: user.passwordHash,
     coins: user.coins,
     referralCoinsCredited: user.referralCoinsCredited,
+    ...(await readTourFlags(user.id)),
     bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
     trackedJobs: user.trackedJobs ? (user.trackedJobs as any) : [],
-    lockerPin: user.lockerPin,
+    lockerPin: user.lockerPin ? 'set' : null,
     lockerPinSetAt: user.lockerPinSetAt ? user.lockerPinSetAt.toISOString() : null,
     isLockerConnected: !!user.isLockerConnected,
     googleDriveEmail: user.googleDriveEmail,
@@ -1406,8 +1570,32 @@ async function handleLogin(data: any, request?: Request) {
   return NextResponse.json({ success: true, user: mappedUser });
 }
 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '570110856860-a2h946nit7obiguglnjedffflto1oq95.apps.googleusercontent.com';
+
+/** Asks Google who the access token belongs to. Only tokens issued to this site's client, for a verified email, count. */
+async function verifyGoogleAccessToken(accessToken: unknown): Promise<{ email: string } | null> {
+  if (typeof accessToken !== 'string' || accessToken.length < 20) return null;
+  try {
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const info = await res.json();
+    const issuedToThisSite = info.aud === GOOGLE_CLIENT_ID || info.azp === GOOGLE_CLIENT_ID;
+    const emailVerified = info.email_verified === true || info.email_verified === 'true';
+    if (!issuedToThisSite || !emailVerified || typeof info.email !== 'string') return null;
+    return { email: info.email };
+  } catch {
+    return null;
+  }
+}
+
 async function handleGoogleAuth(data: any, request?: Request) {
-  const { email, name, profilePhoto } = data;
+  // The email comes from Google (verified token), never from the request body
+  const verified = await verifyGoogleAccessToken(data?.accessToken);
+  if (!verified) {
+    return NextResponse.json({ success: false, error: 'Google sign-in could not be verified. Please try again.' }, { status: 401 });
+  }
+  const email = verified.email;
+  const { name, profilePhoto } = data;
 
   if (!email || !email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return NextResponse.json({ success: false, error: 'Valid Google email is required.' }, { status: 400 });
@@ -1484,13 +1672,13 @@ async function handleGoogleAuth(data: any, request?: Request) {
       subscriptionExpiresAt: user.subscriptionExpiresAt,
       registeredDate: formatDateTime(user.createdAt),
       isBlocked: user.isBlocked,
-      password: user.passwordHash,
       coins: user.coins,
       referralCoinsCredited: user.referralCoinsCredited,
+      ...(await readTourFlags(user.id)),
       profilePhoto: user.profilePhoto,
       bookmarkedQuestions: user.bookmarkedQuestions ? (user.bookmarkedQuestions as any) : [],
       trackedJobs: user.trackedJobs ? (user.trackedJobs as any) : [],
-      lockerPin: user.lockerPin,
+      lockerPin: user.lockerPin ? 'set' : null,
       lockerPinSetAt: user.lockerPinSetAt ? user.lockerPinSetAt.toISOString() : null,
       isLockerConnected: !!user.isLockerConnected,
       googleDriveEmail: user.googleDriveEmail,
@@ -1587,6 +1775,12 @@ async function handleGoogleAuth(data: any, request?: Request) {
       isBlocked: newUser.isBlocked,
       coins: newUser.coins,
       referralCoinsCredited: newUser.referralCoinsCredited,
+      tourCompletedAt: null,
+      noticesTourCompletedAt: null,
+      testsTourCompletedAt: null,
+      typingTourCompletedAt: null,
+      lockerTourCompletedAt: null,
+      profileTourCompletedAt: null,
       profilePhoto: newUser.profilePhoto,
       testSessions: [],
       bookmarkedQuestions: [],
@@ -1596,7 +1790,9 @@ async function handleGoogleAuth(data: any, request?: Request) {
 }
 
 async function handleGetReferredFriends(data: any) {
-  const { referralCode } = data;
+  // Always the account's own referral code (data.userId is the verified caller), never one sent by the client
+  const owner = await prisma.user.findUnique({ where: { id: data.userId }, select: { referralCode: true } });
+  const referralCode = owner?.referralCode;
   if (!referralCode) {
     return NextResponse.json({ success: false, error: 'Referral code is required' }, { status: 400 });
   }
@@ -1697,21 +1893,37 @@ async function handleUpdateTrackedJobs(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleUpdatePassword(data: any) {
-  const { userId, newPass } = data;
+// The current password is checked here on the server; the new one is stored hashed.
+// Other website logins of the account are signed out.
+async function handleUpdatePassword(data: any, currentToken: string | null) {
+  const { userId, oldPass, newPass } = data;
+  const next = typeof newPass === 'string' ? newPass.trim() : '';
+  if (next.length < 6) {
+    return NextResponse.json({ success: false, error: 'New password must be at least 6 characters.' }, { status: 400 });
+  }
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+  if (!user || !(await verifyPassword(typeof oldPass === 'string' ? oldPass : '', user.passwordHash))) {
+    return NextResponse.json({ success: false, error: 'Current password is incorrect.' }, { status: 401 });
+  }
 
   await prisma.user.update({
     where: { id: userId },
     data: {
-      passwordHash: newPass.trim(),
+      passwordHash: await hashPassword(next),
     },
   });
+  await revokeAllWebSessions(userId, currentToken).catch(() => {});
 
   return NextResponse.json({ success: true });
 }
 
-async function handleClaimPassPro(data: any, requesterUserId: string | null) {
+async function handleClaimPassPro(data: any, requesterUserId: string | null, isAdmin = false) {
   try {
+    // Students can claim a pass for themselves; only an admin may set coins, expiry or other tiers
+    if (!isAdmin) {
+      data = { ...data, coins: undefined, expiry: undefined };
+      if (!['Testbook Pass', 'Testbook Pass Pro'].includes(data.tier)) data.tier = 'Testbook Pass Pro';
+    }
     const targetUserId = data?.userId || requesterUserId;
     if (!targetUserId) {
       return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
@@ -1758,7 +1970,6 @@ async function handleClaimPassPro(data: any, requesterUserId: string | null) {
 }
 
 async function handleSaveProfileAdmin(data: any, requesterUserId: string | null, isWebRequest = false) {
-  console.log("handleSaveProfileAdmin received data:", data);
   const {
     userId,
     name,
@@ -1786,7 +1997,7 @@ async function handleSaveProfileAdmin(data: any, requesterUserId: string | null,
       where: { id: requesterUserId },
       select: { passwordHash: true }
     });
-    if (!adminUser || adminUser.passwordHash !== adminConfirmPassword) {
+    if (!adminUser || !(await verifyPassword(adminConfirmPassword, adminUser.passwordHash))) {
       return NextResponse.json({ success: false, error: 'Authentication failed: Invalid administrator verification password.' }, { status: 401 });
     }
   }
@@ -1806,20 +2017,73 @@ async function handleSaveProfileAdmin(data: any, requesterUserId: string | null,
     },
   });
 
+  // A new password set by an admin: stored hashed, and the account is signed out everywhere
+  if (typeof password === 'string' && password.trim().length >= 6) {
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(password.trim()), currentSessionId: null } });
+    await revokeAllWebSessions(userId).catch(() => {});
+  }
+
+  // A blocked account is signed out everywhere (website and apps)
+  if (isBlocked === true) {
+    await revokeAllWebSessions(userId).catch(() => {});
+    await prisma.user.update({ where: { id: userId }, data: { currentSessionId: null } }).catch(() => {});
+  }
+
   return NextResponse.json({ success: true });
 }
 
+type BookmarkEntry = { testId: string; questionId: string };
+
+function cleanBookmarkList(list: unknown): BookmarkEntry[] {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set<string>();
+  const out: BookmarkEntry[] = [];
+  for (const b of list) {
+    if (!b || typeof b.testId !== 'string' || typeof b.questionId !== 'string' || !b.testId || !b.questionId) continue;
+    const key = `${b.testId}\u0000${b.questionId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ testId: b.testId, questionId: b.questionId });
+  }
+  return out;
+}
+
+// Adds or removes one bookmark inside a single UPDATE statement. Postgres row-locks
+// it and re-reads the latest list, so quick clicks, out-of-order requests or a
+// second open tab never undo each other. The old whole-list payload ({ bookmarks })
+// is still accepted from cached clients.
 async function handleToggleBookmark(data: any) {
-  const { userId, bookmarks } = data;
+  const { userId, testId, questionId, bookmarked, bookmarks } = data || {};
+  if (!userId) return NextResponse.json({ success: false, error: 'Missing userId' }, { status: 400 });
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      bookmarkedQuestions: bookmarks,
-    },
-  });
+  const isSingle = typeof testId === 'string' && typeof questionId === 'string' && !!testId && !!questionId && typeof bookmarked === 'boolean';
+  if (!isSingle && !Array.isArray(bookmarks)) {
+    return NextResponse.json({ success: false, error: 'Invalid bookmark payload' }, { status: 400 });
+  }
 
-  return NextResponse.json({ success: true });
+  if (!isSingle) {
+    const next = cleanBookmarkList(bookmarks);
+    const res = await prisma.user.updateMany({ where: { id: userId }, data: { bookmarkedQuestions: next } });
+    if (res.count === 0) return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    return NextResponse.json({ success: true, bookmarks: next });
+  }
+
+  const entry = JSON.stringify([{ testId, questionId }]);
+  const rows = await prisma.$queryRaw<{ bookmarkedQuestions: unknown }[]>`
+    UPDATE users SET
+      "bookmarkedQuestions" = (
+        SELECT COALESCE(jsonb_agg(e), '[]'::jsonb)
+        FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof("bookmarkedQuestions") = 'array' THEN "bookmarkedQuestions" ELSE '[]'::jsonb END
+        ) AS e
+        WHERE NOT (e->>'testId' = ${testId} AND e->>'questionId' = ${questionId})
+      ) || CASE WHEN ${bookmarked} THEN ${entry}::jsonb ELSE '[]'::jsonb END,
+      "updatedAt" = NOW()
+    WHERE id = ${userId}
+    RETURNING "bookmarkedQuestions"`;
+
+  if (rows.length === 0) return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+  return NextResponse.json({ success: true, bookmarks: cleanBookmarkList(rows[0].bookmarkedQuestions) });
 }
 
 async function ensureMockTestExists(testId: string, title?: string, maxMarks?: number, durationMinutes?: number) {
@@ -2203,6 +2467,150 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
   }
 
   return NextResponse.json({ success: true });
+}
+
+// ---------------------------------------------------------------------------------------------
+// Ongoing exam progress (web exam terminal). The client sends one snapshot with everything
+// needed to resume: answers, review marks, visited questions, timer, position and submitted
+// sections. It is written in a single UPDATE and only when it is newer than what is stored,
+// so a late or duplicate request can never replace newer progress. Per-question rows are
+// also kept up to date (upsert, never delete) for the mobile app's get-session-responses.
+// ---------------------------------------------------------------------------------------------
+const toInt = (v: unknown, fallback = 0) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.round(v)) : fallback);
+
+async function handleSaveExamProgress(data: any) {
+  const { userId, snapshot } = data || {};
+  const testId = snapshot?.testId;
+  const savedAt = Number(snapshot?.savedAt);
+  if (!userId || !snapshot || typeof snapshot !== 'object' || typeof testId !== 'string' || !testId || !Number.isFinite(savedAt)) {
+    return NextResponse.json({ success: false, error: 'Invalid progress payload' }, { status: 400 });
+  }
+  const json = JSON.stringify(snapshot);
+  if (json.length > 2_000_000) {
+    return NextResponse.json({ success: false, error: 'Progress too large' }, { status: 413 });
+  }
+
+  const remaining = toInt(snapshot.timeRemaining);
+  const violations = toInt(snapshot.violations);
+  const sectionIdx = toInt(snapshot.currentSectionIndex);
+  const questionIdx = toInt(snapshot.currentQuestionIndex);
+
+  await ensureMockTestExists(testId, snapshot.title, undefined, remaining ? Math.ceil(remaining / 60) : 60);
+
+  let session = await prisma.userTestSession.findFirst({
+    where: { userId, mockTestId: testId, status: 'ONGOING' },
+    orderBy: { startedAt: 'desc' },
+    select: { id: true },
+  });
+  if (!session) {
+    session = await prisma.userTestSession.create({
+      data: {
+        userId,
+        mockTestId: testId,
+        status: 'ONGOING',
+        remainingSeconds: remaining,
+        violationsCount: violations,
+        currentSectionIndex: sectionIdx,
+        currentQuestionIndex: questionIdx,
+        source: snapshot.source === 'mobile_web' ? 'mobile_web' : 'web',
+      },
+      select: { id: true },
+    });
+  }
+
+  const applied = await prisma.$executeRaw`
+    UPDATE user_test_sessions SET
+      "progressSnapshot" = ${json}::jsonb,
+      "progressSavedAt" = ${savedAt},
+      "remainingSeconds" = ${remaining},
+      "violationsCount" = ${violations},
+      "currentSectionIndex" = ${sectionIdx},
+      "currentQuestionIndex" = ${questionIdx}
+    WHERE id = ${session.id} AND ("progressSavedAt" IS NULL OR "progressSavedAt" <= ${savedAt})`;
+
+  const responses = snapshot.engine === 'tcs' ? snapshot.data?.responses : null;
+  if (applied > 0 && responses && typeof responses === 'object') {
+    const rows = Object.entries(responses)
+      .filter(([, r]: any) => r && typeof r === 'object' && r.state !== 1)
+      .map(([questionId, r]: any) => ({
+        q: questionId,
+        s: typeof r.selectedOptionIndex === 'number' ? r.selectedOptionIndex : null,
+        st: [1, 2, 3, 4, 5].includes(r.state) ? r.state : 2,
+        e: toInt(r.elapsedSeconds),
+      }));
+    if (rows.length > 0) {
+      try {
+        await prisma.$executeRaw`
+          INSERT INTO question_response_states (id, "sessionId", "questionId", "selectedOptionIndex", state, "elapsedSeconds", "updatedAt")
+          SELECT gen_random_uuid()::text, ${session.id}, x.q, x.s, x.st, x.e, NOW()
+          FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS x(q text, s int, st int, e int)
+          ON CONFLICT ("sessionId", "questionId") DO UPDATE SET
+            "selectedOptionIndex" = EXCLUDED."selectedOptionIndex",
+            state = EXCLUDED.state,
+            "elapsedSeconds" = EXCLUDED."elapsedSeconds",
+            "updatedAt" = NOW()`;
+      } catch (err) {
+        // The snapshot above is what the web resumes from; these rows only serve the mobile app
+        console.error('Failed to sync response rows for exam progress:', err);
+      }
+    }
+  }
+
+  return NextResponse.json({ success: true, applied: applied > 0, sessionId: session.id });
+}
+
+async function handleGetExamProgress(data: any) {
+  const { userId, testId } = data || {};
+  if (!userId || !testId) {
+    return NextResponse.json({ success: false, error: 'userId and testId are required' }, { status: 400 });
+  }
+
+  const rows = await prisma.$queryRaw<{
+    id: string; progressSnapshot: any; progressSavedAt: number | null; remainingSeconds: number;
+    violationsCount: number; currentSectionIndex: number; currentQuestionIndex: number;
+  }[]>`
+    SELECT id, "progressSnapshot", "progressSavedAt", "remainingSeconds", "violationsCount", "currentSectionIndex", "currentQuestionIndex"
+    FROM user_test_sessions
+    WHERE "userId" = ${userId} AND "mockTestId" = ${testId} AND status = 'ONGOING'
+    ORDER BY "progressSavedAt" DESC NULLS LAST, "startedAt" DESC
+    LIMIT 1`;
+  const session = rows[0];
+  if (!session) return NextResponse.json({ success: true, progress: null });
+
+  if (session.progressSnapshot) {
+    return NextResponse.json({ success: true, progress: session.progressSnapshot });
+  }
+
+  // Saved by the mobile app (or the old web code): rebuild from the per-question rows.
+  // savedAt 0 so a progress copy in this browser, if any, is preferred.
+  const responseRows = await prisma.questionResponseState.findMany({
+    where: { sessionId: session.id },
+    select: { questionId: true, selectedOptionIndex: true, state: true, elapsedSeconds: true },
+  });
+  const responses: Record<string, any> = {};
+  for (const r of responseRows) {
+    responses[r.questionId] = {
+      questionId: r.questionId,
+      selectedOptionIndex: r.selectedOptionIndex,
+      tempOptionIndex: r.selectedOptionIndex,
+      state: r.state,
+      elapsedSeconds: r.elapsedSeconds,
+    };
+  }
+  return NextResponse.json({
+    success: true,
+    progress: {
+      v: 1,
+      engine: 'tcs',
+      testId,
+      savedAt: 0,
+      timeRemaining: session.remainingSeconds,
+      violations: session.violationsCount,
+      currentSectionIndex: session.currentSectionIndex,
+      currentQuestionIndex: session.currentQuestionIndex,
+      data: { responses },
+    },
+  });
 }
 
 async function handleClearOngoingSession(data: any) {
@@ -3464,7 +3872,10 @@ async function handleReportQuestion(data: any) {
 // ---------------------------------------------------------------------------
 async function getCompiledExamCatalog() {
   // Safe runtime schema patch: run once on boot to avoid executing 8 DDL queries on every request
-  if (!schemaPatched) {
+  // PERF: The schema is synced by `prisma db push` during every build, so these DDL statements
+  // are redundant on each cold start (8 sequential round trips + table locks). Opt in with
+  // RUN_RUNTIME_SCHEMA_PATCH=1 if a database ever needs the legacy patch applied.
+  if (!schemaPatched && process.env.RUN_RUNTIME_SCHEMA_PATCH === '1') {
     schemaPatched = true;
     try {
       await prisma.$executeRawUnsafe('ALTER TABLE categories ADD COLUMN IF NOT EXISTS "logoUrl" text;');
@@ -3502,10 +3913,12 @@ async function getCompiledExamCatalog() {
     }
   }
 
-  const categories = await prisma.category.findMany({ orderBy: { orderIndex: 'asc' } });
-  const exams = await prisma.exam.findMany({ orderBy: { orderIndex: 'asc' } });
-  const testSeries = await prisma.testSeries.findMany({ orderBy: { orderIndex: 'asc' } });
-  const mockTests = await prisma.$queryRaw<any[]>`
+  // PERF: run the four catalog queries in parallel instead of one after another
+  const [categories, exams, testSeries, mockTests] = await Promise.all([
+  prisma.category.findMany({ orderBy: { orderIndex: 'asc' } }),
+  prisma.exam.findMany({ orderBy: { orderIndex: 'asc' } }),
+  prisma.testSeries.findMany({ orderBy: { orderIndex: 'asc' } }),
+  prisma.$queryRaw<any[]>`
     SELECT 
       "id", 
       "testSeriesId", 
@@ -3534,7 +3947,8 @@ async function getCompiledExamCatalog() {
       END as "customQuestionsCount"
     FROM "mock_tests"
     ORDER BY "orderIndex" ASC
-  `;
+  `,
+  ]);
 
   // Group tests by testSeriesId
   const testsBySeries: Record<string, any[]> = {};
@@ -3983,7 +4397,7 @@ async function seedDatabase() {
       subscriptionTier: 'None',
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     },
     {
@@ -3999,7 +4413,7 @@ async function seedDatabase() {
       subscriptionTier: 'Testbook Pass Pro',
       subscriptionPurchasedAt: '2026-03-15',
       subscriptionExpiresAt: '2027-03-15',
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     },
     {
@@ -4015,7 +4429,7 @@ async function seedDatabase() {
       subscriptionTier: 'Testbook Pass',
       subscriptionPurchasedAt: '2025-12-01',
       subscriptionExpiresAt: '2026-12-01',
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     },
     {
@@ -4031,7 +4445,7 @@ async function seedDatabase() {
       subscriptionTier: 'None',
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     },
     {
@@ -4047,7 +4461,7 @@ async function seedDatabase() {
       subscriptionTier: 'None',
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     },
     {
@@ -4063,7 +4477,7 @@ async function seedDatabase() {
       subscriptionTier: 'None',
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     },
     {
@@ -4079,7 +4493,7 @@ async function seedDatabase() {
       subscriptionTier: 'None',
       subscriptionPurchasedAt: null,
       subscriptionExpiresAt: null,
-      passwordHash: 'password123',
+      passwordHash: 'disabled_' + crypto.randomUUID(), // no usable password
       isBlocked: false,
     }
   ];
@@ -4366,7 +4780,65 @@ async function handleDeleteReportedQuestion(data: any) {
   return NextResponse.json({ success: true });
 }
 
-async function handleGetUserDetails(data: any) {
+// ---------------------------------------------------------------------------
+// Website tour: users.tourCompletedAt (null = new user who has not finished the tour).
+// Read/written with raw SQL so it works even before the Prisma client is regenerated.
+// undefined means "unknown" (e.g. column missing) and never triggers the tour.
+// ---------------------------------------------------------------------------
+type TourFlags = { tourCompletedAt?: string | null; noticesTourCompletedAt?: string | null; testsTourCompletedAt?: string | null; typingTourCompletedAt?: string | null; lockerTourCompletedAt?: string | null; profileTourCompletedAt?: string | null };
+
+async function readTourFlags(userId: string): Promise<TourFlags> {
+  const iso = (v: any) => (v ? new Date(v).toISOString() : null);
+  try {
+    const rows = await prisma.$queryRaw<any[]>`SELECT "tourCompletedAt", "noticesTourCompletedAt", "testsTourCompletedAt", "typingTourCompletedAt", "lockerTourCompletedAt", "profileTourCompletedAt" FROM "users" WHERE "id" = ${userId}`;
+    if (!rows.length) return {};
+    return {
+      tourCompletedAt: iso(rows[0].tourCompletedAt),
+      noticesTourCompletedAt: iso(rows[0].noticesTourCompletedAt),
+      testsTourCompletedAt: iso(rows[0].testsTourCompletedAt),
+      typingTourCompletedAt: iso(rows[0].typingTourCompletedAt),
+      lockerTourCompletedAt: iso(rows[0].lockerTourCompletedAt),
+      profileTourCompletedAt: iso(rows[0].profileTourCompletedAt),
+    };
+  } catch {
+    // Older databases may lack the notices column: fall back to the welcome-tour column only
+    try {
+      const rows = await prisma.$queryRaw<any[]>`SELECT "tourCompletedAt" FROM "users" WHERE "id" = ${userId}`;
+      return rows.length ? { tourCompletedAt: iso(rows[0].tourCompletedAt) } : {};
+    } catch {
+      return {};
+    }
+  }
+}
+
+async function handleCompleteTour(data: any, requesterUserId: string | null) {
+  const userId = data?.userId;
+  if (!userId || userId !== requesterUserId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+  }
+  const tour = data?.tour === 'notices' ? 'notices' : data?.tour === 'tests' ? 'tests' : data?.tour === 'typing' ? 'typing' : data?.tour === 'locker' ? 'locker' : data?.tour === 'profile' ? 'profile' : 'welcome';
+  try {
+    const rows = tour === 'profile'
+      ? await prisma.$queryRaw<any[]>`UPDATE "users" SET "profileTourCompletedAt" = COALESCE("profileTourCompletedAt", now()) WHERE "id" = ${userId} RETURNING "profileTourCompletedAt" AS "at"`
+      : tour === 'locker'
+      ? await prisma.$queryRaw<any[]>`UPDATE "users" SET "lockerTourCompletedAt" = COALESCE("lockerTourCompletedAt", now()) WHERE "id" = ${userId} RETURNING "lockerTourCompletedAt" AS "at"`
+      : tour === 'typing'
+      ? await prisma.$queryRaw<any[]>`UPDATE "users" SET "typingTourCompletedAt" = COALESCE("typingTourCompletedAt", now()) WHERE "id" = ${userId} RETURNING "typingTourCompletedAt" AS "at"`
+      : tour === 'tests'
+      ? await prisma.$queryRaw<any[]>`UPDATE "users" SET "testsTourCompletedAt" = COALESCE("testsTourCompletedAt", now()) WHERE "id" = ${userId} RETURNING "testsTourCompletedAt" AS "at"`
+      : tour === 'notices'
+      ? await prisma.$queryRaw<any[]>`UPDATE "users" SET "noticesTourCompletedAt" = COALESCE("noticesTourCompletedAt", now()) WHERE "id" = ${userId} RETURNING "noticesTourCompletedAt" AS "at"`
+      : await prisma.$queryRaw<any[]>`UPDATE "users" SET "tourCompletedAt" = COALESCE("tourCompletedAt", now()) WHERE "id" = ${userId} RETURNING "tourCompletedAt" AS "at"`;
+    const value = rows[0]?.at;
+    return NextResponse.json({ success: true, tour, completedAt: value ? new Date(value).toISOString() : new Date().toISOString() });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: err.message || 'Failed to save tour status' }, { status: 500 });
+  }
+}
+
+async function handleGetUserDetails(data: any, requesterUserId: string | null = null) {
+  // Saved exam-portal passwords in tracked jobs are shown only to the account owner
+  const viewingOwnAccount = data?.userId === requesterUserId;
   const { userId } = data;
   if (!userId) {
     return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
@@ -4376,6 +4848,7 @@ async function handleGetUserDetails(data: any) {
   // This action is called on every tab focus switch — loading all responses (thousands of rows)
   // on each tab switch was a massive recurring egress cost. Responses are loaded on-demand
   // when the user opens a specific test analysis screen (via get-session-responses).
+  const tourPromise = readTourFlags(userId);
   const u = await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -4419,9 +4892,9 @@ async function handleGetUserDetails(data: any) {
     isBlocked: u.isBlocked,
     coins: u.coins,
     referralCoinsCredited: u.referralCoinsCredited,
-    password: u.passwordHash,
+    ...(await tourPromise),
     bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
-    trackedJobs: u.trackedJobs ? (u.trackedJobs as any) : [],
+    trackedJobs: !u.trackedJobs ? [] : viewingOwnAccount ? (u.trackedJobs as any) : (u.trackedJobs as any[]).map((j: any) => ({ ...j, password: undefined })),
     // EGRESS-OPT: sessions mapped WITHOUT responses (responses = {} always empty here)
     testSessions: u.testSessions.map((session: any) => {
       return {
@@ -4502,20 +4975,10 @@ async function handleGetSessionResponses(data: any) {
   return NextResponse.json({ success: true, sessionId, responses: responsesRecord });
 }
 
-async function handleAdminData(data: any) {
-  const { userId } = data;
-  if (!userId) {
-    return NextResponse.json({ success: false, error: 'Unauthorized: No User ID provided' }, { status: 401 });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { role: true }
-  });
-
-  if (!user || user.role === 'STUDENT') {
-    return NextResponse.json({ success: false, error: 'Unauthorized access' }, { status: 403 });
-  }
+// Staff only (checked in POST). Full user list for ADMIN; other staff roles only get what
+// their screens need (name, contact, role). Passwords and login sessions are never included.
+async function handleAdminData(requesterRole: string | null) {
+  const isAdmin = requesterRole === 'ADMIN';
 
   // Fetch all users list WITHOUT sessions (sessions loaded lazily per user to avoid timeout)
   const users = await prisma.user.findMany({
@@ -4523,6 +4986,25 @@ async function handleAdminData(data: any) {
       createdAt: 'desc',
     },
   });
+
+  if (!isAdmin) {
+    return NextResponse.json({
+      success: true,
+      usersList: users.map((u: any) => ({
+        id: u.id,
+        candidateCode: u.candidateCode,
+        name: u.fullName,
+        email: u.email,
+        mobile: u.mobile,
+        role: u.role,
+        isBlocked: u.isBlocked,
+        lastSeen: u.lastSeen ? u.lastSeen.toISOString() : null,
+        lastPlatform: u.lastPlatform || 'web',
+        testSessions: [],
+      })),
+      reportedQuestionsList: [],
+    });
+  }
 
   // Map users to UI model format (testSessions is [] at bootstrap; loaded on demand)
   const usersList = users.map((u: any) => ({
@@ -4542,7 +5024,6 @@ async function handleAdminData(data: any) {
     isBlocked: u.isBlocked,
     coins: u.coins,
     referralCoinsCredited: u.referralCoinsCredited,
-    password: u.passwordHash,
     bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
     lastSeen: u.lastSeen ? u.lastSeen.toISOString() : null,
     lastPlatform: u.lastPlatform || 'web',
@@ -4654,16 +5135,25 @@ async function handleConfirmPasswordReset(data: any) {
     return NextResponse.json({ success: false, error: 'OTP has expired. Please request a new one.' }, { status: 400 });
   }
 
-  if (cachedOtp.code !== otp.trim()) {
-    return NextResponse.json({ success: false, error: 'Invalid OTP code.' }, { status: 400 });
+  if (cachedOtp.code !== String(otp).trim()) {
+    // At most 5 wrong codes, then a new code has to be requested
+    const tries = ((cachedOtp as any).failedTries || 0) + 1;
+    if (tries >= 5) otpCache.delete(trimmedEmail);
+    else (cachedOtp as any).failedTries = tries;
+    return NextResponse.json({ success: false, error: tries >= 5 ? 'Too many wrong codes. Please request a new OTP.' : 'Invalid OTP code.' }, { status: 400 });
+  }
+  if (typeof newPassword !== 'string' || newPassword.trim().length < 6) {
+    return NextResponse.json({ success: false, error: 'New password must be at least 6 characters.' }, { status: 400 });
   }
 
   try {
-    // Update password in the database
-    await prisma.user.update({
+    // Update password in the database (hashed) and sign the account out everywhere
+    const updatedUser = await prisma.user.update({
       where: { email: trimmedEmail },
-      data: { passwordHash: newPassword }
+      data: { passwordHash: await hashPassword(newPassword.trim()), currentSessionId: null },
+      select: { id: true },
     });
+    await revokeAllWebSessions(updatedUser.id).catch(() => {});
 
     // Clear OTP from cache after successful verification
     otpCache.delete(trimmedEmail);
@@ -5221,13 +5711,14 @@ async function handleDeleteTypingAttempt(id?: string) {
   }
 }
 
-async function handleGetTypingAttemptById(id?: string) {
+async function handleGetTypingAttemptById(id: string | undefined, requesterUserId: string | null, isStaffRequester: boolean) {
   try {
     if (!id) return NextResponse.json({ success: false, error: 'Missing attempt ID' }, { status: 400 });
     const attempt = await prismaTyping.typingAttempt.findUnique({
       where: { id }
     });
-    if (!attempt) {
+    // Only the student who typed it (or staff) may open a result
+    if (!attempt || (!isStaffRequester && attempt.userId !== requesterUserId)) {
       return NextResponse.json({ success: false, error: 'Typing attempt not found' }, { status: 404 });
     }
 
@@ -5803,7 +6294,7 @@ async function handleLockerResetPinWithPassword(data: any, requesterUserId: stri
       return NextResponse.json({ success: false, error: 'User not found.' }, { status: 404 });
     }
 
-    if (user.passwordHash !== accountPassword) {
+    if (!(await verifyPassword(accountPassword, user.passwordHash))) {
       return NextResponse.json({ success: false, error: 'Incorrect account password. Verification failed.' }, { status: 401 });
     }
 

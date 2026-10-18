@@ -68,6 +68,7 @@ async function postRequest(action: string, data: any = {}) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(activeSessionId ? { 'x-session-id': activeSessionId } : {}),
           },
           body: JSON.stringify({ action, data }),
         },

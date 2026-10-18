@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from './lib/prisma';
+import { buildTestSeriesPath } from './lib/testSeriesUrl';
 
 const SITE_URL = 'https://mocktesthub.vercel.app';
 
@@ -19,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/terms`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  const [notices, typingCategories] = await Promise.all([
+  const [notices, typingCategories, testCategories, testExams] = await Promise.all([
     // Most recent 1000 notices — plenty of headroom under the 50k sitemap-entry limit
     // while keeping the query fast; older notices stay reachable via internal links.
     prisma.notice.findMany({
@@ -31,6 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { isActive: true },
       select: { id: true, updatedAt: true },
     }),
+    prisma.category.findMany({ select: { id: true } }),
+    prisma.exam.findMany({ select: { id: true, categoryId: true } }),
   ]);
 
   const noticeRoutes: MetadataRoute.Sitemap = notices.map(n => ({
@@ -47,5 +50,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...noticeRoutes, ...typingRoutes];
+  // Test Series: one address per category and per exam (practice series live on their own page)
+  const isTestSeriesCategory = (id: string) => id !== 'practice_series' && !id.startsWith('ps_');
+  const testSeriesRoutes: MetadataRoute.Sitemap = [
+    ...testCategories
+      .filter(c => isTestSeriesCategory(c.id))
+      .map(c => ({ url: `${SITE_URL}${buildTestSeriesPath(c.id)}`, changeFrequency: 'weekly' as const, priority: 0.7 })),
+    ...testExams
+      .filter(e => isTestSeriesCategory(e.categoryId))
+      .map(e => ({ url: `${SITE_URL}${buildTestSeriesPath(e.categoryId, e.id)}`, changeFrequency: 'weekly' as const, priority: 0.6 })),
+  ];
+
+  return [...staticRoutes, ...noticeRoutes, ...typingRoutes, ...testSeriesRoutes];
 }

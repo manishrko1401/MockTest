@@ -3,31 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../AuthContext';
-import { 
-  ShieldCheck, 
-  ArrowLeft, 
-  Sun, 
-  Moon, 
-  Lock, 
-  Eye, 
-  Database, 
-  ShieldAlert, 
-  Award, 
-  FolderLock, 
-  BarChart3, 
-  Bell, 
-  Gift, 
-  MessageSquare, 
-  CheckCircle2, 
-  Scale 
-} from 'lucide-react';
-import { TRANSLATIONS } from '../translations';
-import { useIsMobile } from '../useIsMobile';
+import { LegalDocument } from '../components/LegalDocument';
 
 export default function PrivacyPolicyPage() {
-  const { currentUser, theme, toggleTheme, language, setLanguage } = useAuth();
-  const t = TRANSLATIONS[language];
-  const { isMobile, isMounted } = useIsMobile();
+  const { language } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -115,220 +94,32 @@ export default function PrivacyPolicyPage() {
 
   const curr = language === 'hi' ? content.hi : content.en;
 
+  const hi = language === 'hi';
   return (
-    <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans min-h-screen text-slate-800 dark:text-slate-100 select-none transition-colors duration-200">
-      
-      {/* HEADER NAVBAR */}
-      <header className="h-18 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm sticky top-0 z-40 transition-colors duration-200">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-2 rounded-full flex items-center justify-center h-9 w-9 border border-blue-200/50 dark:border-slate-700">
-              <Award className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h1 className="font-extrabold text-xs md:text-sm leading-tight text-slate-900 dark:text-white tracking-wider">{t.logoTitle}</h1>
-              <p className="text-[8px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase">{t.logoSub}</p>
-            </div>
-          </Link>
-          <span className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:inline"></span>
-          <Link 
-            href="/" 
-            className="hidden sm:flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold text-xs transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" /> {t.backToHome}
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          {/* Language Selector */}
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[10px] sm:text-xs font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी</option>
-          </select>
-
-          {/* Theme Switcher */}
-          <button 
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition border border-slate-200 dark:border-slate-800 flex items-center justify-center cursor-pointer"
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-        </div>
-      </header>
-
-      {/* MOBILE BACK LINK */}
-      <div className="p-4 sm:hidden bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
-        <Link 
-          href="/" 
-          className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-bold text-xs"
-        >
-          <ArrowLeft className="h-4 w-4" /> {t.backToHome}
-        </Link>
-      </div>
-
-      {/* MAIN LAYOUT */}
-      <main className="py-12 px-4 sm:px-6 md:px-8 max-w-4xl w-full mx-auto flex-1 flex flex-col relative z-10">
-        
-        {/* Title Header */}
-        <div className="flex flex-col gap-3 border-b border-slate-200 dark:border-slate-800 pb-6 mb-8">
-          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-            <ShieldCheck className="h-6 w-6" />
-            <span className="text-[10px] font-black uppercase tracking-widest bg-blue-50 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-900/60 px-2 py-0.5 rounded">
-              Privacy & Data Protection
-            </span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            {curr.title}
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-            {curr.subtitle}
-          </p>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold font-mono">
-            {curr.lastUpdated}
-          </span>
-        </div>
-
-        {/* POLICY GRID */}
-        <div className="space-y-6">
-          
-          {/* Card 1: Information Collected */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-blue-100/50 dark:border-blue-900/40 text-blue-600 dark:text-blue-400">
-              <Database className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec1Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec1Text}</p>
-            </div>
-          </div>
-
-          {/* Card 2: Google Drive Locker (Highlighted) */}
-          <div className="p-5 bg-white dark:bg-slate-950 border-2 border-blue-500/80 dark:border-blue-500/60 rounded-2xl shadow-md flex flex-col sm:flex-row gap-4 hover:shadow-lg transition relative overflow-hidden bg-gradient-to-r from-blue-500/5 via-transparent to-emerald-500/5">
-            <div className="p-3 bg-blue-600 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 text-white shadow-md shadow-blue-600/30">
-              <FolderLock className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 flex items-center gap-2 flex-wrap">
-                {curr.sec2Title}
-                <span className="text-[8px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 font-black px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 uppercase tracking-wide">
-                  {curr.sec2Badge}
-                </span>
-              </h4>
-              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">{curr.sec2Text}</p>
-            </div>
-          </div>
-
-          {/* Card 3: Dossier Integrity */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-emerald-100/50 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-              <Lock className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
-                {curr.sec3Title}
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec3Text}</p>
-            </div>
-          </div>
-
-          {/* Card 4: Exam Analytics & Ranks */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-indigo-100/50 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400">
-              <BarChart3 className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec4Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec4Text}</p>
-            </div>
-          </div>
-
-          {/* Card 5: Jobs & Notifications */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-amber-100/50 dark:border-amber-900/40 text-amber-600 dark:text-amber-400">
-              <Bell className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec5Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec5Text}</p>
-            </div>
-          </div>
-
-          {/* Card 6: Referrals & Coins */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-purple-100/50 dark:border-purple-900/40 text-purple-600 dark:text-purple-400">
-              <Gift className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec6Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec6Text}</p>
-            </div>
-          </div>
-
-          {/* Card 7: Zero Advertising (Highlighted) */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition border-l-4 border-l-emerald-500">
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-emerald-100/50 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec7Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec7Text}</p>
-            </div>
-          </div>
-
-          {/* Card 8: Session Security */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-teal-50 dark:bg-teal-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-teal-100/50 dark:border-teal-900/40 text-teal-600 dark:text-teal-400">
-              <ShieldAlert className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec8Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec8Text}</p>
-            </div>
-          </div>
-
-          {/* Card 9: Data Retention & Deletion */}
-          <div className="p-5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs flex flex-col sm:flex-row gap-4 hover:shadow-md transition">
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 rounded-xl h-10 w-10 flex items-center justify-center shrink-0 border border-rose-100/50 dark:border-rose-900/40 text-rose-600 dark:text-rose-400">
-              <Lock className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white mb-2">{curr.sec9Title}</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">{curr.sec9Text}</p>
-            </div>
-          </div>
-
-        </div>
-
-        {/* SUPPORT / CONTACT FOOTER */}
-        <div className="mt-12 p-6 rounded-2xl bg-blue-50/40 dark:bg-blue-950/15 border border-blue-100 dark:border-blue-900/30 text-center space-y-3">
-          <h5 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">{curr.contactTitle}</h5>
-          <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed font-semibold">
-            {curr.contactText}
-          </p>
-        </div>
-
-        {/* POLICY NAV LINKS */}
-        <div className="mt-8 flex items-center justify-center gap-4 text-xs font-bold text-slate-600 dark:text-slate-400">
-          <Link href="/contact" className="text-blue-600 dark:text-blue-400 hover:underline">
-            Contact Us
-          </Link>
-          <span>•</span>
-          <Link href="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">
-            Terms & Conditions
-          </Link>
-        </div>
-
-      </main>
-
-      {/* SITE FOOTER */}
-      <footer className="mt-auto py-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-        © 2026 MockTest Hub. All rights reserved.
-      </footer>
-
-    </div>
+    <LegalDocument
+      language={language}
+      crumb={hi ? 'गोपनीयता नीति' : 'Privacy Policy'}
+      title={curr.title}
+      subtitle={curr.subtitle}
+      lastUpdated={curr.lastUpdated}
+      sections={[
+        { id: 'information-we-collect', title: curr.sec1Title, text: curr.sec1Text },
+        { id: 'document-locker', title: curr.sec2Title, text: curr.sec2Text, badge: curr.sec2Badge, highlight: true },
+        { id: 'profile-security', title: curr.sec3Title, text: curr.sec3Text, badge: curr.sec3Badge },
+        { id: 'analytics-ranks', title: curr.sec4Title, text: curr.sec4Text },
+        { id: 'job-tracking', title: curr.sec5Title, text: curr.sec5Text },
+        { id: 'referrals', title: curr.sec6Title, text: curr.sec6Text },
+        { id: 'no-data-selling', title: curr.sec7Title, text: curr.sec7Text },
+        { id: 'session-protection', title: curr.sec8Title, text: curr.sec8Text },
+        { id: 'data-retention', title: curr.sec9Title, text: curr.sec9Text },
+      ]}
+      contactTitle={curr.contactTitle}
+      contactText={curr.contactText}
+      contactEmail="mocktesthubsupport@gmail.com"
+      related={[
+        { href: '/terms', label: hi ? 'नियम एवं शर्तें' : 'Terms & Conditions' },
+        { href: '/contact', label: hi ? 'हमसे संपर्क करें' : 'Contact Us' },
+      ]}
+    />
   );
 }

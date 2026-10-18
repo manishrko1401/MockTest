@@ -186,24 +186,24 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
   ];
 
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden animate-in fade-in duration-200">
+    <div className="w-full h-full flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden animate-in fade-in duration-200">
       
       {/* TOP HEADER WITH BACK BUTTON */}
       <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/80 dark:bg-slate-950/60 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition active:scale-95 cursor-pointer shrink-0"
+            className="p-2 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0"
             title={isHindi ? 'मुख्य पृष्ठ पर वापस जाएं' : 'Back to Home'}
           >
             <ArrowLeft className="h-4.5 w-4.5" />
           </button>
           <div className="min-w-0">
-            <h2 className="font-black text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-tight truncate flex items-center gap-2">
-              <Headphones className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+            <h2 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white truncate flex items-center gap-2">
+              <Headphones className="h-4.5 w-4.5 text-[#1e4e79] dark:text-blue-400" />
               <span>{isHindi ? 'संपर्क करें एवं सहायता केंद्र' : 'Contact Us & Candidate Helpdesk'}</span>
             </h2>
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs sm:text-xs text-slate-500 dark:text-slate-400 truncate">
               {isHindi ? 'हमारी समर्पित सहायता टीम से किसी भी समय संपर्क करें' : 'Get in touch with the MockTest Hub team'}
             </p>
           </div>
@@ -211,7 +211,7 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
 
         <button
           onClick={onBack}
-          className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline shrink-0 cursor-pointer"
+          className="text-xs font-bold text-[#1e4e79] dark:text-blue-400 hover:underline shrink-0 cursor-pointer"
         >
           {isHindi ? 'होम पर वापस' : 'Back to Home'}
         </button>
@@ -221,13 +221,13 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
         
         {/* HERO BANNER CARD */}
-        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden">
+        <div className="bg-[#1e4e79] rounded-lg sm:rounded-lg p-5 sm:p-6 text-white shadow-lg relative overflow-hidden">
           <div className="relative z-10 space-y-3">
-            <span className="px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-wider border border-white/20 inline-flex items-center gap-1.5">
+            <span className="px-3 py-1 bg-white/15 rounded-full text-xs font-semibold border border-white/20 inline-flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
               {isHindi ? '24x7 उम्मीदवार सहायता' : 'Candidate Assistance Desk'}
             </span>
-            <h3 className="text-lg sm:text-2xl font-black tracking-tight">
+            <h3 className="text-lg sm:text-2xl font-semibold">
               {isHindi ? 'हम आपकी परीक्षा तैयारी में मदद के लिए यहाँ हैं' : 'We are here to assist your exam journey'}
             </h3>
             <p className="text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed font-medium">
@@ -241,27 +241,27 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
         {/* PRIMARY CHANNELS GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           {/* EMAIL SUPPORT CARD */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+          <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <div className="w-9 h-9 rounded-xl bg-red-500/10 text-red-600 flex items-center justify-center font-black">
+                <div className="w-9 h-9 rounded-md bg-red-500/10 text-red-600 flex items-center justify-center font-semibold">
                   <Mail className="h-4.5 w-4.5" />
                 </div>
                 <button
                   onClick={handleCopyEmail}
-                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 flex items-center gap-1 cursor-pointer transition active:scale-95"
+                  className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 flex items-center gap-1 cursor-pointer transition"
                 >
                   {copiedEmail ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                   <span>{copiedEmail ? (isHindi ? 'कॉपी हुआ' : 'Copied') : (isHindi ? 'कॉपी करें' : 'Copy')}</span>
                 </button>
               </div>
-              <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Official Email Support</h4>
-              <p className="font-mono text-xs text-blue-600 dark:text-blue-400 font-bold break-all">{SUPPORT_EMAIL}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">Response time: 2 - 4 business hours</p>
+              <h4 className="font-semibold text-xs text-slate-900 dark:text-white">Official Email Support</h4>
+              <p className="font-mono text-xs text-[#1e4e79] dark:text-blue-400 font-bold break-all">{SUPPORT_EMAIL}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Response time: 2 - 4 business hours</p>
             </div>
             <a
               href={`mailto:${SUPPORT_EMAIL}?subject=Support%20Request`}
-              className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-sm"
+              className="w-full py-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs rounded-md transition text-center flex items-center justify-center gap-1.5 shadow-sm"
             >
               <span>{isHindi ? 'ईमेल भेजें' : 'Send Email'}</span>
               <ExternalLink className="h-3.5 w-3.5" />
@@ -269,25 +269,25 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
           </div>
 
           {/* TELEGRAM COMMUNITY CARD */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
+          <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-3 flex flex-col justify-between">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-black">
+                <div className="w-9 h-9 rounded-md bg-sky-500/10 text-sky-500 flex items-center justify-center font-semibold">
                   <Send className="h-4.5 w-4.5" />
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 font-black text-[9px] uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 font-semibold text-[11px]">
                   Community
                 </span>
               </div>
-              <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Telegram Channel</h4>
+              <h4 className="font-semibold text-xs text-slate-900 dark:text-white">Telegram Channel</h4>
               <p className="font-mono text-xs text-sky-600 dark:text-sky-400 font-bold">@MockTest_Hub</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">Instant exam updates, free PDFs & notes</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Instant exam updates, free PDFs & notes</p>
             </div>
             <a
               href="https://t.me/MockTest_Hub"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2 bg-[#229ED9] hover:bg-[#1e8cc1] text-white font-bold text-xs rounded-xl transition text-center flex items-center justify-center gap-1.5 shadow-sm"
+              className="w-full py-2 bg-[#229ED9] hover:bg-[#1e8cc1] text-white font-bold text-xs rounded-md transition text-center flex items-center justify-center gap-1.5 shadow-sm"
             >
               <span>{isHindi ? 'टेलीग्राम से जुड़ें' : 'Join Telegram'}</span>
               <ExternalLink className="h-3.5 w-3.5" />
@@ -296,24 +296,24 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
         </div>
 
         {/* DIRECT QUERY SUBMISSION FORM */}
-        <div className="p-5 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="p-5 rounded-lg sm:rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="p-2 rounded-md bg-blue-500/10 text-[#1e4e79] dark:text-blue-400">
               <MessageSquare className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h4 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-tight">
+              <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">
                 {isHindi ? 'सीधा संदेश भेजें' : 'Send a Direct Message'}
               </h4>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isHindi ? 'हमारी टीम आपके ईमेल पर शीघ्र उत्तर देगी' : 'Our support team will respond directly to your email'}
               </p>
             </div>
           </div>
 
           {formSuccess ? (
-            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold text-center space-y-1 animate-in fade-in">
-              <p className="text-sm font-black">🎉 {isHindi ? 'संदेश सफलतापूर्वक भेजा गया!' : 'Message Sent Successfully!'}</p>
+            <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold text-center space-y-1 animate-in fade-in">
+              <p className="text-sm font-semibold">{isHindi ? 'संदेश सफलतापूर्वक भेजा गया!' : 'Message Sent Successfully!'}</p>
               <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
                 {isHindi ? 'हमारी टीम शीघ्र ही आपसे संपर्क करेगी।' : 'We will get back to you shortly via email.'}
               </p>
@@ -321,14 +321,14 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
           ) : (
             <form onSubmit={handleFormSubmit} className="space-y-3">
               {formError && (
-                <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs rounded-xl">
+                <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs rounded-md">
                   {formError}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 block">
                     {isHindi ? 'आपका नाम' : 'Your Name'}
                   </label>
                   <input
@@ -337,11 +337,11 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
                     placeholder={isHindi ? 'अपना पूरा नाम लिखें' : 'Enter your full name'}
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 block">
                     {isHindi ? 'ईमेल पता' : 'Email Address'}
                   </label>
                   <input
@@ -350,13 +350,13 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
                     value={senderEmail}
                     onChange={(e) => setSenderEmail(e.target.value)}
                     placeholder={isHindi ? 'अपना ईमेल दर्ज करें' : 'Enter your email'}
-                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 block">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 block">
                   {isHindi ? 'संदेश' : 'Message'}
                 </label>
                 <textarea
@@ -365,14 +365,14 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
                   placeholder={isHindi ? 'यहाँ अपना संदेश या प्रश्न लिखें...' : 'Write your question or request here...'}
-                  className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
+                  className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={formSubmitting || !messageContent.trim()}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-xs rounded-xl shadow-md shadow-blue-500/20 transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2.5 bg-[#1e4e79] hover:bg-[#163c5e] disabled:opacity-50 text-white font-semibold text-xs rounded-md shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {formSubmitting ? (
                   <>
@@ -392,7 +392,7 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
 
         {/* FREQUENTLY ASKED QUESTIONS */}
         <div className="space-y-3">
-          <h4 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+          <h4 className="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
             <HelpCircle className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             <span>{isHindi ? 'अक्सर पूछे जाने वाले प्रश्न' : 'Frequently Asked Questions'}</span>
           </h4>
@@ -403,14 +403,14 @@ export default function HomeContactSection({ onBack }: HomeContactSectionProps) 
               return (
                 <div
                   key={idx}
-                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 overflow-hidden"
+                  className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 overflow-hidden"
                 >
                   <button
                     onClick={() => setActiveFaq(isOpen ? null : idx)}
                     className="w-full p-3.5 text-left font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center justify-between gap-3 cursor-pointer"
                   >
                     <span>{isHindi ? faq.q.hi : faq.q.en}</span>
-                    <ChevronDown className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[#1e4e79]' : ''}`} />
                   </button>
                   {isOpen && (
                     <div className="px-3.5 pb-3.5 text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2 leading-relaxed">

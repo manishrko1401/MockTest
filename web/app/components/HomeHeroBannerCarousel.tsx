@@ -177,8 +177,6 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
         }}
       >
         {/* Glow Ambient Highlights in background */}
-        <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header Row */}
         <div className="flex items-center justify-between gap-1.5 z-10">
@@ -266,7 +264,6 @@ export default function HomeHeroBannerCarousel({ onOpenPassClaim }: HomeHeroBann
           {/* Right Column: 3D Silver Rupee Coin / Emblem Graphic (Visible on Desktop) */}
           <div className="hidden sm:flex col-span-4 flex-col items-center justify-center relative shrink-0">
             <div className="relative group/coin">
-              <div className="absolute -inset-2 bg-cyan-400/30 rounded-full blur-xl animate-pulse" />
               <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full bg-gradient-to-br from-slate-200 via-slate-400 to-slate-100 p-1.5 sm:p-2 shadow-[inset_0_4px_10px_rgba(255,255,255,0.8),0_10px_25px_rgba(0,0,0,0.6)] border-2 border-slate-100 flex flex-col items-center justify-center text-slate-800 relative transform group-hover/coin:scale-105 transition-transform duration-300">
                 <div className="w-full h-full rounded-full border border-dashed border-slate-400 flex flex-col items-center justify-center text-center p-1 bg-gradient-to-b from-slate-100 via-slate-300 to-slate-200">
                   <span className="text-[8px] sm:text-[9px] md:text-xs font-black text-slate-700 tracking-wider">

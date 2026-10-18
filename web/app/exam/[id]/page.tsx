@@ -1,5 +1,6 @@
 "use client";
 
+import { buildTestSeriesPath } from '../../lib/testSeriesUrl';
 import React, { useEffect, useState, use, useRef } from 'react';
 import {
   useTestEngine,
@@ -18,6 +19,7 @@ import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
 import MathJaxText from '../../lib/MathJaxText';
 import MathJaxLoader from '../../components/MathJaxLoader';
 import CbatExamEngine from './CbatExamEngine';
+import { ExamProgress, createProgressSyncer, readLocalProgress, writeLocalProgress, clearLocalProgress, fetchServerProgress, newerProgress } from '../../lib/examProgress';
 import { matchCbatBatteryKey } from './cbatData';
 
 
@@ -26,7 +28,7 @@ import { matchCbatBatteryKey } from './cbatData';
 function handleReturnToTestSeries(testId: string, catalog: any[], router: any) {
   if (typeof window !== 'undefined') {
     // 1. If referrer is a mock-tests page with query params or hash, history back works best
-    if (document.referrer && document.referrer.includes(window.location.host) && document.referrer.includes('/mock-tests') && (document.referrer.includes('sub=') || document.referrer.includes('#exam-'))) {
+    if (document.referrer && document.referrer.includes(window.location.host) && document.referrer.includes('/mock-tests') && (document.referrer.includes('sub=') || document.referrer.includes('#exam-') || /\/mock-tests\/[^/?#]+\/[^/?#]+/.test(document.referrer))) {
       window.history.back();
       return;
     }
@@ -39,7 +41,7 @@ function handleReturnToTestSeries(testId: string, catalog: any[], router: any) {
           for (const ss of sub.subSubCategories || []) {
             const foundInSubSub = (ss.tests || []).find((t: any) => t.id === testId);
             if (foundInSubSub) {
-              const url = `/mock-tests?cat=${cat.id}&sub=${sub.id}&subsub=${ss.id}#exam-${sub.id}-${ss.id}`;
+              const url = buildTestSeriesPath(cat.id, sub.id, ss.id);
               if (router && router.push) {
                 router.push(url);
               } else {
@@ -51,7 +53,7 @@ function handleReturnToTestSeries(testId: string, catalog: any[], router: any) {
           // Check direct subcategory tests
           const foundInSub = (sub.tests || []).find((t: any) => t.id === testId);
           if (foundInSub) {
-            const url = `/mock-tests?cat=${cat.id}&sub=${sub.id}#exam-${sub.id}`;
+            const url = buildTestSeriesPath(cat.id, sub.id);
             if (router && router.push) {
               router.push(url);
             } else {
@@ -201,6 +203,17 @@ function TestUploadedSoonCard({ testId, testTitle, catalog, router, currentUser 
 import { generateExamSession } from '../../lib/examUtils';
 
 
+// Everything about an ongoing test that is worth an immediate server backup when it changes
+// (not the timer, which is backed up by the 15-second heartbeat).
+function progressSignature(s: any): string {
+  let out = `${s.currentSectionIndex}:${s.currentQuestionIndex}:${(s.submittedSectionIndices || []).join(',')}:${s.isExtraTimeMode ? 1 : 0}:${s.violationsCount}|`;
+  for (const id in s.responses) {
+    const r = s.responses[id];
+    out += `${r.selectedOptionIndex ?? '-'}${r.tempOptionIndex ?? '-'}${r.state},`;
+  }
+  return out;
+}
+
 function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang2 }: { testId: string; initialExamLanguage?: 'en' | 'hi'; selectedLang1?: string; selectedLang2?: string }) {
   const {
     state,
@@ -222,6 +235,20 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
   const { addAttempt, currentUser, saveOngoingSession, language: authLanguage, examCatalog } = useAuth();
   const router = useRouter();
+
+  // SSC exam pattern: an answer is chosen only by clicking the radio circle before the option
+  // (as on the real SSC exam screen), not by clicking the option text or row.
+  const isSscCategoryTest = React.useMemo(() => {
+    const ssc = (examCatalog || []).find((c: any) => c.id === 'ssc');
+    const inSscCategory = !!ssc && (ssc.subCategories || []).some((sub: any) =>
+      (sub.tests || []).some((t: any) => t.id === testId) ||
+      (sub.subSubCategories || []).some((ss: any) => (ss.tests || []).some((t: any) => t.id === testId))
+    );
+    return inSscCategory || testId.toLowerCase().includes('ssc');
+  }, [examCatalog, testId]);
+  const OptionRow: any = isSscCategoryTest ? 'div' : 'label';
+  const sscRowClass = (cls: string) =>
+    isSscCategoryTest ? cls.replace(/cursor-pointer/g, 'cursor-default').replace(/\s(?:dark:)?hover:bg-\S+/g, '') : cls;
 
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [questionLanguages, setQuestionLanguages] = useState<Record<string, 'en' | 'hi'>>({});
@@ -283,6 +310,53 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     saveOngoingSessionRef.current = saveOngoingSession;
   }, [saveOngoingSession]);
 
+  // ---- Ongoing progress: saved in this browser on every change, backed up to the server ----
+  const progressSyncRef = useRef<ReturnType<typeof createProgressSyncer> | null>(null);
+  if (!progressSyncRef.current) progressSyncRef.current = createProgressSyncer();
+  // Set once the session is set up (fresh or resumed); nothing is saved before that
+  const progressReadyRef = useRef(false);
+  // False while the server copy could not be checked (offline at start), so a fresh start
+  // here can't overwrite progress the server may hold; re-checked by the heartbeat.
+  const serverWritableRef = useRef(true);
+  const resumedSavedAtRef = useRef(0);
+  const lastProgressSigRef = useRef('');
+  const serverSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const buildProgress = React.useCallback((): ExamProgress | null => {
+    const s = stateRef.current;
+    if (!progressReadyRef.current || !s.session || !s.session.questions?.length || s.isExamSubmitted) return null;
+    return {
+      v: 1,
+      engine: 'tcs',
+      testId,
+      userId: currentUserRef.current?.id || 'guest',
+      title: s.session.testTitle,
+      source: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'mobile_web' : 'web',
+      savedAt: Date.now(),
+      timeRemaining: s.timeRemaining,
+      violations: s.violationsCount,
+      currentSectionIndex: s.currentSectionIndex,
+      currentQuestionIndex: s.currentQuestionIndex,
+      data: {
+        responses: s.responses,
+        submittedSectionIndices: s.submittedSectionIndices || [],
+        isExtraTimeMode: s.isExtraTimeMode,
+        extraTimeRemaining: s.extraTimeRemaining,
+      },
+    };
+  }, [testId]);
+
+  const persistProgress = React.useCallback((opts: { server?: boolean; keepalive?: boolean } = {}) => {
+    const p = buildProgress();
+    if (!p) return;
+    writeLocalProgress(p);
+    if (opts.server && serverWritableRef.current) {
+      progressSyncRef.current?.push(p, { keepalive: opts.keepalive });
+      // Keep "Resume" on the Test Series page in step (no extra request)
+      saveOngoingSessionRef.current(testId, p.title || '', p.timeRemaining, p.violations, stateRef.current.responses, p.currentSectionIndex, p.currentQuestionIndex, { localOnly: true });
+    }
+  }, [buildProgress, testId]);
+
   // Automatically pause exam, save state instantly, and display pause popup when tab is switched, browser minimized, or window focus lost
   useEffect(() => {
     if (state.isExamSubmitted) return;
@@ -291,34 +365,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       pauseExam();
       setIsManuallyPaused(true);
 
-      const currentState = stateRef.current;
-      if (currentState.session && currentState.session.questions && currentState.session.questions.length > 0 && !currentState.isExamSubmitted) {
-        const localSnap = {
-          testId,
-          status: 'ONGOING',
-          timeRemaining: currentState.timeRemaining,
-          violations: currentState.violationsCount,
-          currentSectionIndex: currentState.currentSectionIndex,
-          currentQuestionIndex: currentState.currentQuestionIndex,
-          responses: currentState.responses,
-          savedAt: Date.now(),
-          updatedAt: new Date().toISOString(),
-          startedAt: new Date().toISOString(),
-        };
-        try {
-          localStorage.setItem(`ongoing_web_${testId}`, JSON.stringify(localSnap));
-        } catch {}
-
-        saveOngoingSessionRef.current(
-          testId,
-          currentState.session.testTitle,
-          currentState.timeRemaining,
-          currentState.violationsCount,
-          currentState.responses,
-          currentState.currentSectionIndex,
-          currentState.currentQuestionIndex
-        );
-      }
+      persistProgress({ server: true, keepalive: document.visibilityState === 'hidden' });
     };
 
     const handleVisibilityChange = () => {
@@ -338,7 +385,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
     };
-  }, [state.isExamSubmitted, pauseExam, testId]);
+  }, [state.isExamSubmitted, pauseExam, testId, persistProgress]);
 
   // Initialize session on mount (checking for resume) — runs ONLY ONCE
   useEffect(() => {
@@ -346,6 +393,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     initializedRef.current = true;
 
     const initialize = async () => {
+      // Look up saved progress on the server while the questions load
+      const user = currentUserRef.current;
+      const serverProgressPromise = user?.id ? fetchServerProgress(user.id, testId, 'tcs') : Promise.resolve(null);
       let customQs = null;
       try {
         const res = await fetch('/api/db', {
@@ -401,87 +451,81 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         console.log('[RPSC RAS] Detected RPSC RAS mode for test:', testId, '| title:', examSession.testTitle, '| cat:', examSession.testCategory, '| sub:', examSession.testSubcategory);
       }
 
-      // 1. Check server for an ongoing session first
-      const user = currentUserRef.current;
-      const ongoingRecord = user?.testSessions?.find(
-        (s: any) => s.testId === testId && s.status === 'ONGOING'
-      );
-
-      // 2. Fallback: check localStorage for a locally-saved snapshot (works offline)
-      let localSnap: any = null;
-      if (!ongoingRecord) {
-        try {
-          const raw = localStorage.getItem(`ongoing_web_${testId}`);
-          if (raw) {
-            localSnap = JSON.parse(raw);
-            // Only use if it's actually an ongoing session
-            if (localSnap?.status !== 'ONGOING') localSnap = null;
-          }
-        } catch {}
-      }
-
-      const resumeSource = ongoingRecord || localSnap;
+      // Continue from the newer of this browser's copy and the server's copy
+      const localProgress = readLocalProgress(user?.id, testId, 'tcs');
+      const serverProgress = await serverProgressPromise;
+      if (serverProgress === undefined) serverWritableRef.current = false;
+      const resumeSource = newerProgress(localProgress, serverProgress ?? null);
       const examLangToUse = initialExamLanguage || authLanguage || 'en';
 
-      if (resumeSource && resumeSource.responses) {
+      if (resumeSource && resumeSource.data?.responses && Object.keys(resumeSource.data.responses).length > 0) {
+        resumedSavedAtRef.current = resumeSource.savedAt || 0;
+        const sectionCount = examSession.sections.length;
+        const sectionIdx = (resumeSource.currentSectionIndex ?? 0) < sectionCount ? (resumeSource.currentSectionIndex ?? 0) : 0;
+        const sectionQuestionCount = examSession.questions.filter(q => q.sectionId === examSession.sections[sectionIdx]?.id).length;
+        const questionIdx = (resumeSource.currentQuestionIndex ?? 0) < sectionQuestionCount ? (resumeSource.currentQuestionIndex ?? 0) : 0;
         initSession(examSession, 3, {
-          responses: resumeSource.responses as any,
+          responses: resumeSource.data.responses as any,
           timeRemaining: resumeSource.timeRemaining ?? examSession.totalDurationSeconds,
           violationsCount: resumeSource.violations ?? 0,
-          currentSectionIndex: resumeSource.currentSectionIndex ?? 0,
-          currentQuestionIndex: resumeSource.currentQuestionIndex ?? 0,
+          currentSectionIndex: sectionIdx,
+          currentQuestionIndex: questionIdx,
+          submittedSectionIndices: Array.isArray(resumeSource.data.submittedSectionIndices) ? resumeSource.data.submittedSectionIndices : undefined,
+          isExtraTimeMode: !!resumeSource.data.isExtraTimeMode,
+          extraTimeRemaining: resumeSource.data.extraTimeRemaining,
         }, examLangToUse, isRpscRas);
       } else {
         initSession(examSession, 3, undefined, examLangToUse, isRpscRas); // 3 violations allowed
       }
+      progressReadyRef.current = true;
     };
 
     initialize();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testId, initialExamLanguage, authLanguage, state.isExamSubmitted]);
 
-  // Save state to localStorage (instant, works offline) and server on unload/unmount
+  // Save progress on every change: this browser immediately, the server ~1.5s after an
+  // answer / review mark / visit / section change, and every 15s for the timer.
   useEffect(() => {
-    const handleSave = () => {
-      const currentState = stateRef.current;
-      if (currentState.session && currentState.session.questions && currentState.session.questions.length > 0 && !currentState.isExamSubmitted) {
-        // Always save to localStorage immediately (works offline, zero latency)
-        const localSnap = {
-          testId,
-          status: 'ONGOING',
-          timeRemaining: currentState.timeRemaining,
-          violations: currentState.violationsCount,
-          currentSectionIndex: currentState.currentSectionIndex,
-          currentQuestionIndex: currentState.currentQuestionIndex,
-          responses: currentState.responses,
-          savedAt: Date.now(),
-          updatedAt: new Date().toISOString(),
-          startedAt: new Date().toISOString(),
-        };
-        try {
-          localStorage.setItem(`ongoing_web_${testId}`, JSON.stringify(localSnap));
-        } catch {}
+    if (!progressReadyRef.current || !state.session || state.isExamSubmitted) return;
+    persistProgress();
+    const sig = progressSignature(state);
+    if (sig !== lastProgressSigRef.current) {
+      lastProgressSigRef.current = sig;
+      if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+      serverSaveTimerRef.current = setTimeout(() => persistProgress({ server: true }), 1500);
+    }
+  }, [state, persistProgress]);
 
-        // Also sync to server (may fail if offline — localStorage already has it)
-        saveOngoingSessionRef.current(
-          testId,
-          currentState.session.testTitle,
-          currentState.timeRemaining,
-          currentState.violationsCount,
-          currentState.responses,
-          currentState.currentSectionIndex,
-          currentState.currentQuestionIndex
-        );
+  const hasSession = !!state.session;
+  useEffect(() => {
+    if (!hasSession || state.isExamSubmitted) return;
+    const heartbeat = setInterval(async () => {
+      if (!serverWritableRef.current) {
+        // Server copy couldn't be checked at start: check again before writing to it
+        const user = currentUserRef.current;
+        if (!user?.id) return;
+        const serverProgress = await fetchServerProgress(user.id, testId, 'tcs');
+        if (serverProgress === undefined) return;
+        if (serverProgress && serverProgress.savedAt > resumedSavedAtRef.current) return; // newer progress elsewhere: leave it alone
+        serverWritableRef.current = true;
       }
-    };
+      if (stateRef.current.isTimerRunning) persistProgress({ server: true });
+    }, 15000);
+    return () => clearInterval(heartbeat);
+  }, [hasSession, state.isExamSubmitted, persistProgress, testId]);
 
-    window.addEventListener('beforeunload', handleSave);
-
+  // Page closing, reloading or left: save now, with a request that outlives the tab
+  useEffect(() => {
+    const saveOnLeave = () => persistProgress({ server: true, keepalive: true });
+    window.addEventListener('pagehide', saveOnLeave);
+    window.addEventListener('beforeunload', saveOnLeave);
     return () => {
-      handleSave();
-      window.removeEventListener('beforeunload', handleSave);
+      saveOnLeave();
+      window.removeEventListener('pagehide', saveOnLeave);
+      window.removeEventListener('beforeunload', saveOnLeave);
     };
-  }, [testId]);
+  }, [persistProgress]);
 
   // Track sectional transitions when sectional timing is active
   const lastSectionIndexRef = useRef(state.currentSectionIndex);
@@ -494,8 +538,11 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     if (state.isExamSubmitted && state.score && currentUser && !attemptSaved) {
       setAttemptSaved(true);
       
-      // Clear local ongoing snapshot immediately BEFORE updating currentUser / calling addAttempt
-      try { localStorage.removeItem(`ongoing_web_${testId}`); } catch {}
+      // Submitted: drop the saved progress, and let any progress save still in flight finish
+      // before the attempt is recorded, so it can't bring the test back as "ongoing"
+      if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
+      clearLocalProgress(testId, currentUser.id);
+      const progressFlushed = progressSyncRef.current ? progressSyncRef.current.stopAndFlush() : Promise.resolve();
 
       const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
       let totalElapsedSeconds = 0;
@@ -513,16 +560,21 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       // exam's), and for RPSC RAS extra-time mode timeRemaining is pinned at 0 the moment
       // extra time starts, so time spent in extra time would be silently dropped. The
       // elapsed-seconds sum tracks correctly across both cases.
-      addAttempt(
-        testId,
-        state.session?.testTitle || "Mock Test Attempt",
-        state.score.obtainedMarks,
-        state.score.totalMarks,
-        state.score.accuracyPercentage,
-        totalElapsedSeconds,
-        state.violationsCount,
-        savedResponses
-      );
+      const attemptTitle = state.session?.testTitle || "Mock Test Attempt";
+      const { obtainedMarks, totalMarks, accuracyPercentage } = state.score;
+      const violations = state.violationsCount;
+      progressFlushed.finally(() => {
+        addAttempt(
+          testId,
+          attemptTitle,
+          obtainedMarks,
+          totalMarks,
+          accuracyPercentage,
+          totalElapsedSeconds,
+          violations,
+          savedResponses
+        );
+      });
     }
   }, [state.isExamSubmitted, state.score, currentUser, addAttempt, testId, attemptSaved, state.responses, state.session, state.timeRemaining, state.violationsCount]);
 
@@ -1360,13 +1412,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                               const isOption5 = idx === 4;
 
                               return (
-                                <label
+                                <OptionRow
                                   key={idx}
-                                  onClick={() => {
+                                  onClick={isSscCategoryTest ? undefined : () => {
                                     if (isBlockedInExtraTime || isReadOnlyInExtraTime) return;
                                     selectOption(idx);
                                   }}
-                                  className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition text-[11px] ${
+                                  className={sscRowClass(`flex items-center gap-3.5 p-3.5 rounded-xl border transition text-[11px] ${
                                     isBlockedInExtraTime
                                       ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 opacity-50 cursor-not-allowed'
                                       : isReadOnlyInExtraTime
@@ -1374,7 +1426,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                       : isOption5 && inExtraTime && isQuestionUnattempted
                                       ? `${isTempChosen ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-500 font-bold text-amber-900 dark:text-amber-100 shadow-sm ring-2 ring-amber-400' : 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100'} cursor-pointer`
                                       : `cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 ${isTempChosen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-700 font-bold text-blue-900 dark:text-blue-100 shadow-sm' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'}`
-                                  }`}
+                                  }`)}
                                 >
                                   {isBlockedInExtraTime ? (
                                     <span className="h-3.5 w-3.5 flex items-center justify-center text-slate-400 dark:text-slate-600">
@@ -1385,15 +1437,20 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                       type="radio"
                                       name={`question-${currentQuestion.id}`}
                                       checked={isTempChosen}
-                                      readOnly
-                                      className={`h-3.5 w-3.5 ${isOption5 ? 'border-amber-400 text-amber-600' : 'border-slate-300 dark:border-slate-600 text-blue-600'} focus:ring-0`}
+                                      readOnly={!isSscCategoryTest}
+                                      onChange={isSscCategoryTest ? () => {
+                                        if (isBlockedInExtraTime || isReadOnlyInExtraTime) return;
+                                        selectOption(idx);
+                                      } : undefined}
+                                      aria-label={`Option ${idx + 1}`}
+                                      className={`${isSscCategoryTest ? 'cursor-pointer ' : ''}h-3.5 w-3.5 ${isOption5 ? 'border-amber-400 text-amber-600' : 'border-slate-300 dark:border-slate-600 text-blue-600'} focus:ring-0`}
                                     />
                                   )}
                                   <MathJaxText
                                     className={`flex-1 font-sans ${isOption5 ? 'font-bold text-amber-900 dark:text-amber-200' : ''}`}
                                     content={processQuestionHtml(optLabel)}
                                   />
-                                </label>
+                                </OptionRow>
                               );
                             })}
                           </>
@@ -1881,13 +1938,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                 const isOption5 = idx === 4;
 
                                 return (
-                                  <label
+                                  <OptionRow
                                     key={idx}
-                                    onClick={() => {
+                                    onClick={isSscCategoryTest ? undefined : () => {
                                       if (isBlockedInExtraTime || isReadOnlyInExtraTime) return;
                                       selectOption(idx);
                                     }}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border transition ${
+                                    className={sscRowClass(`flex items-center gap-3 p-3 rounded-lg border transition ${
                                       isBlockedInExtraTime
                                         ? 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed'
                                         : isReadOnlyInExtraTime
@@ -1895,7 +1952,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                         : isOption5 && inExtraTime && isQuestionUnattempted
                                         ? `${isTempChosen ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-500 font-semibold text-amber-900 dark:text-amber-100 ring-2 ring-amber-400' : 'bg-amber-50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30'} cursor-pointer`
                                         : `cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 border-slate-200 dark:border-slate-700 ${isTempChosen ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-400 dark:border-blue-700 font-semibold text-blue-900 dark:text-blue-100' : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200'}`
-                                    }`}
+                                    }`)}
                                   >
                                     {isBlockedInExtraTime ? (
                                       <span className="h-4 w-4 flex items-center justify-center text-slate-400">
@@ -1906,15 +1963,20 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                                         type="radio"
                                         name={`question-${currentQuestion.id}`}
                                         checked={isTempChosen}
-                                        readOnly
-                                        className={`h-4 w-4 ${isOption5 ? 'border-amber-400 text-amber-600 focus:ring-amber-500' : 'border-slate-300 text-blue-600 focus:ring-blue-500'}`}
+                                        readOnly={!isSscCategoryTest}
+                                        onChange={isSscCategoryTest ? () => {
+                                          if (isBlockedInExtraTime || isReadOnlyInExtraTime) return;
+                                          selectOption(idx);
+                                        } : undefined}
+                                        aria-label={`Option ${idx + 1}`}
+                                        className={`${isSscCategoryTest ? 'cursor-pointer ' : ''}h-4 w-4 ${isOption5 ? 'border-amber-400 text-amber-600 focus:ring-amber-500' : 'border-slate-300 text-blue-600 focus:ring-blue-500'}`}
                                       />
                                     )}
                                     <MathJaxText
                                       className={`text-slate-800 dark:text-slate-200 text-xs flex-1 font-sans ${isOption5 ? 'font-bold text-amber-900 dark:text-amber-200' : ''}`}
                                       content={processQuestionHtml(optLabel)}
                                     />
-                                  </label>
+                                  </OptionRow>
                                 );
                               })}
                             </>
@@ -3151,7 +3213,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
 export default function DynamicExamPage() {
   const params = useParams();
   const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { saveOngoingSession, language: authLanguage, examCatalog } = useAuth();
+  const { language: authLanguage, examCatalog } = useAuth();
   
   const [mounted, setMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -3172,26 +3234,6 @@ export default function DynamicExamPage() {
   if (!mounted) {
     return null;
   }
-
-  // Callback when Engine triggers background timer saves
-  const handleSaveSync = async (engineState: any) => {
-    console.log('Synchronizing test engine states with database endpoint...', {
-      sessionId: engineState.session.sessionId,
-      remaining: engineState.timeRemaining,
-      violations: engineState.violationsCount
-    });
-    if (engineState.session && engineState.session.questions && engineState.session.questions.length > 0 && !engineState.isExamSubmitted) {
-      saveOngoingSession(
-        testId,
-        engineState.session.testTitle,
-        engineState.timeRemaining,
-        engineState.violationsCount,
-        engineState.responses,
-        engineState.currentSectionIndex,
-        engineState.currentQuestionIndex
-      );
-    }
-  };
 
   const handleStart = (chosenLang: 'en' | 'hi') => {
     setSelectedExamLang(chosenLang);
@@ -3229,12 +3271,29 @@ export default function DynamicExamPage() {
 
   const isCbat = (() => {
     const lowerId = (testId || '').toLowerCase();
+    if (lowerId === 'rrb_ntpc_cbat__psycho_test__iayf') return true;
 
-    // 1. Direct ID match for Full Mock & All 5 Sectional Tests
-    if (
-      lowerId.includes('cbat') || 
-      lowerId.includes('psycho') || 
-      lowerId === 'rrb_ntpc_cbat__psycho_test__iayf' || 
+    // 1. Catalog decides when the test is listed: CBAT only if it sits under the CBAT / psycho exam.
+    //    (Keyword matching alone sent SSC "General Intelligence and Reasoning" tests to the CBAT engine.)
+    if (examCatalog && Array.isArray(examCatalog)) {
+      for (const cat of examCatalog) {
+        for (const sub of cat.subCategories || []) {
+          const inSub =
+            sub.tests?.some((t: any) => t.id === testId) ||
+            sub.subSubCategories?.some((ss: any) => ss.tests?.some((t: any) => t.id === testId)) ||
+            sub.subSubCategories?.some((ss: any) => ss.mockTests?.some((t: any) => t.id === testId));
+          if (inSub) {
+            const subName = (sub.name || '').toLowerCase();
+            return sub.id === 'rrb_ntpc_cbat__psycho_test__iayf' || subName.includes('cbat') || subName.includes('psycho');
+          }
+        }
+      }
+    }
+
+    // 2. Not in the catalog (e.g. still loading or a direct link): fall back to ID keywords
+    return (
+      lowerId.includes('cbat') ||
+      lowerId.includes('psycho') ||
       lowerId.includes('station_master') ||
       lowerId.includes('classification') ||
       lowerId.includes('personality') ||
@@ -3244,26 +3303,12 @@ export default function DynamicExamPage() {
       lowerId.includes('odd_numbers') ||
       lowerId.includes('selective_attention') ||
       lowerId.includes('spatial_scanning') ||
-      lowerId.includes('intelligence')
-    ) return true;
-
-    // 2. Catalog hierarchy match
-    if (examCatalog && Array.isArray(examCatalog)) {
-      for (const cat of examCatalog) {
-        for (const sub of cat.subCategories || []) {
-          if (sub.id === 'rrb_ntpc_cbat__psycho_test__iayf' || (sub.name && (sub.name.toLowerCase().includes('cbat') || sub.name.toLowerCase().includes('psycho')))) {
-            if (sub.tests?.some((t: any) => t.id === testId)) return true;
-            if (sub.subSubCategories?.some((ss: any) => ss.tests?.some((t: any) => t.id === testId))) return true;
-            if (sub.subSubCategories?.some((ss: any) => ss.mockTests?.some((t: any) => t.id === testId))) return true;
-          }
-        }
-      }
-    }
-    return false;
+      (lowerId.includes('intelligence') && !lowerId.includes('reasoning'))
+    );
   })();
 
   if (isCbat) {
-    return <CbatExamEngine testId={testId} initialExamLanguage={selectedExamLang} onStateSync={handleSaveSync} />;
+    return <CbatExamEngine testId={testId} initialExamLanguage={selectedExamLang} />;
   }
 
   if (!isConfirmed) {
@@ -3274,7 +3319,7 @@ export default function DynamicExamPage() {
   }
 
   return (
-    <TestEngineProvider onStateSync={handleSaveSync} syncIntervalSeconds={12}>
+    <TestEngineProvider>
       <TcsIonEngine testId={testId} initialExamLanguage={selectedExamLang} selectedLang1={selectedLang1} selectedLang2={selectedLang2} />
     </TestEngineProvider>
   );

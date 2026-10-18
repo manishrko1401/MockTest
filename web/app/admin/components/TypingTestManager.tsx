@@ -138,8 +138,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
   // Admin headers helper
   const adminHeaders = {
-    'Content-Type': 'application/json',
-    'x-admin-key': 'super_secret_admin_key_2026'
+    'Content-Type': 'application/json'
   };
 
   // Fetch all data
@@ -150,12 +149,12 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
         fetch('/api/db', {
           method: 'POST',
           headers: adminHeaders,
-          body: JSON.stringify({ action: 'get-typing-tests' })
+          body: JSON.stringify({ action: 'get-typing-tests', data: { includeInactive: true } })
         }),
         fetch('/api/db', {
           method: 'POST',
           headers: adminHeaders,
-          body: JSON.stringify({ action: 'get-typing-categories' })
+          body: JSON.stringify({ action: 'get-typing-categories', data: { includeInactive: true } })
         }),
         fetch('/api/db', {
           method: 'POST',
@@ -588,9 +587,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
   return (
     <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans">
       {/* Header & Sub-Tabs Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+          <div className="p-3 rounded-md bg-blue-100 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-400">
             <Keyboard className="w-6 h-6" />
           </div>
           <div>
@@ -608,7 +607,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           <button
             onClick={loadAllData}
             disabled={loading}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+            className="p-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -617,9 +616,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
             href="/typing-test"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 rounded-md bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
           >
-            <Play className="w-3.5 h-3.5 text-blue-500" />
+            <Play className="w-3.5 h-3.5 text-[#1e4e79]" />
             Live Portal
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -630,9 +629,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button
           onClick={() => setSubTab('tests')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
+          className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
             subTab === 'tests'
-              ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+              ? 'bg-[#1e4e79] text-white shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -642,9 +641,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
         <button
           onClick={() => setSubTab('categories')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
+          className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
             subTab === 'categories'
-              ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+              ? 'bg-[#1e4e79] text-white shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -654,9 +653,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
         <button
           onClick={() => setSubTab('attempts')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
+          className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
             subTab === 'attempts'
-              ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+              ? 'bg-[#1e4e79] text-white shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
@@ -672,7 +671,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
         <div className="space-y-6">
 
           {/* CREATE NEW TYPING TEST — COLLAPSIBLE CARD (Styled Like MockTestManager) */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
             <button
               type="button"
               onClick={() => {
@@ -684,11 +683,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
                   <PlusCircle className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create New Typing Test</p>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-white">Create New Typing Test</p>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">Click to expand the typing test creation form</p>
                 </div>
               </div>
@@ -704,14 +703,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Category Selector */}
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                         Exam Category *
                       </label>
                       <select
                         required
                         value={testForm.categoryId}
                         onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                       >
                         <option value="">-- Select Exam Category --</option>
                         {categories.map(cat => (
@@ -724,7 +723,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                     {/* Test Language / Category Section Selector */}
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                         Test Typing Language / Category Section *
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -736,21 +735,21 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                             demoPassageText: DEFAULT_DEMO_TEXT_EN,
                             qualifyingWpm: prev.qualifyingWpm === 30 ? 35 : prev.qualifyingWpm
                           }))}
-                          className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                          className={`p-2.5 rounded-md border flex items-center gap-2.5 transition cursor-pointer text-left ${
                             testForm.language === 'en'
-                              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                              ? 'border-[#1e4e79] bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
                               : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                           }`}
                         >
-                          <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'en' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+                          <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'en' ? 'bg-[#1e4e79] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
                             <Keyboard className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs font-black flex items-center gap-1">
+                            <div className="text-xs font-semibold flex items-center gap-1">
                               English Typing
-                              {testForm.language === 'en' && <span className="text-[9px] bg-blue-600 text-white px-1 py-0.2 rounded font-bold">ACTIVE</span>}
+                              {testForm.language === 'en' && <span className="text-[11px] bg-[#1e4e79] text-white px-1 py-0.2 rounded font-bold">ACTIVE</span>}
                             </div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                               Shows in English Section
                             </div>
                           </div>
@@ -764,21 +763,21 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                             demoPassageText: DEFAULT_DEMO_TEXT_HI,
                             qualifyingWpm: prev.qualifyingWpm === 35 ? 30 : prev.qualifyingWpm
                           }))}
-                          className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                          className={`p-2.5 rounded-md border flex items-center gap-2.5 transition cursor-pointer text-left ${
                             testForm.language === 'hi'
-                              ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                              ? 'border-[#1e4e79] bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
                               : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                           }`}
                         >
-                          <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'hi' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
+                          <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'hi' ? 'bg-[#1e4e79] text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs font-black flex items-center gap-1">
+                            <div className="text-xs font-semibold flex items-center gap-1">
                               हिंदी Typing
-                              {testForm.language === 'hi' && <span className="text-[9px] bg-blue-600 text-white px-1 py-0.2 rounded font-bold">ACTIVE</span>}
+                              {testForm.language === 'hi' && <span className="text-[11px] bg-[#1e4e79] text-white px-1 py-0.2 rounded font-bold">ACTIVE</span>}
                             </div>
-                            <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                               Shows in Hindi Section
                             </div>
                           </div>
@@ -790,8 +789,8 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   {/* Test Title & Quantity (Batch Creation matching MockTestManager) */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div className="sm:col-span-3">
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                        Test Title ({testForm.language === 'hi' ? 'Hindi' : 'English'}) * {testCount > 1 && <span className="text-blue-600 dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                        Test Title ({testForm.language === 'hi' ? 'Hindi' : 'English'}) * {testCount > 1 && <span className="text-[#1e4e79] dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
                       </label>
                       <input
                         type="text"
@@ -799,11 +798,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         value={testForm.title}
                         onChange={e => setTestForm({ ...testForm, title: e.target.value })}
                         placeholder={testForm.language === 'hi' ? "e.g. SSC CGL Tier-2 Hindi Typing Test" : "e.g. SSC CGL Tier-2 English Typing Test"}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold font-sans"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                         No. of Tests to Create <span className="text-slate-400 font-normal lowercase">(max 200)</span>
                       </label>
                       <input
@@ -813,14 +812,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         max={200}
                         value={testCount}
                         onChange={e => setTestCount(Math.min(200, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold font-sans"
                       />
                     </div>
                   </div>
 
                   {/* Hindi Title (Optional) */}
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                       Test Title in Hindi (Optional)
                     </label>
                     <input
@@ -828,27 +827,27 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       value={testForm.titleHi}
                       onChange={e => setTestForm({ ...testForm, titleHi: e.target.value })}
                       placeholder="e.g. एसएससी सीजीएल टियर-2 टाइपिंग टेस्ट"
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
 
                   {/* Live Bulk Title Preview Badge */}
                   {testCount > 1 && testForm.title.trim() && (
-                    <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-900 dark:text-blue-200 space-y-1">
-                      <div className="font-extrabold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
-                        <span>⚡ Bulk Creation Preview ({testCount} Typing Tests in {testForm.language === 'hi' ? 'Hindi' : 'English'} Section):</span>
+                    <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-md text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                      <div className="font-semibold flex items-center gap-1.5 text-[#1e4e79] dark:text-blue-400">
+                        <span>Bulk Creation Preview ({testCount} Typing Tests in {testForm.language === 'hi' ? 'Hindi' : 'English'} Section):</span>
                       </div>
                       <p className="text-[11px] text-blue-800 dark:text-blue-300 font-medium">
                         Will create tests with titles suffixing 1 to {testCount}:
                       </p>
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {Array.from({ length: Math.min(testCount, 5) }).map((_, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[10px] font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-700">
+                          <span key={idx} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-xs font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-700">
                             {testForm.title.trim()} {idx + 1}
                           </span>
                         ))}
                         {testCount > 5 && (
-                          <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[10px] font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-800">
+                          <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-[#1e4e79] dark:text-blue-300 text-xs font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-800">
                             ... up to "{testForm.title.trim()} {testCount}"
                           </span>
                         )}
@@ -859,7 +858,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   {/* Durations & Criteria Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Demo (min)</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Demo (min)</label>
                       <input
                         type="number"
                         step="0.5"
@@ -867,11 +866,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         required
                         value={testForm.demoDurationMinutes}
                         onChange={e => setTestForm({ ...testForm, demoDurationMinutes: Number(e.target.value) })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Break (min)</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Break (min)</label>
                       <input
                         type="number"
                         step="0.5"
@@ -879,11 +878,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         required
                         value={testForm.breakDurationMinutes}
                         onChange={e => setTestForm({ ...testForm, breakDurationMinutes: Number(e.target.value) })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Main Exam (min)</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Main Exam (min)</label>
                       <input
                         type="number"
                         step="1"
@@ -891,11 +890,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         required
                         value={testForm.mainDurationMinutes}
                         onChange={e => setTestForm({ ...testForm, mainDurationMinutes: Number(e.target.value) })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Target Speed (WPM)</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Target Speed (WPM)</label>
                       <input
                         type="number"
                         min={10}
@@ -903,11 +902,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         required
                         value={testForm.qualifyingWpm}
                         onChange={e => setTestForm({ ...testForm, qualifyingWpm: Number(e.target.value) })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Max Error %</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Max Error %</label>
                       <input
                         type="number"
                         step="0.1"
@@ -916,15 +915,15 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         required
                         value={testForm.maxErrorPercentage}
                         onChange={e => setTestForm({ ...testForm, maxErrorPercentage: Number(e.target.value) })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Difficulty</label>
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Difficulty</label>
                       <select
                         value={testForm.difficulty}
                         onChange={e => setTestForm({ ...testForm, difficulty: e.target.value as any })}
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                       >
                         <option value="Easy">Easy</option>
                         <option value="Medium">Medium</option>
@@ -934,7 +933,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   </div>
 
                   {/* Rules Panel 1: Backspace Key Control (Matching MockTestManager Feature Panel Style) */}
-                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-2">
                     <label className="flex items-start gap-2.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -945,10 +944,10 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                            <Keyboard className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <Keyboard className="w-3.5 h-3.5 text-[#1e4e79] dark:text-blue-400" />
                             Enable Backspace & Delete Keys
                           </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                             testForm.enableBackspace
                               ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                               : 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
@@ -964,7 +963,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   </div>
 
                   {/* Rules Panel 2: Paragraph Retyping (Matching MockTestManager Feature Panel Style) */}
-                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
+                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-2">
                     <label className="flex items-start gap-2.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -975,12 +974,12 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                            <RotateCcw className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <RotateCcw className="w-3.5 h-3.5 text-[#1e4e79] dark:text-blue-400" />
                             Enable Paragraph Retype (Repeat Passage After Finishing)
                           </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                             testForm.allowRetype
-                              ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                              ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e4e79] dark:text-blue-300 border border-blue-200 dark:border-blue-800'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                           }`}>
                             {testForm.allowRetype ? '✓ Speed Counts Retyped Words' : '✕ Single Pass Evaluation'}
@@ -995,12 +994,12 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                   {/* Main Exam Passage Notice Card */}
                   <div className="pt-1 border-t border-slate-200 dark:border-slate-800">
-                    <div className="p-4 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl flex items-start gap-3">
+                    <div className="p-4 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-md flex items-start gap-3">
                       <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5">
                         <Upload className="w-4 h-4" />
                       </div>
                       <div className="space-y-1">
-                        <h5 className="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                        <h5 className="text-xs font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
                           Main Exam Passage Uploaded After Test Creation
                         </h5>
                         <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
@@ -1018,14 +1017,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         setIsCreateTestOpen(false);
                         setTestCount(1);
                       }}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                      className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer transition active:scale-95"
+                      className="px-6 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs shadow-md flex items-center gap-2 cursor-pointer transition"
                     >
                       <Plus className="w-4 h-4" />
                       {testCount > 1 ? `Create ${testCount} Typing Tests` : 'Create Typing Test'}
@@ -1037,7 +1036,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           </div>
 
           {/* SEARCH & FILTER BAR */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="relative w-full sm:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -1045,7 +1044,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={categoryFilter ? `Search tests in ${selectedCategoryObj?.name || 'category'}...` : "Search exam categories..."}
-                className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                className="w-full pl-9 pr-4 py-2 text-xs rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
               />
             </div>
 
@@ -1053,7 +1052,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
+                className="px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
               >
                 <option value="">-- Select Exam Category ({categories.length}) --</option>
                 {categories.map(c => (
@@ -1067,7 +1066,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 <select
                   value={languageFilter}
                   onChange={e => setLanguageFilter(e.target.value as any)}
-                  className="px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
+                  className="px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold cursor-pointer focus:outline-none"
                 >
                   <option value="ALL">All Languages</option>
                   <option value="en">English (QWERTY)</option>
@@ -1094,7 +1093,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   {filteredTests.length} test{filteredTests.length !== 1 ? 's' : ''} in category
                 </span>
               ) : (
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-900/60">
+                <span className="text-xs font-bold text-[#1e4e79] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-900/60">
                   {categories.length} Categories Available
                 </span>
               )}
@@ -1104,13 +1103,13 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           {/* CATEGORY SELECTION VIEW (Shown when no category is selected yet) */}
           {!categoryFilter && (
             <div className="space-y-4">
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50/50 to-slate-50 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-950 border border-blue-200/80 dark:border-blue-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="p-5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-blue-200/80 dark:border-blue-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                  <div className="h-11 w-11 rounded-lg bg-[#1e4e79] text-white flex items-center justify-center shadow-md shrink-0">
                     <Folder className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="font-semibold text-base text-slate-900 dark:text-white flex items-center gap-2">
                       Select an Exam Category to View Typing Tests
                     </h3>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
@@ -1120,7 +1119,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-black bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                  <span className="text-xs font-semibold bg-white dark:bg-slate-900 px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                     Total: <strong>{tests.length}</strong> Tests · <strong>{categories.length}</strong> Categories
                   </span>
                 </div>
@@ -1139,7 +1138,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                           setCategoryFilter(cat.id);
                           setSearchQuery('');
                         }}
-                        className="group bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4"
+                        className="group bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-lg p-5 shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
@@ -1147,15 +1146,15 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                               <img
                                 src={cat.logoUrl}
                                 alt={cat.name}
-                                className="w-11 h-11 rounded-xl object-contain p-1 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0"
+                                className="w-11 h-11 rounded-md object-contain p-1 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0"
                               />
                             ) : (
-                              <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                              <div className="w-11 h-11 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-900/60 text-[#1e4e79] dark:text-blue-400 flex items-center justify-center font-semibold text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                 <Keyboard className="w-5 h-5" />
                               </div>
                             )}
                             <div className="min-w-0">
-                              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                              <h4 className="font-semibold text-sm text-slate-900 dark:text-white group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors truncate">
                                 {cat.name}
                               </h4>
                               {cat.nameHi && (
@@ -1166,7 +1165,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                             </div>
                           </div>
 
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/80 text-[#1e4e79] dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
                             {count} {count === 1 ? 'Test' : 'Tests'}
                           </span>
                         </div>
@@ -1177,7 +1176,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                           </p>
                         )}
 
-                        <div className="pt-2 border-t border-slate-100 dark:border-slate-900 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-900 flex items-center justify-between text-xs font-bold text-[#1e4e79] dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
                           <span>View {count} Tests</span>
                           <ChevronRight className="w-4 h-4" />
                         </div>
@@ -1190,7 +1189,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
           {/* ACTIVE CATEGORY BANNER (Shown when a category is selected) */}
           {categoryFilter && selectedCategoryObj && (
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   type="button"
@@ -1198,7 +1197,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     setCategoryFilter('');
                     setSearchQuery('');
                   }}
-                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition"
+                  className="p-2 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition"
                   title="Back to All Categories"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -1212,19 +1211,19 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     <img
                       src={selectedCategoryObj.logoUrl}
                       alt={selectedCategoryObj.name}
-                      className="w-9 h-9 rounded-xl object-contain p-1 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0"
+                      className="w-9 h-9 rounded-md object-contain p-1 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shrink-0"
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-md bg-blue-100 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-400 flex items-center justify-center shrink-0">
                       <Keyboard className="w-5 h-5" />
                     </div>
                   )}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                      <h3 className="font-semibold text-base text-slate-900 dark:text-white">
                         {selectedCategoryObj.name}
                       </h3>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-300 border border-blue-200 dark:border-blue-900">
                         {filteredTests.length} {filteredTests.length === 1 ? 'Test' : 'Tests'}
                       </span>
                     </div>
@@ -1244,7 +1243,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     setTestForm(getEmptyTestForm(selectedCategoryObj.id));
                     setIsCreateTestOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+                  className="px-3 py-1.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add Test to {selectedCategoryObj.name}
@@ -1257,7 +1256,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           {categoryFilter && (
             <div className="space-y-3">
               {filteredTests.length === 0 ? (
-                <div className="bg-white dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
+                <div className="bg-white dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg p-12 text-center">
                   <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
                   <p className="font-bold text-slate-600 dark:text-slate-400">
                     No typing tests found in {selectedCategoryObj?.name || 'this category'}
@@ -1271,7 +1270,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       setTestForm(getEmptyTestForm(selectedCategoryObj?.id || ''));
                       setIsCreateTestOpen(true);
                     }}
-                    className="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs inline-flex items-center gap-2 cursor-pointer hover:bg-blue-700 transition"
+                    className="mt-4 px-4 py-2 rounded-md bg-[#1e4e79] text-white font-bold text-xs inline-flex items-center gap-2 cursor-pointer hover:bg-[#163c5e] transition"
                   >
                     <Plus className="w-4 h-4" />
                     Create First Test for {selectedCategoryObj?.name}
@@ -1286,20 +1285,20 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 return (
                   <div
                     key={test.id}
-                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden text-xs transition hover:border-slate-300 dark:hover:border-slate-700"
+                    className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden text-xs transition hover:border-slate-300 dark:hover:border-slate-700"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5">
                       {/* Left: Test Details */}
                       <div className="flex-1 min-w-0 space-y-2">
                         {/* Top Meta Bar */}
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                          <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-[#1e4e79] dark:text-blue-300 border border-blue-200 dark:border-blue-900">
                             {cat?.name || 'General Typing'}
                           </span>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                          <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                             {test.language === 'hi' ? 'Hindi' : 'English'}
                           </span>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+                          <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
                             {test.difficulty}
                           </span>
                           <span className="text-[11px] text-slate-400 font-mono">
@@ -1309,7 +1308,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                         {/* Title */}
                         <div>
-                          <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
+                          <h4 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
                             {test.title}
                           </h4>
                           {test.titleHi && (
@@ -1324,16 +1323,16 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                           {/* 3-Phase durations */}
                           <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg font-bold text-slate-700 dark:text-slate-300 text-[11px]">
                             <Clock className="w-3 h-3 text-slate-500" />
-                            Demo: <strong>{test.demoDurationMinutes}m</strong> · Break: <strong className="text-amber-600">{test.breakDurationMinutes}m</strong> · Main: <strong className="text-blue-600">{test.mainDurationMinutes}m</strong>
+                            Demo: <strong>{test.demoDurationMinutes}m</strong> · Break: <strong className="text-amber-600">{test.breakDurationMinutes}m</strong> · Main: <strong className="text-[#1e4e79]">{test.mainDurationMinutes}m</strong>
                           </span>
 
                           {/* Target criteria */}
                           <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-lg font-bold text-slate-700 dark:text-slate-300 text-[11px]">
-                            🎯 Target Speed: <strong>{test.qualifyingWpm} WPM</strong>
+                            Target Speed: <strong>{test.qualifyingWpm} WPM</strong>
                           </span>
 
                           {/* Backspace rule badge */}
-                          <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                          <span className={`px-2 py-0.5 rounded-md font-bold text-xs ${
                             isBackspaceAllowed
                               ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
                               : 'bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900'
@@ -1342,9 +1341,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                           </span>
 
                           {/* Retype rule badge */}
-                          <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                          <span className={`px-2 py-0.5 rounded-md font-bold text-xs ${
                             test.allowRetype
-                              ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
+                              ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e4e79] dark:text-blue-400 border border-blue-200 dark:border-blue-900'
                               : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
                           }`}>
                             {test.allowRetype ? '✓ Retype ON' : '✕ Single Pass'}
@@ -1352,17 +1351,17 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                           {/* Passage Status */}
                           {!test.passageText || !test.passageText.trim() ? (
-                            <span className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-900 px-2 py-0.5 rounded-md font-extrabold text-amber-700 dark:text-amber-300 text-[10px]">
+                            <span className="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-900 px-2 py-0.5 rounded-md font-semibold text-amber-700 dark:text-amber-300 text-xs">
                               <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                               ⚠️ Passage Pending
                             </span>
                           ) : test.passageText.startsWith('tigris') || test.passageText.startsWith('http') ? (
-                            <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-[10px]">
+                            <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-xs">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                               Passage in Tigris Cloud
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-[10px]">
+                            <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-900 px-2 py-0.5 rounded-md font-bold text-emerald-700 dark:text-emerald-300 text-xs">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                               Passage Uploaded ({passageWordCount} words)
                             </span>
@@ -1376,7 +1375,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                           {/* Dedicated Upload / Edit Passage Button */}
                           <button
                             onClick={() => handleOpenUploadPassage(test)}
-                            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition active:scale-95 ${
+                            className={`px-3 py-1.5 rounded-md font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition ${
                               !test.passageText || !test.passageText.trim()
                                 ? 'bg-amber-500 hover:bg-amber-600 text-white'
                                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
@@ -1391,7 +1390,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                             href={`/typing-test/${test.id}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                            className="px-3.5 py-1.5 rounded-md bg-blue-50 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                           >
                             <Play className="w-3.5 h-3.5 fill-blue-500" />
                             Terminal
@@ -1442,7 +1441,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
             </div>
             <button
               onClick={handleOpenCreateCategory}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow flex items-center gap-2 cursor-pointer transition active:scale-95"
+              className="px-4 py-2 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-bold shadow flex items-center gap-2 cursor-pointer transition"
             >
               <Plus className="w-4 h-4" />
               Add Exam Category
@@ -1450,10 +1449,10 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
           </div>
 
           {/* Clean List / Table View of Categories */}
-          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase text-[10px] tracking-wider">
+                <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-xs">
                   <tr>
                     <th className="py-3.5 px-4 w-16 text-center">Logo</th>
                     <th className="py-3.5 px-4">Exam Category Name</th>
@@ -1480,11 +1479,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                           {/* Logo Column */}
                           <td className="py-3.5 px-4 text-center">
                             {cat.logoUrl ? (
-                              <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-xs mx-auto">
+                              <div className="w-10 h-10 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-xs mx-auto">
                                 <img src={cat.logoUrl} alt={cat.name} className="w-full h-full object-contain" />
                               </div>
                             ) : (
-                              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 flex items-center justify-center mx-auto">
+                              <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-[#1e4e79] flex items-center justify-center mx-auto">
                                 <Keyboard className="w-5 h-5" />
                               </div>
                             )}
@@ -1492,7 +1491,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                           {/* Category Name */}
                           <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
-                            <div className="text-sm font-extrabold">{cat.name}</div>
+                            <div className="text-sm font-semibold">{cat.name}</div>
                             {cat.nameHi && (
                               <div className="text-xs text-slate-400 font-medium">{cat.nameHi}</div>
                             )}
@@ -1507,7 +1506,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                           {/* Linked Tests */}
                           <td className="py-3.5 px-4 text-center">
-                            <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] border border-blue-200 dark:border-blue-900">
+                            <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-300 font-semibold text-[11px] border border-blue-200 dark:border-blue-900">
                               {linkedTestsCount} test{linkedTestsCount !== 1 ? 's' : ''}
                             </span>
                           </td>
@@ -1519,7 +1518,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                           {/* Status */}
                           <td className="py-3.5 px-4 text-center">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                               cat.isActive !== false
                                 ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'
@@ -1563,9 +1562,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       {/* ---------------------------------------------------- */}
       {subTab === 'attempts' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+          <div className="p-4 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+              <thead className="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-semibold text-xs">
                 <tr>
                   <th className="py-3 px-3">Candidate</th>
                   <th className="py-3 px-3">Exam Test</th>
@@ -1593,10 +1592,10 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                       <td className="py-3 px-3 text-slate-600 dark:text-slate-400 max-w-xs truncate">
                         {att.testTitle}
                       </td>
-                      <td className="py-3 px-3 font-bold text-blue-600 dark:text-blue-400">
+                      <td className="py-3 px-3 font-bold text-[#1e4e79] dark:text-blue-400">
                         {isSscExam(att.testTitle) ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-extrabold" title="SSC Result is evaluated on Error %">
-                            {att.errorPercentage}% <span className="text-[10px] text-slate-400 font-normal">Err</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold" title="SSC Result is evaluated on Error %">
+                            {att.errorPercentage}% <span className="text-xs text-slate-400 font-normal">Err</span>
                           </span>
                         ) : (
                           `${att.netWpm} WPM`
@@ -1612,7 +1611,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         {att.totalMistakes} ({att.errorPercentage}%)
                       </td>
                       <td className="py-3 px-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                           att.isQualified
                             ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400'
                             : 'bg-red-50 dark:bg-red-950/80 text-red-600 dark:text-red-400'
@@ -1636,8 +1635,8 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       {/* MODAL: EDIT TYPING TEST */}
       {/* ---------------------------------------------------- */}
       {showEditTestModal && editingTest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -1660,14 +1659,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Category Selector */}
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                     Exam Category *
                   </label>
                   <select
                     required
                     value={testForm.categoryId}
                     onChange={e => setTestForm({ ...testForm, categoryId: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                   >
                     <option value="">-- Select Exam Category --</option>
                     {categories.map(c => (
@@ -1680,7 +1679,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
                 {/* Section / Language Switcher */}
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                     Test Language / Category Section *
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1691,20 +1690,20 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         language: 'en',
                         demoPassageText: DEFAULT_DEMO_TEXT_EN
                       }))}
-                      className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                      className={`p-2.5 rounded-md border flex items-center gap-2.5 transition cursor-pointer text-left ${
                         testForm.language === 'en'
-                          ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                          ? 'border-[#1e4e79] bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
                           : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                       }`}
                     >
-                      <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'en' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                      <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'en' ? 'bg-[#1e4e79] text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
                         <Keyboard className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-black flex items-center gap-1">
+                        <div className="text-xs font-semibold flex items-center gap-1">
                           English Typing
                         </div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                           English Section
                         </div>
                       </div>
@@ -1717,20 +1716,20 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         language: 'hi',
                         demoPassageText: DEFAULT_DEMO_TEXT_HI
                       }))}
-                      className={`p-2.5 rounded-xl border-2 flex items-center gap-2.5 transition cursor-pointer text-left ${
+                      className={`p-2.5 rounded-md border flex items-center gap-2.5 transition cursor-pointer text-left ${
                         testForm.language === 'hi'
-                          ? 'border-blue-600 bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
+                          ? 'border-[#1e4e79] bg-blue-50/80 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 shadow-xs'
                           : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                       }`}
                     >
-                      <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'hi' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
+                      <div className={`p-1.5 rounded-lg shrink-0 ${testForm.language === 'hi' ? 'bg-[#1e4e79] text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
                         <Sparkles className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-black flex items-center gap-1">
+                        <div className="text-xs font-semibold flex items-center gap-1">
                           हिंदी Typing
                         </div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                           Hindi Section
                         </div>
                       </div>
@@ -1742,7 +1741,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               {/* Title Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                     Test Title ({testForm.language === 'hi' ? 'Hindi' : 'English'}) *
                   </label>
                   <input
@@ -1750,18 +1749,18 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     required
                     value={testForm.title}
                     onChange={e => setTestForm({ ...testForm, title: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                     Test Title in Hindi (Optional)
                   </label>
                   <input
                     type="text"
                     value={testForm.titleHi}
                     onChange={e => setTestForm({ ...testForm, titleHi: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
               </div>
@@ -1769,7 +1768,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               {/* Durations & Criteria Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Demo (min)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Demo (min)</label>
                   <input
                     type="number"
                     step="0.5"
@@ -1777,11 +1776,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     required
                     value={testForm.demoDurationMinutes}
                     onChange={e => setTestForm({ ...testForm, demoDurationMinutes: Number(e.target.value) })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Break (min)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Break (min)</label>
                   <input
                     type="number"
                     step="0.5"
@@ -1789,11 +1788,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     required
                     value={testForm.breakDurationMinutes}
                     onChange={e => setTestForm({ ...testForm, breakDurationMinutes: Number(e.target.value) })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Main Exam (min)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Main Exam (min)</label>
                   <input
                     type="number"
                     step="1"
@@ -1801,11 +1800,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     required
                     value={testForm.mainDurationMinutes}
                     onChange={e => setTestForm({ ...testForm, mainDurationMinutes: Number(e.target.value) })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Target Speed (WPM)</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Target Speed (WPM)</label>
                   <input
                     type="number"
                     min={10}
@@ -1813,11 +1812,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     required
                     value={testForm.qualifyingWpm}
                     onChange={e => setTestForm({ ...testForm, qualifyingWpm: Number(e.target.value) })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Max Error %</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Max Error %</label>
                   <input
                     type="number"
                     step="0.1"
@@ -1826,11 +1825,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     required
                     value={testForm.maxErrorPercentage}
                     onChange={e => setTestForm({ ...testForm, maxErrorPercentage: Number(e.target.value) })}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-2">Difficulty</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Difficulty</label>
                   <select
                     value={testForm.difficulty}
                     onChange={e => setTestForm({ ...testForm, difficulty: e.target.value as any })}
@@ -1845,7 +1844,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
               {/* Feature Panels */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+                <label className="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md cursor-pointer">
                   <input
                     type="checkbox"
                     checked={testForm.enableBackspace}
@@ -1854,11 +1853,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   />
                   <div>
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Enable Backspace</div>
-                    <div className="text-[10px] text-slate-500">Allow candidate to make corrections</div>
+                    <div className="text-xs text-slate-500">Allow candidate to make corrections</div>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+                <label className="flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md cursor-pointer">
                   <input
                     type="checkbox"
                     checked={testForm.allowRetype}
@@ -1867,7 +1866,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   />
                   <div>
                     <div className="text-xs font-bold text-slate-800 dark:text-slate-200">Enable Retype Paragraph</div>
-                    <div className="text-[10px] text-slate-500">Repeat passage when finished</div>
+                    <div className="text-xs text-slate-500">Repeat passage when finished</div>
                   </div>
                 </label>
               </div>
@@ -1875,10 +1874,10 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               {/* Main Passage Text */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase">
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Main Exam Passage Text
                   </label>
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-xs text-slate-400 font-mono">
                     {testForm.passageText?.trim() ? testForm.passageText.trim().split(/\s+/).length : 0} words
                   </span>
                 </div>
@@ -1887,7 +1886,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   value={testForm.passageText}
                   onChange={e => setTestForm({ ...testForm, passageText: e.target.value })}
                   placeholder="Paste or write the main examination typing passage text (optional during draft)..."
-                  className="w-full p-3 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-blue-500"
+                  className="w-full p-3 text-xs rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
 
@@ -1895,14 +1894,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 <button
                   type="button"
                   onClick={() => setShowEditTestModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md cursor-pointer transition active:scale-95"
+                  className="px-6 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs shadow-md cursor-pointer transition"
                 >
                   Save Changes
                 </button>
@@ -1916,8 +1915,8 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
       {/* MODAL: CREATE / EDIT CATEGORY */}
       {/* ---------------------------------------------------- */}
       {showCategoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 {editingCategory ? 'Edit Exam Category' : 'Create Exam Category'}
@@ -1938,7 +1937,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   value={categoryForm.name}
                   onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
                   placeholder="e.g. SSC CGL (Tier-2 DEST)"
-                  className="w-full mt-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  className="w-full mt-1 px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
               <div>
@@ -1948,7 +1947,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   value={categoryForm.nameHi}
                   onChange={e => setCategoryForm({ ...categoryForm, nameHi: e.target.value })}
                   placeholder="e.g. एसएससी सीजीएल (टियर-2 डेस्ट)"
-                  className="w-full mt-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  className="w-full mt-1 px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
 
@@ -1959,14 +1958,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     <button
                       type="button"
                       onClick={() => setCategoryForm({ ...categoryForm, logoUrl: '' })}
-                      className="text-[10px] text-red-500 hover:underline font-bold cursor-pointer"
+                      className="text-xs text-red-500 hover:underline font-bold cursor-pointer"
                     >
                       Remove Logo
                     </button>
                   )}
                 </label>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                  <div className="w-12 h-12 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
                     {categoryForm.logoUrl ? (
                       <img
                         src={categoryForm.logoUrl}
@@ -1981,7 +1980,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     )}
                   </div>
                   <div className="flex-1 space-y-1">
-                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer">
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-400 hover:bg-blue-100 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer">
                       <Upload className="w-3.5 h-3.5" />
                       {isUploadingLogo ? 'Uploading...' : 'Upload Image Logo'}
                       <input
@@ -1992,7 +1991,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         disabled={isUploadingLogo}
                       />
                     </label>
-                    <p className="text-[10px] text-slate-400">PNG, JPG, or SVG up to 2MB</p>
+                    <p className="text-xs text-slate-400">PNG, JPG, or SVG up to 2MB</p>
                   </div>
                 </div>
               </div>
@@ -2004,7 +2003,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                   value={categoryForm.description}
                   onChange={e => setCategoryForm({ ...categoryForm, description: e.target.value })}
                   placeholder="Official typing speed test for SSC candidates..."
-                  className="w-full mt-1 p-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  className="w-full mt-1 p-2.5 text-xs rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
 
@@ -2016,11 +2015,11 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     min={1}
                     value={categoryForm.orderIndex}
                     onChange={e => setCategoryForm({ ...categoryForm, orderIndex: Number(e.target.value) })}
-                    className="w-full mt-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
+                    className="w-full mt-1 px-3 py-2 text-xs rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-semibold"
                   />
                 </div>
                 <div className="flex flex-col justify-end">
-                  <label className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer h-9">
+                  <label className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md cursor-pointer h-9">
                     <input
                       type="checkbox"
                       checked={categoryForm.isActive}
@@ -2036,14 +2035,14 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setShowCategoryModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveCategory}
                 disabled={loading || isUploadingLogo}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow cursor-pointer transition active:scale-95"
+                className="px-5 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs shadow cursor-pointer transition"
               >
                 {editingCategory ? 'Save Changes' : 'Create Category'}
               </button>
@@ -2054,26 +2053,26 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
       {/* Dedicated Upload / Edit Main Passage Modal */}
       {uploadPassageModal && uploadPassageModal.isOpen && uploadPassageModal.test && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-amber-500 text-white shadow-xs">
+                <div className="p-2 rounded-md bg-amber-500 text-white shadow-xs">
                   <Upload className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  <h3 className="font-semibold text-base text-slate-900 dark:text-white">
                     Upload / Edit Main Exam Passage
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    For test: <strong className="text-blue-600 dark:text-blue-400 font-semibold">{uploadPassageModal.test.title}</strong>
+                    For test: <strong className="text-[#1e4e79] dark:text-blue-400 font-semibold">{uploadPassageModal.test.title}</strong>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setUploadPassageModal(null)}
-                className="p-1.5 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
+                className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2082,9 +2081,9 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
             {/* Body */}
             <div className="p-5 space-y-4">
               {/* Test Meta Info Chips */}
-              <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl text-xs">
+              <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-md text-xs">
                 <span className="font-bold text-slate-500 dark:text-slate-400">Test Info:</span>
-                <span className="px-2 py-0.5 rounded-md font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <span className="px-2 py-0.5 rounded-md font-bold bg-blue-50 dark:bg-blue-950 text-[#1e4e79] dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   {categories.find(c => c.id === uploadPassageModal.test?.categoryId)?.name || 'Category'}
                 </span>
                 <span className="px-2 py-0.5 rounded-md font-bold bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
@@ -2097,7 +2096,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
 
               {/* Passage Toolbar */}
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Passage Content *
                 </label>
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -2110,7 +2109,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                         ...uploadPassageModal,
                         passageText: sample.text
                       })}
-                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 text-[10px] font-bold border border-slate-200 dark:border-slate-700 cursor-pointer"
+                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-[#1e4e79] dark:text-blue-400 text-xs font-bold border border-slate-200 dark:border-slate-700 cursor-pointer"
                     >
                       Sample {sIdx + 1}
                     </button>
@@ -2119,7 +2118,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                     <button
                       type="button"
                       onClick={() => setUploadPassageModal({ ...uploadPassageModal, passageText: '' })}
-                      className="px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/60 hover:bg-red-100 text-red-600 dark:text-red-400 text-[10px] font-bold border border-red-200 dark:border-red-800 cursor-pointer"
+                      className="px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/60 hover:bg-red-100 text-red-600 dark:text-red-400 text-xs font-bold border border-red-200 dark:border-red-800 cursor-pointer"
                     >
                       Clear
                     </button>
@@ -2134,13 +2133,13 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 value={uploadPassageModal.passageText}
                 onChange={e => setUploadPassageModal({ ...uploadPassageModal, passageText: e.target.value })}
                 placeholder="Paste or write the main examination typing passage text here..."
-                className="w-full p-3.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono leading-relaxed focus:outline-none focus:border-blue-500"
+                className="w-full p-3.5 text-xs rounded-md bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono leading-relaxed focus:outline-none focus:border-[#1e4e79]"
               />
 
               {/* Passage Stats Bar */}
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
                 <span className="flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-blue-500" />
+                  <FileText className="w-3.5 h-3.5 text-[#1e4e79]" />
                   Words: <strong className="text-slate-800 dark:text-slate-200">{uploadPassageModal.passageText.trim() ? uploadPassageModal.passageText.trim().split(/\s+/).length : 0}</strong>
                 </span>
                 <span>
@@ -2154,7 +2153,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
               <button
                 type="button"
                 onClick={() => setUploadPassageModal(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
@@ -2162,7 +2161,7 @@ export function TypingTestManager({ showToast }: TypingTestManagerProps) {
                 type="button"
                 onClick={handleSaveUploadedPassage}
                 disabled={loading || !uploadPassageModal.passageText.trim()}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs shadow-md cursor-pointer transition flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] disabled:opacity-50 text-white font-bold text-xs shadow-md cursor-pointer transition flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5" />
                 Save & Upload Passage

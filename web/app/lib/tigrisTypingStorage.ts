@@ -37,8 +37,9 @@ const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
 
 /**
  * Upload typing passage text to dedicated Tigris Object Storage.
- * Stores under key: typing-passages/${testId}.txt
- * Returns a compact URI: tigris-typing://typing-passages/${testId}.txt
+ * Stores under a fresh key per upload: typing-passages/${testId}-${timestamp}.txt. Passages can be
+ * reshuffled between tests, so a test must never overwrite the object another test may point to.
+ * Returns a compact URI: tigris-typing://typing-passages/${testId}-${timestamp}.txt
  */
 export async function uploadTypingPassageToTigris(testId: string, passageText: string): Promise<string> {
   if (!passageText || !passageText.trim()) return '';
@@ -49,7 +50,7 @@ export async function uploadTypingPassageToTigris(testId: string, passageText: s
     return passageText;
   }
 
-  const cleanKey = `typing-passages/${testId}.txt`;
+  const cleanKey = `typing-passages/${testId}-${Date.now()}.txt`;
 
   try {
     await s3.send(

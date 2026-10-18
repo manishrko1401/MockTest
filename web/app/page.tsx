@@ -23,6 +23,9 @@ import HomeTermsSection from './components/HomeTermsSection';
 import HomePrivacySection from './components/HomePrivacySection';
 import HomeReferralsSection from './components/HomeReferralsSection';
 import PopularExamsMarquee from './components/PopularExamsMarquee';
+import { SiteHeader, SiteFooter } from './components/SiteUI';
+import { buildTestSeriesPath } from './lib/testSeriesUrl';
+import WelcomeTour from './components/WelcomeTour';
 
 const EXAMS_BY_CATEGORY: Record<string, { id: string; name: string }[]> = {
   ssc: [
@@ -108,7 +111,7 @@ const getWebCategoryStyle = (id: string) => {
   const nid = id.toLowerCase();
   if (nid.includes('ssc')) {
     return {
-      bg: 'bg-orange-50/70 hover:bg-orange-100/80 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/40 hover:border-orange-300 dark:hover:border-orange-700/60 shadow-orange-100/10 dark:shadow-none hover:shadow-md hover:shadow-orange-150/15',
+      bg: 'bg-orange-50/70 hover:bg-orange-100/80 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/40 hover:border-orange-300 dark:hover:border-orange-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400',
       icon: 'Award',
       accentText: 'text-orange-600 dark:text-orange-400',
@@ -117,7 +120,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('railway')) {
     return {
-      bg: 'bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-300 dark:hover:border-indigo-700/60 shadow-indigo-100/10 dark:shadow-none hover:shadow-md hover:shadow-indigo-150/15',
+      bg: 'bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-300 dark:hover:border-indigo-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400',
       icon: 'TrendingUp',
       accentText: 'text-indigo-600 dark:text-indigo-400',
@@ -126,7 +129,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('banking') || nid.includes('bank')) {
     return {
-      bg: 'bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 shadow-emerald-100/10 dark:shadow-none hover:shadow-md hover:shadow-emerald-150/15',
+      bg: 'bg-emerald-50/70 hover:bg-emerald-100/80 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/40 hover:border-emerald-300 dark:hover:border-emerald-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400',
       icon: 'Coins',
       accentText: 'text-emerald-600 dark:text-emerald-400',
@@ -135,7 +138,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('teaching') || nid.includes('tet') || nid.includes('ctet')) {
     return {
-      bg: 'bg-amber-50/70 hover:bg-amber-100/80 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700/60 shadow-amber-100/10 dark:shadow-none hover:shadow-md hover:shadow-amber-150/15',
+      bg: 'bg-amber-50/70 hover:bg-amber-100/80 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/40 hover:border-amber-300 dark:hover:border-amber-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-amber-100/80 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400',
       icon: 'BookOpen',
       accentText: 'text-amber-600 dark:text-amber-400',
@@ -144,7 +147,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('ugc') || nid.includes('net')) {
     return {
-      bg: 'bg-sky-50/70 hover:bg-sky-100/80 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700/60 shadow-sky-100/10 dark:shadow-none hover:shadow-md hover:shadow-sky-150/15',
+      bg: 'bg-sky-50/70 hover:bg-sky-100/80 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900/40 hover:border-sky-300 dark:hover:border-sky-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-sky-100/80 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400',
       icon: 'GraduationCap',
       accentText: 'text-sky-600 dark:text-sky-400',
@@ -153,7 +156,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('upsc') || nid.includes('civil')) {
     return {
-      bg: 'bg-teal-50/70 hover:bg-teal-100/80 dark:bg-teal-950/20 border-teal-100 dark:border-teal-900/40 hover:border-teal-300 dark:hover:border-teal-700/60 shadow-teal-100/10 dark:shadow-none hover:shadow-md hover:shadow-teal-150/15',
+      bg: 'bg-teal-50/70 hover:bg-teal-100/80 dark:bg-teal-950/20 border-teal-100 dark:border-teal-900/40 hover:border-teal-300 dark:hover:border-teal-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-teal-100/80 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400',
       icon: 'ShieldCheck',
       accentText: 'text-teal-600 dark:text-teal-400',
@@ -162,7 +165,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('def') || nid.includes('defence') || nid.includes('military')) {
     return {
-      bg: 'bg-cyan-50/70 hover:bg-cyan-100/80 dark:bg-cyan-950/20 border-cyan-100 dark:border-cyan-900/40 hover:border-cyan-300 dark:hover:border-cyan-700/60 shadow-cyan-100/10 dark:shadow-none hover:shadow-md hover:shadow-cyan-150/15',
+      bg: 'bg-cyan-50/70 hover:bg-cyan-100/80 dark:bg-cyan-950/20 border-cyan-100 dark:border-cyan-900/40 hover:border-cyan-300 dark:hover:border-cyan-700/60 shadow-cyan-100/10 dark:shadow-none hover:shadow-sm hover:shadow-cyan-150/15',
       iconBg: 'bg-cyan-100/80 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400',
       icon: 'ShieldCheck',
       accentText: 'text-cyan-600 dark:text-cyan-400',
@@ -171,7 +174,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('eng') || nid.includes('gate') || nid.includes('engineering')) {
     return {
-      bg: 'bg-purple-50/70 hover:bg-purple-100/80 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/40 hover:border-purple-300 dark:hover:border-purple-700/60 shadow-purple-100/10 dark:shadow-none hover:shadow-md hover:shadow-purple-150/15',
+      bg: 'bg-purple-50/70 hover:bg-purple-100/80 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/40 hover:border-purple-300 dark:hover:border-purple-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-purple-100/80 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400',
       icon: 'GraduationCap',
       accentText: 'text-purple-600 dark:text-purple-400',
@@ -180,7 +183,7 @@ const getWebCategoryStyle = (id: string) => {
   }
   if (nid.includes('mba') || nid.includes('cat') || nid.includes('entrance')) {
     return {
-      bg: 'bg-rose-50/70 hover:bg-rose-100/80 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700/60 shadow-rose-100/10 dark:shadow-none hover:shadow-md hover:shadow-rose-150/15',
+      bg: 'bg-rose-50/70 hover:bg-rose-100/80 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/40 hover:border-rose-300 dark:hover:border-rose-700/60 dark:shadow-none hover:shadow-sm',
       iconBg: 'bg-rose-100/80 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400',
       icon: 'BookOpen',
       accentText: 'text-rose-600 dark:text-rose-400',
@@ -189,7 +192,7 @@ const getWebCategoryStyle = (id: string) => {
   }
 
   return {
-    bg: 'bg-pink-50/70 hover:bg-pink-100/80 dark:bg-pink-950/20 border-pink-100 dark:border-pink-900/40 hover:border-pink-300 dark:hover:border-pink-700/60 shadow-pink-100/10 dark:shadow-none hover:shadow-md hover:shadow-pink-150/15',
+    bg: 'bg-pink-50/70 hover:bg-pink-100/80 dark:bg-pink-950/20 border-pink-100 dark:border-pink-900/40 hover:border-pink-300 dark:hover:border-pink-700/60 shadow-pink-100/10 dark:shadow-none hover:shadow-sm hover:shadow-pink-150/15',
     iconBg: 'bg-pink-100/80 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400',
     icon: 'MapPin',
     accentText: 'text-pink-600 dark:text-pink-400',
@@ -395,7 +398,7 @@ const formatSubCategoryName = (name: string) => {
 
   const renderNotificationTile = (notice: any, themeColor: 'blue' | 'amber' | 'emerald' | 'purple') => {
     const typeTagColors = {
-      blue: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/80',
+      blue: 'bg-blue-50 text-[#1e4e79] dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/80',
       amber: 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/80',
       emerald: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/80',
       purple: 'bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/80',
@@ -411,27 +414,27 @@ const formatSubCategoryName = (name: string) => {
         <div className="flex items-center justify-between gap-2 w-full">
           <div className="flex items-center gap-1.5 flex-wrap">
             {notice.type && (
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border ${typeTagColors[themeColor]}`}>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${typeTagColors[themeColor]}`}>
                 {notice.type}
               </span>
             )}
             {isNewlyPublished(notice.publishDate) && (
-              <span className="bg-rose-600 text-white text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-2xs">
+              <span className="bg-rose-600 text-white text-[11px] font-semibold px-2 py-0.5 rounded-md shadow-2xs">
                 {t.newBadge}
               </span>
             )}
           </div>
-          <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium whitespace-nowrap">{notice.date}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-400 font-medium whitespace-nowrap">{notice.date}</span>
         </div>
 
         {/* Regular Normal Weight Title */}
-        <h5 className="font-medium text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug transition-colors">
+        <h5 className="font-medium text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 leading-snug transition-colors">
           {notice.title}
         </h5>
 
         {/* Last Date Deadline - Only in Live Notices */}
         {notice.category === 'notice' && notice.lastDate && (
-          <p className="text-[9.5px] text-rose-600 dark:text-rose-400 font-semibold uppercase tracking-wider flex items-center gap-1 mt-0.5">
+          <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1 mt-0.5">
             <span>{t.lastDate}</span>
             <span>{notice.lastDate}</span>
           </p>
@@ -543,8 +546,8 @@ const formatSubCategoryName = (name: string) => {
 
   if (!isMounted) {
     return (
-      <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
-        <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex-1 flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 items-center justify-center">
+        <div className="h-6 w-6 border border-[#1e4e79] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -552,183 +555,15 @@ const formatSubCategoryName = (name: string) => {
   if (isMobile) {
     return (
       <>
-        <div className="flex-1 flex flex-col bg-slate-200/90 dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
-        {/* Mobile Background Arts & Orbs */}
-        <BackgroundArts isMobile={true} />
-        <div className="absolute top-10 -left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-[50%] -right-20 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <header className="h-18 border-b border-slate-200 dark:border-slate-900 bg-white/90 dark:bg-slate-950/85 backdrop-blur-md sticky top-0 z-40 px-4 flex items-center justify-between shadow-sm">
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 rounded-full shadow-sm flex items-center justify-center h-8 w-8 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <h1 className="font-extrabold text-xs leading-none text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
-              <p className="text-[8px] text-blue-600 dark:text-blue-400 font-bold tracking-wider uppercase mt-0.5 leading-none truncate">{t.logoSub}</p>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            {/* Hamburger / Navigation Menu Button */}
-            <button
-              onClick={() => handleToggleMenu(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 active:scale-95 cursor-pointer"
-              aria-label="Open Navigation Menu"
-            >
-              {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
-            </button>
-          </div>
-        </header>
+        <div className="flex-1 flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
+        <SiteHeader />
 
         {/* Live Notices & Announcements Marquee */}
         <LiveUpdatesBar notices={noticesList} language={language} isMobile={true} />
 
-        {/* MOBILE SLIDE-DOWN DRAWER MENU (Previous / Original Design) */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-x-0 top-14 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 z-50 shadow-2xl p-5 sm:p-6 flex flex-col gap-5 animate-in slide-in-from-top-4 duration-200">
-            <nav className="flex flex-col gap-3 text-sm font-bold text-slate-700 dark:text-slate-200">
-              <Link
-                href="/"
-                onClick={() => handleToggleMenu(false)}
-                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between font-black text-blue-600 dark:text-blue-400"
-              >
-                <span>{t.navHome}</span>
-                <ChevronRight className="h-4 w-4 text-blue-600" />
-              </Link>
-              <Link
-                href="/mock-tests"
-                onClick={() => handleToggleMenu(false)}
-                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
-              >
-                <span>{t.navTestSeries}</span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </Link>
-              <Link
-                href="/typing-test"
-                onClick={() => handleToggleMenu(false)}
-                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <span>{language === 'hi' ? 'टाइपिंग टेस्ट (DEST)' : 'Typing Test & Terminal'}</span>
-                  <span className="bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full">NEW</span>
-                </div>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </Link>
-              <Link
-                href="/updates"
-                onClick={() => handleToggleMenu(false)}
-                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
-              >
-                <span>{t.navUpdates}</span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </Link>
-              <Link
-                href="/locker"
-                onClick={() => handleToggleMenu(false)}
-                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
-              >
-                <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </Link>
-              <Link
-                href="/profile/tracked-jobs"
-                onClick={() => handleToggleMenu(false)}
-                className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
-              >
-                <span>{language === 'hi' ? 'ट्रैक की गई परीक्षाएं' : 'Applied & Saved Exams'}</span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
-              </Link>
-              {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
-                <Link
-                  href="/admin"
-                  onClick={() => handleToggleMenu(false)}
-                  className="hover:text-blue-600 border-b border-slate-100 dark:border-slate-900 pb-2.5 flex items-center justify-between"
-                >
-                  <span>{t.navAdmin}</span>
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
-                </Link>
-              )}
-            </nav>
-
-            <div className="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Language / भाषा</span>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 text-xs font-bold border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 cursor-pointer"
-                >
-                  <option value="en">English</option>
-                  <option value="hi">हिन्दी</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Theme / डार्क मोड</span>
-                <button
-                  onClick={toggleTheme}
-                  className="p-2 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
-                >
-                  {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-400" />}
-                </button>
-              </div>
-
-              {currentUser ? (
-                <div className="flex flex-col gap-2 mt-2">
-                  <Link
-                    href="/profile"
-                    onClick={() => handleToggleMenu(false)}
-                    className="w-full py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-extrabold text-xs text-center border border-blue-200 dark:border-blue-900/40 flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    <UserCheck className="h-4 w-4" />
-                    <span>{currentUser.name} ({t.dashboard})</span>
-                  </Link>
-                  <button
-                    onClick={() => { logout(); handleToggleMenu(false); }}
-                    className="w-full py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:underline text-center cursor-pointer"
-                  >
-                    {t.signOut}
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2.5 mt-2">
-                  <Link
-                    href="/auth"
-                    onClick={() => handleToggleMenu(false)}
-                    className="py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs text-center text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
-                  >
-                    {t.logIn}
-                  </Link>
-                  <Link
-                    href="/auth"
-                    onClick={() => handleToggleMenu(false)}
-                    className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs text-center shadow-md shadow-blue-500/20"
-                  >
-                    {t.signUp}
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* HERO SECTION - MOBILE VIEW */}
-        <main className="flex-1 flex flex-col p-3 sm:p-4 space-y-4 relative z-10 edu-grid-pattern">
-          {/* Floating Mobile Background Art Elements */}
-          <div className="absolute top-12 left-4 opacity-[0.06] dark:opacity-[0.04] animate-float pointer-events-none">
-            <svg className="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
-              <path d="M6 6h10M6 10h10M6 14h10" />
-            </svg>
-          </div>
-
-          <div className="absolute top-[32%] right-4 opacity-[0.06] dark:opacity-[0.04] animate-float-delayed pointer-events-none">
-            <svg className="w-9 h-9 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-            </svg>
-          </div>
+        <main className="flex-1 flex flex-col p-3 sm:p-4 space-y-4 relative z-10">
 
           {/* 1. FULL WIDTH HERO BANNER CAROUSEL (Only shown if admin uploaded banners) */}
           {hasAdminBanners && (
@@ -742,16 +577,17 @@ const formatSubCategoryName = (name: string) => {
             {/* 1. TEST SERIES */}
             <Link
               href="/mock-tests"
-              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-orange-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+              data-tour="home-tests"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-orange-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-9 h-9 rounded-md bg-orange-500/10 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0 shadow-2xs">
                 <Award className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                <h4 className="font-semibold text-xs text-slate-900 dark:text-slate-100 leading-tight">
                   {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
                 </h4>
-                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
                   {language === 'hi' ? '1,500+ सीबीटी टेस्ट्स' : '1,500+ CBT Mocks'}
                 </p>
               </div>
@@ -760,16 +596,17 @@ const formatSubCategoryName = (name: string) => {
             {/* 2. TYPING TEST */}
             <Link
               href="/typing-test"
-              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+              data-tour="home-typing"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-9 h-9 rounded-md bg-blue-500/10 text-[#1e4e79] dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
                 <Keyboard className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                <h4 className="font-semibold text-xs text-slate-900 dark:text-slate-100 leading-tight">
                   {language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}
                 </h4>
-                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
                   {language === 'hi' ? 'एसएससी, कोर्ट व राज्य परीक्षा' : 'SSC, Court & State Tests'}
                 </p>
               </div>
@@ -778,16 +615,17 @@ const formatSubCategoryName = (name: string) => {
             {/* 3. DOCUMENT LOCKER */}
             <Link
               href="/locker"
-              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+              data-tour="home-locker"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-9 h-9 rounded-md bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
                 <Lock className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 leading-tight">
+                <h4 className="font-semibold text-xs text-emerald-600 dark:text-emerald-400 leading-tight">
                   {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
                 </h4>
-                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
                   {language === 'hi' ? 'सुरक्षित प्रमाणपत्र वॉल्ट' : 'Secure Vault'}
                 </p>
               </div>
@@ -796,16 +634,16 @@ const formatSubCategoryName = (name: string) => {
             {/* 4. APPLIED & SAVED EXAMS */}
             <Link
               href="/profile/tracked-jobs"
-              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 shadow-xs hover:shadow-md transition-all duration-200"
+              className="group flex items-start sm:items-center gap-2.5 p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-9 h-9 rounded-md bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs">
                 <BookmarkCheck className="h-4.5 w-4.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                <h4 className="font-semibold text-xs text-slate-900 dark:text-slate-100 leading-tight">
                   {language === 'hi' ? 'आवेदन व ट्रैकिंग' : 'Applied & Saved'}
                 </h4>
-                <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5">
                   {language === 'hi' ? 'ट्रैक की गई परीक्षाएं' : 'Tracked Exams'}
                 </p>
               </div>
@@ -815,8 +653,8 @@ const formatSubCategoryName = (name: string) => {
           {/* POPULAR CATEGORIES */}
           <section className="space-y-6 pt-2 border-t border-slate-200 dark:border-slate-900 relative z-10">
             <div className="text-center max-w-sm mx-auto">
-              <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.popularTitle}</h2>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.popularDesc}</p>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.popularTitle}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.popularDesc}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -841,11 +679,9 @@ const formatSubCategoryName = (name: string) => {
                 return (
                   <Link
                     key={cat.id}
-                    href={`/mock-tests?cat=${cat.id}`}
-                    className={`border p-3.5 rounded-2xl flex flex-col justify-between group transition-all duration-300 text-left w-full relative overflow-hidden active:scale-[0.98] cursor-pointer ${style.bg} ${shadowStyle}`}
+                    href={buildTestSeriesPath(cat.id)}
+                    className={`border p-3.5 rounded-lg flex flex-col justify-between group transition-all duration-300 text-left w-full relative overflow-hidden cursor-pointer bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300`}
                   >
-                    {/* Decorative background circle art (watermark) */}
-                    <div className="absolute -top-6 -right-6 w-14 h-14 rounded-full bg-current opacity-[0.03] dark:opacity-[0.015] pointer-events-none group-hover:scale-110 transition-transform duration-300" />
                     
                     <div className="w-full">
                       <div className="flex items-center justify-between mb-2.5">
@@ -859,18 +695,18 @@ const formatSubCategoryName = (name: string) => {
                           </div>
                         ) : (
                           <div className={`p-2 rounded-lg ${style.iconBg}`}>
-                            <IconComponent className="h-4 w-4 animate-pulse" />
+                            <IconComponent className="h-4 w-4" />
                           </div>
                         )}
-                        <span className={`text-[9px] font-black tracking-wider ${style.accentText}`}>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
                           {cat.count}
                         </span>
                       </div>
-                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mb-1 line-clamp-1">{getLocalizedName(cat, language)}</h4>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-tight font-semibold line-clamp-2">{cat.desc}</p>
+                      <h4 className="font-semibold text-xs text-slate-900 dark:text-white mb-1 line-clamp-1">{getLocalizedName(cat, language)}</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight font-semibold line-clamp-2">{cat.desc}</p>
                     </div>
 
-                    <div className={`flex items-center justify-between font-bold text-[8px] uppercase tracking-wider mt-3 pt-2 border-t border-slate-200/50 dark:border-slate-800/40 w-full ${style.accentText}`}>
+                    <div className={`flex items-center justify-between font-bold text-[11px] mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 w-full text-[#1e4e79] dark:text-blue-300`}>
                       <span>{t.exploreTests}</span>
                       <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </div>
@@ -885,15 +721,15 @@ const formatSubCategoryName = (name: string) => {
           {/* MOBILE TABS UPDATES SECTION */}
           <section className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-900">
             <div className="text-center max-w-sm mx-auto">
-              <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.liveUpdatesDesc}</p>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t.liveUpdatesTitle}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-semibold">{t.liveUpdatesDesc}</p>
             </div>
 
             {/* TAB SELECTION BAR */}
-            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+            <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-md">
               <button
                 onClick={() => setMobileUpdateTab('admit_card')}
-                className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                className={`flex-1 py-2 text-center rounded-lg font-bold text-xs transition ${
                   mobileUpdateTab === 'admit_card' 
                     ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
@@ -903,7 +739,7 @@ const formatSubCategoryName = (name: string) => {
               </button>
               <button
                 onClick={() => setMobileUpdateTab('result')}
-                className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                className={`flex-1 py-2 text-center rounded-lg font-bold text-xs transition ${
                   mobileUpdateTab === 'result' 
                     ? 'bg-white dark:bg-slate-800 text-yellow-600 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
@@ -913,9 +749,9 @@ const formatSubCategoryName = (name: string) => {
               </button>
               <button
                 onClick={() => setMobileUpdateTab('notice')}
-                className={`flex-1 py-2 text-center rounded-lg font-bold text-[10px] uppercase tracking-wider transition ${
+                className={`flex-1 py-2 text-center rounded-lg font-bold text-xs transition ${
                   mobileUpdateTab === 'notice' 
-                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-slate-800 text-[#1e4e79] dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
@@ -924,12 +760,12 @@ const formatSubCategoryName = (name: string) => {
             </div>
 
             {/* RENDER ACTIVE TAB */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm min-h-[300px] flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-lg shadow-sm min-h-[300px] flex flex-col justify-between">
               <div>
-                <h3 className="font-extrabold text-[10px] text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                <h3 className="font-semibold text-xs text-slate-900 dark:text-white mb-4 flex items-center gap-1.5">
                   {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> {t.admitCards}</>}
                   {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500" /> {t.resultsMerits}</>}
-                  {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> {t.liveNotices}</>}
+                  {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-[#1e4e79]" /> {t.liveNotices}</>}
                 </h3>
                 
                 <div className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -946,18 +782,18 @@ const formatSubCategoryName = (name: string) => {
                         >
                           <div className="flex items-center justify-between gap-2">
                             {isNewlyPublished(notice.publishDate) ? (
-                              <span className="bg-rose-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase">
+                              <span className="bg-rose-600 text-white text-[11px] font-semibold px-1.5 py-0.5 rounded">
                                 {t.newBadge}
                               </span>
                             ) : <span />}
-                            <span className="text-[7px] text-slate-400 font-medium">{notice.date}</span>
+                            <span className="text-[11px] text-slate-400 font-medium">{notice.date}</span>
                           </div>
-                          <h5 className="font-medium text-xs text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          <h5 className="font-medium text-xs text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400">
                             <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
                             <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
                           </h5>
                           {notice.category === 'notice' && notice.lastDate && (
-                            <p className="text-[8px] text-red-500 font-semibold mt-0.5 uppercase tracking-wider">
+                            <p className="text-[11px] text-red-500 font-semibold mt-0.5">
                               {t.lastDate} {notice.lastDate}
                             </p>
                           )}
@@ -972,7 +808,7 @@ const formatSubCategoryName = (name: string) => {
               </div>
               
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                <Link href="/updates" className="text-[8px] uppercase font-black text-blue-600 dark:text-blue-450 hover:underline flex items-center gap-0.5">
+                <Link href="/updates" className="text-[11px] font-semibold text-[#1e4e79] dark:text-blue-450 hover:underline flex items-center gap-0.5">
                   {language === 'hi' ? 'सभी अपडेट देखें' : 'View All Alerts'} <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -980,27 +816,15 @@ const formatSubCategoryName = (name: string) => {
           </section>
         </main>
 
-        {/* FOOTER */}
-        <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-[10px] text-slate-500 transition-colors duration-200">
-          <p className="font-bold">© 2026 MockTest Hub. All rights reserved.</p>
-          <div className="mt-2 flex items-center justify-center gap-3">
-            <Link href="/contact" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Contact Us</Link>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Terms & Conditions</Link>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition">Privacy Policy</Link>
-          </div>
-        </footer>
+        <SiteFooter />
 
 
 
         {/* NEW SIGNUP CONGRATULATIONS POPUP (MOBILE VIEW ONLY) */}
         {showCongratsPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-            <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 overflow-hidden">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 animate-fade-in">
+            <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl p-6 overflow-hidden">
               {/* Background design accents */}
-              <div className="absolute -top-10 -right-10 w-36 h-36 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
-              <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
               {/* Close cross */}
               <button
@@ -1014,17 +838,17 @@ const formatSubCategoryName = (name: string) => {
               </button>
 
               {/* Header Icon */}
-              <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-2xl flex items-center justify-center border border-blue-100 dark:border-blue-900/40 mb-6 shadow-inner relative">
-                <Gift className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-bounce" />
+              <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-lg flex items-center justify-center border border-blue-100 dark:border-blue-900/40 mb-6 shadow-inner relative">
+                <Gift className="h-8 w-8 text-[#1e4e79] dark:text-blue-400" />
                 <Sparkles className="h-4 w-4 text-yellow-500 dark:text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
               </div>
 
               {/* Content */}
               <div className="text-center space-y-2">
-                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                  {language === 'hi' ? 'बधाई हो! 🎉' : 'Congratulations! 🎉'}
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  {language === 'hi' ? 'बधाई हो! ' : 'Congratulations! '}
                 </h2>
-                <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                <p className="text-xs font-bold text-[#1e4e79] dark:text-blue-400">
                   {language === 'hi' ? 'मॉक टेस्ट हब टीम से उपहार' : 'Gift from Mock Test Hub Team'}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 px-2 pt-2 leading-relaxed">
@@ -1035,38 +859,38 @@ const formatSubCategoryName = (name: string) => {
               </div>
 
               {/* Unlocked Benefits list */}
-              <div className="mt-6 p-4 bg-slate-55 dark:bg-slate-955/60 border border-slate-150 dark:border-slate-850 rounded-2xl space-y-3.5">
+              <div className="mt-6 p-4 bg-slate-55 dark:bg-slate-955/60 border border-slate-150 dark:border-slate-850 rounded-lg space-y-3.5">
                 <div className="flex items-start gap-3">
-                  <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">🔓</div>
+                  <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 font-semibold text-xs shrink-0 mt-0.5"></div>
                   <div>
-                    <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                    <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                       {language === 'hi' ? 'असीमित मॉक टेस्ट्स' : 'Unlimited Premium Tests'}
                     </h4>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                       {language === 'hi' ? 'सभी एसएससी, बैंकिंग, रेलवे और राज्य स्तरीय प्रीमियम टेस्ट अनलॉक हैं।' : 'Access all SSC, Banking, Railways & State level exams without restriction.'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📝</div>
+                  <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 font-semibold text-xs shrink-0 mt-0.5"></div>
                   <div>
-                    <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                    <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                       {language === 'hi' ? 'कस्टम टेस्ट क्रिएटर' : 'Custom Paper Creator'}
                     </h4>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                       {language === 'hi' ? 'अपने कमजोर विषयों के अनुसार स्वयं के प्रश्न-पत्र तैयार करें।' : 'Build customizable exam papers focused on your weak subjects.'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📊</div>
+                  <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 font-semibold text-xs shrink-0 mt-0.5"></div>
                   <div>
-                    <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                    <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                       {language === 'hi' ? 'पूर्ण स्पीड और गति विश्लेषक' : 'Advanced Speed Analytics'}
                     </h4>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                       {language === 'hi' ? 'अपने डैशबोर्ड पर सेक्शनल टाइम, स्पीड और तुलनात्मक परिणाम देखें।' : 'Track sectional timing averages and topper comparative speed details.'}
                     </p>
                   </div>
@@ -1078,14 +902,14 @@ const formatSubCategoryName = (name: string) => {
                 <button
                   onClick={handleClaimPassPro}
                   disabled={claiming}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 rounded-2xl text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-blue-500/20 uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold py-3.5 rounded-lg text-xs transition cursor-pointer shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {claiming ? (
                     <span>{language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...'}</span>
                   ) : (
                     <>
                       <Gift className="h-4.5 w-4.5 animate-pulse" />
-                      <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) 🎁' : 'Claim 1 Year Pass Pro 🎁'}</span>
+                      <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) ' : 'Claim 1 Year Pass Pro '}</span>
                     </>
                   )}
                 </button>
@@ -1095,104 +919,16 @@ const formatSubCategoryName = (name: string) => {
         )}
       </div>
       {/* Floating Support Team Overlay Widget on Mobile Home Screen */}
+      <WelcomeTour blocked={showCongratsPopup} />
       <HomeSupportWidget />
     </>
   );
 }
 
   return (
-    <div className="h-screen max-h-screen h-[100dvh] w-full flex flex-col bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden relative">
+    <div className="h-screen max-h-screen h-[100dvh] w-full flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden relative">
       
-      {/* Background Decorative Arts & Designs (Strictly bounded within viewport) */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <BackgroundArts isMobile={false} />
-        {/* Decorative Orbs */}
-        <div className="absolute top-10 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute top-[60%] -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      </div>
-
-      {/* HEADER SECTION */}
-      <header className="hidden md:flex h-18 shrink-0 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 items-center justify-between shadow-sm glass-header transition-all duration-350 bg-white/95 dark:bg-slate-950/95 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3 lg:gap-6 min-w-0">
-          {/* Original MockTest Hub Header Logo */}
-          <Link href="/" className="flex items-center gap-2.5 lg:gap-3 shrink-0">
-            <div className="bg-[#E6F4FE] dark:bg-slate-800 p-1.5 lg:p-2 rounded-full shadow-sm flex items-center justify-center h-9 w-9 lg:h-10 lg:w-10 border border-blue-200/50 dark:border-slate-700 shrink-0">
-              <Trophy className="h-5 w-5 lg:h-5.5 lg:w-5.5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="shrink-0">
-              <h1 className="font-extrabold text-xs lg:text-sm leading-tight text-slate-900 dark:text-white tracking-wider truncate">{t.logoTitle}</h1>
-              <p className="text-[8px] lg:text-[9px] text-blue-600 dark:text-blue-400 font-bold tracking-widest uppercase truncate">{t.logoSub}</p>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="flex items-center gap-3 lg:gap-6 text-xs font-bold text-slate-505 dark:text-slate-400 shrink-0">
-            <Link href="/mock-tests" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navTestSeries}</Link>
-            <Link href="/typing-test" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}</span>
-            </Link>
-            <Link href="/updates" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navUpdates}</Link>
-            <Link href="/locker" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">
-              <span>{language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}</span>
-            </Link>
-            {currentUser && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(currentUser.role) && (
-              <Link href="/admin" className="hover:text-blue-600 dark:hover:text-white transition-colors whitespace-nowrap">{t.navAdmin}</Link>
-            )}
-          </nav>
-        </div>
-
-        {/* Auth Buttons / Profile Panel / Language Selector */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Language selector */}
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
-            className="px-2 py-1.5 lg:px-2.5 lg:py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-355 border border-slate-200 dark:border-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="en" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">English</option>
-            <option value="hi" className="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200">हिन्दी</option>
-          </select>
-
-          {/* Theme switcher */}
-          <button 
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-slate-200 dark:border-slate-800"
-            title={theme === 'light' ? t.themeDark : t.themeLight}
-          >
-            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-          </button>
-
-          {currentUser ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link 
-                href="/profile" 
-                className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 transition px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs text-slate-800 dark:text-slate-200 whitespace-nowrap"
-              >
-                {/* Small Mock Test Hub Logo Emblem */}
-                <div className="bg-blue-600/10 dark:bg-blue-950 p-1 rounded-md flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-900/40">
-                  <Trophy className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span>{t.dashboard} ({currentUser.name.split(' ')[0]})</span>
-              </Link>
-              <button
-                onClick={logout}
-                className="hidden lg:block text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-xs font-bold cursor-pointer"
-              >
-                {t.signOut}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link href="/auth" className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition text-xs font-bold flex items-center gap-1 px-2 py-1">
-                <span>{t.logIn}</span>
-              </Link>
-              <Link href="/auth" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-2 px-3 sm:px-4 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 whitespace-nowrap">
-                <span>{t.signUp}</span>
-              </Link>
-            </div>
-          )}
-        </div>
-      </header>
+      <SiteHeader fluid />
 
       {/* Main split-pane content: Left Side Menu Section (identical to category page) + Right Main Content */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden relative">
@@ -1205,7 +941,7 @@ const formatSubCategoryName = (name: string) => {
         />
 
         {/* Right Side: Home Page Content Container */}
-        <main className="flex-1 min-w-0 px-3 md:px-6 pb-0 pt-0 overflow-y-auto overflow-x-hidden edu-grid-pattern relative h-full min-h-0 no-scrollbar flex flex-col space-y-3">
+        <main className="flex-1 min-w-0 px-3 md:px-6 pb-0 pt-0 overflow-y-auto overflow-x-hidden relative h-full min-h-0 no-scrollbar flex flex-col space-y-3">
           
           {rightView === 'chat' ? (
             <div className="w-full h-full py-2 sm:py-3">
@@ -1250,16 +986,17 @@ const formatSubCategoryName = (name: string) => {
             {/* 1. TEST SERIES */}
             <Link
               href="/mock-tests"
-              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-orange-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+              data-tour="home-tests"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-orange-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-orange-500/10 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-md bg-orange-500/10 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0 transition-transform shadow-2xs">
                 <Award className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight line-clamp-1">
+                <h4 className="font-semibold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors leading-tight line-clamp-1">
                   {language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}
                 </h4>
-                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                <p className="text-[11px] sm:text-[11px] xl:text-xs text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
                   {language === 'hi' ? '1,500+ सीबीटी टेस्ट्स' : '1,500+ CBT Mocks'}
                 </p>
               </div>
@@ -1269,35 +1006,37 @@ const formatSubCategoryName = (name: string) => {
             {/* 2. TYPING TEST */}
             <Link
               href="/typing-test"
-              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+              data-tour="home-typing"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-md bg-blue-500/10 text-[#1e4e79] dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform shadow-2xs">
                 <Keyboard className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight line-clamp-1">
+                <h4 className="font-semibold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors leading-tight line-clamp-1">
                   {language === 'hi' ? 'टाइपिंग टेस्ट' : 'Typing Test'}
                 </h4>
-                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                <p className="text-[11px] sm:text-[11px] xl:text-xs text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
                   {language === 'hi' ? 'एसएससी, कोर्ट व राज्य परीक्षा' : 'SSC, Court & State Tests'}
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
+              <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-[#1e4e79] group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
             </Link>
 
             {/* 3. DOCUMENT LOCKER */}
             <Link
               href="/locker"
-              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+              data-tour="home-locker"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-md bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shrink-0 transition-transform shadow-2xs">
                 <Lock className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight line-clamp-1">
+                <h4 className="font-semibold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight line-clamp-1">
                   {language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
                 </h4>
-                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                <p className="text-[11px] sm:text-[11px] xl:text-xs text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
                   {language === 'hi' ? 'सुरक्षित प्रमाणपत्र वॉल्ट' : 'Secure Certificate Vault'}
                 </p>
               </div>
@@ -1307,16 +1046,16 @@ const formatSubCategoryName = (name: string) => {
             {/* 4. APPLIED & SAVED EXAMS */}
             <Link
               href="/profile/tracked-jobs"
-              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 shadow-xs hover:shadow-md transition-all duration-200 transform-gpu hover:-translate-y-0.5"
+              className="group flex items-center gap-2 sm:gap-2.5 xl:gap-3 p-2.5 sm:p-3 xl:p-3.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 shadow-xs hover:shadow-sm transition-all duration-200"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-xl bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 xl:w-11 xl:h-11 rounded-md bg-purple-500/10 text-purple-500 dark:text-purple-400 flex items-center justify-center shrink-0 transition-transform shadow-2xs">
                 <BookmarkCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5 xl:h-5.5 xl:w-5.5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
+                <h4 className="font-semibold text-[11px] sm:text-xs xl:text-[13px] text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight line-clamp-1">
                   {language === 'hi' ? 'आवेदन व सेव परीक्षाएं' : 'Applied & Saved Exams'}
                 </h4>
-                <p className="text-[9px] sm:text-[9.5px] xl:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
+                <p className="text-[11px] sm:text-[11px] xl:text-xs text-slate-400 dark:text-slate-500 font-medium leading-tight mt-0.5 line-clamp-1">
                   {language === 'hi' ? 'ट्रैक किए गए सभी फॉर्म' : 'View Tracked & Saved Exams'}
                 </p>
               </div>
@@ -1342,17 +1081,17 @@ const formatSubCategoryName = (name: string) => {
       {/* PORTAL UPDATES BOARD (RESULTNOTIFY STYLE 3-COLUMN CONTAINER GRID) */}
       <section className="py-10 md:py-14 px-2 sm:px-4 md:px-6 w-full max-w-[1550px] mx-auto relative z-10 border-t border-slate-300 dark:border-slate-800 space-y-8">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">{t.liveUpdatesTitle}</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">{t.liveUpdatesTitle}</h2>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 font-semibold">{t.liveUpdatesDesc}</p>
         </div>
 
         {/* MOBILE & TABLET TABBED UPDATES VIEW (< 1080px) */}
         <div className="block min-[1080px]:hidden max-w-4xl mx-auto space-y-4">
           {/* TAB SELECTION BAR */}
-          <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setMobileUpdateTab('admit_card')}
-              className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 text-center rounded-md font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 mobileUpdateTab === 'admit_card' 
                   ? 'bg-white dark:bg-slate-800 text-green-600 dark:text-green-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -1363,7 +1102,7 @@ const formatSubCategoryName = (name: string) => {
             </button>
             <button
               onClick={() => setMobileUpdateTab('result')}
-              className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 text-center rounded-md font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 mobileUpdateTab === 'result' 
                   ? 'bg-white dark:bg-slate-800 text-yellow-600 dark:text-yellow-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
@@ -1374,9 +1113,9 @@ const formatSubCategoryName = (name: string) => {
             </button>
             <button
               onClick={() => setMobileUpdateTab('notice')}
-              className={`flex-1 py-2 text-center rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 text-center rounded-md font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 mobileUpdateTab === 'notice' 
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
+                  ? 'bg-white dark:bg-slate-800 text-[#1e4e79] dark:text-blue-400 shadow-sm border border-slate-200/60 dark:border-slate-700/60'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
@@ -1386,12 +1125,12 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* RENDER ACTIVE TAB */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm min-h-[300px] flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 rounded-lg shadow-sm min-h-[300px] flex flex-col justify-between">
             <div>
-              <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+              <h3 className="font-semibold text-xs text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
                 {mobileUpdateTab === 'admit_card' && <><FileText className="h-4 w-4 text-green-550" /> <span>{t.admitCards}</span></>}
                 {mobileUpdateTab === 'result' && <><Trophy className="h-4 w-4 text-yellow-500 animate-pulse" /> <span>{t.resultsMerits}</span></>}
-                {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-blue-600 animate-bounce" /> <span>{t.liveNotices}</span></>}
+                {mobileUpdateTab === 'notice' && <><Bell className="h-4 w-4 text-[#1e4e79]" /> <span>{t.liveNotices}</span></>}
               </h3>
               
               <div className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -1408,18 +1147,18 @@ const formatSubCategoryName = (name: string) => {
                       >
                         <div className="flex items-center justify-between gap-2">
                           {isNewlyPublished(notice.publishDate) ? (
-                            <span className="bg-rose-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                            <span className="bg-rose-600 text-white text-[11px] font-semibold px-1.5 py-0.5 rounded">
                               {t.newBadge}
                             </span>
                           ) : <span />}
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium">{notice.date}</span>
+                          <span className="text-[11px] sm:text-[11px] text-slate-400 font-medium">{notice.date}</span>
                         </div>
-                        <h5 className="font-medium text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                        <h5 className="font-medium text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-normal flex items-center justify-between gap-1 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400">
                           <span>{(language === 'hi' && notice.titleHi) ? notice.titleHi : notice.title}</span>
                           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                         </h5>
                         {notice.category === 'notice' && notice.lastDate && (
-                          <p className="text-[9px] sm:text-[10px] text-rose-500 font-semibold mt-0.5 uppercase tracking-wider">
+                          <p className="text-[11px] sm:text-xs text-rose-500 font-semibold mt-0.5">
                             {t.lastDate} {notice.lastDate}
                           </p>
                         )}
@@ -1434,7 +1173,7 @@ const formatSubCategoryName = (name: string) => {
             </div>
             
             <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-              <Link href={`/updates?category=${mobileUpdateTab}`} className="text-[10px] uppercase font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+              <Link href={`/updates?category=${mobileUpdateTab}`} className="text-xs font-semibold text-[#1e4e79] dark:text-blue-400 hover:underline flex items-center gap-1">
                 {language === 'hi' ? 'सभी अपडेट देखें' : 'View All Alerts'} <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -1445,8 +1184,8 @@ const formatSubCategoryName = (name: string) => {
         <div className="hidden min-[1080px]:grid min-[1080px]:grid-cols-3 gap-5 lg:gap-6 w-full">
           
           {/* Column 1: Admit Cards & City Info (Emerald Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
-            <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
+            <h3 className="font-semibold text-xs lg:text-sm text-slate-900 dark:text-white mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <FileText className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
               <span>{t.admitCards}</span>
             </h3>
@@ -1468,7 +1207,7 @@ const formatSubCategoryName = (name: string) => {
             <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
               <Link 
                 href="/updates?category=admit_card"
-                className="w-full py-2.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                className="w-full py-2.5 px-4 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
               >
                 <span>View All {t.admitCards}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -1477,8 +1216,8 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 2: Results & Merit Lists (Amber Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
-            <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
+            <h3 className="font-semibold text-xs lg:text-sm text-slate-900 dark:text-white mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
               <Trophy className="h-4.5 w-4.5 text-amber-500 animate-pulse shrink-0" />
               <span>{t.resultsMerits}</span>
             </h3>
@@ -1500,7 +1239,7 @@ const formatSubCategoryName = (name: string) => {
             <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
               <Link 
                 href="/updates?category=result"
-                className="w-full py-2.5 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                className="w-full py-2.5 px-4 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
               >
                 <span>View All {t.resultsMerits}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -1509,9 +1248,9 @@ const formatSubCategoryName = (name: string) => {
           </div>
 
           {/* Column 3: Live Notices & Announcements (Blue Theme) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
-            <h3 className="font-extrabold text-xs lg:text-sm text-slate-900 dark:text-white uppercase tracking-wider mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
-              <Bell className="h-4.5 w-4.5 text-blue-600 animate-bounce shrink-0" />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 lg:p-6 shadow-sm flex flex-col min-h-[580px] relative w-full">
+            <h3 className="font-semibold text-xs lg:text-sm text-slate-900 dark:text-white mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+              <Bell className="h-4.5 w-4.5 text-[#1e4e79] shrink-0" />
               <span>{t.liveNotices}</span>
             </h3>
 
@@ -1532,7 +1271,7 @@ const formatSubCategoryName = (name: string) => {
             <div className="pt-4 mt-auto border-t border-slate-100 dark:border-slate-800/80">
               <Link 
                 href="/updates?category=notice"
-                className="w-full py-2.5 px-4 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-black flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
+                className="w-full py-2.5 px-4 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/80 text-[#1e4e79] dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs hover:shadow-sm"
               >
                 <span>View All {t.liveNotices}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -1546,7 +1285,7 @@ const formatSubCategoryName = (name: string) => {
       {/* FAQ SECTION */}
       <section className="py-16 px-6 md:px-12 max-w-6xl w-full mx-auto relative z-10 border-t border-slate-200 dark:border-slate-900 space-y-10">
         <div className="text-center max-w-xl mx-auto">
-          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
             {language === 'hi' ? 'सामान्यतः पूछे जाने वाले प्रश्न' : 'Frequently Asked Questions'}
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-semibold">
@@ -1555,7 +1294,7 @@ const formatSubCategoryName = (name: string) => {
         </div>
 
         {/* Single Unified FAQ Section (All 10 Questions) */}
-        <div className="max-w-4xl w-full mx-auto bg-white/90 dark:bg-slate-900/60 backdrop-blur-md border border-slate-300 dark:border-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm space-y-3.5">
+        <div className="max-w-4xl w-full mx-auto bg-white/90 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-800 p-6 sm:p-8 rounded-lg shadow-sm space-y-3.5">
           {[
             {
               id: 0,
@@ -1613,7 +1352,7 @@ const formatSubCategoryName = (name: string) => {
               <div key={faq.id} className="border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 pb-3.5 pt-1">
                 <button
                   onClick={() => setActiveFaq(isOpen ? null : faq.id)}
-                  className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer gap-3"
+                  className="w-full flex items-center justify-between text-left py-1.5 font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 hover:text-[#1e4e79] dark:hover:text-blue-400 transition-colors cursor-pointer gap-3"
                 >
                   <span>{faq.q}</span>
                   <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0 font-mono">
@@ -1634,7 +1373,7 @@ const formatSubCategoryName = (name: string) => {
       {/* CONTACT US & OFFICIAL CHANNELS SECTION (MANAGED BY ADMIN VIA MANAGE CONTACT LINKS) */}
       <section className="py-10 md:py-14 px-4 sm:px-6 md:px-10 max-w-7xl w-full mx-auto relative z-10 border-t border-slate-300 dark:border-slate-800 space-y-6">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
             {language === 'hi' ? 'संपर्क करें एवं आधिकारिक चैनल' : 'Contact Us & Official Channels'}
           </h2>
         </div>
@@ -1656,23 +1395,23 @@ const formatSubCategoryName = (name: string) => {
               x: 'bg-black hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-black',
             };
 
-            const btnBg = btnBgStyles[channel.id] || 'bg-blue-600 hover:bg-blue-700 text-white';
+            const btnBg = btnBgStyles[channel.id] || 'bg-[#1e4e79] hover:bg-[#163c5e] text-white';
 
             return (
               <div
                 key={channel.id}
-                className="bg-white/90 dark:bg-slate-900/60 backdrop-blur-md border border-slate-300 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-2xl p-3 shadow-2xs hover:shadow-xs transition-all duration-200 flex flex-col justify-between group gap-2"
+                className="bg-white/90 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 rounded-lg p-3 shadow-2xs hover:shadow-xs transition-all duration-200 flex flex-col justify-between group gap-2"
               >
                 {/* Top Bar: Icon Badge & Channel Name */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-[11px] text-white shrink-0 shadow-2xs ${channel.badgeBg || 'bg-blue-600'}`}>
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-semibold text-[11px] text-white shrink-0 shadow-2xs ${channel.badgeBg || 'bg-[#1e4e79]'}`}>
                     {channel.badgeText || (channel.name ? channel.name.slice(0, 2).toUpperCase() : 'MT')}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                       {channel.name}
                     </h4>
-                    <p className="text-[9.5px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                    <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       {channel.handle}
                     </p>
                   </div>
@@ -1684,7 +1423,7 @@ const formatSubCategoryName = (name: string) => {
                     href={channel.url}
                     target={isEmail ? undefined : "_blank"}
                     rel={isEmail ? undefined : "noopener noreferrer"}
-                    className={`flex-1 py-1 px-2 rounded-md font-bold text-[10px] flex items-center justify-center gap-1 transition cursor-pointer ${btnBg}`}
+                    className={`flex-1 py-1 px-2 rounded-md font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer ${btnBg}`}
                   >
                     {isEmail ? <Mail className="w-2.5 h-2.5 shrink-0" /> : <ExternalLink className="w-2.5 h-2.5 shrink-0" />}
                     <span className="truncate">
@@ -1703,18 +1442,18 @@ const formatSubCategoryName = (name: string) => {
                           setTimeout(() => setCopiedContactEmail(false), 2000);
                         }
                       }}
-                      className="py-1 px-1.5 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center gap-0.5 transition cursor-pointer shrink-0"
+                      className="py-1 px-1.5 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] flex items-center justify-center gap-0.5 transition cursor-pointer shrink-0"
                       title={language === 'hi' ? 'ईमेल कॉपी करें' : 'Copy Email Address'}
                     >
                       {copiedContactEmail ? (
                         <>
                           <Check className="w-2.5 h-2.5 text-green-600 dark:text-green-400" />
-                          <span className="text-[8.5px] text-green-600 dark:text-green-400">{language === 'hi' ? 'कॉपी!' : 'Copied!'}</span>
+                          <span className="text-[11px] text-green-600 dark:text-green-400">{language === 'hi' ? 'कॉपी!' : 'Copied!'}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-2.5 h-2.5 text-slate-500" />
-                          <span className="text-[8.5px]">{language === 'hi' ? 'कॉपी' : 'Copy'}</span>
+                          <span className="text-[11px]">{language === 'hi' ? 'कॉपी' : 'Copy'}</span>
                         </>
                       )}
                     </button>
@@ -1727,13 +1466,13 @@ const formatSubCategoryName = (name: string) => {
         </div>
 
         {/* Quick Contact & Direct Inquiry Banner (White Color Tile) */}
-        <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-300 dark:border-slate-800 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-800 rounded-lg p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-[9px] font-black uppercase tracking-wider mb-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold mb-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>{language === 'hi' ? 'सक्रिय सपोर्ट डेस्क' : 'Active Support Desk'}</span>
             </div>
-            <h3 className="text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">
               {language === 'hi' ? 'क्या आपके पास कोई प्रश्न या समस्या है?' : 'Have a question, feedback, or grievance?'}
             </h3>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium max-w-xl">
@@ -1746,7 +1485,7 @@ const formatSubCategoryName = (name: string) => {
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-center">
             <button
               onClick={() => setRightView('contact')}
-              className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+              className="py-2 px-4 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Send className="w-3.5 h-3.5" />
               <span>{language === 'hi' ? 'सपोर्ट पोर्टल खोलें' : 'Open Support Desk'}</span>
@@ -1762,21 +1501,21 @@ const formatSubCategoryName = (name: string) => {
         <div className="mt-3 flex items-center justify-center gap-4">
           <button
             onClick={() => setRightView('contact')}
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+            className="hover:text-[#1e4e79] dark:hover:text-blue-400 font-bold transition cursor-pointer"
           >
             Contact Us
           </button>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <button
             onClick={() => setRightView('terms')}
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+            className="hover:text-[#1e4e79] dark:hover:text-blue-400 font-bold transition cursor-pointer"
           >
             Terms & Conditions
           </button>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <button
             onClick={() => setRightView('privacy')}
-            className="hover:text-blue-600 dark:hover:text-blue-400 font-bold transition cursor-pointer"
+            className="hover:text-[#1e4e79] dark:hover:text-blue-400 font-bold transition cursor-pointer"
           >
             Privacy Policy
           </button>
@@ -1792,11 +1531,9 @@ const formatSubCategoryName = (name: string) => {
 
       {/* NEW SIGNUP CONGRATULATIONS POPUP */}
       {showCongratsPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl p-6 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 animate-fade-in">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl p-6 overflow-hidden">
             {/* Background design accents */}
-            <div className="absolute -top-10 -right-10 w-36 h-36 bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
-            <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
             {/* Close cross */}
             <button
@@ -1810,17 +1547,17 @@ const formatSubCategoryName = (name: string) => {
             </button>
 
             {/* Header Icon */}
-            <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-2xl flex items-center justify-center border border-blue-100 dark:border-blue-900/40 mb-6 shadow-inner relative">
-              <Gift className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-bounce" />
+            <div className="mx-auto w-16 h-16 bg-blue-50 dark:bg-blue-950/60 rounded-lg flex items-center justify-center border border-blue-100 dark:border-blue-900/40 mb-6 shadow-inner relative">
+              <Gift className="h-8 w-8 text-[#1e4e79] dark:text-blue-400" />
               <Sparkles className="h-4 w-4 text-yellow-500 dark:text-yellow-400 absolute -top-1 -right-1 animate-pulse" />
             </div>
 
             {/* Content */}
             <div className="text-center space-y-2">
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                {language === 'hi' ? 'बधाई हो! 🎉' : 'Congratulations! 🎉'}
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                {language === 'hi' ? 'बधाई हो! ' : 'Congratulations! '}
               </h2>
-              <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+              <p className="text-xs font-bold text-[#1e4e79] dark:text-blue-400">
                 {language === 'hi' ? 'मॉक टेस्ट हब टीम से उपहार' : 'Gift from Mock Test Hub Team'}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 px-2 pt-2 leading-relaxed">
@@ -1831,38 +1568,38 @@ const formatSubCategoryName = (name: string) => {
             </div>
 
             {/* Unlocked Benefits list */}
-            <div className="mt-6 p-4 bg-slate-55 dark:bg-slate-950/60 border border-slate-150 dark:border-slate-850 rounded-2xl space-y-3.5">
+            <div className="mt-6 p-4 bg-slate-55 dark:bg-slate-950/60 border border-slate-150 dark:border-slate-850 rounded-lg space-y-3.5">
               <div className="flex items-start gap-3">
-                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">🔓</div>
+                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 font-semibold text-xs shrink-0 mt-0.5"></div>
                 <div>
-                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                  <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                     {language === 'hi' ? 'असीमित मॉक टेस्ट्स' : 'Unlimited Premium Tests'}
                   </h4>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                     {language === 'hi' ? 'सभी एसएससी, बैंकिंग, रेलवे और राज्य स्तरीय प्रीमियम टेस्ट अनलॉक हैं।' : 'Access all SSC, Banking, Railways & State level exams without restriction.'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📝</div>
+                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 font-semibold text-xs shrink-0 mt-0.5"></div>
                 <div>
-                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                  <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                     {language === 'hi' ? 'कस्टम टेस्ट क्रिएटर' : 'Custom Paper Creator'}
                   </h4>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                     {language === 'hi' ? 'अपने कमजोर विषयों के अनुसार स्वयं के प्रश्न-पत्र तैयार करें।' : 'Build customizable exam papers focused on your weak subjects.'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-blue-600 dark:text-blue-400 font-extrabold text-[10px] shrink-0 mt-0.5">📊</div>
+                <div className="bg-blue-100 dark:bg-blue-950/40 p-1.5 rounded-lg text-[#1e4e79] dark:text-blue-400 font-semibold text-xs shrink-0 mt-0.5"></div>
                 <div>
-                  <h4 className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200">
+                  <h4 className="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                     {language === 'hi' ? 'पूर्ण स्पीड और गति विश्लेषक' : 'Advanced Speed Analytics'}
                   </h4>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                     {language === 'hi' ? 'अपने डैशबोर्ड पर सेक्शनल टाइम, स्पीड और तुलनात्मक परिणाम देखें।' : 'Track sectional timing averages and topper comparative speed details.'}
                   </p>
                 </div>
@@ -1874,14 +1611,14 @@ const formatSubCategoryName = (name: string) => {
               <button
                 onClick={handleClaimPassPro}
                 disabled={claiming}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold py-3.5 rounded-2xl text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-blue-500/20 uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-[#1e4e79] hover:bg-[#163c5e] text-white font-semibold py-3.5 rounded-lg text-xs transition cursor-pointer shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {claiming ? (
                   <span>{language === 'hi' ? 'प्रोसेसिंग...' : 'Processing...'}</span>
                 ) : (
                   <>
                     <Gift className="h-4.5 w-4.5 animate-pulse" />
-                    <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) 🎁' : 'Claim 1 Year Pass Pro 🎁'}</span>
+                    <span>{language === 'hi' ? '1 वर्ष का पास प्रो दावा करें (Claim Now) ' : 'Claim 1 Year Pass Pro '}</span>
                   </>
                 )}
               </button>
@@ -1891,6 +1628,7 @@ const formatSubCategoryName = (name: string) => {
       )}
 
       {/* Floating Support Team Overlay Widget on Home Screen (Same small circle expandable variant as Test Series page) */}
+      <WelcomeTour blocked={showCongratsPopup} />
       <HomeSupportWidget variant="expandable" />
     </div>
   );

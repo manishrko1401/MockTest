@@ -79,7 +79,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         setEditTier(data.user.subscriptionTier || 'None');
         setEditPurchasedAt(data.user.subscriptionPurchasedAt ? data.user.subscriptionPurchasedAt.split('T')[0] : '');
         setEditExpiry(data.user.subscriptionExpiresAt ? data.user.subscriptionExpiresAt.split('T')[0] : '');
-        setEditPassword(data.user.password || '');
+        setEditPassword(''); // passwords are never shown; type a new one to change it
         setEditIsBlocked(data.user.isBlocked || false);
         setEditCoins(data.user.coins || 0);
       } else {
@@ -172,15 +172,15 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   // Auth Guard
   if (currentUser?.role !== 'ADMIN') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-200/90 dark:bg-slate-900 p-6 text-center">
-        <ShieldAlert className="h-16 w-16 text-red-500 mb-4 animate-bounce" />
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Access Denied</h1>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f7fa] dark:bg-slate-950 p-6 text-center">
+        <ShieldAlert className="h-16 w-16 text-red-500 mb-4" />
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Access Denied</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6">
           This tab contains administrative controls. Please login with an administrator account to view details.
         </p>
         <Link 
           href="/" 
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg text-xs transition"
+          className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2 px-6 rounded-lg text-xs transition"
         >
           Return to Home
         </Link>
@@ -190,8 +190,8 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-200/90 dark:bg-slate-900 p-6">
-        <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f7fa] dark:bg-slate-950 p-6">
+        <div className="h-8 w-8 border-4 border-[#1e4e79] border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading user dossier...</p>
       </div>
     );
@@ -199,9 +199,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   if (error || !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-200/90 dark:bg-slate-900 p-6 text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f7fa] dark:bg-slate-950 p-6 text-center">
         <ShieldAlert className="h-16 w-16 text-amber-500 mb-4" />
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">User Dossier Error</h1>
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">User Dossier Error</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-6">
           {error || 'The requested user could not be retrieved.'}
         </p>
@@ -216,7 +216,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f5f7fa] dark:bg-slate-950 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Top bar */}
         <div className="flex items-center justify-between">
@@ -229,38 +229,38 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
           </button>
           
           <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-bold px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
               Dossier ID: {user.id}
             </span>
           </div>
         </div>
 
         {/* User Dashboard Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-[#1e4e79] text-white p-6 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-extrabold">{user.name}</h1>
+              <h1 className="text-xl font-semibold">{user.name}</h1>
               {user.isBlocked && (
-                <span className="bg-red-500/20 border border-red-400/30 text-red-200 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="bg-red-500/20 border border-red-400/30 text-red-200 text-[11px] font-semibold px-2 py-0.5 rounded-full">
                   Blocked
                 </span>
               )}
             </div>
             <p className="text-xs text-blue-100">{user.email} &bull; Hub ID: <span className="font-mono font-bold bg-white/10 px-1.5 py-0.5 rounded">{user.candidateCode || 'None'}</span></p>
-            <p className="text-[10px] text-indigo-155">Registered on: {user.registeredDate}</p>
+            <p className="text-xs text-indigo-155">Registered on: {user.registeredDate}</p>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="bg-white/10 px-4 py-2.5 rounded-xl border border-white/10 text-center">
-              <p className="text-[10px] text-indigo-150 font-bold uppercase tracking-wider">Wallet Balance</p>
+            <div className="bg-white/10 px-4 py-2.5 rounded-md border border-white/10 text-center">
+              <p className="text-xs text-indigo-150 font-bold">Wallet Balance</p>
               <div className="flex items-center justify-center gap-1 mt-0.5">
                 <Coins className="h-4 w-4 text-amber-300" />
-                <span className="font-black text-sm">{user.coins || 0}</span>
+                <span className="font-semibold text-sm">{user.coins || 0}</span>
               </div>
             </div>
-            <div className="bg-white/10 px-4 py-2.5 rounded-xl border border-white/10 text-center">
-              <p className="text-[10px] text-indigo-150 font-bold uppercase tracking-wider">Sittings Taken</p>
-              <span className="font-black text-sm mt-0.5 block">{user.testSessions.length}</span>
+            <div className="bg-white/10 px-4 py-2.5 rounded-md border border-white/10 text-center">
+              <p className="text-xs text-indigo-150 font-bold">Sittings Taken</p>
+              <span className="font-semibold text-sm mt-0.5 block">{user.testSessions.length}</span>
             </div>
           </div>
         </div>
@@ -268,14 +268,14 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left/Middle Column: Edit Profile */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+            <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-lg shadow-sm">
               <div className="flex items-center gap-3 mb-6 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <UserCheck className="h-5 w-5 text-blue-500" />
-                <h2 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Modify Profile Dossier</h2>
+                <UserCheck className="h-5 w-5 text-[#1e4e79]" />
+                <h2 className="font-semibold text-sm text-slate-900 dark:text-white">Modify Profile Dossier</h2>
               </div>
 
               {saveStatus && (
-                <div className={`p-4 rounded-xl mb-4 text-xs font-bold flex items-center gap-2 border ${
+                <div className={`p-4 rounded-md mb-4 text-xs font-bold flex items-center gap-2 border ${
                   saveStatus.type === 'success' 
                     ? 'bg-green-50 dark:bg-green-955/20 border-green-200 dark:border-green-800/40 text-green-700 dark:text-green-400' 
                     : 'bg-red-50 dark:bg-red-955/20 border-red-200 dark:border-red-808/40 text-red-650 dark:text-red-400'
@@ -288,7 +288,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               <form onSubmit={handleSaveProfile} className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Full Name (Read-Only)</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Full Name (Read-Only)</label>
                     <input
                       type="text"
                       readOnly
@@ -298,7 +298,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Email Address (Read-Only)</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Email Address (Read-Only)</label>
                     <input
                       type="email"
                       readOnly
@@ -308,7 +308,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Mobile Number (Read-Only)</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Mobile Number (Read-Only)</label>
                     <input
                       type="text"
                       readOnly
@@ -318,44 +318,44 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referral Code</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Referral Code</label>
                     <input
                       type="text"
                       required
                       value={editReferralCode}
                       onChange={(e) => setEditReferralCode(e.target.value.toUpperCase())}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referred By (Code)</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Referred By (Code)</label>
                     <input
                       type="text"
                       value={editReferredBy}
                       onChange={(e) => setEditReferredBy(e.target.value.toUpperCase())}
                       placeholder="None"
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Referrals Count</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Referrals Count</label>
                     <input
                       type="number"
                       required
                       value={editReferralsCount}
                       onChange={(e) => setEditReferralsCount(Number(e.target.value))}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">System Role</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">System Role</label>
                     <select
                       value={editRole}
                       onChange={(e) => setEditRole(e.target.value as any)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                     >
                       <option value="STUDENT">Student / User</option>
                       <option value="TEST_CREATOR">Test Creator</option>
@@ -366,22 +366,22 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Wallet Coins</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Wallet Coins</label>
                     <input
                       type="number"
                       required
                       value={editCoins}
                       onChange={(e) => setEditCoins(Number(e.target.value))}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Subscription Pass</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Subscription Pass</label>
                     <select
                       value={editTier}
                       onChange={(e) => setEditTier(e.target.value as any)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79] cursor-pointer"
                     >
                       <option value="None">No Pass</option>
                       <option value="Testbook Pass">Mock Test Pass</option>
@@ -390,46 +390,49 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-extrabold text-slate-450 dark:text-slate-400 uppercase tracking-wider mb-2">Account Password (Read-Only)</label>
+                    <label className="block text-xs font-semibold text-slate-450 dark:text-slate-400 mb-2">Account Password (Read-Only)</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-450">
                         <Key className="h-3.5 w-3.5" />
                       </div>
                       <input
-                        type="text"
-                        readOnly
+                        type="password"
+                        autoComplete="new-password"
+                        minLength={6}
                         value={editPassword}
-                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-808 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none"
+                        onChange={(e) => setEditPassword(e.target.value)}
+                        placeholder="New password (leave blank to keep)"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                   </div>
                 </div>
 
                 {editTier !== 'None' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-955/5 p-4 rounded-xl border border-blue-100 dark:border-blue-950/20">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/30 dark:bg-blue-955/5 p-4 rounded-md border border-blue-100 dark:border-blue-950/20">
                     <div>
-                      <label className="block text-[10px] font-extrabold text-blue-650 dark:text-blue-400 uppercase tracking-wider mb-2">Pass Purchased Date</label>
+                      <label className="block text-xs font-semibold text-blue-650 dark:text-blue-400 mb-2">Pass Purchased Date</label>
                       <input
                         type="date"
                         value={editPurchasedAt}
                         onChange={(e) => setEditPurchasedAt(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-extrabold text-blue-650 dark:text-blue-400 uppercase tracking-wider mb-2">Pass Expiry Date</label>
+                      <label className="block text-xs font-semibold text-blue-650 dark:text-blue-400 mb-2">Pass Expiry Date</label>
                       <input
                         type="date"
                         value={editExpiry}
                         onChange={(e) => setEditExpiry(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79]"
                       />
                     </div>
                   </div>
                 )}
 
                 {/* Block user flag */}
-                <div className="flex items-center gap-2 bg-red-50/20 dark:bg-red-955/5 p-4 rounded-xl border border-red-100 dark:border-red-950/20">
+                <div className="flex items-center gap-2 bg-red-50/20 dark:bg-red-955/5 p-4 rounded-md border border-red-100 dark:border-red-950/20">
                   <input
                     type="checkbox"
                     id="blockedCheckbox"
@@ -446,10 +449,10 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex items-center gap-2 bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-blue-700 active:scale-95 transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:scale-100"
+                    className="flex items-center gap-2 bg-[#1e4e79] text-white font-bold py-2.5 px-6 rounded-lg text-xs hover:bg-[#163c5e] transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:scale-100"
                   >
                     {saving ? (
-                      <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span className="h-4 w-4 border border-white border-t-transparent rounded-full animate-spin"></span>
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
@@ -462,16 +465,16 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
           {/* Right Column: Key Details Sidebar */}
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+            <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-lg shadow-sm">
               <div className="flex items-center gap-3 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <Award className="h-5 w-5 text-indigo-500" />
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">Access Rights</h3>
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Access Rights</h3>
               </div>
               
               <div className="space-y-4 text-xs">
                 <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
                   <span className="font-medium text-slate-500">System Permission:</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
                     user.role === 'ADMIN' 
                       ? 'bg-red-50 dark:bg-red-955/40 text-red-700 dark:text-red-400' 
                       : user.role === 'TEST_CREATOR' 
@@ -488,9 +491,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                 
                 <div className="flex justify-between items-center py-2 border-b border-slate-50 dark:border-slate-900">
                   <span className="font-medium text-slate-500">Subscription Pass:</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
                     user.subscriptionTier === 'Testbook Pass Pro'
-                      ? 'bg-yellow-50 dark:bg-yellow-955/40 text-yellow-750 font-black'
+                      ? 'bg-yellow-50 dark:bg-yellow-955/40 text-yellow-750 font-semibold'
                       : user.subscriptionTier === 'Testbook Pass'
                       ? 'bg-green-50 dark:bg-green-955/40 text-green-700'
                       : 'bg-slate-100 dark:bg-slate-900 text-slate-500'
@@ -514,7 +517,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
                 <div className="flex justify-between items-center py-2">
                   <span className="font-medium text-slate-500">Total Referrals:</span>
-                  <span className="font-extrabold text-slate-900 dark:text-white">{user.referralsCount || 0} user(s)</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{user.referralsCount || 0} user(s)</span>
                 </div>
               </div>
             </div>
@@ -522,9 +525,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
         </div>
 
         {/* Full Width Bottom Panel: Exam Sitting History */}
-        <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-2xl shadow-sm">
+        <div className="bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-808 p-6 rounded-lg shadow-sm">
           <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-200 dark:border-slate-800">
-            <h3 className="font-extrabold text-sm text-slate-905 dark:text-white uppercase tracking-wider">Exam Sitting History</h3>
+            <h3 className="font-semibold text-sm text-slate-905 dark:text-white">Exam Sitting History</h3>
             <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-808 font-bold">
               {user.testSessions.length} sessions logged
             </span>
@@ -555,13 +558,13 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                 return (
                   <div 
                     key={session.id} 
-                    className="border border-slate-200 dark:border-slate-808 rounded-xl p-4 bg-slate-50/40 dark:bg-slate-900/10 hover:border-slate-350 dark:hover:border-slate-700 transition"
+                    className="border border-slate-200 dark:border-slate-808 rounded-md p-4 bg-slate-50/40 dark:bg-slate-900/10 hover:border-slate-350 dark:hover:border-slate-700 transition"
                   >
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-extrabold text-xs text-slate-900 dark:text-white">{session.title}</p>
-                          <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                          <p className="font-semibold text-xs text-slate-900 dark:text-white">{session.title}</p>
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                             isCompleted 
                               ? 'bg-green-50 dark:bg-green-955/20 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/40' 
                               : 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-400 border border-amber-105'
@@ -569,40 +572,40 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                             {session.status}
                           </span>
                         </div>
-                        <p className="text-[10px] text-slate-500">Sitting Date: {session.date} &bull; ID: <span className="font-mono text-[9px]">{session.id}</span></p>
+                        <p className="text-xs text-slate-500">Sitting Date: {session.date} &bull; ID: <span className="font-mono text-[11px]">{session.id}</span></p>
                       </div>
 
                       <div className="flex items-center gap-4 flex-wrap text-xs">
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
-                          <p className="text-[9px] text-slate-400 font-extrabold uppercase">Score</p>
-                          <p className="font-black text-slate-850 dark:text-white mt-0.5">{session.score} / {session.maxScore}</p>
+                          <p className="text-[11px] text-slate-400 font-semibold">Score</p>
+                          <p className="font-semibold text-slate-850 dark:text-white mt-0.5">{session.score} / {session.maxScore}</p>
                         </div>
                         
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
-                          <p className="text-[9px] text-slate-400 font-extrabold uppercase">Percent</p>
-                          <p className="font-black text-blue-600 mt-0.5">{scorePercent}%</p>
+                          <p className="text-[11px] text-slate-400 font-semibold">Percent</p>
+                          <p className="font-semibold text-[#1e4e79] mt-0.5">{scorePercent}%</p>
                         </div>
 
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
-                          <p className="text-[9px] text-slate-400 font-extrabold uppercase">Accuracy</p>
-                          <p className="font-black text-indigo-500 mt-0.5">{session.accuracy.toFixed(1)}%</p>
+                          <p className="text-[11px] text-slate-400 font-semibold">Accuracy</p>
+                          <p className="font-semibold text-indigo-500 mt-0.5">{session.accuracy.toFixed(1)}%</p>
                         </div>
 
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
-                          <p className="text-[9px] text-slate-400 font-extrabold uppercase">Duration</p>
-                          <p className="font-black text-slate-850 dark:text-white mt-0.5">{timeSpentStr} / {session.durationMinutes} min</p>
+                          <p className="text-[11px] text-slate-400 font-semibold">Duration</p>
+                          <p className="font-semibold text-slate-850 dark:text-white mt-0.5">{timeSpentStr} / {session.durationMinutes} min</p>
                         </div>
 
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
-                          <p className="text-[9px] text-slate-400 font-extrabold uppercase">Violations</p>
-                          <p className={`font-black mt-0.5 ${session.violations > 0 ? 'text-red-500' : 'text-slate-850 dark:text-white'}`}>
+                          <p className="text-[11px] text-slate-400 font-semibold">Violations</p>
+                          <p className={`font-semibold mt-0.5 ${session.violations > 0 ? 'text-red-500' : 'text-slate-850 dark:text-white'}`}>
                             {session.violations}
                           </p>
                         </div>
 
                         <div className="text-center bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-808 min-w-[70px]">
-                          <p className="text-[9px] text-slate-400 font-extrabold uppercase">Answers</p>
-                          <p className="font-black text-slate-850 dark:text-white mt-0.5">{answersSubmitted}</p>
+                          <p className="text-[11px] text-slate-400 font-semibold">Answers</p>
+                          <p className="font-semibold text-slate-850 dark:text-white mt-0.5">{answersSubmitted}</p>
                         </div>
 
                         <div className="pl-2 border-l border-slate-200 dark:border-slate-800">
@@ -610,13 +613,13 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                             <div className="flex items-center gap-1.5 animate-in fade-in duration-150">
                               <button 
                                 onClick={() => handleResetAttemptClick(session.id)}
-                                className="bg-red-600 hover:bg-red-700 text-white font-bold px-2.5 py-1.5 rounded text-[10px] transition cursor-pointer"
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold px-2.5 py-1.5 rounded text-xs transition cursor-pointer"
                               >
                                 Confirm Reset
                               </button>
                               <button 
                                 onClick={() => setResetTargetSessionId(null)}
-                                className="bg-slate-250 dark:bg-slate-850 hover:bg-slate-300 text-slate-650 dark:text-slate-350 font-bold px-2 py-1.5 rounded text-[10px] transition cursor-pointer"
+                                className="bg-slate-250 dark:bg-slate-850 hover:bg-slate-300 text-slate-650 dark:text-slate-350 font-bold px-2 py-1.5 rounded text-xs transition cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -625,7 +628,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                             <button
                               type="button"
                               onClick={() => setResetTargetSessionId(session.id)}
-                              className="flex items-center gap-1 bg-red-50 hover:bg-red-100 dark:bg-red-955/20 dark:hover:bg-red-955/40 text-red-650 dark:text-red-400 border border-red-200 dark:border-red-900/30 hover:border-red-300 font-bold px-2.5 py-1.5 rounded text-[10px] transition cursor-pointer"
+                              className="flex items-center gap-1 bg-red-50 hover:bg-red-100 dark:bg-red-955/20 dark:hover:bg-red-955/40 text-red-650 dark:text-red-400 border border-red-200 dark:border-red-900/30 hover:border-red-300 font-bold px-2.5 py-1.5 rounded text-xs transition cursor-pointer"
                             >
                               <Trash2 className="h-3 w-3" />
                               Reset Attempt
@@ -639,7 +642,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-slate-50/20 dark:bg-slate-900/5 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+            <div className="text-center py-12 bg-slate-50/20 dark:bg-slate-900/5 rounded-md border border-dashed border-slate-200 dark:border-slate-800">
               <Calendar className="h-10 w-10 text-slate-350 mx-auto mb-3" />
               <p className="text-xs text-slate-500 font-bold">No exam sittings registered for this user yet.</p>
             </div>
@@ -648,13 +651,13 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
       </div>
 
       {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-808 rounded-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between">
+            <div className="bg-[#1e4e79] text-white p-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Key className="h-5 w-5 text-amber-300" />
-                <h3 className="font-extrabold text-sm uppercase tracking-wider">Confirm Administration Authorization</h3>
+                <h3 className="font-semibold text-sm">Confirm Administration Authorization</h3>
               </div>
               <button 
                 onClick={() => setIsPasswordModalOpen(false)}
@@ -671,14 +674,14 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               </p>
 
               <div>
-                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Administrator Password</label>
+                <label className="block text-xs font-semibold text-slate-400 mb-2">Administrator Password</label>
                 <input 
                   type="password"
                   required
                   placeholder="Enter admin password"
                   value={adminPasswordInput}
                   onChange={(e) => setAdminPasswordInput(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-blue-500 font-mono"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-808 rounded-lg px-3 py-2.5 text-xs text-slate-800 dark:text-slate-202 focus:outline-none focus:border-[#1e4e79] font-mono"
                   autoFocus
                 />
               </div>
@@ -704,11 +707,11 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                 type="button"
                 onClick={submitSaveProfile}
                 disabled={saving}
-                className="px-5 py-2 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                className="px-5 py-2 text-xs font-bold rounded-lg bg-[#1e4e79] hover:bg-[#163c5e] text-white shadow transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 {saving ? (
                   <>
-                    <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span className="h-3.5 w-3.5 border border-white border-t-transparent rounded-full animate-spin"></span>
                     <span>Saving...</span>
                   </>
                 ) : (

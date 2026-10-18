@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
+import { requireCronOrAdmin } from '../../../lib/serverAuth';
 
 /**
  * Weekly cron job — deletes question_response_states for sessions older than 90 days.
@@ -14,11 +15,8 @@ import { prisma } from '../../../lib/prisma';
  */
 export async function GET(request: Request) {
   // Security: Only allow Vercel Cron or internal calls
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireCronOrAdmin(request);
+  if (denied) return denied;
 
   try {
     const cutoffDate = new Date();

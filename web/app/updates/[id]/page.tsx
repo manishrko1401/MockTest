@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { TRANSLATIONS } from '../../translations';
 import { useIsMobile } from '../../useIsMobile';
+import { SiteHeader, SiteFooter, SectionCard, Field, StatusBadge, btnPrimary, btnSecondary, linkCls, pageBg, container } from '../../components/SiteUI';
+import { NoticeDetailTour } from '../../components/NoticesTour';
 
 import { processQuestionHtml } from '../../lib/mathUtils';
 
@@ -557,774 +559,379 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
   if (!isMounted) return null;
 
+  const isHindi = language === 'hi';
+  const categoryLabel: Record<string, string> = {
+    notice: isHindi ? 'भर्ती सूचना' : 'Recruitment Notice',
+    result: isHindi ? 'परिणाम' : 'Result',
+    admit_card: isHindi ? 'प्रवेश पत्र' : 'Admit Card',
+    answer_key: isHindi ? 'उत्तर कुंजी' : 'Answer Key',
+  };
+
   if (!noticeId || (!notice && (noticeLoading || noticesList.length === 0))) {
     return (
-      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-950 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-sm font-bold text-slate-500">Loading recruitment details...</p>
+      <div className={`min-h-screen flex flex-col ${pageBg}`}>
+        <SiteHeader />
+        <div className="flex-1 flex items-center justify-center py-24">
+          <div className="text-center space-y-3">
+            <div className="w-8 h-8 border-2 border-[#1e4e79] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-slate-500">{isHindi ? 'विवरण लोड हो रहा है…' : 'Loading notice details…'}</p>
+          </div>
         </div>
+        <SiteFooter />
       </div>
     );
   }
 
   if (!notice) {
     return (
-      <div className="min-h-screen bg-slate-200/90 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="text-center space-y-4 max-w-md bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
-          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto animate-bounce" />
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Notice Not Found</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">The requested recruitment page might have been updated or moved.</p>
-          <Link href="/updates" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md">
-            <ArrowLeft className="h-4 w-4" /> Return to Advisory Hub
-          </Link>
+      <div className={`min-h-screen flex flex-col ${pageBg}`}>
+        <SiteHeader />
+        <div className={`${container} w-full flex-1 py-16`}>
+          <SectionCard className="max-w-lg mx-auto">
+            <div className="text-center py-6 space-y-3">
+              <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white">{isHindi ? 'सूचना नहीं मिली' : 'Notice not found'}</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{isHindi ? 'यह सूचना हटाई या स्थानांतरित की जा सकती है।' : 'The requested notice may have been updated or moved.'}</p>
+              <Link href="/updates" className={btnPrimary}>
+                <ArrowLeft className="h-4 w-4" /> {isHindi ? 'सभी सूचनाएं' : 'Back to notices'}
+              </Link>
+            </div>
+          </SectionCard>
         </div>
+        <SiteFooter />
       </div>
     );
   }
 
+  const linkMeta = (type: ParsedActionLink['iconType']) => {
+    switch (type) {
+      case 'apply': return { icon: ExternalLink, hint: 'Application portal', cta: 'Apply' };
+      case 'download': return { icon: Download, hint: 'PDF document', cta: 'Download' };
+      case 'official': return { icon: Building2, hint: 'Official website', cta: 'Visit site' };
+      case 'video': return { icon: BookOpen, hint: 'Video guide', cta: 'Watch' };
+      case 'channel': return { icon: Share2, hint: 'Updates channel', cta: 'Join' };
+      default: return { icon: ExternalLink, hint: 'External link', cta: 'Open' };
+    }
+  };
+
+  const sectionTabs = [
+    { id: 'sec-overview', label: isHindi ? 'अवलोकन' : 'Overview' },
+    { id: 'sec-links', label: `${isHindi ? 'महत्वपूर्ण लिंक' : 'Important links'} (${parsedLinks.length})` },
+    { id: 'sec-full-content', label: isHindi ? 'पूर्ण विवरण' : 'Full details' },
+  ];
+  const isActiveTab = (id: string) => activeSection === id || `sec-${activeSection}` === id;
+
+  const credInput = 'w-full h-9 px-3 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-mono text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-sans focus:outline-none focus:border-[#1e4e79] focus:ring-2 focus:ring-[#1e4e79]/15';
+  const iconBtn = 'p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer';
+
   return (
-    <div className="min-h-screen bg-slate-200/90 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200 relative pb-20 overflow-x-hidden">
+    <div className={`min-h-screen flex flex-col ${pageBg} font-sans`}>
+      <SiteHeader />
 
-      {/* Background Decorative Blur Orbs */}
-      <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-[45%] right-0 w-[500px] h-[500px] bg-purple-500/10 dark:bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
-
-      {/* MAIN CONTAINER */}
-      <main className="max-w-7xl mx-auto px-2.5 sm:px-6 md:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6 relative z-10 overflow-x-hidden w-full">
-
-        {/* HERO HEADER CARD (RESULTNOTIFY STYLE TOP CARD) */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm relative overflow-hidden w-full">
-          
-          {/* Small Share Icon Button on Top Right Corner (Mobile View Only) */}
-          <button
-            type="button"
-            onClick={handleShare}
-            className="sm:hidden absolute top-3.5 right-3.5 p-2 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 shrink-0 active:scale-95 transition cursor-pointer shadow-sm z-20 backdrop-blur-xs"
-            title="Share Notice Link"
-          >
-            {copied ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-          </button>
+      {/* Title band */}
+      <div className="bg-transparent">
+        <div className={`${container} pt-6 pb-5`}>
+          <nav className="text-xs text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5 flex-wrap">
+            <Link href="/" className="hover:text-slate-800 dark:hover:text-slate-200">{isHindi ? 'होम' : 'Home'}</Link>
+            <ChevronRight className="h-3 w-3" />
+            <Link href="/updates" className="hover:text-slate-800 dark:hover:text-slate-200">{isHindi ? 'सूचनाएं' : 'Notices'}</Link>
+            <ChevronRight className="h-3 w-3" />
+            <Link href={`/updates?category=${notice.category || 'notice'}`} className="hover:text-slate-800 dark:hover:text-slate-200">{categoryLabel[notice.category || 'notice'] || config.label}</Link>
+          </nav>
 
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-5">
-            
-            <div className="flex items-start gap-3 sm:gap-4 md:gap-6 flex-1 min-w-0">
-              {/* Category Icon Badge */}
-              <div className="p-3 sm:p-3.5 md:p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/20 shrink-0 flex items-center justify-center">
-                {config.icon}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <StatusBadge tone="blue">{categoryLabel[notice.category || 'notice'] || config.label}</StatusBadge>
+                {notice.type && <StatusBadge tone="slate">{notice.type}</StatusBadge>}
               </div>
-
-              {/* Content Details */}
-              <div className="min-w-0 flex-1 space-y-2.5 sm:space-y-3">
-                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pr-10 sm:pr-0">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border ${config.badgeBg}`}>
-                    <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-ping" />
-                    {config.label}
-                  </span>
-
-                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-slate-200 dark:border-slate-700">
-                    <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500" />
-                    Published: {notice.date}
-                  </span>
-
-                  {notice.category === 'notice' && notice.lastDate && (
-                    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full uppercase tracking-wider">
-                      <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-rose-500" />
-                      Last Date: {notice.lastDate}
-                    </span>
-                  )}
-                </div>
-
-                <h1 className="text-base sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-snug sm:leading-tight tracking-tight break-words">
-                  {notice.title}
-                </h1>
-
-                {/* Direct Quick Action Pills (Desktop Only) */}
-                {notice.url && (
-                  <div className="hidden sm:block pt-1">
-                    <a
-                      href={notice.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs tracking-wide px-5 py-2.5 rounded-xl shadow-md shadow-blue-600/20 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/30 items-center gap-2 active:translate-y-0 active:scale-95 cursor-pointer"
-                    >
-                      Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
-                    </a>
-                  </div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white leading-snug break-words">{notice.title}</h1>
+              <div className="mt-2 flex items-center gap-x-4 gap-y-1 flex-wrap text-sm text-slate-500 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1.5"><Calendar className="h-4 w-4" />{isHindi ? 'प्रकाशित' : 'Published'}: {notice.date}</span>
+                {notice.category === 'notice' && notice.lastDate && (
+                  <span className="inline-flex items-center gap-1.5 text-[#b02a37] dark:text-red-400 font-medium"><Clock className="h-4 w-4" />{isHindi ? 'अंतिम तिथि' : 'Last date'}: {notice.lastDate}</span>
                 )}
-
               </div>
             </div>
 
-            {/* TOP RIGHT ACTION BUTTONS & BOTTOM RIGHT SHARE BUTTON */}
-            <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-3 shrink-0 self-stretch lg:self-auto pt-3 lg:pt-0 border-t border-slate-100 dark:border-slate-800/80 lg:border-0">
-              
-              {/* Actions Row: Save Job & Mark as Applied */}
-              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
-                {/* Save Job Button */}
-                <button
-                  type="button"
-                  onClick={handleToggleSave}
-                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-center gap-2 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-md cursor-pointer active:translate-y-0 active:scale-95 shadow-2xs ${
-                    isTrackedSaved
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20'
-                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                  }`}
-                >
-                  <Bookmark className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isTrackedSaved ? 'fill-white text-white' : 'text-slate-500 dark:text-slate-400'}`} />
-                  <span>{isTrackedSaved ? 'Saved Job ✓' : 'Save Job'}</span>
-                </button>
-
-                {/* Mark as Applied Button */}
-                <button
-                  type="button"
-                  onClick={handleToggleApplied}
-                  className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-center gap-2 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-md cursor-pointer active:translate-y-0 active:scale-95 shadow-2xs ${
-                    isTrackedApplied
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20'
-                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                  }`}
-                >
-                  <CheckCircle2 className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isTrackedApplied ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
-                  <span>{isTrackedApplied ? 'Marked Applied ✓' : 'Mark as Applied'}</span>
-                </button>
-              </div>
-
-              {/* Share Announcement Link Button (Desktop View Only) */}
-              <div className="hidden sm:flex pt-1 sm:pt-0 sm:mt-auto justify-end w-full">
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium tracking-wide transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-md flex items-center justify-center gap-2 cursor-pointer active:translate-y-0 active:scale-95 shadow-2xs"
-                  title="Share Notice Link"
-                >
-                  {copied ? <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-                  <span>{copied ? 'Link Copied!' : (language === 'hi' ? 'शेयर करें' : 'Share Announcement')}</span>
-                </button>
-              </div>
-
-              {/* Direct Apply / Download Button at the Very Bottom (Mobile View Only) */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               {notice.url && (
-                <div className="sm:hidden pt-1 w-full">
-                  <a
-                    href={notice.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs tracking-wide px-4 py-3 rounded-2xl shadow-md shadow-blue-600/20 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/30 flex items-center justify-center gap-2 active:translate-y-0 active:scale-95 cursor-pointer"
-                  >
-                    Direct Apply / Download <ArrowUpRight className="h-4 w-4" />
-                  </a>
-                </div>
+                <a href={notice.url} target="_blank" rel="noopener noreferrer" className={btnPrimary} data-tour="notice-apply">
+                  {isHindi ? 'आवेदन / डाउनलोड' : 'Apply / Download'} <ArrowUpRight className="h-4 w-4" />
+                </a>
               )}
-
+              <button type="button" onClick={handleToggleSave} data-tour="notice-save" className={`${btnSecondary} ${isTrackedSaved ? '!border-[#1e4e79] !text-[#1e4e79] dark:!text-blue-300 dark:!border-blue-400' : ''}`}>
+                {isTrackedSaved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+                {isTrackedSaved ? (isHindi ? 'सहेजा गया' : 'Saved') : (isHindi ? 'सहेजें' : 'Save')}
+              </button>
+              <button type="button" onClick={handleToggleApplied} data-tour="notice-applied" className={`${btnSecondary} ${isTrackedApplied ? '!border-[#1e7e34] !text-[#1e7e34] dark:!text-green-400 dark:!border-green-500' : ''}`}>
+                <CheckCircle2 className="h-4 w-4" />
+                {isTrackedApplied ? (isHindi ? 'आवेदन किया' : 'Applied') : (isHindi ? 'आवेदन किया चिह्नित करें' : 'Mark as applied')}
+              </button>
+              <button type="button" onClick={handleShare} className={btnSecondary} title="Share" data-tour="notice-share">
+                {copied ? <Check className="h-4 w-4 text-[#1e7e34]" /> : <Share2 className="h-4 w-4" />}
+                <span className="hidden sm:inline">{copied ? (isHindi ? 'कॉपी हुआ' : 'Copied') : (isHindi ? 'शेयर' : 'Share')}</span>
+              </button>
             </div>
-
           </div>
 
-          {/* APPLIED EXAM CREDENTIALS & DOCUMENT LOCKER VAULT CARD */}
-          {isTrackedApplied && (
-            <div className="mt-5 space-y-3 bg-purple-50/50 dark:bg-purple-950/25 p-4 sm:p-5 rounded-2xl border border-purple-200/80 dark:border-purple-800/60">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
-                  <div>
-                    <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white uppercase tracking-wider">
-                      {language === 'hi' ? 'परीक्षा क्रेडेंशियल्स और गूगल ड्राइव लॉकर' : 'Exam Credentials & Google Drive Locker'}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {language === 'hi'
-                        ? 'अपने आवेदन फॉर्म, पासवर्ड और रोल नंबर को सुरक्षित रखें और Google Drive में ऑटो-सिंक करें।'
-                        : 'Save credentials and sync Admit Card / Application Form directly to your Google Drive.'}
-                    </p>
+          {saveToast && (
+            <div className="mt-4 flex items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 border-l-4 border-l-[#1e7e34] rounded-md px-4 py-2.5 text-sm">
+              <span className="text-slate-700 dark:text-slate-200">{saveToast}</span>
+              <Link href="/profile" className={`${linkCls} text-sm font-medium`}>{isHindi ? 'प्रोफाइल देखें' : 'View in profile'}</Link>
+            </div>
+          )}
+        </div>
+
+        {/* In-page navigation */}
+        <div className="border-b border-slate-200 dark:border-slate-800">
+          <div className={`${container} flex gap-6 overflow-x-auto no-scrollbar`}>
+            {sectionTabs.map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => scrollToSection(tab.id)}
+                className={`py-3 text-sm whitespace-nowrap border-b-2 -mb-px cursor-pointer transition-colors ${
+                  isActiveTab(tab.id)
+                    ? 'border-[#1e4e79] text-[#1e4e79] dark:border-blue-400 dark:text-blue-300 font-medium'
+                    : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main className={`${container} w-full py-6 pb-12 flex-1`}>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-6 min-w-0">
+
+            {/* Application credentials (shown once marked applied) */}
+            {isTrackedApplied && (
+              <SectionCard
+                title={<span className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-[#1e4e79] dark:text-blue-400" />{isHindi ? 'आवेदन क्रेडेंशियल्स' : 'Application credentials'}</span>}
+                description={isHindi ? 'अपना पंजीकरण नंबर, पासवर्ड और रोल नंबर सुरक्षित रखें।' : 'Keep your registration number, password and roll number for this exam.'}
+                action={
+                  <div className="flex flex-wrap gap-2">
+                    <Link href={`/locker?exam=${encodeURIComponent(notice.title)}`} className={btnSecondary}>
+                      <FolderLock className="h-4 w-4" /> {isHindi ? 'लॉकर खोलें' : 'Open locker'}
+                    </Link>
+                    <Link href={`/locker?exam=${encodeURIComponent(notice.title)}&action=upload`} className={btnSecondary}>
+                      <Plus className="h-4 w-4" /> {isHindi ? 'अपलोड' : 'Upload'}
+                    </Link>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    href={`/locker?exam=${encodeURIComponent(notice.title)}`}
-                    className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium tracking-wide transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:scale-105 hover:shadow-md hover:shadow-purple-600/20 flex items-center gap-1.5 shadow-sm shadow-purple-600/20 active:translate-y-0 active:scale-95"
-                  >
-                    <FolderLock className="w-3.5 h-3.5" />
-                    <span>Open in Locker</span>
-                  </Link>
-
-                  <Link
-                    href={`/locker?exam=${encodeURIComponent(notice.title)}&action=upload`}
-                    className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-50 text-xs font-medium tracking-wide transition-all duration-300 transform-gpu hover:-translate-y-0.5 hover:scale-105 hover:shadow-md flex items-center gap-1.5 active:translate-y-0 active:scale-95"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Upload to Drive</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Quick Input Fields for Credentials */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1 text-xs">
-                {/* Registration / Application ID */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Registration No / App ID
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      placeholder="e.g. 2501009845"
-                      value={applicationNo}
-                      onChange={(e) => handleCredentialsUpdate('appNo', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white pr-7"
-                    />
-                    {applicationNo && (
-                      <button
-                        onClick={() => copyToClipboard(applicationNo, 'appNo')}
-                        className="absolute right-2 text-slate-400 hover:text-purple-600 p-0.5 cursor-pointer"
-                        title="Copy Registration Number"
-                      >
-                        {copiedKey === 'appNo' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Portal Password / DOB */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Password / DOB
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="e.g. Pass@123"
-                      value={password}
-                      onChange={(e) => handleCredentialsUpdate('pass', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white pr-12"
-                    />
-                    <div className="absolute right-2 flex items-center gap-1 text-slate-400">
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="hover:text-purple-600 p-0.5 cursor-pointer"
-                        title={showPassword ? 'Hide Password' : 'Show Password'}
-                      >
-                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                      {password && (
-                        <button
-                          type="button"
-                          onClick={() => copyToClipboard(password, 'pass')}
-                          className="hover:text-purple-600 p-0.5 cursor-pointer"
-                          title="Copy Password"
-                        >
-                          {copiedKey === 'pass' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                }
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <Field label={isHindi ? 'पंजीकरण / आवेदन संख्या' : 'Registration / App ID'}>
+                    <div className="relative">
+                      <input type="text" placeholder="e.g. 2501009845" value={applicationNo} onChange={(e) => handleCredentialsUpdate('appNo', e.target.value)} className={`${credInput} pr-8`} />
+                      {applicationNo && (
+                        <button type="button" onClick={() => copyToClipboard(applicationNo, 'appNo')} className={`${iconBtn} absolute right-1.5 top-1/2 -translate-y-1/2`} title="Copy">
+                          {copiedKey === 'appNo' ? <Check className="w-3.5 h-3.5 text-[#1e7e34]" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       )}
                     </div>
-                  </div>
+                  </Field>
+                  <Field label={isHindi ? 'पासवर्ड / जन्मतिथि' : 'Password / DOB'}>
+                    <div className="relative">
+                      <input type={showPassword ? 'text' : 'password'} placeholder="e.g. Pass@123" value={password} onChange={(e) => handleCredentialsUpdate('pass', e.target.value)} className={`${credInput} pr-14`} />
+                      <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className={iconBtn} title={showPassword ? 'Hide' : 'Show'}>
+                          {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                        {password && (
+                          <button type="button" onClick={() => copyToClipboard(password, 'pass')} className={iconBtn} title="Copy">
+                            {copiedKey === 'pass' ? <Check className="w-3.5 h-3.5 text-[#1e7e34]" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </Field>
+                  <Field label={isHindi ? 'रोल नंबर' : 'Roll number'}>
+                    <div className="relative">
+                      <input type="text" placeholder="e.g. 2201019940" value={rollNumber} onChange={(e) => handleCredentialsUpdate('roll', e.target.value)} className={`${credInput} pr-8`} />
+                      {rollNumber && (
+                        <button type="button" onClick={() => copyToClipboard(rollNumber, 'roll')} className={`${iconBtn} absolute right-1.5 top-1/2 -translate-y-1/2`} title="Copy">
+                          {copiedKey === 'roll' ? <Check className="w-3.5 h-3.5 text-[#1e7e34]" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
+                    </div>
+                  </Field>
+                  <Field label={isHindi ? 'परीक्षा तिथि' : 'Exam date'}>
+                    <input type="date" value={examDate} onChange={(e) => handleCredentialsUpdate('examDate', e.target.value)} className={`${credInput} font-sans`} />
+                  </Field>
                 </div>
+              </SectionCard>
+            )}
 
-                {/* Roll Number */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Roll Number (After Admit Card)
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      placeholder="e.g. 2201019940"
-                      value={rollNumber}
-                      onChange={(e) => handleCredentialsUpdate('roll', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white pr-7"
-                    />
-                    {rollNumber && (
-                      <button
-                        onClick={() => copyToClipboard(rollNumber, 'roll')}
-                        className="absolute right-2 text-slate-400 hover:text-purple-600 p-0.5 cursor-pointer"
-                        title="Copy Roll Number"
-                      >
-                        {copiedKey === 'roll' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
+            {/* Overview */}
+            <div id="sec-overview" className="scroll-mt-20">
+              <SectionCard title={isHindi ? 'अवलोकन' : 'Overview'} bodyClass="p-0">
+                <dl className={`grid ${notice.category === 'notice' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'} divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800`}>
+                  <div className="px-5 py-4">
+                    <dt className="text-xs text-slate-500 dark:text-slate-400">{isHindi ? 'श्रेणी' : 'Category'}</dt>
+                    <dd className="mt-1 text-sm font-medium text-slate-900 dark:text-white">{categoryLabel[notice.category || 'notice'] || config.label}</dd>
+                  </div>
+                  <div className="px-5 py-4">
+                    <dt className="text-xs text-slate-500 dark:text-slate-400">{isHindi ? 'प्रकाशन तिथि' : 'Published on'}</dt>
+                    <dd className="mt-1 text-sm font-medium text-slate-900 dark:text-white">{notice.date}</dd>
+                  </div>
+                  {notice.category === 'notice' && (
+                    <div className="px-5 py-4">
+                      <dt className="text-xs text-slate-500 dark:text-slate-400">{isHindi ? 'आवेदन की अंतिम तिथि' : 'Application deadline'}</dt>
+                      <dd className="mt-1 text-sm font-medium text-[#b02a37] dark:text-red-400">{notice.lastDate || (isHindi ? 'सूचना देखें' : 'See notification')}</dd>
+                    </div>
+                  )}
+                  <div className="px-5 py-4">
+                    <dt className="text-xs text-slate-500 dark:text-slate-400">{isHindi ? 'स्थिति' : 'Status'}</dt>
+                    <dd className="mt-1"><StatusBadge tone="green">{isHindi ? 'सक्रिय' : 'Active'}</StatusBadge></dd>
+                  </div>
+                </dl>
+              </SectionCard>
+            </div>
+
+            {/* Important links */}
+            <div id="sec-links" className="scroll-mt-20">
+              <SectionCard
+                title={isHindi ? 'महत्वपूर्ण लिंक' : 'Important links'}
+                description={isHindi ? 'आधिकारिक क्रम में सीधे पोर्टल लिंक' : 'Direct links in the official order.'}
+                bodyClass="p-0"
+              >
+                {parsedLinks.length > 0 ? (
+                  <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {parsedLinks.map((link, i) => {
+                      const m = linkMeta(link.iconType);
+                      return (
+                        <li key={i}>
+                          <a href={link.url} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <m.icon className="h-4 w-4 text-slate-400 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 shrink-0" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 group-hover:underline underline-offset-2 break-words">{link.label}</span>
+                              <span className="block text-xs text-slate-500 dark:text-slate-400">{m.hint}</span>
+                            </span>
+                            <span className={`${linkCls} text-sm font-medium inline-flex items-center gap-1 shrink-0`}>{m.cta}<ArrowUpRight className="h-3.5 w-3.5" /></span>
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : notice.url ? (
+                  <a href={notice.url} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <ExternalLink className="h-4 w-4 text-slate-400 shrink-0" />
+                    <span className="flex-1 text-sm text-slate-800 dark:text-slate-200 group-hover:underline">{isHindi ? 'ऑनलाइन आवेदन / आधिकारिक पोर्टल' : 'Apply online / Official portal'}</span>
+                    <span className={`${linkCls} text-sm font-medium inline-flex items-center gap-1`}>{isHindi ? 'खोलें' : 'Open'}<ArrowUpRight className="h-3.5 w-3.5" /></span>
+                  </a>
+                ) : (
+                  <p className="px-5 py-6 text-sm text-slate-500 dark:text-slate-400">{isHindi ? 'कोई लिंक उपलब्ध नहीं।' : 'No links available yet.'}</p>
+                )}
+              </SectionCard>
+            </div>
+
+            {/* Full content */}
+            <div id="sec-full-content" className="scroll-mt-20">
+              <SectionCard
+                title={isHindi ? 'पूर्ण विवरण' : 'Full details'}
+                description={isHindi ? 'महत्वपूर्ण तिथियां, शुल्क, आयु सीमा, रिक्तियां और पात्रता' : 'Important dates, application fee, age limit, vacancies and eligibility.'}
+              >
+                {sanitizedContent ? (
+                  <div className="notice-custom-body" dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+                ) : (
+                  <div className="py-10 text-center space-y-3">
+                    <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {isHindi ? 'पूर्ण विवरण अपडेट किया जा रहा है। आधिकारिक पोर्टल देखें।' : 'Full details are being updated. Please refer to the official portal.'}
+                    </p>
+                    {notice.url && (
+                      <a href={notice.url} target="_blank" rel="noopener noreferrer" className={btnPrimary}>
+                        {isHindi ? 'आधिकारिक लिंक खोलें' : 'Open official link'} <ExternalLink className="h-4 w-4" />
+                      </a>
                     )}
                   </div>
-                </div>
-
-                {/* Exam Date */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    Exam Date
-                  </label>
-                  <input
-                    type="date"
-                    value={examDate}
-                    onChange={(e) => handleCredentialsUpdate('examDate', e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-        </section>
-
-        {/* TWO-COLUMN LAYOUT (LEFT CONTENT + RIGHT SIDEBAR DOCK) */}
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] w-full">
-
-          {/* LEFT MAIN CONTENT COLUMN */}
-          <div className="space-y-4 sm:space-y-6 w-full min-w-0">
-
-            {/* QUICK ACCESS NAVIGATION BAR (RESULTNOTIFY PILL NAV WITH HORIZONTAL SCROLL) */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-2 sm:p-2.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar flex items-center gap-2 sticky top-16 sm:top-20 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95 whitespace-nowrap scroll-smooth touch-pan-x w-full">
-              <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider px-2 sm:px-3 py-1 shrink-0 flex items-center gap-1">
-                <Compass className="h-3.5 w-3.5 text-blue-500" /> Quick Access:
-              </span>
-
-              <button
-                onClick={() => scrollToSection('sec-overview')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-wide transition shrink-0 cursor-pointer ${
-                  activeSection === 'overview'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                Overview
-              </button>
-
-              <button
-                onClick={() => scrollToSection('sec-links')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-wide transition shrink-0 cursor-pointer ${
-                  activeSection === 'links'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                Important Links ({parsedLinks.length})
-              </button>
-
-              <button
-                onClick={() => scrollToSection('sec-full-content')}
-                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-medium tracking-wide transition shrink-0 cursor-pointer ${
-                  activeSection === 'full-content'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                Complete Breakdown
-              </button>
-            </div>
-
-            {/* 1. OVERVIEW & QUICK METRICS CARD */}
-            <div id="sec-overview" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-3.5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-sm space-y-3.5 sm:space-y-5 overflow-hidden w-full">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
-                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                  <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
-                    <Building2 className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate">Recruitment Overview</h2>
-                    <p className="text-[9.5px] sm:text-[11px] text-slate-400 font-medium truncate">Key summary metrics at a glance</p>
-                  </div>
-                </div>
-
-                <span className="text-[8.5px] sm:text-[10px] bg-green-50 text-green-700 dark:bg-green-950/60 dark:text-green-300 font-bold px-2 sm:px-3 py-1 rounded-full uppercase border border-green-200 dark:border-green-800 flex items-center gap-1 shrink-0">
-                  <CheckCircle2 className="h-3 w-3" /> Official Verified
-                </span>
-              </div>
-
-              {/* Metrics Cards Grid with 3D Hover */}
-              <div className={`grid gap-2.5 sm:gap-3.5 w-full ${notice.category === 'notice' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'}`}>
-                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
-                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Notice Category</span>
-                  <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 uppercase truncate">{notice.category?.replace('_', ' ')}</p>
-                </div>
-
-                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
-                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Publish Date</span>
-                  <p className="text-[10.5px] sm:text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{notice.date}</p>
-                </div>
-
-                {notice.category === 'notice' && (
-                  <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
-                    <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Application Deadline</span>
-                    <p className="text-[10.5px] sm:text-xs font-semibold text-rose-600 dark:text-rose-400 truncate">{notice.lastDate || 'See Notification'}</p>
-                  </div>
                 )}
-
-                <div className="bg-slate-50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 space-y-0.5 min-w-0 flex flex-col justify-center transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-md shadow-2xs cursor-default">
-                  <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Portal Status</span>
-                  <p className="text-[10.5px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 truncate">Active Window</p>
-                </div>
-              </div>
+              </SectionCard>
             </div>
-
-            {/* 2. PARSED SOME USEFUL IMPORTANT LINKS CARD (ROJGARRESULT LIST FORMAT) */}
-            <div id="sec-links" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-sm space-y-4 sm:space-y-5 overflow-hidden w-full">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 gap-2 flex-wrap sm:flex-nowrap min-w-0">
-                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                  <div className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
-                    <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-xs sm:text-base font-bold tracking-wide text-slate-900 dark:text-white uppercase truncate">Some Useful Important Links</h2>
-                    <p className="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">Direct portal links arranged in official sequence</p>
-                  </div>
-                </div>
-                <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 text-[9px] sm:text-[10px] font-bold px-2.5 sm:px-3 py-1 rounded-full uppercase border border-blue-200 dark:border-blue-800 hidden sm:inline-block shrink-0">
-                  {parsedLinks.length > 0 ? `${parsedLinks.length} Direct Links` : 'Official Links'}
-                </span>
-              </div>
-
-              {/* Vertical Stack List Format with 3D Hover */}
-              {parsedLinks.length > 0 ? (
-                <div className="flex flex-col gap-3 sm:gap-3.5 w-full p-1.5 -m-1.5">
-                  {parsedLinks.map((link, i) => (
-                    <a
-                      key={i}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group bg-slate-50 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-300 transform-gpu hover:-translate-y-1.5 hover:scale-[1.012] hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.16),0_4px_12px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_12px_24px_-6px_rgba(59,130,246,0.3),0_0_16px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs active:translate-y-0 active:scale-[0.99] cursor-pointer w-full min-w-0 relative z-0 hover:z-10"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 transition-transform duration-200 group-hover:scale-105 ${
-                          link.iconType === 'apply' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white' :
-                          link.iconType === 'download' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 group-hover:bg-blue-600 group-hover:text-white' :
-                          link.iconType === 'official' ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-slate-800 group-hover:text-white' :
-                          link.iconType === 'video' ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 group-hover:bg-rose-600 group-hover:text-white' :
-                          link.iconType === 'channel' ? 'bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 group-hover:bg-teal-600 group-hover:text-white' :
-                          'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-blue-600 group-hover:text-white'
-                        }`}>
-                          {link.iconType === 'apply' && <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />}
-                          {link.iconType === 'download' && <Download className="h-4 w-4 sm:h-5 sm:w-5" />}
-                          {link.iconType === 'official' && <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-                          {link.iconType === 'video' && <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />}
-                          {link.iconType === 'channel' && <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-                          {link.iconType === 'general' && <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-snug break-words">
-                            {link.label}
-                          </h4>
-                          <p className="text-[9px] sm:text-[10.5px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider mt-0.5 truncate">
-                            {link.iconType === 'apply' ? 'Click to open application portal' :
-                             link.iconType === 'download' ? 'Direct PDF document link' :
-                             link.iconType === 'official' ? 'Official organization portal' :
-                             link.iconType === 'video' ? 'Watch video tutorial' :
-                             link.iconType === 'channel' ? 'Join updates group' :
-                             'Click to open link'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-end shrink-0">
-                        <span className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide transition flex items-center gap-1.5 shadow-xs ${
-                          link.iconType === 'apply' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20' :
-                          link.iconType === 'download' ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20' :
-                          link.iconType === 'official' ? 'bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white' :
-                          link.iconType === 'video' ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20' :
-                          link.iconType === 'channel' ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20' :
-                          'bg-blue-600 hover:bg-blue-700 text-white'
-                        }`}>
-                          {link.iconType === 'apply' ? 'Click Here' :
-                           link.iconType === 'download' ? 'Download' :
-                           link.iconType === 'official' ? 'Visit Site' :
-                           link.iconType === 'video' ? 'Watch Video' :
-                           link.iconType === 'channel' ? 'Join Channel' :
-                           'Click Here'}
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2.5 sm:gap-3 w-full">
-                  {notice.url && (
-                    <a
-                      href={notice.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group bg-blue-600 text-white hover:bg-blue-700 border border-blue-600 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md cursor-pointer w-full"
-                    >
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        <div className="p-2.5 sm:p-3 rounded-xl bg-white/20 text-white shrink-0">
-                          <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-black leading-snug">Apply Online / Official Portal</h4>
-                          <p className="text-[9px] sm:text-[10.5px] text-blue-100 font-bold uppercase tracking-wider block mt-0.5">Click to Open Portal</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end shrink-0">
-                        <span className="bg-white text-blue-700 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0 flex items-center gap-1.5 shadow-xs">
-                          Apply Now <ArrowUpRight className="h-3.5 w-3.5" />
-                        </span>
-                      </div>
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* 3. COMPLETE RECRUITMENT DETAILS (BODY HTML RENDER) */}
-            <div id="sec-full-content" className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden p-3.5 sm:p-6 md:p-8 space-y-4 sm:space-y-6 w-full">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                    <Layers className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">Complete Recruitment Breakdown</h2>
-                    <p className="text-[11px] text-slate-400 font-medium">Important dates, application fee, age limit, vacancies & eligibility details</p>
-                  </div>
-                </div>
-                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 font-semibold px-3 py-1 rounded-full uppercase">
-                  Official Details
-                </span>
-              </div>
-
-              {sanitizedContent ? (
-                <div
-                  className="notice-custom-body"
-                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-                />
-              ) : (
-                <div className="py-16 text-center space-y-4">
-                  <AlertCircle className="h-10 w-10 text-slate-400 mx-auto" />
-                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-                    Full recruitment breakdown is being updated. Click below to open official portal directly.
-                  </p>
-                  {notice.url && (
-                    <a
-                      href={notice.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-xl text-xs tracking-wide shadow-lg shadow-blue-600/25"
-                    >
-                      Open Official Link <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-
           </div>
 
-          {/* RIGHT SIDEBAR DOCK (RESULTNOTIFY SIDEBAR STYLE - HIDDEN ON MOBILE VIEW ONLY) */}
-          <aside className="space-y-6 hidden md:block">
-
-            {/* STICKY QUICK ACTION CARD */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-5 sticky top-24">
-              
-              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <Compass className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Quick Actions</h3>
-              </div>
-
-              <div className="space-y-3">
-                {notice.url && (
-                  <a
-                    href={notice.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium text-xs tracking-wide py-3.5 px-4 rounded-2xl shadow-lg shadow-blue-600/25 transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-600/35 flex items-center justify-center gap-2 active:translate-y-0 active:scale-98 cursor-pointer"
-                  >
-                    Apply / Download Now <ArrowUpRight className="h-4 w-4" />
-                  </a>
-                )}
-              </div>
-
-              {/* APPLICATION CHECKLIST */}
-              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-3">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <ListChecks className="h-4 w-4 text-blue-500" /> Candidate Checklist:
-                </span>
-                
-                <ul className="text-xs space-y-2 font-bold text-slate-600 dark:text-slate-300">
-                  <li className="flex items-start gap-2">
-                    <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Check eligibility criteria before applying</span>
+          {/* Sidebar */}
+          <aside className="space-y-6 min-w-0">
+            <SectionCard title={isHindi ? 'आवेदक चेकलिस्ट' : 'Candidate checklist'}>
+              <ul className="text-sm space-y-2.5 text-slate-600 dark:text-slate-300">
+                {[
+                  isHindi ? 'आवेदन से पहले पात्रता मानदंड जांचें' : 'Check the eligibility criteria before applying',
+                  isHindi ? 'कट-ऑफ तिथि के अनुसार आयु सीमा सत्यापित करें' : 'Verify the age limit as on the cut-off date',
+                  isHindi ? 'स्कैन की गई फोटो और हस्ताक्षर तैयार रखें' : 'Keep your scanned photo and signature ready',
+                  ...(notice.category === 'notice'
+                    ? [`${isHindi ? 'अंतिम तिथि से पहले फॉर्म जमा करें' : 'Submit the form before'}: ${notice.lastDate || (isHindi ? 'सूचना अनुसार' : 'the notified date')}`]
+                    : []),
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-[#1e7e34] shrink-0 mt-0.5" />
+                    <span>{item}</span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Verify age limit as on cut-off date</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                    <span>Keep scanned photo & signature ready</span>
-                  </li>
-                  {notice.category === 'notice' && (
-                    <li className="flex items-start gap-2">
-                      <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                      <span>Submit form before deadline: <strong>{notice.lastDate || 'As per notice'}</strong></span>
-                    </li>
-                  )}
-                </ul>
-              </div>
+                ))}
+              </ul>
+            </SectionCard>
 
-              {/* SHARE NOTICE CARD */}
-              <div className="pt-2">
-                <button
-                  onClick={handleShare}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-xs tracking-wide py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Share2 className="h-4 w-4" />}
-                  <span>{copied ? 'Link Copied to Clipboard!' : 'Share Announcement Link'}</span>
-                </button>
-              </div>
-
-            </div>
-
-            {/* SAVE & TRACK SECTION (RESULTNOTIFY SIDEBAR FEATURE) */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 rounded-3xl shadow-sm space-y-4">
-              
-              {/* Toast Feedback */}
-              {saveToast && (
-                <div className="bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold p-3 rounded-2xl animate-in fade-in flex items-center justify-between shadow-xs">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    {saveToast}
+            <div data-tour="notice-track">
+            <SectionCard
+              title={isHindi ? 'सहेजें और ट्रैक करें' : 'Save & track'}
+              description={isHindi ? 'अपने आवेदन की प्रगति ट्रैक करें' : 'Keep track of this application in your profile.'}
+              bodyClass="p-0"
+              footer={
+                <Link href="/profile" className={`${linkCls} text-sm font-medium inline-flex items-center gap-1`}>
+                  {isHindi ? 'मेरी सहेजी गई नौकरियां' : 'My saved & applied jobs'} <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              }
+            >
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                <button type="button" onClick={handleToggleSave} className="w-full flex items-center justify-between gap-3 px-5 py-3 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer">
+                  <span className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
+                    {isTrackedSaved ? <BookmarkCheck className="h-4 w-4 text-[#1e4e79] dark:text-blue-400" /> : <Bookmark className="h-4 w-4 text-slate-400" />}
+                    {isTrackedSaved ? (isHindi ? 'प्रोफाइल में सहेजा गया' : 'Saved to profile') : (isHindi ? 'नौकरी सहेजें' : 'Save this job')}
                   </span>
-                  <Link href="/profile" className="text-[10px] underline font-black uppercase">
-                    View Profile
-                  </Link>
-                </div>
-              )}
-
-              {/* Card Header */}
-              <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div className="p-2 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/50 dark:border-blue-800/50">
-                  <BookmarkCheck className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Save & Track</h3>
-                  <p className="text-[10px] text-slate-400 font-semibold">Track your application progress</p>
-                </div>
-              </div>
-
-              {/* Actions List with 3D Hover */}
-              <div className="space-y-2.5">
-                
-                {/* 1. Bookmark / Save Job Toggle */}
-                <button
-                  onClick={handleToggleSave}
-                  className={`w-full py-3 px-4 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98 ${
-                    isTrackedSaved
-                      ? 'bg-blue-50 dark:bg-blue-950/80 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-white dark:bg-slate-800/70 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Bookmark className={`h-4 w-4 ${isTrackedSaved ? 'fill-blue-600 text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
-                    <span>{isTrackedSaved ? 'Job Saved to Profile' : 'Save Job'}</span>
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                  {isTrackedSaved ? <StatusBadge tone="blue">{isHindi ? 'सहेजा' : 'Saved'}</StatusBadge> : <ChevronRight className="h-4 w-4 text-slate-300" />}
                 </button>
-
-                {/* 2. Mark as Applied Toggle */}
-                <button
-                  onClick={handleToggleApplied}
-                  className={`w-full py-3 px-4 rounded-2xl border text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98 ${
-                    isTrackedApplied
-                      ? 'bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 shadow-2xs'
-                      : 'bg-slate-50 hover:bg-white dark:bg-slate-800/70 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className={`h-4 w-4 ${isTrackedApplied ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
-                    <span>{isTrackedApplied ? 'Marked as Applied ✓' : 'Mark as Applied'}</span>
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                <button type="button" onClick={handleToggleApplied} className="w-full flex items-center justify-between gap-3 px-5 py-3 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer">
+                  <span className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
+                    <CheckCircle2 className={`h-4 w-4 ${isTrackedApplied ? 'text-[#1e7e34]' : 'text-slate-400'}`} />
+                    {isTrackedApplied ? (isHindi ? 'आवेदन किया गया' : 'Marked as applied') : (isHindi ? 'आवेदन किया चिह्नित करें' : 'Mark as applied')}
+                  </span>
+                  {isTrackedApplied ? <StatusBadge tone="green">{appliedDate || new Date().toISOString().split('T')[0]}</StatusBadge> : <ChevronRight className="h-4 w-4 text-slate-300" />}
                 </button>
-
-                {/* Expandable Application Details when Marked as Applied */}
-                {isTrackedApplied && (
-                  <div className="p-3.5 bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/50 rounded-2xl space-y-2.5 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between text-[11px] font-medium tracking-wide text-emerald-800 dark:text-emerald-300">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" /> Applied Date: {appliedDate || new Date().toISOString().split('T')[0]}
-                      </span>
-                      <span className="bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase">Active</span>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-[9.5px] font-medium tracking-wide text-emerald-800 dark:text-emerald-400 uppercase mb-1">
-                        Registration / Roll No. (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={applicationNo}
-                        onChange={(e) => handleCredentialsUpdate('appNo', e.target.value)}
-                        placeholder="e.g. REG-2026-88492"
-                        className="w-full bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 placeholder-slate-400 font-medium tracking-wide"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Track Updates & Reminders Button */}
                 <button
+                  type="button"
                   onClick={() => {
-                    setSaveToast('Reminders synced to your profile!');
+                    setSaveToast(isHindi ? 'रिमाइंडर आपकी प्रोफाइल में सिंक हो गए।' : 'Reminders synced to your profile.');
                     setTimeout(() => setSaveToast(null), 3000);
                   }}
-                  className="w-full py-3 px-4 rounded-2xl bg-slate-50 hover:bg-white dark:bg-slate-800/70 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.015] hover:shadow-md cursor-pointer active:translate-y-0 active:scale-98"
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <span className="flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
                     <Bell className="h-4 w-4 text-slate-400" />
-                    <span>Track Updates & Reminders</span>
-                  </div>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    {isHindi ? 'अपडेट और रिमाइंडर' : 'Updates & reminders'}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-slate-300" />
                 </button>
-
-                {/* 4. View My Saved & Applied Jobs Button */}
-                <Link
-                  href="/profile"
-                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-medium tracking-wide flex items-center justify-between transition-all duration-300 transform-gpu hover:-translate-y-1 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-600/30 cursor-pointer active:translate-y-0 active:scale-98 shadow-md shadow-blue-600/20"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <BookmarkCheck className="h-4 w-4 text-yellow-300" />
-                    <span>View My Saved & Applied Jobs</span>
-                  </div>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
               </div>
-
-              {/* Helper Footer Banner */}
-              {!currentUser ? (
-                <div className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-semibold space-y-2.5">
-                  <p className="leading-snug">
-                    Please log in to mark jobs as applied, save notifications, and track your application deadlines in your profile.
-                  </p>
-                  <Link
-                    href="/auth"
-                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium tracking-wide flex items-center justify-center gap-2 transition cursor-pointer shadow-md shadow-blue-600/20 active:scale-98"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Log In to Save & Track</span>
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              ) : (
-                <div className="p-3.5 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 font-semibold space-y-2">
-                  <p className="leading-snug">
-                    Saved & applied jobs are automatically synced and tracked in your Profile for future reference.
-                  </p>
-                  <Link href="/profile" className="inline-flex items-center gap-1.5 font-extrabold text-amber-900 dark:text-amber-200 hover:underline">
-                    View My Saved & Applied Jobs <ArrowUpRight className="h-3.5 w-3.5" />
+              {!currentUser && (
+                <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-300 space-y-3">
+                  <p>{isHindi ? 'नौकरियां सहेजने और आवेदन ट्रैक करने के लिए लॉग इन करें।' : 'Log in to save jobs and track your applications.'}</p>
+                  <Link href="/auth" className={`${btnPrimary} w-full`}>
+                    <User className="h-4 w-4" /> {isHindi ? 'लॉग इन करें' : 'Log in'}
                   </Link>
                 </div>
               )}
-
+            </SectionCard>
             </div>
-
           </aside>
-
         </div>
-
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-8 px-4 text-center text-xs text-slate-500 font-bold transition-colors duration-200 mt-16">
-        <p>© 2026 MockTest Hub. All rights reserved.</p>
-      </footer>
+      <SiteFooter />
+      <NoticeDetailTour ready={!!notice} />
     </div>
   );
 }

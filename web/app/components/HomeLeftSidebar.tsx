@@ -107,7 +107,7 @@ export default function HomeLeftSidebar({
       subtitle: isHindi ? 'सरकारी परीक्षा स्पीड टेस्ट' : 'Govt Exam DEST Simulator',
       href: '/typing-test',
       icon: Keyboard,
-      iconColor: 'text-blue-500',
+      iconColor: 'text-[#1e4e79] dark:text-blue-400',
     },
     {
       id: 'notices',
@@ -151,7 +151,7 @@ export default function HomeLeftSidebar({
         if (onSelectView) onSelectView('chat');
       },
       icon: MessageSquare,
-      iconColor: 'text-blue-500',
+      iconColor: 'text-[#1e4e79] dark:text-blue-400',
     },
     {
       id: 'telegram',
@@ -191,37 +191,37 @@ export default function HomeLeftSidebar({
   const filteredShortcuts = primaryShortcuts;
 
   return (
-    <aside className="w-full md:w-56 lg:w-64 xl:w-72 bg-slate-900 dark:bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 z-20 h-full min-h-0 overflow-hidden select-none">
+    <aside className="w-full md:w-56 lg:w-64 xl:w-72 bg-[#e9eef4] dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700 flex flex-col shrink-0 z-20 h-full min-h-0 overflow-hidden select-none">
       {/* Scrollable Navigation List */}
-      <div className="p-2.5 space-y-4 flex-1 overflow-y-auto min-h-0 no-scrollbar">
+      <div className="p-3 space-y-5 flex-1 overflow-y-auto min-h-0 no-scrollbar">
 
         {/* 1. USER PROFILE / AUTH CARD */}
         {currentUser ? (
-          <div className="bg-slate-800/80 dark:bg-slate-900/80 border border-slate-700 dark:border-slate-800 rounded-2xl p-3 shadow-xs text-white">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-700 rounded-lg p-3 text-slate-800 dark:text-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-slate-700 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0 border border-slate-600/50">
+              <div className="h-9 w-9 rounded-md bg-[#1e4e79] text-white font-semibold text-xs flex items-center justify-center shrink-0">
                 {currentUser.name ? currentUser.name[0].toUpperCase() : 'U'}
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-xs text-white truncate">
+                <h4 className="font-semibold text-sm text-slate-900 dark:text-white truncate">
                   {currentUser.name}
                 </h4>
-                <p className="text-[9px] font-semibold text-slate-400 truncate">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                   {currentUser.candidateCode?.replace('CGL', 'HUB-ID')}
                 </p>
               </div>
             </div>
-            <div className="mt-2.5 pt-2 border-t border-slate-700/60 dark:border-slate-800 flex items-center justify-between">
-              <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+            <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                 isPassPro
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-slate-700/60 text-slate-300 border border-slate-600/60'
+                  ? 'bg-green-50 text-green-700 border border-green-600/30 dark:bg-green-950/40 dark:text-green-400'
+                  : 'bg-white text-slate-600 border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
               }`}>
-                {isPassPro ? (isHindi ? '👑 पास प्रो' : '👑 Pass Pro') : (isHindi ? 'मुफ़्त सदस्य' : 'Free Member')}
+                {isPassPro ? (isHindi ? 'पास प्रो' : 'Pass Pro') : (isHindi ? 'मुफ़्त सदस्य' : 'Free Member')}
               </span>
               <Link
                 href="/profile"
-                className="text-[10px] text-slate-300 hover:text-white font-extrabold hover:underline flex items-center gap-0.5"
+                className="text-xs text-[#1e4e79] dark:text-blue-300 font-medium hover:underline flex items-center gap-0.5"
               >
                 <span>{isHindi ? 'डैशबोर्ड' : 'Dashboard'}</span>
                 <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
@@ -229,30 +229,30 @@ export default function HomeLeftSidebar({
             </div>
           </div>
         ) : (
-          <div className="bg-slate-800/80 dark:bg-slate-900/80 border border-slate-700 dark:border-slate-800 rounded-2xl p-3 shadow-xs text-white">
+          <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-700 rounded-lg p-3 text-slate-800 dark:text-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-slate-700/70 text-slate-300 flex items-center justify-center shrink-0 border border-slate-600/50">
+              <div className="h-8 w-8 rounded-md bg-[#eef3f8] text-[#1e4e79] flex items-center justify-center shrink-0 dark:bg-slate-800 dark:text-blue-300">
                 <User className="h-3.5 w-3.5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-[11px] text-white">
+                <h4 className="font-semibold text-sm text-slate-900 dark:text-white">
                   {isHindi ? 'अभ्यर्थी लॉगिन' : 'Student Account'}
                 </h4>
-                <p className="text-[9px] text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {isHindi ? 'रैंक एवं टेस्ट सुरक्षित करें' : 'Track tests & analytics'}
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-3">
               <Link
                 href="/auth"
-                className="py-1.5 px-2 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-700 text-[10px] font-extrabold text-center transition"
+                className="h-8 inline-flex items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium transition-colors"
               >
                 {t.logIn}
               </Link>
               <Link
                 href="/auth"
-                className="py-1.5 px-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-extrabold text-center shadow-xs transition border border-slate-600/60"
+                className="h-8 inline-flex items-center justify-center rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-medium transition-colors border border-[#1e4e79]"
               >
                 {t.signUp}
               </Link>
@@ -262,39 +262,39 @@ export default function HomeLeftSidebar({
 
         {/* 3. PRIMARY SHORTCUTS SECTION */}
         <div>
-          <p className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider px-2 pb-1.5">
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 px-1 pb-2">
             {isHindi ? 'प्रमुख शॉर्टकट' : 'Core Shortcuts'}
           </p>
 
-          <div className="rounded-xl overflow-hidden bg-slate-800/60 dark:bg-slate-900/60 divide-y divide-slate-700/60 dark:divide-slate-800">
+          <div className="rounded-lg overflow-hidden bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
             {filteredShortcuts.map((item) => {
               const Icon = item.icon;
               const isItemActive = (item.id === 'chat' && activeView === 'chat') || (item.id === 'referrals' && activeView === 'referrals');
               const hasUnread = (item.id === 'chat' && unreadChatCount > 0);
 
               const content = (
-                <div className={`w-full flex items-center justify-between py-2.5 px-2.5 text-left transition-colors duration-150 text-xs font-bold cursor-pointer group ${
+                <div data-tour={item.id === 'notices' ? 'home-notices' : undefined} className={`w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 text-xs font-medium cursor-pointer group ${
                   isItemActive
-                    ? 'bg-slate-700/80 dark:bg-slate-800 text-white border-l-2 border-l-slate-400'
-                    : 'hover:bg-slate-700/40 dark:hover:bg-slate-800/50 text-slate-200'
+                    ? 'bg-[#eef3f8] dark:bg-slate-800 text-[#1e4e79] dark:text-white shadow-[inset_3px_0_0_0_#1e4e79]'
+                    : 'hover:bg-[#f2f6fa] dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
                 }`}>
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="relative w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 dark:border-slate-700 overflow-visible shrink-0 transition-transform duration-200 group-hover:scale-105">
+                    <div className="relative w-8 h-8 rounded-md flex items-center justify-center bg-[#eef3f8] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-visible shrink-0 transition-transform duration-200">
                       <Icon className={`h-4 w-4 ${item.iconColor}`} />
                       {hasUnread && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border-2 border-slate-900 animate-bounce shadow-xs z-10">
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[11px] font-semibold h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white dark:border-slate-900 z-10">
                           {unreadChatCount}
                         </span>
                       )}
                     </div>
                     <div className="truncate min-w-0">
-                      <p className={`text-xs leading-tight truncate font-bold transition-colors ${
-                        isItemActive ? 'text-white' : 'text-slate-100 group-hover:text-white'
+                      <p className={`text-xs leading-tight truncate font-medium transition-colors ${
+                        isItemActive ? 'text-[#1e4e79] dark:text-white' : 'text-slate-800 dark:text-slate-100'
                       }`}>
                         {item.title}
                       </p>
                       {item.subtitle ? (
-                        <p className="text-[9.5px] text-slate-400 mt-0.5 truncate font-normal">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate font-normal">
                           {item.subtitle}
                         </p>
                       ) : null}
@@ -303,14 +303,14 @@ export default function HomeLeftSidebar({
 
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {hasUnread && (
-                      <span className="bg-red-500 text-white text-[8.5px] font-black px-1.5 py-0.5 rounded-full animate-pulse shadow-xs">
+                      <span className="bg-red-500 text-white text-[11px] font-semibold px-1.5 py-0.5 rounded-full animate-pulse shadow-xs">
                         {unreadChatCount} {isHindi ? 'नया' : 'New'}
                       </span>
                     )}
                     {item.isExternal ? (
-                      <ExternalLink className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ExternalLink className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
                     ) : (
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
                     )}
                   </div>
                 </div>
@@ -361,34 +361,34 @@ export default function HomeLeftSidebar({
         </div>
 
         {/* 4. ALERTS & SUPPORT */}
-        <div className="pt-2">
-          <p className="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-wider px-2 pb-1.5">
+        <div>
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 px-1 pb-2">
             {isHindi ? 'सूचनाएं व सहायता' : 'Alerts & Support'}
           </p>
 
-          <div className="rounded-xl overflow-hidden bg-slate-800/60 dark:bg-slate-900/60 divide-y divide-slate-700/60 dark:divide-slate-800">
+          <div className="rounded-lg overflow-hidden bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-700 divide-y divide-slate-200 dark:divide-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
             {/* Admit Cards */}
             <Link
               href="/updates?category=admit_card"
               onClick={() => {
                 if (onSelectView) onSelectView('home');
               }}
-              className="w-full flex items-center justify-between py-2.5 px-2.5 text-left transition-colors duration-150 hover:bg-slate-700/40 dark:hover:bg-slate-800/50 text-slate-200 group"
+              className="w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 hover:bg-[#f2f6fa] dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 group"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-emerald-400 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#eef3f8] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 shrink-0 transition-transform">
                   <FileText className="h-4 w-4" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-100 group-hover:text-emerald-300 transition-colors block leading-tight">
+                  <span className="text-xs font-medium text-slate-800 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-colors block leading-tight">
                     {t.admitCards}
                   </span>
-                  <span className="text-[9.5px] text-slate-400 font-normal block mt-0.5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal block mt-0.5">
                     {isHindi ? 'हॉल टिकट व परीक्षा तिथियां' : 'Hall tickets & Exam dates'}
                   </span>
                 </div>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
             </Link>
 
             {/* Results & Merits */}
@@ -397,22 +397,22 @@ export default function HomeLeftSidebar({
               onClick={() => {
                 if (onSelectView) onSelectView('home');
               }}
-              className="w-full flex items-center justify-between py-2.5 px-2.5 text-left transition-colors duration-150 hover:bg-slate-700/40 dark:hover:bg-slate-800/50 text-slate-200 group"
+              className="w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 hover:bg-[#f2f6fa] dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 group"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#eef3f8] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-amber-600 dark:text-amber-400 shrink-0 transition-transform">
                   <Trophy className="h-4 w-4" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-100 group-hover:text-amber-300 transition-colors block leading-tight">
+                  <span className="text-xs font-medium text-slate-800 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-colors block leading-tight">
                     {t.resultsMerits}
                   </span>
-                  <span className="text-[9.5px] text-slate-400 font-normal block mt-0.5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal block mt-0.5">
                     {isHindi ? 'मेरिट सूची व कट-ऑफ' : 'Merit lists & Cut-offs'}
                   </span>
                 </div>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
             </Link>
 
             {/* Suggestion Box Button (Opens full right section page) */}
@@ -421,28 +421,28 @@ export default function HomeLeftSidebar({
               onClick={() => {
                 if (onSelectView) onSelectView('suggestion');
               }}
-              className={`w-full flex items-center justify-between py-2.5 px-2.5 text-left transition-colors duration-150 group cursor-pointer ${
+              className={`w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 group cursor-pointer ${
                 activeView === 'suggestion'
-                  ? 'bg-slate-700/80 dark:bg-slate-800 text-white border-l-2 border-l-slate-400'
-                  : 'hover:bg-slate-700/40 dark:hover:bg-slate-800/50 text-slate-200'
+                  ? 'bg-[#eef3f8] dark:bg-slate-800 text-[#1e4e79] dark:text-white shadow-[inset_3px_0_0_0_#1e4e79]'
+                  : 'hover:bg-[#f2f6fa] dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-yellow-400 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#eef3f8] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-yellow-600 dark:text-yellow-400 shrink-0 transition-transform">
                   <Lightbulb className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 truncate">
-                  <span className={`text-xs font-bold block truncate leading-tight ${
-                    activeView === 'suggestion' ? 'text-white' : 'text-slate-100 group-hover:text-yellow-300'
+                  <span className={`text-xs font-medium block truncate leading-tight ${
+                    activeView === 'suggestion' ? 'text-[#1e4e79] dark:text-white' : 'text-slate-800 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300'
                   }`}>
                     {isHindi ? 'सुझाव पेटिका' : 'Suggestion Box'}
                   </span>
-                  <span className="text-[9.5px] text-slate-400 font-normal block mt-0.5 truncate">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal block mt-0.5 truncate">
                     {isHindi ? 'सुझाव या नया टेस्ट अनुरोध' : 'Feature / Test Request'}
                   </span>
                 </div>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all shrink-0 ml-1" />
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0 ml-1" />
             </button>
 
             {/* Help & FAQ */}
@@ -450,26 +450,26 @@ export default function HomeLeftSidebar({
               onClick={() => {
                 if (onSelectView) onSelectView('contact');
               }}
-              className={`w-full flex items-center justify-between py-2.5 px-2.5 text-left transition-colors duration-150 cursor-pointer group ${
+              className={`w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 cursor-pointer group ${
                 activeView === 'contact'
-                  ? 'bg-slate-700/80 dark:bg-slate-800 text-white border-l-2 border-l-slate-400'
-                  : 'hover:bg-slate-700/40 dark:hover:bg-slate-800/50 text-slate-200'
+                  ? 'bg-[#eef3f8] dark:bg-slate-800 text-[#1e4e79] dark:text-white shadow-[inset_3px_0_0_0_#1e4e79]'
+                  : 'hover:bg-[#f2f6fa] dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700/60 dark:bg-slate-800 border border-slate-600/40 text-purple-400 shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#eef3f8] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-purple-600 dark:text-purple-400 shrink-0 transition-transform">
                   <HelpCircle className="h-4 w-4" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-100 group-hover:text-purple-300 transition-colors block leading-tight">
+                  <span className="text-xs font-medium text-slate-800 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-colors block leading-tight">
                     {isHindi ? 'सहायता केंद्र व एफएक्यू' : 'Help & FAQ'}
                   </span>
-                  <span className="text-[9.5px] text-slate-400 font-normal block mt-0.5">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal block mt-0.5">
                     {isHindi ? 'त्वरित सहायता व दिशा-निर्देश' : '24x7 Guide & FAQs'}
                   </span>
                 </div>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
             </button>
           </div>
         </div>
@@ -477,7 +477,7 @@ export default function HomeLeftSidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-slate-800 bg-slate-900/90 dark:bg-slate-950 text-[10px] text-slate-400 font-semibold flex items-center justify-between shrink-0">
+      <div className="p-3 border-t border-slate-300 dark:border-slate-700 bg-[#e3e9f0] dark:bg-slate-900 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between shrink-0">
         <span>© 2026 MockTest Hub</span>
         <span>v2.4 Pro</span>
       </div>

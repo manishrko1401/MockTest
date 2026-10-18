@@ -63,7 +63,7 @@ export default async function RootLayout({
     >
       <body
         suppressHydrationWarning
-        className="h-full min-h-full overflow-x-hidden flex flex-col bg-slate-200/90 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200"
+        className="h-full min-h-full overflow-x-hidden flex flex-col bg-[#f5f7fa] dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200"
       >
         <AuthProvider initialUserProfile={userProfile}>
           <DeploymentRecovery />

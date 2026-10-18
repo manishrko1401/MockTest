@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { requireStaff } from "../../lib/serverAuth";
 
 // S3 Client configuration for Tigris
 const s3Client = new S3Client({
@@ -11,7 +12,10 @@ const s3Client = new S3Client({
   },
 });
 
+// Uploads come from the admin panel only
 export async function POST(req: NextRequest) {
+  const denied = await requireStaff(req, ['TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER']);
+  if (denied) return denied;
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;

@@ -17,6 +17,7 @@ import {
 } from './CbatVisualComponents';
 import { Trophy } from 'lucide-react';
 import './CbatExamEngine.css';
+import { ExamProgress, createProgressSyncer, readLocalProgress, writeLocalProgress, clearLocalProgress, fetchServerProgress, newerProgress } from '../../lib/examProgress';
 
 interface CbatExamEngineProps {
   testId: string;
@@ -26,7 +27,7 @@ interface CbatExamEngineProps {
 
 export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: CbatExamEngineProps) {
   const router = useRouter();
-  const { addAttempt, currentUser } = useAuth();
+  const { addAttempt, currentUser, saveOngoingSession } = useAuth();
   const [examLang, setExamLang] = useState<'en' | 'hi'>(initialExamLanguage);
 
   // Batteries State
@@ -89,11 +90,125 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
     return () => { isCancelled = true; };
   }, [testId]);
 
+  // ---- Ongoing progress: kept in this browser on every change and backed up to the server, so
+  // a refresh, closed tab or power cut continues the test where it was (until submit/reset) ----
+  const progressSyncRef = useRef<ReturnType<typeof createProgressSyncer> | null>(null);
+  if (!progressSyncRef.current) progressSyncRef.current = createProgressSyncer();
+  const [progressReady, setProgressReady] = useState(false);
+  const progressReadyRef = useRef(false);
+  const submittedRef = useRef(false);
+  // The stage effect below resets the timer; skip that once when restoring a saved stage
+  const skipTimerResetRef = useRef(false);
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
+  const saveOngoingSessionRef = useRef(saveOngoingSession);
+  saveOngoingSessionRef.current = saveOngoingSession;
+  const serverProgressRef = useRef<Promise<ExamProgress | null | undefined> | null>(null);
+  if (!serverProgressRef.current) {
+    const uid = currentUser?.id;
+    serverProgressRef.current = uid ? fetchServerProgress(uid, testId, 'cbat') : Promise.resolve(null);
+  }
+
+  useEffect(() => {
+    if (loadingQuestions || progressReadyRef.current) return;
+    let cancelled = false;
+    (async () => {
+      const local = readLocalProgress(currentUserRef.current?.id, testId, 'cbat');
+      const server = await serverProgressRef.current;
+      if (cancelled) return;
+      const saved = newerProgress(local, server ?? null);
+      const d = saved?.data;
+      if (d && Number.isInteger(d.batteryIdx) && d.batteryIdx >= 0 && d.batteryIdx < batteries.length) {
+        const savedStage = ['instruction', 'question', 'rest'].includes(d.stage) ? d.stage : 'instruction';
+        const chunkCount = batteries[d.batteryIdx].chunks.length;
+        if (savedStage !== stage || d.batteryIdx !== batteryIdx) skipTimerResetRef.current = true;
+        setBatteryIdx(d.batteryIdx);
+        setStage(savedStage);
+        setChunkIdx(Number.isInteger(d.chunkIdx) && d.chunkIdx >= 0 && d.chunkIdx < chunkCount ? d.chunkIdx : 0);
+        setTimeLeft(typeof d.timeLeft === 'number' && d.timeLeft > 0 ? Math.round(d.timeLeft) : 1);
+        if (d.userResponses && typeof d.userResponses === 'object') setUserResponses(d.userResponses);
+        if (typeof d.isJumbled === 'boolean') setIsJumbled(d.isJumbled);
+        if (typeof d.customTimeSec === 'number') setCustomTimeSec(d.customTimeSec);
+        if (['normal', 'exam1', 'view2', 'view3'].includes(d.selectedLayout)) setSelectedLayout(d.selectedLayout);
+        if (typeof d.activeQuestionId === 'string' || d.activeQuestionId === null) setActiveQuestionId(d.activeQuestionId);
+        if (d.examLang === 'en' || d.examLang === 'hi') setExamLang(d.examLang);
+        if (typeof d.timeAckChecked === 'boolean') setTimeAckChecked(d.timeAckChecked);
+      }
+      progressReadyRef.current = true;
+      setProgressReady(true);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingQuestions]);
+
+  const buildProgress = (): ExamProgress | null => {
+    if (!progressReadyRef.current || submittedRef.current) return null;
+    const title = paperTitle ? `Station Master CBAT - ${paperTitle}` : 'Station Master CBAT (Psycho Test) Full Mock';
+    return {
+      v: 1,
+      engine: 'cbat',
+      testId,
+      userId: currentUserRef.current?.id || 'guest',
+      title,
+      source: typeof window !== 'undefined' && window.innerWidth <= 768 ? 'mobile_web' : 'web',
+      savedAt: Date.now(),
+      timeRemaining: Math.max(0, timeLeft),
+      violations: 0,
+      currentSectionIndex: batteryIdx,
+      currentQuestionIndex: chunkIdx,
+      data: { batteryIdx, stage, chunkIdx, timeLeft, userResponses, isJumbled, customTimeSec, selectedLayout, activeQuestionId, examLang, timeAckChecked },
+    };
+  };
+  const buildProgressRef = useRef(buildProgress);
+  buildProgressRef.current = buildProgress;
+
+  const persistProgress = (opts: { server?: boolean; keepalive?: boolean } = {}) => {
+    const p = buildProgressRef.current();
+    if (!p) return;
+    writeLocalProgress(p);
+    if (opts.server) {
+      progressSyncRef.current?.push(p, { keepalive: opts.keepalive });
+      saveOngoingSessionRef.current(testId, p.title || '', p.timeRemaining, 0, {}, p.currentSectionIndex, p.currentQuestionIndex, { localOnly: true });
+    }
+  };
+  const persistProgressRef = useRef(persistProgress);
+  persistProgressRef.current = persistProgress;
+
+  // This browser: every change, including each timer tick
+  useEffect(() => {
+    if (progressReady) persistProgressRef.current();
+  }, [progressReady, batteryIdx, stage, chunkIdx, timeLeft, userResponses, isJumbled, customTimeSec, selectedLayout, activeQuestionId, examLang, timeAckChecked]);
+
+  // Server: ~1.5s after an answer / screen change, and every 15s for the timer
+  useEffect(() => {
+    if (!progressReady) return;
+    const t = setTimeout(() => persistProgressRef.current({ server: true }), 1500);
+    return () => clearTimeout(t);
+  }, [progressReady, batteryIdx, stage, chunkIdx, userResponses, isJumbled, selectedLayout, examLang]);
+  useEffect(() => {
+    if (!progressReady) return;
+    const heartbeat = setInterval(() => persistProgressRef.current({ server: true }), 15000);
+    const saveOnLeave = () => persistProgressRef.current({ server: true, keepalive: true });
+    const onVisibility = () => { if (document.visibilityState === 'hidden') saveOnLeave(); };
+    window.addEventListener('pagehide', saveOnLeave);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearInterval(heartbeat);
+      saveOnLeave();
+      window.removeEventListener('pagehide', saveOnLeave);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [progressReady]);
+
   const activeBattery = batteries[batteryIdx];
   const activeQuestionsChunk = activeBattery.chunks[chunkIdx] || [];
 
   // Reset timer on stage or battery change
   useEffect(() => {
+    if (skipTimerResetRef.current) {
+      skipTimerResetRef.current = false; // restored a saved stage: keep its saved time
+      return;
+    }
     if (stage === 'instruction') {
       setTimeLeft(300); // 5 min default instruction timer
       setCustomTimeSec(activeBattery.durationSeconds);
@@ -106,6 +221,7 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
 
   // Live Timer Ticking
   useEffect(() => {
+    if (!progressReady) return; // wait until saved progress (if any) is restored
     if (timeLeft <= 0) {
       handleTimeExpiry();
       return;
@@ -114,7 +230,7 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
       setTimeLeft(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, stage]);
+  }, [timeLeft, stage, progressReady]);
 
   // Disable scrolling via mouse wheel (forces candidate to use the scrollbar, exactly matching official RDSO CBAT)
   useEffect(() => {
@@ -264,10 +380,16 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
 
     const accuracy = totalAttempted > 0 ? Math.round((correctCount / totalAttempted) * 100) : 0;
 
+    // Submitted: stop saving progress and drop it; any save still in flight finishes
+    // before the attempt is recorded, so it can't bring the test back as "ongoing"
+    submittedRef.current = true;
+    clearLocalProgress(testId, currentUser?.id);
+    const progressFlushed = progressSyncRef.current ? progressSyncRef.current.stopAndFlush() : Promise.resolve();
+
     // Save attempt to user profile via AuthContext
     if (currentUser && addAttempt) {
       try {
-        addAttempt(
+        progressFlushed.finally(() => addAttempt(
           testId,
           paperTitle ? `Station Master CBAT - ${paperTitle}` : "Station Master CBAT (Psycho Test) Full Mock",
           totalObtainedMarks,
@@ -276,7 +398,7 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
           1800,
           0,
           savedResponses
-        );
+        ));
       } catch (err) {
         console.error("Error saving CBAT attempt:", err);
       }
@@ -286,7 +408,7 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
     router.push(`/exam/${testId}/analysis`);
   };
 
-  if (loadingQuestions) {
+  if (loadingQuestions || !progressReady) {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', fontFamily: 'sans-serif' }}>
         <div style={{ textAlign: 'center' }}>

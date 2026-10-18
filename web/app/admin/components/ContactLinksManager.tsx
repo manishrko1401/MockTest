@@ -52,7 +52,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
   const [newId, setNewId] = useState('');
   const [newName, setNewName] = useState('');
   const [newBadgeText, setNewBadgeText] = useState('');
-  const [newBadgeBg, setNewBadgeBg] = useState('bg-blue-600');
+  const [newBadgeBg, setNewBadgeBg] = useState('bg-[#1e4e79]');
   const [newHandle, setNewHandle] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newDescEn, setNewDescEn] = useState('');
@@ -197,7 +197,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
       id: cleanId,
       name: newName.trim(),
       badgeText: newBadgeText.trim() || cleanId.slice(0, 2).toUpperCase(),
-      badgeBg: newBadgeBg.trim() || 'bg-blue-600',
+      badgeBg: newBadgeBg.trim() || 'bg-[#1e4e79]',
       badgeTextColor: 'text-white',
       iconType: 'link',
       handle: newHandle.trim() || newName.trim(),
@@ -217,7 +217,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
     setNewId('');
     setNewName('');
     setNewBadgeText('');
-    setNewBadgeBg('bg-blue-600');
+    setNewBadgeBg('bg-[#1e4e79]');
     setNewHandle('');
     setNewUrl('');
     setNewDescEn('');
@@ -228,13 +228,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
     <div className="space-y-6">
       
       {/* HEADER BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-950 p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20">
+          <div className="w-11 h-11 rounded-md bg-[#1e4e79] text-white flex items-center justify-center shadow-md">
             <Share2 className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
               Manage Contact & Social Links
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -247,7 +247,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
           <button
             onClick={handleResetDefaults}
             disabled={saving}
-            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2 rounded-md bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 cursor-pointer disabled:opacity-50"
             title="Reset to default handles"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -256,7 +256,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-blue-600 dark:text-blue-400 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 cursor-pointer"
+            className="px-3.5 py-2 rounded-md bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-[#1e4e79] dark:text-blue-400 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Channel</span>
@@ -265,7 +265,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
           <button
             onClick={handleSaveAll}
             disabled={saving}
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-5 py-2 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-semibold shadow-md transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? 'Saving Changes...' : 'Save All Changes'}</span>
@@ -274,9 +274,9 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
       </div>
 
       {/* QUICK PREVIEW BANNER */}
-      <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700 dark:text-slate-300">
-          <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+      <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-lg border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <Globe className="w-4 h-4 text-[#1e4e79] dark:text-blue-400" />
           <span>Live Pill Preview (as shown to candidates on Contact Us page):</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -285,7 +285,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
               key={l.id}
               className="inline-flex items-center gap-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 pl-1 pr-3 py-1 rounded-full text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs"
             >
-              <div className={`w-6 h-6 rounded-full ${l.badgeBg || 'bg-blue-600'} text-white flex items-center justify-center font-black text-[10px] shrink-0`}>
+              <div className={`w-6 h-6 rounded-full ${l.badgeBg || 'bg-[#1e4e79]'} text-white flex items-center justify-center font-semibold text-xs shrink-0`}>
                 {l.badgeText || l.id.slice(0, 2).toUpperCase()}
               </div>
               <span className="text-[11px]">{l.name}</span>
@@ -309,7 +309,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
           return (
             <div
               key={channel.id}
-              className={`bg-white dark:bg-slate-950 border rounded-2xl p-5 shadow-xs transition-all duration-200 ${
+              className={`bg-white dark:bg-slate-950 border rounded-lg p-5 shadow-xs transition-all duration-200 ${
                 channel.isEnabled 
                   ? 'border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-800' 
                   : 'border-dashed border-slate-300 dark:border-slate-800 opacity-60'
@@ -319,18 +319,18 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                 
                 {/* Left: Badge, Name, Handle & Live Pill */}
                 <div className="flex items-center gap-3.5">
-                  <div className={`w-11 h-11 rounded-2xl ${channel.badgeBg || 'bg-blue-600'} text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs`}>
+                  <div className={`w-11 h-11 rounded-lg ${channel.badgeBg || 'bg-[#1e4e79]'} text-white font-semibold text-sm flex items-center justify-center shrink-0 shadow-xs`}>
                     {channel.badgeText || channel.id.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                      <h4 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
                         {channel.name}
                       </h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 font-bold">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 font-bold">
                         ID: {channel.id}
                       </span>
-                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                         channel.isEnabled 
                           ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
                           : 'bg-slate-100 dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800'
@@ -368,7 +368,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                   {/* Enable / Disable Toggle */}
                   <button
                     onClick={() => handleToggleEnabled(channel.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                       channel.isEnabled
                         ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                         : 'bg-slate-100 dark:bg-slate-900 text-slate-500 border border-slate-200 dark:border-slate-800'
@@ -383,7 +383,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     href={channel.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                    className="p-2 rounded-md bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 text-slate-600 dark:text-slate-300 transition cursor-pointer"
                     title="Open Link"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -393,7 +393,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                   {!['email', 'telegram', 'youtube', 'instagram', 'x', 'reddit', 'whatsapp', 'linkedin'].includes(channel.id) && (
                     <button
                       onClick={() => handleDelete(channel.id)}
-                      className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 transition cursor-pointer"
+                      className="p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-400 hover:text-red-600 transition cursor-pointer"
                       title="Delete Channel"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -408,20 +408,20 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                 
                 {/* Field 1: Display Name */}
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Display Name
                   </label>
                   <input
                     type="text"
                     value={channel.name}
                     onChange={(e) => handleUpdateField(channel.id, 'name', e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] transition"
                   />
                 </div>
 
                 {/* Field 2: Handle / Username Text */}
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Handle / Username
                   </label>
                   <input
@@ -429,13 +429,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={channel.handle}
                     onChange={(e) => handleUpdateField(channel.id, 'handle', e.target.value)}
                     placeholder="e.g. @MockTestHubOfficial"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] transition"
                   />
                 </div>
 
                 {/* Field 3: Target URL / Mailto */}
                 <div className="md:col-span-2 lg:col-span-1">
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Target URL / Mailto Link
                   </label>
                   <input
@@ -443,13 +443,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={channel.url}
                     onChange={(e) => handleUpdateField(channel.id, 'url', e.target.value)}
                     placeholder="https://... or mailto:..."
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] transition"
                   />
                 </div>
 
                 {/* Field 4: Badge Text (Acronym / Letters) */}
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Badge Text (Circle Logo)
                   </label>
                   <input
@@ -458,13 +458,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={channel.badgeText}
                     onChange={(e) => handleUpdateField(channel.id, 'badgeText', e.target.value)}
                     placeholder="e.g. TG, YT, IG"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black uppercase text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] transition"
                   />
                 </div>
 
                 {/* Field 5: English Description */}
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
                     English Description
                   </label>
                   <input
@@ -472,13 +472,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={channel.descriptionEn || ''}
                     onChange={(e) => handleUpdateField(channel.id, 'descriptionEn', e.target.value)}
                     placeholder="e.g. Official Telegram for exam notes"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] transition"
                   />
                 </div>
 
                 {/* Field 6: Hindi Description */}
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">
                     Hindi Description
                   </label>
                   <input
@@ -486,7 +486,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={channel.descriptionHi || ''}
                     onChange={(e) => handleUpdateField(channel.id, 'descriptionHi', e.target.value)}
                     placeholder="e.g. परीक्षा नोट्स के लिए आधिकारिक टेलीग्राम"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79] transition"
                   />
                 </div>
 
@@ -499,12 +499,12 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
 
       {/* ADD NEW CHANNEL MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 bg-[#1e4e79] text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <Plus className="w-5 h-5" />
-                <h3 className="font-extrabold text-base">Add New Social / Contact Channel</h3>
+                <h3 className="font-semibold text-base">Add New Social / Contact Channel</h3>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -517,7 +517,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
             <form onSubmit={handleCreateNewChannel} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
                     Channel ID (Unique, e.g. discord)
                   </label>
                   <input
@@ -526,12 +526,12 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={newId}
                     onChange={(e) => setNewId(e.target.value)}
                     placeholder="e.g. discord"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
                     Display Name
                   </label>
                   <input
@@ -540,13 +540,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     placeholder="e.g. Discord Server"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                <label className="block text-xs font-bold text-slate-500 mb-1">
                   Target URL
                 </label>
                 <input
@@ -555,13 +555,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                   value={newUrl}
                   onChange={(e) => setNewUrl(e.target.value)}
                   placeholder="https://discord.gg/..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
                     Badge Text (Circle Logo)
                   </label>
                   <input
@@ -570,12 +570,12 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={newBadgeText}
                     onChange={(e) => setNewBadgeText(e.target.value)}
                     placeholder="e.g. DC"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black uppercase text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
                     Handle / Subtitle
                   </label>
                   <input
@@ -583,13 +583,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                     value={newHandle}
                     onChange={(e) => setNewHandle(e.target.value)}
                     placeholder="e.g. MockTest Discord"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                <label className="block text-xs font-bold text-slate-500 mb-1">
                   English Description
                 </label>
                 <input
@@ -597,12 +597,12 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                   value={newDescEn}
                   onChange={(e) => setNewDescEn(e.target.value)}
                   placeholder="Join our candidate discussion server"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                <label className="block text-xs font-bold text-slate-500 mb-1">
                   Hindi Description
                 </label>
                 <input
@@ -610,7 +610,7 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                   value={newDescHi}
                   onChange={(e) => setNewDescHi(e.target.value)}
                   placeholder="उम्मीदवार चर्चा समूह में शामिल हों"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#1e4e79]"
                 />
               </div>
 
@@ -618,13 +618,13 @@ export function ContactLinksManager({ showToast }: ContactLinksManagerProps) {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-md text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md cursor-pointer"
+                  className="px-5 py-2 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-semibold shadow-md cursor-pointer"
                 >
                   Add Channel
                 </button>

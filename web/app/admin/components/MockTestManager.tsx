@@ -255,25 +255,25 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Manage Mock Tests</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Manage Mock Tests</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Create, edit, reorder, and delete mock tests across all categories</p>
         </div>
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg">{filteredMocks.length} test{filteredMocks.length !== 1 ? 's' : ''} shown</span>
       </div>
 
       {/* Create New Mock Test — Collapsible */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setEditingMockTestId(editingMockTestId === '__new__' ? null : '__new__')}
           className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+            <div className="h-8 w-8 rounded-md bg-[#1e4e79] text-white flex items-center justify-center">
               <PlusCircle className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-extrabold text-sm text-slate-900 dark:text-white">Create New Mock Test</p>
+              <p className="font-semibold text-sm text-slate-900 dark:text-white">Create New Mock Test</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">Click to expand the creation form</p>
             </div>
           </div>
@@ -338,38 +338,38 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               {/* Category / Sub / SubSub cascade selectors */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Category</label>
                   <select
                     required
                     value={newMockCategoryParent}
                     onChange={(e) => { setNewMockCategoryParent(e.target.value); setNewMockSubCategoryParent(''); setNewMockSubSubCategoryParent(''); }}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
                   >
                     <option value="">-- Select --</option>
                     {testSeriesCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Sub Category</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Sub Category</label>
                   <select
                     required
                     value={newMockSubCategoryParent}
                     onChange={(e) => { setNewMockSubCategoryParent(e.target.value); setNewMockSubSubCategoryParent(''); }}
                     disabled={!newMockCategoryParent}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-50"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-50"
                   >
                     <option value="">-- Select --</option>
                     {testSeriesCatalog.find((c: any) => c.id === newMockCategoryParent)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Sub-Sub Category</label>
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Sub-Sub Category</label>
                   <select
                     required
                     value={newMockSubSubCategoryParent}
                     onChange={(e) => setNewMockSubSubCategoryParent(e.target.value)}
                     disabled={!newMockSubCategoryParent}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-50"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-50"
                   >
                     <option value="">-- Select --</option>
                     {examCatalog.find((c: any) => c.id === newMockCategoryParent)?.subCategories.find((s: any) => s.id === newMockSubCategoryParent)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
@@ -380,8 +380,8 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               {/* Test Title & Quantity */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="sm:col-span-3">
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    Test Title {countValue > 1 && <span className="text-blue-600 dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    Test Title {countValue > 1 && <span className="text-[#1e4e79] dark:text-blue-400 font-normal lowercase">(base title for batch)</span>}
                   </label>
                   <input
                     type="text"
@@ -389,11 +389,11 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     value={newMockTitle}
                     onChange={(e) => setNewMockTitle(e.target.value)}
                     placeholder="e.g. SSC CGL Full Test"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                     No. of Tests to Create
                   </label>
                   <input
@@ -403,28 +403,28 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     max={50}
                     value={countValue}
                     onChange={(e) => updateCount(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold font-sans"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold font-sans"
                   />
                 </div>
               </div>
 
               {/* Live Bulk Title Preview Badge */}
               {countValue > 1 && newMockTitle.trim() && (
-                <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-900 dark:text-blue-200 space-y-1">
-                  <div className="font-extrabold flex items-center gap-1.5 text-blue-700 dark:text-blue-400">
-                    <span>⚡ Bulk Creation Preview ({countValue} Mock Tests):</span>
+                <div className="p-3 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-md text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5 text-[#1e4e79] dark:text-blue-400">
+                    <span>Bulk Creation Preview ({countValue} Mock Tests):</span>
                   </div>
                   <p className="text-[11px] text-blue-800 dark:text-blue-300 font-medium">
                     Will create tests with titles suffixing 1 to {countValue}:
                   </p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {Array.from({ length: Math.min(countValue, 5) }).map((_, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-[10px] font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-700">
+                      <span key={idx} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 text-xs font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-700">
                         {newMockTitle.trim()} {idx + 1}
                       </span>
                     ))}
                     {countValue > 5 && (
-                      <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[10px] font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-800">
+                      <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-[#1e4e79] dark:text-blue-300 text-xs font-mono font-semibold rounded-md border border-blue-200 dark:border-blue-800">
                         ... up to "{newMockTitle.trim()} {countValue}"
                       </span>
                     )}
@@ -435,20 +435,20 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               {/* Settings */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-2">Duration (min)</label>
-                  <input type="number" required min={1} value={newMockDuration} onChange={(e) => setNewMockDuration(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Duration (min)</label>
+                  <input type="number" required min={1} value={newMockDuration} onChange={(e) => setNewMockDuration(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-2">Questions</label>
-                  <input type="number" required min={1} value={newMockQsCount} onChange={(e) => setNewMockQsCount(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Questions</label>
+                  <input type="number" required min={1} value={newMockQsCount} onChange={(e) => setNewMockQsCount(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-2">Max Marks</label>
-                  <input type="number" required min={1} value={newMockMaxMarks} onChange={(e) => setNewMockMaxMarks(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Max Marks</label>
+                  <input type="number" required min={1} value={newMockMaxMarks} onChange={(e) => setNewMockMaxMarks(Number(e.target.value))} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-extrabold text-slate-400 uppercase mb-2">Access Tier</label>
-                  <select value={newMockRequiredTier} onChange={(e) => setNewMockRequiredTier(e.target.value as any)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <label className="block text-xs font-semibold text-slate-400 mb-2">Access Tier</label>
+                  <select value={newMockRequiredTier} onChange={(e) => setNewMockRequiredTier(e.target.value as any)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer">
                     <option value="None">Free</option>
                     <option value="Testbook Pass">Pass</option>
                     <option value="Testbook Pass Pro">Pass Pro</option>
@@ -457,7 +457,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               </div>
 
               {/* Sectional Timing */}
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-4 font-sans">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-4 font-sans">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input
@@ -470,17 +470,17 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                       className="w-4 h-4 accent-blue-600 cursor-pointer rounded"
                     />
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <Clock className="w-3.5 h-3.5 text-[#1e4e79] dark:text-blue-400" />
                       Enable Sectional Timing
                     </span>
-                    <span className="text-[10px] text-slate-400">(lock users per section)</span>
+                    <span className="text-xs text-slate-400">(lock users per section)</span>
                   </label>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setShowAddPresetForm(!showAddPresetForm)}
-                      className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg transition"
+                      className="text-[11px] font-semibold text-[#1e4e79] dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg transition"
                     >
                       <Plus className="w-3 h-3" />
                       + Add Quick Timing
@@ -490,7 +490,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         type="button"
                         onClick={handleResetPresets}
                         title="Reset to default presets"
-                        className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer"
+                        className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1 cursor-pointer"
                       >
                         <RotateCcw className="w-3 h-3" />
                       </button>
@@ -501,7 +501,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 {/* Quick Timing Presets Selector Chips */}
                 <div className="space-y-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
                       Quick Sectional Timing Presets (1-Click Apply)
                     </span>
@@ -526,14 +526,14 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                               setNewMockDuration(totalMin);
                             }
                           }}
-                          className={`group relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
+                          className={`group relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold cursor-pointer transition-all border ${
                             isActive
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/30 ring-2 ring-blue-400 dark:ring-blue-500'
-                              : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-xs'
+                              ? 'bg-[#1e4e79] text-white border-[#1e4e79] shadow-sm ring-2 ring-blue-400 dark:ring-blue-500'
+                              : 'bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-blue-400 hover:text-[#1e4e79] dark:hover:text-blue-400 shadow-xs'
                           }`}
                         >
                           <span>{normalizedPreset}</span>
-                          <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-md ${
                             isActive 
                               ? 'bg-blue-700 text-blue-100' 
                               : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950'
@@ -559,8 +559,8 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
 
                 {/* Form to Add Custom Preset */}
                 {showAddPresetForm && (
-                  <div className="p-3 bg-white dark:bg-slate-950 border border-blue-200 dark:border-blue-900/60 rounded-xl space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                  <div className="p-3 bg-white dark:bg-slate-950 border border-blue-200 dark:border-blue-900/60 rounded-md space-y-2">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
                       Create New Quick Timing Preset
                     </label>
                     <div className="flex items-center gap-2">
@@ -575,12 +575,12 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                             handleAddCustomPreset();
                           }
                         }}
-                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono font-semibold"
+                        className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-mono font-semibold"
                       />
                       <button
                         type="button"
                         onClick={() => handleAddCustomPreset()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer shrink-0"
+                        className="bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer shrink-0"
                       >
                         Save & Apply
                       </button>
@@ -592,7 +592,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         Cancel
                       </button>
                     </div>
-                    <p className="text-[10px] text-slate-400">
+                    <p className="text-xs text-slate-400">
                       Enter section durations in minutes separated by commas. Saved presets will be available for 1-click test creation.
                     </p>
                   </div>
@@ -601,7 +601,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 {/* Manual Text Input Field */}
                 {newMockHasSectionalTiming && (
                   <div className="pt-2">
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1.5">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
                       Selected Section Durations (minutes, comma-separated)
                     </label>
                     <div className="flex items-center gap-2">
@@ -618,14 +618,14 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                           }
                         }}
                         placeholder="e.g. 15, 15, 15, 15 or 20, 20, 20"
-                        className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-mono font-semibold"
+                        className="flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-mono font-semibold"
                       />
                       {newMockSectionalTimingsStr.trim() && !quickTimingPresets.includes(newMockSectionalTimingsStr.split(',').map(s => s.trim()).filter(Boolean).join(', ')) && (
                         <button
                           type="button"
                           onClick={() => handleAddCustomPreset(newMockSectionalTimingsStr)}
                           title="Save current custom timing as a quick preset"
-                          className="px-2.5 py-2 bg-slate-100 hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-blue-950 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] font-bold shrink-0 transition flex items-center gap-1 cursor-pointer"
+                          className="px-2.5 py-2 bg-slate-100 hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-blue-950 text-[#1e4e79] dark:text-blue-400 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold shrink-0 transition flex items-center gap-1 cursor-pointer"
                         >
                           <Plus className="w-3 h-3" /> Save as Preset
                         </button>
@@ -635,7 +635,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                       const timings = newMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
                       const total = timings.reduce((a, b) => a + b, 0);
                       return total > 0 ? (
-                        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                        <div className="flex items-center gap-2 mt-1.5 text-xs text-[#1e4e79] dark:text-blue-400 font-semibold">
                           <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-md">
                             {timings.length} section{timings.length !== 1 ? 's' : ''} ({timings.join(' min, ')} min)
                           </span>
@@ -649,7 +649,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               </div>
 
               {/* Section Lock on Submit (Single Total Test Time with Non-Revisitable Sections) */}
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2 font-sans">
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-2 font-sans">
                 <label className="flex items-start gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
@@ -663,7 +663,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                         Lock Section on Submit
                       </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                         Total Test Duration · Sequential Non-revisitable Sections
                       </span>
                     </div>
@@ -677,30 +677,30 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
 
 
               {/* Benchmark Stats */}
-              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
-                <h4 className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Benchmark Statistics <span className="font-normal normal-case">— optional</span></h4>
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-3">
+                <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400">Benchmark Statistics <span className="font-normal normal-case">— optional</span></h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Total Pool</label>
-                    <input type="number" value={newMockTestbookTotalUsers} onChange={(e) => setNewMockTestbookTotalUsers(Number(e.target.value))} placeholder="e.g. 15000" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Total Pool</label>
+                    <input type="number" value={newMockTestbookTotalUsers} onChange={(e) => setNewMockTestbookTotalUsers(Number(e.target.value))} placeholder="e.g. 15000" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Topper Score</label>
-                    <input type="number" step="0.1" value={newMockTestbookTopperScore} onChange={(e) => setNewMockTestbookTopperScore(Number(e.target.value))} placeholder="e.g. 185.5" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Topper Score</label>
+                    <input type="number" step="0.1" value={newMockTestbookTopperScore} onChange={(e) => setNewMockTestbookTopperScore(Number(e.target.value))} placeholder="e.g. 185.5" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Average Score</label>
-                    <input type="number" step="0.1" value={newMockTestbookAverageScore} onChange={(e) => setNewMockTestbookAverageScore(Number(e.target.value))} placeholder="e.g. 94.2" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Average Score</label>
+                    <input type="number" step="0.1" value={newMockTestbookAverageScore} onChange={(e) => setNewMockTestbookAverageScore(Number(e.target.value))} placeholder="e.g. 94.2" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Cutoff Score</label>
-                    <input type="number" step="0.1" value={newMockTestbookCutoffScore} onChange={(e) => setNewMockTestbookCutoffScore(Number(e.target.value))} placeholder="e.g. 112.5" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Cutoff Score</label>
+                    <input type="number" step="0.1" value={newMockTestbookCutoffScore} onChange={(e) => setNewMockTestbookCutoffScore(Number(e.target.value))} placeholder="e.g. 112.5" className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end font-sans">
-                <button type="submit" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-xl text-sm transition active:scale-95 cursor-pointer shadow-md shadow-blue-500/20">
+                <button type="submit" className="flex items-center gap-2 bg-[#1e4e79] hover:bg-[#163c5e] text-white font-bold py-2.5 px-8 rounded-md text-sm transition cursor-pointer shadow-md">
                   <PlusCircle className="h-4 w-4" />
                   Create Mock Test
                 </button>
@@ -711,9 +711,9 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm font-sans">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm font-sans">
         <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
             <Search className="h-3.5 w-3.5 text-slate-400" /> Filter
           </div>
           <div className="relative flex-1 min-w-[180px]">
@@ -723,13 +723,13 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
               value={filterSearch}
               onChange={(e) => setFilterSearch(e.target.value)}
               placeholder="Search mock test title..."
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold"
             />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => { setFilterCategory(e.target.value); setFilterSubCategory(''); setFilterSubSubCategory(''); }}
-            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold"
+            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold"
           >
             <option value="">All Exam Categories</option>
             {examCatalog.map((cat: any) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
@@ -738,7 +738,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
             value={filterSubCategory}
             onChange={(e) => { setFilterSubCategory(e.target.value); setFilterSubSubCategory(''); }}
             disabled={!filterCategory}
-            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-40"
           >
             <option value="">All Sub Categories</option>
             {examCatalog.find((c: any) => c.id === filterCategory)?.subCategories.map((sub: any) => <option key={sub.id} value={sub.id}>{sub.name}</option>) || null}
@@ -747,7 +747,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
             value={filterSubSubCategory}
             onChange={(e) => setFilterSubSubCategory(e.target.value)}
             disabled={!filterSubCategory}
-            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold disabled:opacity-40"
+            className="flex-1 min-w-[140px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold disabled:opacity-40"
           >
             <option value="">All Sub-Sub Categories</option>
             {examCatalog.find((c: any) => c.id === filterCategory)?.subCategories.find((s: any) => s.id === filterSubCategory)?.subSubCategories?.map((subsub: any) => <option key={subsub.id} value={subsub.id}>{subsub.name}</option>) || null}
@@ -763,7 +763,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
       {/* Mock Tests Card List */}
       <div className="space-y-3 font-sans">
         {filteredMocks.length === 0 ? (
-          <div className="bg-white dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
+          <div className="bg-white dark:bg-slate-950 border border-dashed border-slate-200 dark:border-slate-800 rounded-lg p-12 text-center">
             <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700 mb-3" />
             <p className="font-bold text-slate-500 dark:text-slate-400">No mock tests found</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Use the filter above or create a new test above</p>
@@ -775,34 +775,34 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
             const tierColor = test.requiredTier === 'None' ? 'green' : test.requiredTier === 'Testbook Pass' ? 'blue' : 'yellow';
 
             return (
-              <div key={test.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden text-xs">
+              <div key={test.id} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden text-xs">
                 {/* Card Header */}
                 <div className="flex items-start gap-4 p-5">
                   <div className="flex-1 min-w-0">
                     {/* Breadcrumb */}
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mb-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold mb-1">
                       {cat.name} › {sub.name} › {subsub.name}
                     </p>
                     {/* Title */}
-                    <p className="font-black text-sm text-slate-900 dark:text-white leading-snug truncate">{test.title}</p>
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white leading-snug truncate">{test.title}</p>
 
                     {/* Settings strip */}
                     <div className="flex flex-wrap gap-2 mt-2 text-[11px] font-bold text-slate-600 dark:text-slate-300">
                       <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md">
-                        📋 {test.questionsCount} Qs
+                        {test.questionsCount} Qs
                       </span>
                       <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-md">
-                        🏆 {test.maxMarks} Marks
+                        {test.maxMarks} Marks
                       </span>
                       {(() => {
                         const scheme = formatTestMarkingScheme(test);
                         return (
-                          <span className={`flex items-center gap-1 border px-2 py-0.5 rounded-md font-extrabold ${
+                          <span className={`flex items-center gap-1 border px-2 py-0.5 rounded-md font-semibold ${
                             scheme.isCustom
                               ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
                               : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400'
                           }`}>
-                            {scheme.isCustom ? '⚡ ' : '🎯 '}{scheme.badgeText}
+                            {scheme.isCustom ? '' : ''}{scheme.badgeText}
                           </span>
                         );
                       })()}
@@ -820,10 +820,10 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         const sumTotal = timingsArr.reduce((a: number, b: number) => a + b, 0);
 
                         return (
-                          <span className="px-2.5 py-1 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-[11px] font-extrabold flex items-center gap-1.5 shadow-xs">
+                          <span className="px-2.5 py-1 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shadow-xs">
                             <Zap className="w-3 h-3 text-purple-600 dark:text-purple-400 fill-purple-500" />
                             Sectional: {timingsArr.length > 0 ? `${timingsArr.join('m, ')}m` : 'Enabled'} 
-                            <span className="text-[10px] text-purple-500 font-semibold">({sumTotal > 0 ? sumTotal : test.durationMinutes} min total)</span>
+                            <span className="text-xs text-purple-500 font-semibold">({sumTotal > 0 ? sumTotal : test.durationMinutes} min total)</span>
                           </span>
                         );
                       })() : (
@@ -836,16 +836,16 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     {/* Benchmark stats strip */}
                     {(test.testbookTotalUsers ?? 0) > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-blue-50 dark:bg-blue-950/30 text-[#1e4e79] dark:text-blue-400 border border-blue-200 dark:border-blue-900/50">
                           Pool: {test.testbookTotalUsers?.toLocaleString()}
                         </span>
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/50">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/50">
                           Top: {test.testbookTopperScore}
                         </span>
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-900/50">
                           Avg: {test.testbookAverageScore}
                         </span>
-                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">
+                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">
                           Cut: {test.testbookCutoffScore}
                         </span>
                       </div>
@@ -853,24 +853,24 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
 
                     {/* Status badges */}
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
+                      <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
                         tierColor === 'green' ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/50'
-                        : tierColor === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50'
+                        : tierColor === 'blue' ? 'bg-blue-50 dark:bg-blue-950/30 text-[#1e4e79] dark:text-blue-400 border border-blue-200 dark:border-blue-900/50'
                         : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50'
                       }`}>
                         {test.requiredTier === 'None' || test.requiredTierName === 'None' ? 'Free' : (test.requiredTierName || test.requiredTier || '').replace('Testbook', 'Mock')}
                       </span>
                       {hasCustomQs ? (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-green-950/30 text-green-500 border border-green-800">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-green-950/30 text-green-500 border border-green-800">
                           ✓ {getCustomQuestionsCount(test.id)} Custom Qs
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-800">
                           Default Qs
                         </span>
                       )}
                       {test.lockSectionOnSubmit && (
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5" /> Section Lock
                         </span>
                       )}
@@ -943,7 +943,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                         }
                       }}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition ${
-                        isEditing ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-950/50'
+                        isEditing ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300' : 'bg-blue-50 dark:bg-blue-950/30 text-[#1e4e79] dark:text-blue-400 border border-blue-200 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-950/50'
                       }`}
                     >
                       {isEditing ? <X className="h-3.5 w-3.5" /> : <Edit className="h-3.5 w-3.5" />}
@@ -967,33 +967,33 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                 {/* Inline Edit Panel */}
                 {isEditing && (
                   <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-5 space-y-4 font-sans">
-                    <p className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-[#1e4e79] dark:text-blue-400 flex items-center gap-1.5">
                       <Edit className="h-3 w-3" /> Editing Mock Test: {test.title}
                     </p>
 
                     {/* Title */}
                     <div>
-                      <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Title</label>
-                      <input type="text" value={editingMockTestTitle} onChange={(e) => setEditingMockTestTitle(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Title</label>
+                      <input type="text" value={editingMockTestTitle} onChange={(e) => setEditingMockTestTitle(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md px-4 py-2.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold" />
                     </div>
 
                     {/* Main Config: Duration, Questions, Max Marks, Access Tier */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Duration (min)</label>
-                        <input type="number" min={1} value={editingMockDuration} onChange={(e) => setEditingMockDuration(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Duration (min)</label>
+                        <input type="number" min={1} value={editingMockDuration} onChange={(e) => setEditingMockDuration(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold" />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Questions Count</label>
-                        <input type="number" min={1} value={editingMockQsCount} onChange={(e) => setEditingMockQsCount(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Questions Count</label>
+                        <input type="number" min={1} value={editingMockQsCount} onChange={(e) => setEditingMockQsCount(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold" />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Max Marks</label>
-                        <input type="number" min={1} value={editingMockMaxMarks} onChange={(e) => setEditingMockMaxMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 font-semibold" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Max Marks</label>
+                        <input type="number" min={1} value={editingMockMaxMarks} onChange={(e) => setEditingMockMaxMarks(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] font-semibold" />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Access Tier</label>
-                        <select value={editingMockRequiredTier} onChange={(e) => setEditingMockRequiredTier(e.target.value as any)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer font-semibold">
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Access Tier</label>
+                        <select value={editingMockRequiredTier} onChange={(e) => setEditingMockRequiredTier(e.target.value as any)} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79] cursor-pointer font-semibold">
                           <option value="None">Free</option>
                           <option value="Testbook Pass">Pass</option>
                           <option value="Testbook Pass Pro">Pass Pro</option>
@@ -1002,7 +1002,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     </div>
 
                     {/* Sectional Timing in Edit Panel */}
-                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3">
+                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-3">
                       <label className="flex items-center gap-2.5 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1017,12 +1017,12 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                           <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                           Enable Sectional Timing
                         </span>
-                        <span className="text-[10px] text-slate-400">(lock users per section)</span>
+                        <span className="text-xs text-slate-400">(lock users per section)</span>
                       </label>
 
                       {/* Quick Timing Presets for Edit Form */}
                       <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-900">
-                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <span className="text-xs font-semibold text-slate-400 flex items-center gap-1">
                           <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
                           Quick Presets (1-Click Apply)
                         </span>
@@ -1048,11 +1048,11 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                                 }}
                                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer border ${
                                   isActive
-                                    ? 'bg-purple-600 text-white border-purple-600 ring-2 ring-purple-400'
+                                    ? 'bg-[#1e4e79] text-white border-purple-600 ring-2 ring-purple-400'
                                     : 'bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-purple-400'
                                 }`}
                               >
-                                {normalizedPreset} <span className="text-[9px] opacity-80">({totalMin}m)</span>
+                                {normalizedPreset} <span className="text-[11px] opacity-80">({totalMin}m)</span>
                               </button>
                             );
                           })}
@@ -1061,7 +1061,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
 
                       {editingMockHasSectionalTiming && (
                         <div className="pt-1">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Section Durations (minutes, comma-separated)</label>
+                          <label className="block text-xs font-bold text-slate-400 mb-1">Section Durations (minutes, comma-separated)</label>
                           <input
                             type="text"
                             value={editingMockSectionalTimingsStr}
@@ -1081,7 +1081,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                             const timings = editingMockSectionalTimingsStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n) && n > 0);
                             const total = timings.reduce((a, b) => a + b, 0);
                             return total > 0 ? (
-                              <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold mt-1">
+                              <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold mt-1">
                                 {timings.length} section(s) · Total: <strong>{total} min</strong> (overrides Duration)
                               </p>
                             ) : null;
@@ -1091,7 +1091,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     </div>
 
                     {/* Lock Section on Submit in Edit Panel */}
-                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-2">
+                    <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-4 space-y-2">
                       <label className="flex items-start gap-2.5 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1105,7 +1105,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                               <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                               Lock Section on Submit
                             </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                            <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                               Total Test Duration · Sequential Non-revisitable Sections
                             </span>
                           </div>
@@ -1119,25 +1119,25 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                     {/* Benchmark Stats */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Total Pool</label>
-                        <input type="number" value={editingMockTestbookTotalUsers} onChange={(e) => setEditingMockTestbookTotalUsers(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Total Pool</label>
+                        <input type="number" value={editingMockTestbookTotalUsers} onChange={(e) => setEditingMockTestbookTotalUsers(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Topper Score</label>
-                        <input type="number" step="0.1" value={editingMockTestbookTopperScore} onChange={(e) => setEditingMockTestbookTopperScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Topper Score</label>
+                        <input type="number" step="0.1" value={editingMockTestbookTopperScore} onChange={(e) => setEditingMockTestbookTopperScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Average Score</label>
-                        <input type="number" step="0.1" value={editingMockTestbookAverageScore} onChange={(e) => setEditingMockTestbookAverageScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Average Score</label>
+                        <input type="number" step="0.1" value={editingMockTestbookAverageScore} onChange={(e) => setEditingMockTestbookAverageScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                       </div>
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1.5">Cutoff Score</label>
-                        <input type="number" step="0.1" value={editingMockTestbookCutoffScore} onChange={(e) => setEditingMockTestbookCutoffScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500" />
+                        <label className="block text-[11px] font-bold text-slate-400 mb-1.5">Cutoff Score</label>
+                        <input type="number" step="0.1" value={editingMockTestbookCutoffScore} onChange={(e) => setEditingMockTestbookCutoffScore(Number(e.target.value))} className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-[#1e4e79]" />
                       </div>
                     </div>
 
                     <div className="flex gap-3 justify-end pt-2 border-t border-slate-200 dark:border-slate-800">
-                      <button type="button" onClick={() => setEditingMockTestId(null)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition">
+                      <button type="button" onClick={() => setEditingMockTestId(null)} className="px-4 py-2 rounded-md text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 cursor-pointer transition">
                         Cancel
                       </button>
                       <button
@@ -1172,7 +1172,7 @@ export const MockTestManager: React.FC<MockTestManagerProps> = ({
                             showToast('Mock test updated successfully!');
                           }
                         }}
-                        className="px-6 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition active:scale-95 shadow-md shadow-blue-500/20"
+                        className="px-6 py-2 rounded-md text-xs font-bold text-white bg-[#1e4e79] hover:bg-[#163c5e] cursor-pointer transition shadow-md"
                       >
                         Save Changes
                       </button>

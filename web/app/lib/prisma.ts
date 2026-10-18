@@ -16,7 +16,11 @@ if (globalForPrisma.prisma && (globalForPrisma.prisma as any).contactInquiry) {
   const pool = new Pool({
     connectionString,
     connectionTimeoutMillis: 30000, // 30s timeout to handle Supabase cold starts
-    idleTimeoutMillis: 30000,       // close idle connections after 30s
+    // PERF: keep idle connections for 5 min. Re-opening a TLS connection to the Supabase
+    // pooler costs several round trips (~1s from India), which every request paid after
+    // any 30s pause. The pooler (pgbouncer) handles long-lived idle clients fine.
+    idleTimeoutMillis: 5 * 60 * 1000,
+    keepAlive: true,
     max: 5,                         // max 5 connections in pool
   });
   const adapter = new PrismaPg(pool);

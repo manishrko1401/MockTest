@@ -60,6 +60,18 @@ model User {
   otpExpiresAt            DateTime?
   supportMessages         SupportMessage[]
   lastSeen                DateTime?
+  // Website tour: null = new user who has not finished the welcome tour yet
+  tourCompletedAt         DateTime?
+  // Notices page tour: null = not finished yet
+  noticesTourCompletedAt  DateTime?
+  // Test series page tour: null = not finished yet
+  testsTourCompletedAt    DateTime?
+  // Typing tests tour: null = not finished yet
+  typingTourCompletedAt   DateTime?
+  // Document locker tour: null = not finished yet
+  lockerTourCompletedAt   DateTime?
+  // Account/profile page tour: null = not finished yet
+  profileTourCompletedAt  DateTime?
   lastPlatform            String?            @default("web")
   trackedJobs             Json?
   isLockerConnected       Boolean            @default(false)
@@ -253,6 +265,12 @@ model UserTestSession {
   testbookRank               Int?
   testbookPercentile         Float?
   source                     String                  @default("web")
+  // Full in-progress exam state saved by the web exam terminal (answers, review marks,
+  // visited questions, timer, position, submitted sections) so an ongoing test survives a
+  // refresh, closed tab or power cut. progressSavedAt is the client's save time (epoch ms);
+  // older saves never overwrite newer ones. Read/written with raw SQL in api/db/route.ts.
+  progressSnapshot           Json?
+  progressSavedAt            Float?
 
   @@map("user_test_sessions")
 }

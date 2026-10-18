@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
+import { requireStaff } from '../../lib/serverAuth';
 
 export async function POST(req: Request) {
   try {
@@ -44,7 +45,10 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+// Reading and deleting feedback: admin / support team only (sending it is open)
+export async function GET(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const feedbacks = await prisma.feedback.findMany({
       orderBy: {
@@ -59,6 +63,8 @@ export async function GET() {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await requireStaff(req, ['SUPPORT_TEAM']);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

@@ -74,7 +74,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 transition-opacity"
         aria-hidden="true"
       />
 
@@ -86,20 +86,20 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
         aria-label="Navigation Menu"
       >
         {/* TOP HEADER / BRANDING */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-gradient-to-r from-blue-50/50 via-white to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/40">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50 dark:bg-slate-900">
           <Link
             href="/"
             onClick={onClose}
             className="flex items-center gap-3 group"
           >
-            <div className="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex items-center justify-center h-10 w-10">
+            <div className="bg-[#1e4e79] text-white p-2 rounded-md shadow-md transition-transform flex items-center justify-center h-10 w-10">
               <Trophy className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-tight tracking-wider">
+              <h2 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white leading-tight">
                 {t.logoTitle}
               </h2>
-              <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mt-0.5">
+              <p className="text-xs text-[#1e4e79] dark:text-blue-400 font-bold mt-0.5">
                 {t.logoSub}
               </p>
             </div>
@@ -107,7 +107,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95 cursor-pointer"
+            className="p-2 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
             aria-label="Close menu"
           >
             <X className="h-4.5 w-4.5" />
@@ -119,10 +119,10 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
           
           {/* USER PROFILE OR LOGIN CARD */}
           {currentUser ? (
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-slate-800/60 dark:to-slate-800/20 border border-blue-100 dark:border-slate-700/60 rounded-2xl p-3.5 shadow-xs">
+            <div className="bg-slate-50 dark:bg-slate-900 border border-blue-100 dark:border-slate-700/60 rounded-lg p-3.5 shadow-xs">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-blue-500/20">
+                  <div className="h-11 w-11 rounded-md bg-[#1e4e79] text-white font-semibold text-sm flex items-center justify-center shadow-md">
                     {currentUser.name ? currentUser.name[0].toUpperCase() : 'U'}
                   </div>
                   {isPassPro && (
@@ -134,23 +134,23 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                    <h3 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                       {currentUser.name}
                     </h3>
                   </div>
-                  <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
                     {currentUser.candidateCode?.replace('CGL', 'HUB-ID')}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                       isPassPro
                         ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
                         : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
                     }`}>
-                      {isPassPro ? (isHindi ? '👑 पास प्रो सक्रिय' : '👑 Pass Pro Active') : (isHindi ? 'मुफ़्त योजना' : 'Free Member')}
+                      {isPassPro ? (isHindi ? 'पास प्रो सक्रिय' : 'Pass Pro Active') : (isHindi ? 'मुफ़्त योजना' : 'Free Member')}
                     </span>
                     {currentUser.coins > 0 && (
-                      <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
                         <Coins className="h-3 w-3" /> {currentUser.coins}
                       </span>
                     )}
@@ -162,7 +162,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
                 <Link
                   href="/profile"
                   onClick={onClose}
-                  className="py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold text-center flex items-center justify-center gap-1 shadow-xs transition active:scale-95"
+                  className="py-1.5 px-2.5 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-[11px] font-bold text-center flex items-center justify-center gap-1 shadow-xs transition"
                 >
                   <UserCheck className="h-3.5 w-3.5" />
                   <span>{isHindi ? 'डैशबोर्ड' : 'Dashboard'}</span>
@@ -172,7 +172,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
                     logout();
                     onClose();
                   }}
-                  className="py-1.5 px-2.5 rounded-xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-[11px] font-bold text-center flex items-center justify-center gap-1 transition active:scale-95 cursor-pointer"
+                  className="py-1.5 px-2.5 rounded-md border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-[11px] font-bold text-center flex items-center justify-center gap-1 transition cursor-pointer"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span>{t.signOut}</span>
@@ -180,16 +180,16 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-purple-500/10 border border-blue-200/70 dark:border-blue-900/50 rounded-2xl p-4 text-left relative overflow-hidden">
+            <div className="bg-slate-50 dark:bg-slate-900 border border-blue-200/70 dark:border-blue-900/50 rounded-lg p-4 text-left relative overflow-hidden">
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-10 w-10 rounded-xl bg-blue-600/15 dark:bg-blue-600/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <div className="h-10 w-10 rounded-md bg-[#1e4e79]/15 dark:bg-blue-600/30 text-[#1e4e79] dark:text-blue-400 flex items-center justify-center shrink-0">
                   <User className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white">
-                    {isHindi ? 'अभ्यर्थी स्वागतम्! 👋' : 'Welcome Aspirant! 👋'}
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-white">
+                    {isHindi ? 'अभ्यर्थी स्वागतम्! ' : 'Welcome Aspirant! '}
                   </h3>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {isHindi ? 'मॉक टेस्ट, स्कोर और रैंक ट्रैक करें' : 'Login to save rank & test analytics'}
                   </p>
                 </div>
@@ -199,14 +199,14 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
                 <Link
                   href="/auth"
                   onClick={onClose}
-                  className="py-2 px-3 rounded-xl border border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs font-extrabold text-center transition active:scale-95"
+                  className="py-2 px-3 rounded-md border border-blue-300 dark:border-blue-800 text-[#1e4e79] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs font-semibold text-center transition"
                 >
                   {t.logIn}
                 </Link>
                 <Link
                   href="/auth"
                   onClick={onClose}
-                  className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold text-center shadow-md shadow-blue-500/20 transition active:scale-95"
+                  className="py-2 px-3 rounded-md bg-[#1e4e79] hover:bg-[#163c5e] text-white text-xs font-semibold text-center shadow-md transition"
                 >
                   {t.signUp}
                 </Link>
@@ -218,7 +218,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
 
           {/* MAIN NAVIGATION SHORTCUTS */}
           <div className="space-y-1">
-            <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 mb-1">
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 px-2 mb-1">
               {isHindi ? 'मुख्य शॉर्टकट' : 'Quick Navigation'}
             </p>
 
@@ -226,17 +226,17 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/mock-tests"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 transition-transform">
                   <Award className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                     {t.navTestSeries}
                   </h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'एसएससी, रेलवे, बैंकिंग, टीईटी' : 'SSC, Railway, Banking, Teaching'}
                   </p>
                 </div>
@@ -249,22 +249,22 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/typing-test"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-950/40 text-[#1e4e79] dark:text-blue-400 transition-transform">
                   <Keyboard className="h-4.5 w-4.5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                       {isHindi ? 'टाइपिंग टेस्ट व टर्मिनल' : 'Typing Test & Terminal'}
                     </h4>
-                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-blue-600 text-white">
+                    <span className="text-[11px] font-semibold px-1.5 py-0.2 rounded-full bg-[#1e4e79] text-white">
                       DEST
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'एसएससी, रेलवे व कोर्ट टाइपिंग' : 'SSC, RRB & Court DEST Exam'}
                   </p>
                 </div>
@@ -276,17 +276,17 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/updates"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 transition-transform">
                   <Bell className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                     {t.navUpdates}
                   </h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'एडमिट कार्ड, परिणाम और सूचनाएं' : 'Admit Cards, Results & Jobs'}
                   </p>
                 </div>
@@ -298,17 +298,17 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/locker"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 transition-transform">
                   <Lock className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                     {isHindi ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
                   </h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'प्रमाणपत्र व एडमिट कार्ड वॉल्ट' : 'Secure Certificate Vault'}
                   </p>
                 </div>
@@ -320,17 +320,17 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/profile/tracked-jobs"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 transition-transform">
                   <BookmarkCheck className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                     {isHindi ? 'आवेदन व सेव परीक्षाएं' : 'Applied & Saved Exams'}
                   </h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'ट्रैक किए गए फॉर्म व परीक्षाएं' : 'Tracked & Saved Exams'}
                   </p>
                 </div>
@@ -342,17 +342,17 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/profile"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 transition-transform">
                   <User className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                     {isHindi ? 'प्रोफाइल एवं विश्लेषिकी' : 'Profile & Analytics'}
                   </h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'गति, स्कोर एवं परीक्षण इतिहास' : 'Speed Graphs & Test History'}
                   </p>
                 </div>
@@ -364,17 +364,17 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             <Link
               href="/referrals"
               onClick={onClose}
-              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-md bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 transition-transform">
                   <Share2 className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                     {isHindi ? 'रेफर करें और कमाएं' : 'Refer & Earn'}
                   </h4>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'मित्रों को आमंत्रित कर सिक्के प्राप्त करें' : 'Invite friends & get rewards'}
                   </p>
                 </div>
@@ -387,22 +387,22 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
               <Link
                 href="/admin"
                 onClick={onClose}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 transition group"
+                className="flex items-center justify-between p-2.5 rounded-md bg-slate-100 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 transition group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">
+                  <div className="p-2 rounded-md bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 transition-transform">
                     <Shield className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
                       {t.navAdmin}
                     </h4>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
                       {isHindi ? 'प्रबंधन एवं प्रश्न निर्माण' : 'Management & Test Creator'}
                     </p>
                   </div>
                 </div>
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 uppercase">
+                <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
                   Staff
                 </span>
               </Link>
@@ -411,7 +411,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
 
           {/* EXAM CATEGORIES SHORTCUT CHIPS */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 px-2">
               {isHindi ? 'लोकप्रिय परीक्षाएं' : 'Popular Exam Categories'}
             </p>
 
@@ -419,83 +419,83 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
               <Link
                 href="/mock-tests?cat=ssc"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200/60 dark:border-orange-900/30 hover:border-orange-400 text-left transition active:scale-95 group"
+                className="p-2 rounded-md bg-orange-50/60 dark:bg-orange-950/20 border border-orange-200/60 dark:border-orange-900/30 hover:border-orange-400 text-left transition group"
               >
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 block truncate">
-                  🏆 SSC Exams
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 block truncate">
+                  SSC Exams
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold">CGL, CHSL, MTS</span>
+                <span className="text-[11px] text-slate-400 font-semibold">CGL, CHSL, MTS</span>
               </Link>
 
               <Link
                 href="/mock-tests?cat=railways"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-900/30 hover:border-indigo-400 text-left transition active:scale-95 group"
+                className="p-2 rounded-md bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-900/30 hover:border-indigo-400 text-left transition group"
               >
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 block truncate">
-                  🚆 Railways
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 block truncate">
+                  Railways
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold">RRB NTPC, Group D</span>
+                <span className="text-[11px] text-slate-400 font-semibold">RRB NTPC, Group D</span>
               </Link>
 
               <Link
                 href="/mock-tests?cat=banking"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/30 hover:border-emerald-400 text-left transition active:scale-95 group"
+                className="p-2 rounded-md bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/30 hover:border-emerald-400 text-left transition group"
               >
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 block truncate">
-                  🏦 Banking
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 block truncate">
+                  Banking
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold">SBI PO, Clerk, IBPS</span>
+                <span className="text-[11px] text-slate-400 font-semibold">SBI PO, Clerk, IBPS</span>
               </Link>
 
               <Link
                 href="/mock-tests?cat=teaching"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 hover:border-amber-400 text-left transition active:scale-95 group"
+                className="p-2 rounded-md bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 hover:border-amber-400 text-left transition group"
               >
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 block truncate">
-                  📖 Teaching
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 block truncate">
+                  Teaching
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold">CTET, State TET</span>
+                <span className="text-[11px] text-slate-400 font-semibold">CTET, State TET</span>
               </Link>
 
               <Link
                 href="/mock-tests?cat=ugc_net"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-900/30 hover:border-sky-400 text-left transition active:scale-95 group"
+                className="p-2 rounded-md bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200/60 dark:border-sky-900/30 hover:border-sky-400 text-left transition group"
               >
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 block truncate">
-                  🎓 UGC NET
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400 block truncate">
+                  UGC NET
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold">Paper 1 & Paper 2</span>
+                <span className="text-[11px] text-slate-400 font-semibold">Paper 1 & Paper 2</span>
               </Link>
 
               <Link
                 href="/mock-tests?cat=state_exams"
                 onClick={onClose}
-                className="p-2 rounded-xl bg-pink-50/60 dark:bg-pink-950/20 border border-pink-200/60 dark:border-pink-900/30 hover:border-pink-400 text-left transition active:scale-95 group"
+                className="p-2 rounded-md bg-pink-50/60 dark:bg-pink-950/20 border border-pink-200/60 dark:border-pink-900/30 hover:border-pink-400 text-left transition group"
               >
-                <span className="text-xs font-black text-slate-800 dark:text-slate-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 block truncate">
-                  🏛️ State Exams
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-pink-600 dark:group-hover:text-pink-400 block truncate">
+                  State Exams
                 </span>
-                <span className="text-[9px] text-slate-400 font-semibold">UPPSC, BSSC, RAS</span>
+                <span className="text-[11px] text-slate-400 font-semibold">UPPSC, BSSC, RAS</span>
               </Link>
             </div>
           </div>
 
           {/* NOTICES SUB-SECTIONS */}
           <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 px-2">
               {isHindi ? 'सूचनाएं व एडमिट कार्ड' : 'Alerts & Exam Letters'}
             </p>
             <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold">
               <Link
                 href="/updates?category=notice"
                 onClick={onClose}
-                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition"
+                className="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:text-[#1e4e79] dark:hover:text-blue-400 flex items-center gap-1.5 transition"
               >
-                <Bell className="h-3.5 w-3.5 text-blue-500" />
+                <Bell className="h-3.5 w-3.5 text-[#1e4e79]" />
                 <span className="truncate">{t.liveNotices}</span>
               </Link>
               <Link
@@ -531,8 +531,8 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/90 space-y-3 shrink-0">
           <div className="grid grid-cols-2 gap-2">
             {/* Language Selector */}
-            <div className="flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5">
-              <span className="text-[10px] font-black text-slate-400 uppercase">Lang</span>
+            <div className="flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5">
+              <span className="text-xs font-semibold text-slate-400">Lang</span>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as 'en' | 'hi')}
@@ -546,9 +546,9 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition active:scale-95 cursor-pointer"
+              className="flex items-center justify-between bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition cursor-pointer"
             >
-              <span className="text-[10px] font-black text-slate-400 uppercase">Theme</span>
+              <span className="text-xs font-semibold text-slate-400">Theme</span>
               <div className="flex items-center gap-1">
                 {theme === 'light' ? (
                   <>
@@ -565,7 +565,7 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
             </button>
           </div>
 
-          <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 pt-1 font-semibold">
+          <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-1 font-semibold">
             <Link href="/terms" onClick={onClose} className="hover:underline">Terms</Link>
             <span>•</span>
             <Link href="/privacy" onClick={onClose} className="hover:underline">Privacy</Link>

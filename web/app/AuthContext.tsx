@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { clearLocalProgress } from './lib/examProgress';
 
 export interface MockTestItem {
   id: string;
@@ -96,6 +97,18 @@ export interface Notice {
 
 export interface MockUser {
   id: string;
+  /** Website tour: null = new user who has not finished the welcome tour; undefined = unknown */
+  tourCompletedAt?: string | null;
+  /** Notices page tour: null = not finished yet; undefined = unknown */
+  noticesTourCompletedAt?: string | null;
+  /** Test series page tour: null = not finished yet; undefined = unknown */
+  testsTourCompletedAt?: string | null;
+  /** Typing tests tour: null = not finished yet; undefined = unknown */
+  typingTourCompletedAt?: string | null;
+  /** Document locker tour: null = not finished yet; undefined = unknown */
+  lockerTourCompletedAt?: string | null;
+  /** Account/profile page tour: null = not finished yet; undefined = unknown */
+  profileTourCompletedAt?: string | null;
   currentSessionId?: string;
   candidateCode: string;
   name: string;
@@ -166,11 +179,12 @@ interface AuthContextType {
   toggleTheme: () => void;
   login: (email: string, password?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string, honeypot?: string, turnstileToken?: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: (email: string, name: string, profilePhoto?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
+  loginWithGoogle: (email: string, name: string, profilePhoto?: string, accessToken?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
-  updatePassword: (oldPass: string, newPass: string) => boolean;
+  updatePassword: (oldPass: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
   updateTrackedJobs: (trackedJobs: TrackedJob[]) => void;
+  completeTour: (tour?: 'welcome' | 'notices' | 'tests' | 'typing' | 'locker' | 'profile') => void;
   reportedQuestionsList: ReportedQuestion[];
   reportQuestion: (
     questionId: string,
@@ -219,9 +233,10 @@ interface AuthContextType {
     violations: number,
     responses: any,
     currentSectionIndex?: number,
-    currentQuestionIndex?: number
+    currentQuestionIndex?: number,
+    options?: { localOnly?: boolean }
   ) => void;
-  clearOngoingSession: (testId: string) => void;
+  clearOngoingSession: (testId: string) => Promise<void>;
   noticesList: Notice[];
   addNotice: (title: string, type: string, category: Notice['category'], date?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => void;
   editNotice: (id: string, title: string, type: string, category: Notice['category'], date?: string, url?: string, lastDateInput?: string, imageUrl?: string, titleHi?: string) => void;
@@ -801,8 +816,8 @@ function readCache<T>(key: string, ttlMs?: number): T | null {
   } catch { return null; }
 }
 
-function writeCache(key: string, data: unknown) {
-  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); } catch { /* quota exceeded — ignore */ }
+function writeCache(key: string, data: unknown): boolean {
+  try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })); return true; } catch { /* quota exceeded */ return false; }
 }
 
 function readETag(): string | null {
@@ -810,6 +825,9 @@ function readETag(): string | null {
 }
 function writeETag(etag: string) {
   try { localStorage.setItem(CACHE_KEY_ETAG, etag); } catch {}
+}
+function clearETag() {
+  try { localStorage.removeItem(CACHE_KEY_ETAG); } catch {}
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProfile?: string | null }> = ({ children, initialUserProfile }) => {
@@ -907,19 +925,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
 
       // PERF: Send stored ETag so server can return 304 Not Modified if catalog unchanged.
       // 304 has zero body — this completely eliminates egress on repeat visits.
-      const storedETag = readETag();
-      const bootstrapHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (storedETag) bootstrapHeaders['If-None-Match'] = storedETag;
+      // A 304 only makes sense when the browser still holds a usable copy of both lists.
+      // If either saved copy expired, was evicted or never saved (storage full), ask for the
+      // full payload instead — otherwise the server says "not modified" and the page stays empty.
+      const cachedNotices = readCache<Notice[]>(CACHE_KEY_NOTICES, NOTICES_CACHE_TTL_MS);
+      const cachedCatalog = readCache<TestCategory[]>(CACHE_KEY_CATALOG, CATALOG_CACHE_TTL_MS);
+      const hasUsableCache = !!(cachedNotices && cachedNotices.length && cachedCatalog && cachedCatalog.length);
+      const storedETag = hasUsableCache ? readETag() : null;
+      if (!hasUsableCache) clearETag();
+
+      const requestBootstrap = (etag: string | null) => {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (etag) headers['If-None-Match'] = etag;
+        return fetch('/api/db', {
+          method: 'POST',
+          headers,
+          // no-store: the browser's own HTTP cache must not answer for us; freshness is
+          // decided by the ETag check above against our localStorage copy.
+          cache: 'no-store',
+          body: JSON.stringify({
+            action: 'bootstrap',
+            ...(savedUserId ? { userId: savedUserId } : {})
+          })
+        });
+      };
 
       // 🚀 Fire bootstrap + user fetch IN PARALLEL — eliminates the serial waterfall
-      const bootstrapRes = fetch('/api/db', {
-        method: 'POST',
-        headers: bootstrapHeaders,
-        body: JSON.stringify({
-          action: 'bootstrap',
-          ...(savedUserId ? { userId: savedUserId } : {})
-        })
-      });
+      const bootstrapRes = requestBootstrap(storedETag);
 
       const userPromise = savedUserId
         ? fetch('/api/db', {
@@ -929,26 +961,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           }).then(r => r.json())
         : Promise.resolve(null);
 
-      const [bootstrapRaw, userData] = await Promise.all([bootstrapRes, userPromise]);
+      let [bootstrapRaw, userData] = await Promise.all([bootstrapRes, userPromise]);
 
       // PERF: 304 = catalog/notices haven't changed — use cached data, save 100% egress
-      if (bootstrapRaw.status === 304) {
-        // Nothing to update for catalog/notices — cached data is still valid
-        console.debug('[Bootstrap] 304 Not Modified — using cached catalog');
+      if (bootstrapRaw.status === 304 && hasUsableCache) {
+        setNoticesList(prev => (prev.length ? prev : sortNotices(cachedNotices!)));
+        setExamCatalog(prev => (prev.length ? prev : cachedCatalog!));
       } else {
+        if (bootstrapRaw.status === 304) {
+          // Defensive: never accept a 304 without a usable local copy
+          clearETag();
+          bootstrapRaw = await requestBootstrap(null);
+        }
         const data = await bootstrapRaw.json();
         // Store new ETag for next request
         const newETag = bootstrapRaw.headers.get('ETag');
-        if (newETag) writeETag(newETag);
+        if (newETag) writeETag(newETag);   // cleared again below if saving the data fails
 
         if (data.success) {
           const freshNotices = sortNotices(data.noticesList || []);
           const freshCatalog = data.examCatalog || [];
           setNoticesList(freshNotices);
           setExamCatalog(freshCatalog);
-          // 💾 Persist to localStorage so the NEXT page load is instant
-          writeCache(CACHE_KEY_NOTICES, freshNotices);
-          writeCache(CACHE_KEY_CATALOG, freshCatalog);
+          // 💾 Persist to localStorage so the NEXT page load is instant. The ETag is kept
+          // only when both copies were actually saved, so a later 304 is always backed by data.
+          const savedNotices = writeCache(CACHE_KEY_NOTICES, freshNotices);
+          const savedCatalog = writeCache(CACHE_KEY_CATALOG, freshCatalog);
+          if (!(savedNotices && savedCatalog)) clearETag();
         }
       }
 
@@ -1878,14 +1917,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   };
 
-  const loginWithGoogle = async (email: string, name: string, profilePhoto?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
+  // accessToken: the Google token, which the server verifies with Google (the email alone is not trusted)
+  const loginWithGoogle = async (email: string, name: string, profilePhoto?: string, accessToken?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'google-auth',
-          data: { email, name, profilePhoto }
+          data: { email, name, profilePhoto, accessToken }
         })
       });
       const data = await res.json();
@@ -1921,6 +1961,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     setCurrentUser(null);
     syncUserCookieAndCache(null);
     document.cookie = "tb_user_id=;path=/;max-age=0";
+    // End the login session on the server (removes the HttpOnly login cookie)
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'logout' })
+    }).catch(() => {});
   };
 
   const updateProfile = (name: string, email: string, mobile: string) => {
@@ -1947,6 +1993,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Update profile API error:", err));
   };
 
+  // Marks the welcome tour as finished (or skipped) for the logged-in user, locally and in the DB
+  const completeTour = (tour: 'welcome' | 'notices' | 'tests' | 'typing' | 'locker' | 'profile' = 'welcome') => {
+    if (!currentUser) return;
+    const field = tour === 'notices' ? 'noticesTourCompletedAt' : tour === 'tests' ? 'testsTourCompletedAt' : tour === 'typing' ? 'typingTourCompletedAt' : tour === 'locker' ? 'lockerTourCompletedAt' : tour === 'profile' ? 'profileTourCompletedAt' : 'tourCompletedAt';
+    if (currentUser[field]) return;
+    const updatedUser = { ...currentUser, [field]: new Date().toISOString() };
+    setCurrentUser(updatedUser);
+    syncUserCookieAndCache(updatedUser);
+    fetch('/api/db', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'complete-tour', data: { userId: currentUser.id, tour } })
+    }).catch(err => console.error('Save tour status error:', err));
+  };
+
   const updateTrackedJobs = (trackedJobs: TrackedJob[]) => {
     if (!currentUser) return;
 
@@ -1968,29 +2029,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Sync tracked jobs to DB error:", err));
   };
 
-  const updatePassword = (oldPass: string, newPass: string): boolean => {
-    if (!currentUser) return false;
-
-    if (currentUser.password && oldPass !== currentUser.password) {
-      return false;
+  // The server checks the current password (the browser never holds it)
+  const updatePassword = async (oldPass: string, newPass: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser) return { success: false, error: 'Not logged in' };
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update-password',
+          data: { userId: currentUser.id, oldPass, newPass }
+        })
+      });
+      const data = await res.json();
+      return data.success ? { success: true } : { success: false, error: data.error };
+    } catch (err: any) {
+      console.error("Update password API error:", err);
+      return { success: false, error: err?.message || 'Connection error' };
     }
-
-    const updatedUser = { ...currentUser, password: newPass };
-    setCurrentUser(updatedUser);
-
-    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
-    setUsersList(updatedList);
-
-    fetch('/api/db', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'update-password',
-        data: { userId: currentUser.id, newPass }
-      })
-    }).catch(err => console.error("Update password API error:", err));
-
-    return true;
   };
 
   const addAttempt = (
@@ -2082,7 +2138,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     violations: number,
     responses: any,
     currentSectionIndex?: number,
-    currentQuestionIndex?: number
+    currentQuestionIndex?: number,
+    // localOnly: only update this tab's copy (the web exam page saves to the server itself,
+    // through save-exam-progress)
+    options?: { localOnly?: boolean }
   ) => {
     if (!currentUser) return;
 
@@ -2123,6 +2182,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
 
+    if (options?.localOnly) return;
+
     const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
     const source = isMobileView ? 'mobile_web' : 'web';
 
@@ -2146,8 +2207,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).catch(err => console.error("Save ongoing session error:", err));
   };
 
-  const clearOngoingSession = (testId: string) => {
-    if (!currentUser) return;
+  // Resolves once the server copy is deleted, so the exam page opened next can't load it
+  const clearOngoingSession = (testId: string): Promise<void> => {
+    // Reset: also drop this browser's saved progress, or the test would resume from it
+    clearLocalProgress(testId, currentUser?.id);
+    if (!currentUser) return Promise.resolve();
     const updatedSessions = currentUser.testSessions.filter(
       s => !(s.testId === testId && s.status === 'ONGOING')
     );
@@ -2157,42 +2221,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
     setUsersList(updatedList);
 
-    fetch('/api/db', {
+    return fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'clear-ongoing-session',
         data: { userId: currentUser.id, testId }
       })
-    }).catch(err => console.error("Clear ongoing session error:", err));
+    }).then(() => undefined).catch(err => console.error("Clear ongoing session error:", err));
   };
 
   const toggleBookmark = (testId: string, questionId: string) => {
     if (!currentUser) return;
-    const currentBookmarks = currentUser.bookmarkedQuestions || [];
-    const exists = currentBookmarks.some(b => b.testId === testId && b.questionId === questionId);
+    const userId = currentUser.id;
+    const isSame = (b: { testId: string; questionId: string }) => b.testId === testId && b.questionId === questionId;
+    const bookmarked = !(currentUser.bookmarkedQuestions || []).some(isSame);
 
-    let updatedBookmarks;
-    if (exists) {
-      updatedBookmarks = currentBookmarks.filter(b => !(b.testId === testId && b.questionId === questionId));
-    } else {
-      updatedBookmarks = [...currentBookmarks, { testId, questionId }];
-    }
+    // Apply one change on top of the latest list (functional updates, so quick clicks don't overwrite each other)
+    const apply = (list: { testId: string; questionId: string }[] | undefined, add: boolean) => {
+      const rest = (list || []).filter(b => !isSame(b));
+      return add ? [...rest, { testId, questionId }] : rest;
+    };
+    const setBookmarks = (fn: (list: { testId: string; questionId: string }[] | undefined) => { testId: string; questionId: string }[]) => {
+      setCurrentUser(prev => (prev && prev.id === userId ? { ...prev, bookmarkedQuestions: fn(prev.bookmarkedQuestions) } : prev));
+      setUsersList(prev => prev.map(u => (u.id === userId ? { ...u, bookmarkedQuestions: fn(u.bookmarkedQuestions) } : u)));
+    };
 
-    const updatedUser = { ...currentUser, bookmarkedQuestions: updatedBookmarks };
-    setCurrentUser(updatedUser);
-
-    const updatedList = usersList.map(u => u.id === currentUser.id ? updatedUser : u);
-    setUsersList(updatedList);
+    setBookmarks(list => apply(list, bookmarked));
 
     fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'toggle-bookmark',
-        data: { userId: currentUser.id, bookmarks: updatedBookmarks }
+        data: { userId, testId, questionId, bookmarked }
       })
-    }).catch(err => console.error("Toggle bookmark error:", err));
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (!result?.success) throw new Error(result?.error || 'Bookmark not saved');
+      })
+      .catch(err => {
+        console.error("Toggle bookmark error:", err);
+        // Not saved on the server: undo the change on screen
+        setBookmarks(list => apply(list, !bookmarked));
+      });
   };
 
   const resetAttempt = (userId: string, sessionId: string) => {
@@ -2256,7 +2329,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           subscriptionTier: tier,
           subscriptionPurchasedAt: purchasedAt,
           subscriptionExpiresAt: expiry,
-          password: password || u.password || 'password123',
           isBlocked: isBlocked ?? u.isBlocked ?? false,
           coins: coins !== undefined ? coins : u.coins ?? 0
         };
@@ -2278,7 +2350,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         subscriptionTier: tier,
         subscriptionPurchasedAt: purchasedAt,
         subscriptionExpiresAt: expiry,
-        password: password || currentUser.password || 'password123',
         isBlocked: isBlocked ?? currentUser.isBlocked ?? false,
         coins: coins !== undefined ? coins : currentUser.coins ?? 0,
         testSessions: currentUser.testSessions || []
@@ -2463,6 +2534,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         updateProfile,
         updatePassword,
         updateTrackedJobs,
+        completeTour,
         addAttempt,
         toggleBookmark,
         resetAttempt,

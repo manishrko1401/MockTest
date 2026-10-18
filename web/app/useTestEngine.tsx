@@ -76,6 +76,18 @@ export interface QuestionResponse {
   elapsedSeconds: number;
 }
 
+// Saved progress of an ongoing test, used to continue it after a refresh, closed tab or power cut
+export interface EngineResumeData {
+  responses: Record<string, QuestionResponse>;
+  timeRemaining: number;
+  violationsCount: number;
+  currentSectionIndex?: number;
+  currentQuestionIndex?: number;
+  submittedSectionIndices?: number[];
+  isExtraTimeMode?: boolean;
+  extraTimeRemaining?: number;
+}
+
 export interface EngineState {
   session: ActiveSession | null;
   currentSectionIndex: number;
@@ -110,7 +122,7 @@ export interface EngineState {
 }
 
 type EngineAction =
-  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; isRpscRasMode?: boolean; resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number; submittedSectionIndices?: number[] } } }
+  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; isRpscRasMode?: boolean; resumeData?: EngineResumeData } }
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
   | { type: 'TICK_TIMER' }
   | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
@@ -223,8 +235,9 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         isExamSubmitted: false,
         isSyncing: false,
         isRpscRasMode,
-        isExtraTimeMode: false,
-        extraTimeRemaining: 0,
+        // RPSC RAS: a test closed during its extra time continues in extra time
+        isExtraTimeMode: isRpscRasMode && !!resumeData?.isExtraTimeMode,
+        extraTimeRemaining: isRpscRasMode && resumeData?.isExtraTimeMode ? Math.max(0, resumeData.extraTimeRemaining ?? 0) : 0,
         isExtraTimeRulesShown: false,
         score: null,
         lastTickEpochMs: Date.now(),
@@ -821,7 +834,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
 interface TestEngineContextType {
   state: EngineState;
-  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number }, defaultLanguage?: 'en' | 'hi', isRpscRasMode?: boolean) => void;
+  initSession: (session: ActiveSession, maxViolations?: number, resumeData?: EngineResumeData, defaultLanguage?: 'en' | 'hi', isRpscRasMode?: boolean) => void;
   selectOption: (optionIndex: number | null) => void;
   saveAndNext: () => void;
   clearResponse: () => void;
@@ -883,7 +896,7 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
   const initSession = useCallback((
     session: ActiveSession,
     maxViolations?: number,
-    resumeData?: { responses: Record<string, QuestionResponse>; timeRemaining: number; violationsCount: number; currentSectionIndex?: number; currentQuestionIndex?: number },
+    resumeData?: EngineResumeData,
     defaultLanguage?: 'en' | 'hi',
     isRpscRasMode?: boolean
   ) => {
