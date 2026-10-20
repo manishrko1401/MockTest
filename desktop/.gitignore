@@ -2,3 +2,5 @@ node_modules/
 src-tauri/target/
 src-tauri/gen/
 release/
+# The app's start page lives in dist/ (the project-wide rule ignores dist/ folders)
+!dist/

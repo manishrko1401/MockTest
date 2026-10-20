@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mock Test Hub</title>
+  <link rel="preconnect" href="https://mocktesthub.vercel.app" crossorigin />
+  <style>
+    :root { --navy: #1e4e79; --bg: #f5f7fa; --text: #1e293b; --muted: #64748b; --card: #ffffff; --border: #cfd6de; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f172a; --text: #e2e8f0; --muted: #94a3b8; --card: #111827; --border: #334155; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif; }
+    .card { width: min(420px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      padding: 32px 28px; text-align: center; }
+    .logo { display: block; width: 72px; height: 72px; margin: 0 auto 12px; }
+    h1 { font-size: 20px; margin: 0 0 6px; }
+    p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .spinner { width: 22px; height: 22px; margin: 18px auto 0; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--navy);
+      animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    button { margin-top: 20px; height: 38px; padding: 0 20px; border: 0; border-radius: 6px; background: var(--navy); color: #fff;
+      font: 600 14px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+    button:hover { filter: brightness(1.1); }
+    .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .actions button { margin-top: 16px; }
+    button.link { margin-top: 12px; height: auto; padding: 4px 8px; background: none; color: var(--navy); }
+    code { font-family: Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img class="logo" src="logo.png" alt="" width="72" height="72" />
+    <h1>Mock Test Hub</h1>
+    <section id="loading">
+      <p id="loading-text">Connecting…</p>
+      <div class="spinner" role="status" aria-label="Loading"></div>
+    </section>
+    <section id="offline" hidden>
+      <p id="offline-text">No internet connection. Tests and bookmarks you downloaded still work offline.</p>
+      <div class="actions">
+        <button id="open-offline" type="button">My offline tests</button>
+        <button id="open-bookmarks" type="button">Bookmarked questions</button>
+      </div>
+      <button id="retry" type="button" class="link">Try again</button>
+    </section>
+    <section id="qa-down" hidden>
+      <p><strong>QA test app:</strong> the local website is not running.</p>
+      <p style="margin-top:8px">Open a terminal in the <code>web</code> folder and run <code>npm run dev</code>, then press Try again.</p>
+      <button id="qa-retry" type="button">Try again</button>
+    </section>
+  </main>
+  <script>
+    // The app tells this page which website to open (window.__MTH_SITE__). The normal app opens
+    // the live site straight away when online; the QA test app first checks that the website
+    // running on this PC (npm run dev) answers.
+    const SITE = window.__MTH_SITE__ || 'https://mocktesthub.vercel.app/';
+    const IS_QA = !!window.__MTH_QA__;
+    const loading = document.getElementById('loading');
+    const offline = document.getElementById('offline');
+    const qaDown = document.getElementById('qa-down');
+    if (IS_QA) document.querySelector('h1').textContent = 'Mock Test Hub QA';
+
+    function show(section) {
+      for (const el of [loading, offline, qaDown]) el.hidden = el !== section;
+    }
+
+    // Does the website really answer? (navigator.onLine is often true on Windows without
+    // internet: Wi-Fi with no internet, VPN or virtual network adapters.)
+    async function reachable(url, ms) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      try {
+        await fetch(url, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+        return true;
+      } catch {
+        return false;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    // Tests downloaded to this PC (the app's encrypted store)
+    async function downloadedCount() {
+      try {
+        const items = await window.__TAURI__.core.invoke('offline_list');
+        return (items || []).filter(it => (it.kind === 'mock' || it.kind === 'typing') && !it.expired).length;
+      } catch {
+        return 0;
+      }
+    }
+
+    let connecting = false;
+    async function connect() {
+      if (connecting) return;
+      connecting = true;
+      try {
+        show(loading);
+        document.getElementById('loading-text').textContent = 'Connecting…';
+        if (navigator.onLine && await reachable(SITE + 'favicon.ico?ping=' + Date.now(), IS_QA ? 8000 : 6000)) {
+          window.location.replace(SITE);
+          return;
+        }
+        // No internet: straight to the tests downloaded on this PC
+        const count = await downloadedCount();
+        if (count > 0) {
+          document.getElementById('loading-text').textContent = 'No internet: opening your offline tests…';
+          window.location.replace(SITE + 'offline');
+          return;
+        }
+        if (IS_QA) { show(qaDown); return; }
+        document.getElementById('offline-text').textContent =
+          'No internet connection, and no tests are downloaded on this PC yet. Connect to the internet and press Download on any mock or typing test to use it offline.';
+        show(offline);
+      } finally {
+        connecting = false;
+      }
+    }
+
+    // Pages kept on this PC by the website's offline service worker
+    document.getElementById('open-offline').addEventListener('click', () => window.location.assign(SITE + 'offline'));
+    document.getElementById('open-bookmarks').addEventListener('click', () => window.location.assign(SITE + 'offline/bookmarks'));
+    document.getElementById('retry').addEventListener('click', connect);
+    document.getElementById('qa-retry').addEventListener('click', connect);
+    window.addEventListener('online', connect);
+    connect();
+  </script>
+</body>
+</html>

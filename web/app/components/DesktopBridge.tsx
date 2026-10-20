@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { WifiOff } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { isDesktopApp, desktopNotify, precacheOfflinePages, syncOfflineResults } from '../lib/desktopApp';
 import { setAccountBookmarks, syncAllBookmarks } from '../lib/offlineBookmarks';
@@ -128,6 +130,55 @@ function plannerReminders(data: PlannerData) {
   writeJson(PLANNER_SENT_KEY, sent);
 }
 
+/** Is the website really reachable? (navigator.onLine is often wrong on Windows.) */
+async function siteReachable() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+  try {
+    const res = await fetch(`/favicon.ico?ping=${Date.now()}`, { cache: 'no-store', signal: controller.signal });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** "No internet" bar with a way to the downloaded tests (not on the offline pages themselves). */
+function OfflineBar() {
+  const { language } = useAuth();
+  const hi = language === 'hi';
+  const pathname = usePathname() || '';
+  const [offline, setOffline] = useState(false);
+
+  useEffect(() => {
+    if (!isDesktopApp()) return;
+    let cancelled = false;
+    const check = async () => {
+      const ok = navigator.onLine && await siteReachable();
+      if (!cancelled) setOffline(!ok);
+    };
+    const goneOffline = () => setOffline(true);
+    check();
+    const timer = setInterval(check, 30 * 1000);
+    window.addEventListener('offline', goneOffline);
+    window.addEventListener('online', check);
+    return () => { cancelled = true; clearInterval(timer); window.removeEventListener('offline', goneOffline); window.removeEventListener('online', check); };
+  }, []);
+
+  if (!offline || pathname.startsWith('/offline')) return null;
+  return (
+    <div role="status" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[90] w-[calc(100%-2rem)] max-w-xl flex items-center gap-3 rounded-lg bg-slate-900 text-white px-4 py-3 shadow-lg">
+      <WifiOff className="h-5 w-5 text-amber-400 shrink-0" />
+      <p className="text-sm flex-1">{hi ? 'इंटरनेट नहीं है। आपके डाउनलोड किए गए टेस्ट फिर भी चलेंगे।' : 'No internet. Your downloaded tests still work.'}</p>
+      {/* A full page load, so the stored offline page opens */}
+      <button type="button" onClick={() => window.location.assign('/offline')} className="h-8 px-3 rounded-md bg-white text-slate-900 text-sm font-semibold cursor-pointer shrink-0">
+        {hi ? 'ऑफ़लाइन टेस्ट खोलें' : 'Open offline tests'}
+      </button>
+    </div>
+  );
+}
+
 export default function DesktopBridge() {
   const { currentUser } = useAuth();
 
@@ -195,5 +246,5 @@ export default function DesktopBridge() {
     return () => clearInterval(timer);
   }, [userId]);
 
-  return null;
+  return <OfflineBar />;
 }

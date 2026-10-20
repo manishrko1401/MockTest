@@ -1,6 +1,6 @@
 // Mock Test Hub Windows app: keeps the offline-test pages and the code they need on this PC.
 // Online everything comes from the network (and the copy is refreshed); offline the stored
-// copy is used. Only page code, the /offline pages and MathJax are stored — never test data
+// copy is used, and any other page that can't load opens "My offline tests". Only page code, the /offline pages and MathJax are stored — never test data
 // (downloaded tests are kept encrypted by the app itself) and never API responses.
 const CACHE = 'mth-offline-v1';
 const CDN_HOSTS = ['cdn.jsdelivr.net'];
@@ -56,6 +56,13 @@ self.addEventListener('fetch', (event) => {
     } else if (req.mode === 'navigate' && (url.pathname === '/offline' || url.pathname.startsWith('/offline/'))) {
       // Offline pages: one stored copy per page, whatever the ?id=
       event.respondWith(networkFirst(req, url.pathname));
+    } else if (req.mode === 'navigate' && !url.pathname.startsWith('/api/')) {
+      // Any other page while there is no internet: open "My offline tests" instead of an error
+      event.respondWith(fetch(req).catch(async (err) => {
+        const cache = await caches.open(CACHE);
+        if (await cache.match('/offline', { ignoreSearch: true })) return Response.redirect(new URL('/offline', self.location.origin).href, 302);
+        throw err;
+      }));
     }
   } else if (CDN_HOSTS.includes(url.hostname) && url.pathname.includes('/mathjax')) {
     event.respondWith(networkFirst(req));
