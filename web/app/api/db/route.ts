@@ -357,6 +357,9 @@ export async function POST(request: Request) {
 
     if (action === 'logout') {
       await revokeWebSession(readCookie(request, AUTH_COOKIE)).catch(() => {});
+      // Android app: its own login token
+      const bearer = request.headers.get('authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1];
+      if (bearer) await revokeWebSession(bearer).catch(() => {});
       const res = NextResponse.json({ success: true });
       res.headers.append('Set-Cookie', authCookie(null));
       return res;
@@ -370,6 +373,11 @@ export async function POST(request: Request) {
       try {
         const json = await res.clone().json();
         if (json?.success && json.user?.id) {
+          // Android app: a login token of its own (sent back as "Authorization: Bearer"), one per
+          // phone, so signing in on the phone never signs the website out
+          if (data?.client === 'android-app') {
+            return NextResponse.json({ ...json, authToken: await createWebSession(json.user.id, request) }, { status: res.status });
+          }
           await revokeWebSession(readCookie(request, AUTH_COOKIE)).catch(() => {});
           res.headers.append('Set-Cookie', authCookie(await createWebSession(json.user.id, request)));
         }
@@ -423,7 +431,8 @@ export async function POST(request: Request) {
       case 'update-tracked-jobs':
         return await handleUpdateTrackedJobs(data);
       case 'update-password':
-        return await handleUpdatePassword(data, readCookie(request, AUTH_COOKIE));
+        // Keeps this device signed in (website cookie or Android app token); others are signed out
+        return await handleUpdatePassword(data, readCookie(request, AUTH_COOKIE) || request.headers.get('authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1] || null);
       case 'claim-pass-pro':
         return await handleClaimPassPro(data, requesterUserId, isRequesterAdmin);
       case 'save-profile-admin':
@@ -1604,6 +1613,8 @@ async function handleLogin(data: any, request?: Request) {
 }
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '570110856860-a2h946nit7obiguglnjedffflto1oq95.apps.googleusercontent.com';
+// The Android app signs in with its own Google OAuth client (package com.mocktesthub)
+const GOOGLE_ANDROID_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID || '570110856860-vmpk8qihkb834ihj1grthuf3kumc65q6.apps.googleusercontent.com';
 
 /** Asks Google who the access token belongs to. Only tokens issued to this site's client, for a verified email, count. */
 async function verifyGoogleAccessToken(accessToken: unknown): Promise<{ email: string } | null> {
@@ -1612,7 +1623,8 @@ async function verifyGoogleAccessToken(accessToken: unknown): Promise<{ email: s
     const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const info = await res.json();
-    const issuedToThisSite = info.aud === GOOGLE_CLIENT_ID || info.azp === GOOGLE_CLIENT_ID;
+    const ours = [GOOGLE_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID];
+    const issuedToThisSite = ours.includes(info.aud) || ours.includes(info.azp);
     const emailVerified = info.email_verified === true || info.email_verified === 'true';
     if (!issuedToThisSite || !emailVerified || typeof info.email !== 'string') return null;
     return { email: info.email };
@@ -4166,7 +4178,10 @@ async function handleGetCustomQuestions(rawPayload: any, requester: { id: string
   }
 
   const locked = !isStaff && !attempted && !tierAllows(requiredTier, userTier);
-  const legacyApp = !!requester && !isStaff && !(request && readCookie(request, AUTH_COOKIE)) && process.env.LEGACY_APP_FULL_QUESTIONS !== '0';
+  // Old mobile app builds (session id header, no cookie). The new Android app sends a bearer
+  // token and gets answers only after submitting, like the website.
+  const legacyApp = !!requester && !isStaff && !(request && (readCookie(request, AUTH_COOKIE) || request.headers.get('authorization')))
+    && process.env.LEGACY_APP_FULL_QUESTIONS !== '0';
   const withAnswers = isStaff || attempted || legacyApp;
   const questions = !fullQuestions || locked ? null : withAnswers ? fullQuestions : stripAnswers(fullQuestions);
 

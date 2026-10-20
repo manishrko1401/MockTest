@@ -1,0 +1,11 @@
+node_modules/
+android/
+.expo/
+dist/
+release/
+*.apk
+*.aab
+# Release signing key (same as the old app; required for every Google Play update). Keep a private backup.
+keystore/
+# Firebase config
+google-services.json

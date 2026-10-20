@@ -1,0 +1,723 @@
+// AUTO-COPIED from the website by scripts/sync-shared.mjs. Edit the website file, then run npm run sync-shared.
+import type { OptionContent, QuestionContent, Question, Section, ActiveSession, PaletteState, QuestionResponse } from './webTypes';
+import { scoreSession } from './examScoring';
+
+// ============================================================================
+// TYPE DEFINITIONS FOR THE EXAM ENGINE
+// ============================================================================
+
+
+
+
+
+
+/**
+ * TCS iON 5-State Palette Status:
+ * 1: NOT_VISITED - White background, square edges.
+ * 2: NOT_ANSWERED - Red background, top corners rounded.
+ * 3: ANSWERED - Green background, bottom corners rounded.
+ * 4: MARKED_FOR_REVIEW - Purple background, perfect circle.
+ * 5: ANSWERED_AND_MARKED_FOR_REVIEW - Purple background, circle with green check badge (counted for evaluation).
+ */
+
+
+// Saved progress of an ongoing test, used to continue it after a refresh, closed tab or power cut
+export interface EngineResumeData {
+  responses: Record<string, QuestionResponse>;
+  timeRemaining: number;
+  violationsCount: number;
+  currentSectionIndex?: number;
+  currentQuestionIndex?: number;
+  submittedSectionIndices?: number[];
+  isExtraTimeMode?: boolean;
+  extraTimeRemaining?: number;
+}
+
+export interface EngineState {
+  session: ActiveSession | null;
+  currentSectionIndex: number;
+  currentQuestionIndex: number; // Index within the current section
+  responses: Record<string, QuestionResponse>; // key: questionId
+  submittedSectionIndices?: number[];
+  timeRemaining: number;
+  isTimerRunning: boolean;
+  // Wall-clock anchor for the currently-running countdown (Date.now() at the last tick/resume).
+  // TICK_TIMER/TICK_EXTRA_TIMER measure the real elapsed time against this instead of
+  // blindly subtracting 1, so setInterval jitter/drift over a long exam can't desync the
+  // countdown (or the derived "time taken") from actual wall-clock time.
+  lastTickEpochMs: number;
+  language: 'en' | 'hi';
+  violationsCount: number;
+  maxViolationsAllowed: number;
+  isExamSubmitted: boolean;
+  isSyncing: boolean;
+  // RPSC RAS Extra Time Mode fields
+  isRpscRasMode: boolean;
+  isExtraTimeMode: boolean;
+  extraTimeRemaining: number;
+  isExtraTimeRulesShown: boolean;
+  score: {
+    totalMarks: number;
+    obtainedMarks: number;
+    correctCount: number;
+    incorrectCount: number;
+    unattemptedCount: number;
+    accuracyPercentage: number;
+  } | null;
+}
+
+type EngineAction =
+  | { type: 'INIT_SESSION'; payload: { session: ActiveSession; maxViolations?: number; defaultLanguage?: 'en' | 'hi'; isRpscRasMode?: boolean; resumeData?: EngineResumeData } }
+  | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
+  | { type: 'TICK_TIMER' }
+  | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
+  | { type: 'SAVE_AND_NEXT' }
+  | { type: 'CLEAR_RESPONSE' }
+  | { type: 'MARK_FOR_REVIEW_AND_NEXT' }
+  | { type: 'JUMP_TO_QUESTION'; payload: { sectionIndex: number; questionIndex: number } }
+  | { type: 'SWITCH_SECTION'; payload: { sectionIndex: number } }
+  | { type: 'SUBMIT_SECTION' }
+  | { type: 'ADD_VIOLATION' }
+  | { type: 'SUBMIT_EXAM' }
+  | { type: 'SET_SYNCING'; payload: boolean }
+  | { type: 'PAUSE_EXAM' }
+  | { type: 'RESUME_EXAM' }
+  | { type: 'ENTER_EXTRA_TIME_MODE' }
+  | { type: 'TICK_EXTRA_TIMER' }
+  | { type: 'DISMISS_EXTRA_TIME_RULES' };
+
+// ============================================================================
+// HELPER UTILITIES FOR THE ENGINE
+// ============================================================================
+
+/**
+ * Gets the list of questions for a specific section index.
+ */
+const getSectionQuestions = (session: ActiveSession, sectionIndex: number): Question[] => {
+  const section = session.sections[sectionIndex];
+  if (!section) return [];
+  return session.questions
+    .filter((q) => q.sectionId === section.id)
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+};
+
+// ============================================================================
+// ENGINE REDUCER LOGIC
+// ============================================================================
+
+function engineReducer(state: EngineState, action: EngineAction): EngineState {
+  if (!state.session && action.type !== 'INIT_SESSION') {
+    return state;
+  }
+
+  const session = state.session!;
+
+  switch (action.type) {
+    case 'INIT_SESSION': {
+      const { session, maxViolations = 3, defaultLanguage = 'en', isRpscRasMode = false, resumeData } = action.payload;
+      let initialResponses: Record<string, QuestionResponse> = {};
+      // For sectional timing: start with Section 0's duration; otherwise full test duration
+      let initialTimeRemaining = session.hasSectionalTiming && session.sections[0]?.durationSeconds
+        ? session.sections[0].durationSeconds
+        : session.totalDurationSeconds;
+      let initialViolationsCount = 0;
+      let initialSectionIndex = 0;
+      let initialQuestionIndex = 0;
+      let initialSubmittedSections: number[] = resumeData?.submittedSectionIndices ? [...resumeData.submittedSectionIndices] : [];
+
+      if (resumeData) {
+        initialResponses = { ...resumeData.responses };
+        initialTimeRemaining = resumeData.timeRemaining;
+        initialViolationsCount = resumeData.violationsCount;
+        if (resumeData.currentSectionIndex !== undefined) {
+          initialSectionIndex = resumeData.currentSectionIndex;
+          if (initialSubmittedSections.length === 0 && initialSectionIndex > 0) {
+            for (let i = 0; i < initialSectionIndex; i++) {
+              initialSubmittedSections.push(i);
+            }
+          }
+        }
+        if (resumeData.currentQuestionIndex !== undefined) {
+          initialQuestionIndex = resumeData.currentQuestionIndex;
+        }
+      }
+
+      // Ensure every question has a valid response object with tempOptionIndex defined
+      session.questions.forEach((q) => {
+        const existing = initialResponses[q.id];
+        initialResponses[q.id] = {
+          questionId: q.id,
+          selectedOptionIndex: existing?.selectedOptionIndex ?? null,
+          tempOptionIndex: existing?.tempOptionIndex ?? existing?.selectedOptionIndex ?? null,
+          state: existing?.state ?? 1, // NOT_VISITED
+          elapsedSeconds: existing?.elapsedSeconds ?? 0,
+        };
+      });
+
+      if (!resumeData) {
+        // Mark the very first question of the first section as state 2 (NOT_ANSWERED)
+        const firstSectionQuestions = getSectionQuestions(session, 0);
+        if (firstSectionQuestions.length > 0) {
+          const firstQuestionId = firstSectionQuestions[0].id;
+          initialResponses[firstQuestionId] = {
+            ...initialResponses[firstQuestionId],
+            state: 2, // NOT_ANSWERED
+          };
+        }
+      }
+
+      return {
+        session,
+        currentSectionIndex: initialSectionIndex,
+        currentQuestionIndex: initialQuestionIndex,
+        responses: initialResponses,
+        submittedSectionIndices: initialSubmittedSections,
+        timeRemaining: initialTimeRemaining,
+        isTimerRunning: true,
+        language: defaultLanguage,
+        violationsCount: initialViolationsCount,
+        maxViolationsAllowed: maxViolations,
+        isExamSubmitted: false,
+        isSyncing: false,
+        isRpscRasMode,
+        // RPSC RAS: a test closed during its extra time continues in extra time
+        isExtraTimeMode: isRpscRasMode && !!resumeData?.isExtraTimeMode,
+        extraTimeRemaining: isRpscRasMode && resumeData?.isExtraTimeMode ? Math.max(0, resumeData.extraTimeRemaining ?? 0) : 0,
+        isExtraTimeRulesShown: false,
+        score: null,
+        lastTickEpochMs: Date.now(),
+      };
+    }
+
+    case 'SET_LANGUAGE': {
+      return {
+        ...state,
+        language: action.payload,
+      };
+    }
+
+    case 'TICK_TIMER': {
+      if (state.isExamSubmitted || !state.isTimerRunning) return state;
+
+      // Measure real elapsed wall-clock time since the last tick instead of assuming
+      // exactly 1s passed — setInterval firing can lag under main-thread load (heavy
+      // question rendering, MathJax, re-renders), and naive -1-per-tick silently loses
+      // that lag, desyncing the countdown (and time-taken) from actual elapsed time.
+      // Clamped to [1, 30]s per tick: floors at 1 so a tick always counts as *something*,
+      // caps at 30 so a single pathological stall (e.g. laptop sleep without a blur event)
+      // can't blow a huge, unverified gap onto the clock in one step.
+      const now = Date.now();
+      const rawDeltaSec = Math.round((now - state.lastTickEpochMs) / 1000);
+      const deltaSec = Math.min(30, Math.max(1, rawDeltaSec));
+
+      const nextTimeRemaining = Math.max(0, state.timeRemaining - deltaSec);
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+
+      // Update elapsed time for current question
+      const updatedResponses = { ...state.responses };
+      if (activeQuestion && updatedResponses[activeQuestion.id]) {
+        updatedResponses[activeQuestion.id] = {
+          ...updatedResponses[activeQuestion.id],
+          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + deltaSec,
+        };
+      }
+
+      // When timer hits zero:
+      if (nextTimeRemaining === 0) {
+        // Sectional timing: auto-advance to next section or submit if last
+        if (session.hasSectionalTiming) {
+          const nextSectionIndex = state.currentSectionIndex + 1;
+          if (nextSectionIndex < session.sections.length) {
+            // Advance to next section, reset timer to next section's duration
+            const nextSection = session.sections[nextSectionIndex];
+            const nextSectionDuration = nextSection.durationSeconds ?? session.totalDurationSeconds;
+            const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+            // Mark first question of next section as visited
+            if (nextSectionQuestions.length > 0) {
+              const firstQ = nextSectionQuestions[0];
+              if (updatedResponses[firstQ.id]?.state === 1) {
+                updatedResponses[firstQ.id] = { ...updatedResponses[firstQ.id], state: 2 };
+              }
+            }
+            return {
+              ...state,
+              currentSectionIndex: nextSectionIndex,
+              currentQuestionIndex: 0,
+              timeRemaining: nextSectionDuration,
+              responses: updatedResponses,
+              lastTickEpochMs: now,
+            };
+          } else {
+            // Last section done, submit
+            return engineReducer(
+              { ...state, timeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
+              { type: 'SUBMIT_EXAM' }
+            );
+          }
+        }
+
+        // RPSC RAS: Enter extra time mode instead of auto-submitting
+        if (state.isRpscRasMode && !state.isExtraTimeMode) {
+          return engineReducer(
+            { ...state, timeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
+            { type: 'ENTER_EXTRA_TIME_MODE' }
+          );
+        }
+
+        // Non-sectional: submit on global timer expiry
+        return engineReducer(
+          { ...state, timeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
+          { type: 'SUBMIT_EXAM' }
+        );
+      }
+
+      return {
+        ...state,
+        timeRemaining: nextTimeRemaining,
+        responses: updatedResponses,
+        lastTickEpochMs: now,
+      };
+    }
+
+    case 'SELECT_OPTION': {
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+      if (!activeQuestion) return state;
+
+      const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+
+      updatedResponses[activeQuestion.id] = {
+        ...currentResp,
+        tempOptionIndex: action.payload.optionIndex,
+      };
+
+      return {
+        ...state,
+        responses: updatedResponses,
+      };
+    }
+
+    case 'SAVE_AND_NEXT': {
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+      if (!activeQuestion) return state;
+
+      const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
+
+      // Update state: ANSWERED (3) if selected, else NOT_ANSWERED (2)
+      updatedResponses[activeQuestion.id] = {
+        ...currentResp,
+        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
+        state: hasSelection ? 3 : 2,
+      };
+
+      // Navigate forward
+      let nextQuestionIndex = state.currentQuestionIndex + 1;
+      let nextSectionIndex = state.currentSectionIndex;
+
+      if (nextQuestionIndex >= activeSectionQuestions.length) {
+        // Move to next section if available (only when neither sectional timing nor lock-on-submit is active)
+        if (!session.hasSectionalTiming && !session.lockSectionOnSubmit && nextSectionIndex + 1 < session.sections.length) {
+          nextSectionIndex += 1;
+          nextQuestionIndex = 0;
+        } else {
+          // Wrap around or stay on last question (user must submit manually)
+          nextQuestionIndex = state.currentQuestionIndex;
+        }
+      }
+
+      const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+      const nextQuestion = nextSectionQuestions[nextQuestionIndex];
+
+      if (nextQuestion) {
+        const nextResp = updatedResponses[nextQuestion.id] || {
+          questionId: nextQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
+        // If next question was NOT_VISITED (1), set to NOT_ANSWERED (2)
+        updatedResponses[nextQuestion.id] = {
+          ...nextResp,
+          state: nextResp.state === 1 ? 2 : nextResp.state,
+          tempOptionIndex: nextResp.selectedOptionIndex,
+        };
+      }
+
+      return {
+        ...state,
+        currentSectionIndex: nextSectionIndex,
+        currentQuestionIndex: nextQuestionIndex,
+        responses: updatedResponses,
+      };
+    }
+
+    case 'CLEAR_RESPONSE': {
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+      if (!activeQuestion) return state;
+
+      const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+
+      // Flush selections and set state to NOT_ANSWERED (2)
+      updatedResponses[activeQuestion.id] = {
+        ...currentResp,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 2,
+      };
+
+      return {
+        ...state,
+        responses: updatedResponses,
+      };
+    }
+
+    case 'MARK_FOR_REVIEW_AND_NEXT': {
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+      if (!activeQuestion) return state;
+
+      const updatedResponses = { ...state.responses };
+      const currentResp = updatedResponses[activeQuestion.id] || {
+        questionId: activeQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
+
+      // 5-State Rule:
+      // Option chosen: ANSWERED_AND_MARKED_FOR_REVIEW (5)
+      // No option chosen: MARKED_FOR_REVIEW (4)
+      updatedResponses[activeQuestion.id] = {
+        ...currentResp,
+        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
+        state: hasSelection ? 5 : 4,
+      };
+
+      // Navigate forward
+      let nextQuestionIndex = state.currentQuestionIndex + 1;
+      let nextSectionIndex = state.currentSectionIndex;
+
+      if (nextQuestionIndex >= activeSectionQuestions.length) {
+        if (!session.hasSectionalTiming && !session.lockSectionOnSubmit && nextSectionIndex + 1 < session.sections.length) {
+          nextSectionIndex += 1;
+          nextQuestionIndex = 0;
+        } else {
+          nextQuestionIndex = state.currentQuestionIndex;
+        }
+      }
+
+      const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+      const nextQuestion = nextSectionQuestions[nextQuestionIndex];
+
+      if (nextQuestion) {
+        const nextResp = updatedResponses[nextQuestion.id] || {
+          questionId: nextQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
+        updatedResponses[nextQuestion.id] = {
+          ...nextResp,
+          state: nextResp.state === 1 ? 2 : nextResp.state,
+          tempOptionIndex: nextResp.selectedOptionIndex,
+        };
+      }
+
+      return {
+        ...state,
+        currentSectionIndex: nextSectionIndex,
+        currentQuestionIndex: nextQuestionIndex,
+        responses: updatedResponses,
+      };
+    }
+
+    case 'JUMP_TO_QUESTION': {
+      const { sectionIndex, questionIndex } = action.payload;
+
+      // Block cross-section navigation if sectional timing is active
+      if (session.hasSectionalTiming && sectionIndex !== state.currentSectionIndex) {
+        return state;
+      }
+
+      // Block cross-section navigation to locked/submitted sections if lockSectionOnSubmit is active
+      if (session.lockSectionOnSubmit && (sectionIndex !== state.currentSectionIndex || (state.submittedSectionIndices || []).includes(sectionIndex))) {
+        return state;
+      }
+
+      const targetQuestions = getSectionQuestions(session, sectionIndex);
+      const targetQuestion = targetQuestions[questionIndex];
+      if (!targetQuestion) return state;
+
+      const updatedResponses = { ...state.responses };
+
+      // Update current active question's state (discarding unsaved changes)
+      const currentQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const currentActiveQuestion = currentQuestions[state.currentQuestionIndex];
+      if (currentActiveQuestion) {
+        const activeResp = updatedResponses[currentActiveQuestion.id] || {
+          questionId: currentActiveQuestion.id,
+          selectedOptionIndex: null,
+          tempOptionIndex: null,
+          state: 1,
+          elapsedSeconds: 0,
+        };
+        // Revert temporary changes to saved value
+        updatedResponses[currentActiveQuestion.id] = {
+          ...activeResp,
+          tempOptionIndex: activeResp.selectedOptionIndex,
+          state: activeResp.state === 1 ? 2 : activeResp.state,
+        };
+      }
+
+      // Prepare target question
+      const targetResp = updatedResponses[targetQuestion.id] || {
+        questionId: targetQuestion.id,
+        selectedOptionIndex: null,
+        tempOptionIndex: null,
+        state: 1,
+        elapsedSeconds: 0,
+      };
+      
+      updatedResponses[targetQuestion.id] = {
+        ...targetResp,
+        state: targetResp.state === 1 ? 2 : targetResp.state,
+        tempOptionIndex: targetResp.selectedOptionIndex,
+      };
+
+      return {
+        ...state,
+        currentSectionIndex: sectionIndex,
+        currentQuestionIndex: questionIndex,
+        responses: updatedResponses,
+      };
+    }
+
+    case 'SWITCH_SECTION': {
+      const { sectionIndex } = action.payload;
+      // Block section switching if sectional timing or lock on submit is active
+      if (session.hasSectionalTiming || session.lockSectionOnSubmit) return state;
+      return engineReducer(state, {
+        type: 'JUMP_TO_QUESTION',
+        payload: { sectionIndex, questionIndex: 0 },
+      });
+    }
+
+    case 'SUBMIT_SECTION': {
+      if (state.isExamSubmitted) return state;
+      const nextSectionIndex = state.currentSectionIndex + 1;
+      const updatedSubmitted = Array.from(new Set([...(state.submittedSectionIndices || []), state.currentSectionIndex]));
+
+      if (session && nextSectionIndex < session.sections.length) {
+        const nextSection = session.sections[nextSectionIndex];
+        const nextSectionDuration = session.hasSectionalTiming && nextSection.durationSeconds
+          ? nextSection.durationSeconds
+          : state.timeRemaining;
+        const nextSectionQuestions = getSectionQuestions(session, nextSectionIndex);
+        const updatedResponses = { ...state.responses };
+        if (nextSectionQuestions.length > 0) {
+          const firstQ = nextSectionQuestions[0];
+          if (updatedResponses[firstQ.id]?.state === 1) {
+            updatedResponses[firstQ.id] = { ...updatedResponses[firstQ.id], state: 2 };
+          }
+        }
+        return {
+          ...state,
+          currentSectionIndex: nextSectionIndex,
+          currentQuestionIndex: 0,
+          timeRemaining: nextSectionDuration,
+          responses: updatedResponses,
+          submittedSectionIndices: updatedSubmitted,
+          isTimerRunning: true,
+        };
+      } else {
+        return engineReducer({ ...state, submittedSectionIndices: updatedSubmitted }, { type: 'SUBMIT_EXAM' });
+      }
+    }
+
+    case 'ADD_VIOLATION': {
+      if (state.isExamSubmitted) return state;
+
+      const nextViolations = state.violationsCount + 1;
+      const triggerAutoSubmit = nextViolations >= state.maxViolationsAllowed;
+
+      const nextState = {
+        ...state,
+        violationsCount: nextViolations,
+      };
+
+      if (triggerAutoSubmit) {
+        return engineReducer(nextState, { type: 'SUBMIT_EXAM' });
+      }
+
+      return nextState;
+    }
+
+    case 'SUBMIT_EXAM': {
+      if (state.isExamSubmitted) return state;
+      // Same rules as the server's re-scoring (app/lib/examScoring.ts). Before submission the
+      // browser has no answer key, so this is provisional; the saved result comes from the server.
+      return {
+        ...state,
+        isTimerRunning: false,
+        isExamSubmitted: true,
+        isExtraTimeMode: false,
+        score: scoreSession(session, state.responses, state.isRpscRasMode),
+      };
+    }
+
+    case 'SET_SYNCING': {
+      return {
+        ...state,
+        isSyncing: action.payload,
+      };
+    }
+
+    case 'PAUSE_EXAM': {
+      return {
+        ...state,
+        isTimerRunning: false,
+      };
+    }
+
+    case 'RESUME_EXAM': {
+      // Reset the tick anchor to now — otherwise the entire paused duration
+      // (tab was hidden/blurred) would be counted as elapsed on the first tick back.
+      return {
+        ...state,
+        isTimerRunning: true,
+        lastTickEpochMs: Date.now(),
+      };
+    }
+
+    // ========================================================================
+    // RPSC RAS EXTRA TIME MODE ACTIONS
+    // ========================================================================
+
+    case 'ENTER_EXTRA_TIME_MODE': {
+      if (state.isExamSubmitted || !state.isRpscRasMode) return state;
+
+      // Check if there are unattempted questions — if none, just submit normally
+      const allQuestions = session.questions;
+      const hasUnattempted = allQuestions.some((q) => {
+        const resp = state.responses[q.id];
+        return !resp || resp.state === 1 || resp.state === 2 || 
+               (resp.state !== 3 && resp.state !== 5);
+      });
+
+      if (!hasUnattempted) {
+        // All questions attempted, submit directly
+        return engineReducer(state, { type: 'SUBMIT_EXAM' });
+      }
+
+      // Find the first unattempted question across all sections
+      let firstUnattemptedSectionIdx = 0;
+      let firstUnattemptedQuestionIdx = 0;
+      let found = false;
+      for (let sIdx = 0; sIdx < session.sections.length && !found; sIdx++) {
+        const secQuestions = getSectionQuestions(session, sIdx);
+        for (let qIdx = 0; qIdx < secQuestions.length && !found; qIdx++) {
+          const resp = state.responses[secQuestions[qIdx].id];
+          if (!resp || resp.state === 1 || resp.state === 2 || 
+              (resp.state !== 3 && resp.state !== 5)) {
+            firstUnattemptedSectionIdx = sIdx;
+            firstUnattemptedQuestionIdx = qIdx;
+            found = true;
+          }
+        }
+      }
+
+      return {
+        ...state,
+        isExtraTimeMode: true,
+        isExtraTimeRulesShown: true, // Show rules modal first
+        extraTimeRemaining: 600, // 10 minutes
+        isTimerRunning: false, // Paused until user dismisses rules modal
+        timeRemaining: 0,
+        currentSectionIndex: firstUnattemptedSectionIdx,
+        currentQuestionIndex: firstUnattemptedQuestionIdx,
+      };
+    }
+
+    case 'DISMISS_EXTRA_TIME_RULES': {
+      return {
+        ...state,
+        isExtraTimeRulesShown: false,
+        isTimerRunning: true, // Start extra time countdown
+        lastTickEpochMs: Date.now(),
+      };
+    }
+
+    case 'TICK_EXTRA_TIMER': {
+      if (state.isExamSubmitted || !state.isExtraTimeMode || !state.isTimerRunning) return state;
+
+      // Same wall-clock drift correction as TICK_TIMER — see its comment.
+      const now = Date.now();
+      const rawDeltaSec = Math.round((now - state.lastTickEpochMs) / 1000);
+      const deltaSec = Math.min(30, Math.max(1, rawDeltaSec));
+
+      const nextExtraTime = Math.max(0, state.extraTimeRemaining - deltaSec);
+
+      // Track elapsed time for current question
+      const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
+      const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
+      const updatedResponses = { ...state.responses };
+      if (activeQuestion && updatedResponses[activeQuestion.id]) {
+        updatedResponses[activeQuestion.id] = {
+          ...updatedResponses[activeQuestion.id],
+          elapsedSeconds: updatedResponses[activeQuestion.id].elapsedSeconds + deltaSec,
+        };
+      }
+
+      if (nextExtraTime === 0) {
+        // Extra time expired — auto-submit with penalties
+        return engineReducer(
+          { ...state, extraTimeRemaining: 0, responses: updatedResponses, lastTickEpochMs: now },
+          { type: 'SUBMIT_EXAM' }
+        );
+      }
+
+      return {
+        ...state,
+        extraTimeRemaining: nextExtraTime,
+        responses: updatedResponses,
+        lastTickEpochMs: now,
+      };
+    }
+
+    default:
+      return state;
+  }
+}
+
+
+export { engineReducer, getSectionQuestions };
+export type { EngineAction };

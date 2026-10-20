@@ -1,0 +1,47 @@
+{
+  "name": "mocktesthub-android",
+  "version": "2.0.0",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "sync-shared": "node scripts/sync-shared.mjs",
+    "prebuild": "expo prebuild -p android",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~56.0.21",
+    "@noble/ciphers": "1.3.0",
+    "@noble/curves": "1.9.7",
+    "@noble/hashes": "1.8.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "12.0.1",
+    "expo": "56.0.15",
+    "expo-auth-session": "56.0.17",
+    "expo-constants": "56.0.20",
+    "expo-crypto": "56.0.4",
+    "expo-document-picker": "~56.0.4",
+    "expo-file-system": "~56.0.11",
+    "expo-image-picker": "~56.0.25",
+    "expo-keep-awake": "~56.0.3",
+    "expo-notifications": "56.0.20",
+    "expo-screen-capture": "~56.0.5",
+    "expo-secure-store": "56.0.4",
+    "expo-status-bar": "56.0.4",
+    "expo-system-ui": "~56.0.5",
+    "expo-web-browser": "56.0.6",
+    "lucide-react-native": "1.21.0",
+    "mathjax": "3.2.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "^0.21.2",
+    "react-native-webview": "13.16.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "typescript": "6.0.3"
+  }
+}
