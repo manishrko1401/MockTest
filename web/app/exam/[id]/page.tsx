@@ -19,6 +19,10 @@ import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
 import MathJaxText from '../../lib/MathJaxText';
 import MathJaxLoader from '../../components/MathJaxLoader';
 import CbatExamEngine from './CbatExamEngine';
+import ExamAccessGate from './ExamAccessGate';
+import { setDesktopExamMode } from '../../lib/desktopApp';
+import { isCbatTest, isRpscRasTest } from '../../lib/examScoring';
+import { useOfflineMock, newLocalId } from '../../lib/offlineExam';
 import { ExamProgress, createProgressSyncer, readLocalProgress, writeLocalProgress, clearLocalProgress, fetchServerProgress, newerProgress } from '../../lib/examProgress';
 import { matchCbatBatteryKey } from './cbatData';
 
@@ -233,7 +237,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     enterExtraTimeMode,
   } = useTestEngine();
 
-  const { addAttempt, currentUser, saveOngoingSession, language: authLanguage, examCatalog } = useAuth();
+  const { addAttempt, waitForAttemptSave, currentUser, saveOngoingSession, language: authLanguage, examCatalog: liveCatalog } = useAuth();
+  // Offline (Windows app): the test comes from the downloaded package, results go to the app's outbox
+  const offline = useOfflineMock();
+  const examCatalog = offline?.catalog || liveCatalog;
   const router = useRouter();
 
   // SSC exam pattern: an answer is chosen only by clicking the radio circle before the option
@@ -304,6 +311,11 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  // Windows app: exam mode (full screen, no screenshots, refresh/back keys off) until submitted
+  const examInProgress = !!state.session && state.session.questions.length > 0 && !state.isExamSubmitted;
+  useEffect(() => { setDesktopExamMode(examInProgress); }, [examInProgress]);
+  useEffect(() => () => setDesktopExamMode(false), []);
 
   const saveOngoingSessionRef = useRef(saveOngoingSession);
   useEffect(() => {
@@ -396,8 +408,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       // Look up saved progress on the server while the questions load
       const user = currentUserRef.current;
       const serverProgressPromise = user?.id ? fetchServerProgress(user.id, testId, 'tcs') : Promise.resolve(null);
-      let customQs = null;
-      try {
+      let customQs = offline ? offline.customQs : null;
+      if (!offline) try {
         const res = await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -431,22 +443,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       // Primary detection: use the parent category & subcategory names from the exam catalog
       // (these are always populated now via generateExamSession's catalog lookup)
       // Secondary detection: fallback to testId and title string matching
-      const idLower = testId.toLowerCase();
-      const titleLower = (examSession.testTitle || '').toLowerCase();
-      const catLower = (examSession.testCategory || '').toLowerCase();
-      const subLower = (examSession.testSubcategory || '').toLowerCase();
-      
-      const isRpscRas = 
-        // Primary: Category is "RPSC Exams" and subcategory contains "RAS"
-        (catLower.includes('rpsc') && (subLower.includes('ras') || titleLower.includes('ras'))) ||
-        // Secondary: testId-based detection for tests with explicit RPSC RAS in ID
-        idLower.includes('rpsc_ras') || 
-        idLower.includes('rpsc-ras') || 
-        idLower.includes('rpsc__ras') ||
-        // Title-based detection for PYQs and named tests
-        (titleLower.includes('rpsc') && (titleLower.includes('ras') || titleLower.includes('prelim'))) ||
-        (titleLower.includes('ras') && (titleLower.includes('prelim') || titleLower.includes('full') || titleLower.includes('pyq') || titleLower.includes('paper')));
-      
+      const isRpscRas = isRpscRasTest(testId, examSession);
+
       if (isRpscRas) {
         console.log('[RPSC RAS] Detected RPSC RAS mode for test:', testId, '| title:', examSession.testTitle, '| cat:', examSession.testCategory, '| sub:', examSession.testSubcategory);
       }
@@ -563,6 +561,15 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       const attemptTitle = state.session?.testTitle || "Mock Test Attempt";
       const { obtainedMarks, totalMarks, accuracyPercentage } = state.score;
       const violations = state.violationsCount;
+      if (offline) {
+        // Scored here with the downloaded answer key; the server re-scores it when uploaded
+        offline.onMockSubmitted({
+          localId: newLocalId(), testId, title: attemptTitle, score: obtainedMarks, maxScore: totalMarks, accuracy: accuracyPercentage,
+          durationSeconds: totalElapsedSeconds, violations, responses: savedResponses, completedAt: new Date().toISOString(),
+          lang1: selectedLang1, lang2: selectedLang2,
+        });
+        return;
+      }
       progressFlushed.finally(() => {
         addAttempt(
           testId,
@@ -572,7 +579,8 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
           accuracyPercentage,
           totalElapsedSeconds,
           violations,
-          savedResponses
+          savedResponses,
+          { lang1: selectedLang1, lang2: selectedLang2 }
         );
       });
     }
@@ -1246,6 +1254,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       }
                     }
                   } catch (e) {}
+                  if (offline) { router.push(offline.analysisHref); return; }
+                  // The analysis needs the saved, server-scored attempt
+                  await waitForAttemptSave();
                   router.push(`/exam/${testId}/analysis`);
                 }}
                 className="w-full min-[1080px]:w-auto bg-slate-900 hover:bg-slate-800 text-white dark:bg-blue-600 dark:hover:bg-blue-500 font-bold text-xs sm:text-sm px-7 py-3 rounded-xl shadow-sm transition-all cursor-pointer active:scale-95 whitespace-nowrap uppercase tracking-wider"
@@ -2481,7 +2492,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
 function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi', lang1?: string, lang2?: string) => void }) {
   const router = useRouter();
-  const { theme, toggleTheme, examCatalog, currentUser } = useAuth();
+  const { theme, toggleTheme, examCatalog: liveCatalog, currentUser } = useAuth();
+  const offline = useOfflineMock();
+  const examCatalog = offline?.catalog || liveCatalog;
   const [defaultLang, setDefaultLang] = useState<string>('English');
   const [lang1, setLang1] = useState<string>('English');
   const [lang2, setLang2] = useState<string>('Hindi');
@@ -2493,6 +2506,7 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
   useEffect(() => {
     setMounted(true);
     const fetchQs = async () => {
+      if (offline) { setCustomQs(offline.customQs); setFetching(false); return; }
       try {
         const res = await fetch('/api/db', {
           method: 'POST',
@@ -2792,7 +2806,9 @@ function CtetExamInstructionsScreen({ testId, onStart }: { testId: string; onSta
 
 function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: (selectedLang: 'en' | 'hi') => void }) {
   const router = useRouter();
-  const { theme, toggleTheme, language: authLang, examCatalog, currentUser } = useAuth();
+  const { theme, toggleTheme, language: authLang, examCatalog: liveCatalog, currentUser } = useAuth();
+  const offline = useOfflineMock();
+  const examCatalog = offline?.catalog || liveCatalog;
   const [agreed, setAgreed] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [mounted, setMounted] = useState(false);
@@ -2802,6 +2818,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
   useEffect(() => {
     setMounted(true);
     const fetchQs = async () => {
+      if (offline) { setCustomQs(offline.customQs); setFetching(false); return; }
       try {
         const res = await fetch('/api/db', {
           method: 'POST',
@@ -2864,22 +2881,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
   const isRpscRas = lowerId.includes('rpsc') || titleLower.includes('rpsc') || titleLower.includes('ras');
 
   // Station Master CBAT (Psycho Test) detection
-  const isCbat = (() => {
-    if (lowerId.includes('cbat') || titleLower.includes('cbat') || subCatLower.includes('cbat')) return true;
-    if (lowerId.includes('psycho') || titleLower.includes('psycho') || subCatLower.includes('psycho')) return true;
-    if (customQs?.subCategoryId === 'rrb_ntpc_cbat__psycho_test__iayf' || customQs?.examId === 'rrb_ntpc_cbat__psycho_test__iayf') return true;
-    if (examCatalog && Array.isArray(examCatalog)) {
-      for (const cat of examCatalog) {
-        for (const sub of cat.subCategories || []) {
-          if (sub.id === 'rrb_ntpc_cbat__psycho_test__iayf' || (sub.name && (sub.name.toLowerCase().includes('cbat') || sub.name.toLowerCase().includes('psycho')))) {
-            if (sub.tests?.some((t: any) => t.id === testId)) return true;
-            if (sub.subSubCategories?.some((ss: any) => ss.tests?.some((t: any) => t.id === testId))) return true;
-          }
-        }
-      }
-    }
-    return false;
-  })();
+  const isCbat = isCbatTest(testId, examCatalog);
 
   const getCbatSectionTimingDisplay = (sec: any, idx: number) => {
     let mins: number | null = null;
@@ -3210,10 +3212,22 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
   );
 }
 
+// Online, the exam starts only after the access check (PRO lock, login, uploaded questions)
 export default function DynamicExamPage() {
   const params = useParams();
-  const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { language: authLanguage, examCatalog } = useAuth();
+  const offline = useOfflineMock();
+  const { examCatalog } = useAuth();
+  const testId = offline?.testId || (params?.id as string) || "ssc_cgl_tier1";
+  if (offline) return <ExamPage />;
+  return <ExamAccessGate testId={testId} isCbat={isCbatTest(testId, examCatalog)}><ExamPage /></ExamAccessGate>;
+}
+
+function ExamPage() {
+  const params = useParams();
+  const offline = useOfflineMock();
+  const testId = offline?.testId || (params?.id as string) || "ssc_cgl_tier1";
+  const { language: authLanguage, examCatalog: liveCatalog } = useAuth();
+  const examCatalog = offline?.catalog || liveCatalog;
   
   const [mounted, setMounted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -3269,43 +3283,7 @@ export default function DynamicExamPage() {
 
   const isCtetFullTest = (testId || '').toLowerCase().includes('ctet');
 
-  const isCbat = (() => {
-    const lowerId = (testId || '').toLowerCase();
-    if (lowerId === 'rrb_ntpc_cbat__psycho_test__iayf') return true;
-
-    // 1. Catalog decides when the test is listed: CBAT only if it sits under the CBAT / psycho exam.
-    //    (Keyword matching alone sent SSC "General Intelligence and Reasoning" tests to the CBAT engine.)
-    if (examCatalog && Array.isArray(examCatalog)) {
-      for (const cat of examCatalog) {
-        for (const sub of cat.subCategories || []) {
-          const inSub =
-            sub.tests?.some((t: any) => t.id === testId) ||
-            sub.subSubCategories?.some((ss: any) => ss.tests?.some((t: any) => t.id === testId)) ||
-            sub.subSubCategories?.some((ss: any) => ss.mockTests?.some((t: any) => t.id === testId));
-          if (inSub) {
-            const subName = (sub.name || '').toLowerCase();
-            return sub.id === 'rrb_ntpc_cbat__psycho_test__iayf' || subName.includes('cbat') || subName.includes('psycho');
-          }
-        }
-      }
-    }
-
-    // 2. Not in the catalog (e.g. still loading or a direct link): fall back to ID keywords
-    return (
-      lowerId.includes('cbat') ||
-      lowerId.includes('psycho') ||
-      lowerId.includes('station_master') ||
-      lowerId.includes('classification') ||
-      lowerId.includes('personality') ||
-      lowerId.includes('short_route') ||
-      lowerId.includes('information_ordering') ||
-      lowerId.includes('add_of_odd') ||
-      lowerId.includes('odd_numbers') ||
-      lowerId.includes('selective_attention') ||
-      lowerId.includes('spatial_scanning') ||
-      (lowerId.includes('intelligence') && !lowerId.includes('reasoning'))
-    );
-  })();
+  const isCbat = offline ? offline.isCbat : isCbatTest(testId, examCatalog);
 
   if (isCbat) {
     return <CbatExamEngine testId={testId} initialExamLanguage={selectedExamLang} />;

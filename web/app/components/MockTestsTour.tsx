@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { GuidedTour, TourStep } from './GuidedTour';
+import { useIsDesktopApp } from '../lib/desktopApp';
+import { OFFLINE_TOUR_STEPS, appOfflineTourSeen, markAppOfflineTourSeen } from './offlineTourSteps';
 
 // -----------------------------------------------------------------------------
 // Test Series tour: categories, bookmarks, opening a category → exam → series,
@@ -33,7 +35,10 @@ export default function MockTestsTour({
   openSeries: () => void;
 }) {
   const { currentUser, completeTour, language } = useAuth();
+  // Windows app (signed in): the tour also covers download for offline and offline bookmarks
+  const inApp = useIsDesktopApp() && !!currentUser;
   const [open, setOpen] = useState(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const startedRef = useRef(false);
 
   const done = currentUser
@@ -58,8 +63,19 @@ export default function MockTestsTour({
     return () => window.removeEventListener(START_TESTS_TOUR_EVENT, start);
   }, [start]);
 
+  // Finished the tour before the offline features: show only what's new, once on this PC
+  useEffect(() => {
+    if (!inApp || done !== true || open || startedRef.current || !ready || !atRoot || appOfflineTourSeen('tests')) return;
+    const timer = setTimeout(() => { startedRef.current = true; setWhatsNewOpen(true); }, 1200);
+    return () => clearTimeout(timer);
+  }, [inApp, done, open, ready, atRoot]);
+
+  const finishWhatsNew = () => { setWhatsNewOpen(false); markAppOfflineTourSeen('tests'); };
+
   const finish = () => {
     setOpen(false);
+    setWhatsNewOpen(false);
+    if (inApp) markAppOfflineTourSeen('tests');
     if (currentUser) completeTour('tests');
     try { localStorage.setItem(LOCAL_DONE_KEY, '1'); } catch { /* ignore */ }
   };
@@ -90,6 +106,7 @@ export default function MockTestsTour({
           hi: 'टेस्ट की समीक्षा करते समय बुकमार्क किए गए प्रश्न सही उत्तर और व्याख्या के साथ यहां सहेजे जाते हैं, ताकि आप बाद में दोहरा सकें।',
         },
       },
+      ...(inApp ? [OFFLINE_TOUR_STEPS.offlineBookmarks(['[data-tour="ts-bookmarks"]'])] : []),
       {
         targets: ['[data-tour="ts-category"]'],
         title: { en: 'Open a category', hi: 'श्रेणी खोलें' },
@@ -135,6 +152,7 @@ export default function MockTestsTour({
         },
         noBack: true,
       },
+      ...(inApp ? [OFFLINE_TOUR_STEPS.downloadTest(['[data-tour="ts-test"] [data-tour="offline-download"]', '[data-tour="ts-test"]'])] : []),
       {
         targets: [],
         title: { en: 'After the test', hi: 'टेस्ट के बाद' },
@@ -144,19 +162,40 @@ export default function MockTestsTour({
         },
       },
     );
+    if (inApp) list.push(OFFLINE_TOUR_STEPS.myOfflineTests());
     return list;
-  }, [hasSeries, openCategory, openExam, openSeries]);
+  }, [hasSeries, openCategory, openExam, openSeries, inApp]);
+
+  const whatsNewSteps: TourStep[] = useMemo(() => [
+    OFFLINE_TOUR_STEPS.newIntro('tests'),
+    OFFLINE_TOUR_STEPS.downloadTest([]),
+    OFFLINE_TOUR_STEPS.offlineBookmarks(['[data-tour="ts-bookmarks"]']),
+    OFFLINE_TOUR_STEPS.myOfflineTests(),
+  ], []);
 
   return (
-    <GuidedTour
-      open={open}
-      steps={steps}
-      language={language}
-      onFinish={finish}
-      introLabel={{ en: 'Test Series guide', hi: 'टेस्ट सीरीज गाइड' }}
-      startLabel={{ en: 'Start guide', hi: 'गाइड शुरू करें' }}
-      stepOffset={-1}
-      totalSteps={steps.length - 1}
-    />
+    <>
+      <GuidedTour
+        open={open}
+        steps={steps}
+        language={language}
+        onFinish={finish}
+        introLabel={{ en: 'Test Series guide', hi: 'टेस्ट सीरीज गाइड' }}
+        startLabel={{ en: 'Start guide', hi: 'गाइड शुरू करें' }}
+        stepOffset={-1}
+        totalSteps={steps.length - 1}
+      />
+      <GuidedTour
+        open={whatsNewOpen && !open}
+        steps={whatsNewSteps}
+        language={language}
+        onFinish={finishWhatsNew}
+        introLabel={{ en: 'What’s new', hi: 'नया क्या है' }}
+        startLabel={{ en: 'Show me', hi: 'दिखाएं' }}
+        finishLabel={{ en: 'Got it', hi: 'समझ गया' }}
+        stepOffset={-1}
+        totalSteps={whatsNewSteps.length - 1}
+      />
+    </>
   );
 }

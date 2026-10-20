@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./AuthContext";
 import DeploymentRecovery from "./components/DeploymentRecovery";
+import DesktopBridge from "./components/DesktopBridge";
 import { cookies } from "next/headers";
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default async function RootLayout({
       >
         <AuthProvider initialUserProfile={userProfile}>
           <DeploymentRecovery />
+          <DesktopBridge />
           {children}
         </AuthProvider>
       </body>

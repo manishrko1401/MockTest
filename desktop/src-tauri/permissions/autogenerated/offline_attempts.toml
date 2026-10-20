@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-offline-attempts"
+description = "Enables the offline_attempts command without any pre-configured scope."
+commands.allow = ["offline_attempts"]
+
+[[permission]]
+identifier = "deny-offline-attempts"
+description = "Denies the offline_attempts command without any pre-configured scope."
+commands.deny = ["offline_attempts"]

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import { randomUUID } from 'crypto';
 import { requireStaff } from '../../lib/serverAuth';
+import { notifyStaff, shorten } from '../../lib/adminPush';
 
 export async function POST(req: Request) {
   try {
@@ -70,6 +71,11 @@ export async function POST(req: Request) {
       };
     }
 
+    notifyStaff('inquiry', () => ({
+      title: `Contact inquiry · ${shorten(subject || 'general', 40)}`,
+      body: `${shorten(name, 40)}: ${shorten(message)}`,
+      data: { screen: 'inquiries' },
+    }));
     return NextResponse.json({ success: true, inquiry });
   } catch (error: any) {
     console.error('Error in POST /api/inquiries:', error);

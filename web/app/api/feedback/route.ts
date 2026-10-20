@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import { requireStaff } from '../../lib/serverAuth';
+import { notifyStaff, shorten } from '../../lib/adminPush';
 
 export async function POST(req: Request) {
   try {
@@ -38,6 +39,11 @@ export async function POST(req: Request) {
       }
     });
 
+    notifyStaff('feedback', () => ({
+      title: `Feedback ${'★'.repeat(Math.max(1, Math.min(5, Number(platformRating) || 0)))} · ${shorten(feedback.testTitle, 50)}`,
+      body: `${shorten(feedback.userFullName || 'Student', 40)}: ${feedback.feedbackText ? shorten(feedback.feedbackText) : `Exam ${examRating}/5, platform ${platformRating}/5`}`,
+      data: { screen: 'feedback' },
+    }));
     return NextResponse.json({ success: true, feedback });
   } catch (error: any) {
     console.error('Error in POST /api/feedback:', error);

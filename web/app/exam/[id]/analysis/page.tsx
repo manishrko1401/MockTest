@@ -36,6 +36,8 @@ import { TRANSLATIONS } from '../../../translations';
 import { processQuestionHtml, decodeHtml } from '../../../lib/mathUtils';
 import MathJaxText from '../../../lib/MathJaxText';
 import MathJaxLoader from '../../../components/MathJaxLoader';
+import { useOfflineMock } from '../../../lib/offlineExam';
+import OfflineBookmarkBadge from '../../../components/OfflineBookmarkBadge';
 
 // -----------------------------------------------------------------------------
 // RRB NTPC CBAT (Psycho Test) — T-Score result display
@@ -91,8 +93,11 @@ function matchCbatBattery(name: string): string | null {
 
 export default function ExamSolutionAnalysisPage() {
   const params = useParams();
-  const testId = (params?.id as string) || "ssc_cgl_tier1";
-  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage, reportQuestion, examCatalog } = useAuth();
+  // Offline (Windows app): attempts and questions come from the downloaded package
+  const offline = useOfflineMock();
+  const testId = offline?.testId || (params?.id as string) || "ssc_cgl_tier1";
+  const { currentUser, theme, toggleTheme, toggleBookmark, language, setLanguage, reportQuestion, examCatalog: liveCatalog } = useAuth();
+  const examCatalog = offline?.catalog || liveCatalog;
   const router = useRouter();
   const { isMobile } = useIsMobile();
 
@@ -249,7 +254,7 @@ export default function ExamSolutionAnalysisPage() {
   };
 
   // Load completed sessions for this testId
-  const attempts = currentUser
+  const attempts: MockTestRecord[] = offline ? (offline.attempts as MockTestRecord[]) : currentUser
     ? currentUser.testSessions.filter(
         s => (s.testId === testId || s.title.toLowerCase().includes(testId.replace(/_/g, ' '))) &&
              (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
@@ -263,7 +268,7 @@ export default function ExamSolutionAnalysisPage() {
   );
 
   useEffect(() => {
-    if (!currentUser?.id || !selectedRecId || selectedRecHasResponses || fetchedResponses[selectedRecId]) return;
+    if (offline || !currentUser?.id || !selectedRecId || selectedRecHasResponses || fetchedResponses[selectedRecId]) return;
     let cancelled = false;
     fetch('/api/db', {
       method: 'POST',
@@ -284,16 +289,24 @@ export default function ExamSolutionAnalysisPage() {
     setMounted(true);
 
     const fetchCustomQuestions = async () => {
+      if (offline) { setCustomQs(offline.customQs); setLoadingCustomQs(false); return; }
       try {
-        const res = await fetch('/api/db', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'get-custom-questions',
-            data: { testId }
-          })
-        });
-        const data = await res.json();
+        // Answers come only once the attempt is saved on the server; if this page opened a
+        // moment before that, ask again briefly.
+        let data: any = null;
+        for (let tryNo = 0; tryNo < 4; tryNo++) {
+          const res = await fetch('/api/db', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'get-custom-questions',
+              data: { testId }
+            })
+          });
+          data = await res.json();
+          if (!data?.success || data.answersIncluded !== false || !data.questions) break;
+          await new Promise(r => setTimeout(r, 1500));
+        }
         if (data.success && data.questions) {
           setCustomQs({
             questions: data.questions,
@@ -385,7 +398,7 @@ export default function ExamSolutionAnalysisPage() {
               </p>
               <div className="flex gap-2 justify-center pt-1">
                 <Link href="/mock-tests" className={btnSecondary}>Browse tests</Link>
-                <Link href={`/exam/${testId}`} className={btnPrimary}>Start test</Link>
+                <Link href={offline ? offline.examHref : `/exam/${testId}`} className={btnPrimary}>Start test</Link>
               </div>
             </div>
           </SectionCard>
@@ -1443,6 +1456,7 @@ export default function ExamSolutionAnalysisPage() {
                   <Bookmark className={`h-3 w-3 ${isBookmarked ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                   {isBookmarked ? (language === 'hi' ? 'बुकमार्क किया गया' : 'Bookmarked') : (language === 'hi' ? 'बुकमार्क करें' : 'Bookmark')}
                 </button>
+                <OfflineBookmarkBadge testId={testId} questionId={activeQuestion.id} />
 
                 <button
                   onClick={() => handleOpenReportModal(activeQuestion.id)}

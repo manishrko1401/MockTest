@@ -17,6 +17,8 @@ import {
 } from './CbatVisualComponents';
 import { Trophy } from 'lucide-react';
 import './CbatExamEngine.css';
+import { setDesktopExamMode } from '../../lib/desktopApp';
+import { useOfflineMock, newLocalId } from '../../lib/offlineExam';
 import { ExamProgress, createProgressSyncer, readLocalProgress, writeLocalProgress, clearLocalProgress, fetchServerProgress, newerProgress } from '../../lib/examProgress';
 
 interface CbatExamEngineProps {
@@ -27,7 +29,8 @@ interface CbatExamEngineProps {
 
 export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: CbatExamEngineProps) {
   const router = useRouter();
-  const { addAttempt, currentUser, saveOngoingSession } = useAuth();
+  const { addAttempt, waitForAttemptSave, currentUser, saveOngoingSession } = useAuth();
+  const offline = useOfflineMock();
   const [examLang, setExamLang] = useState<'en' | 'hi'>(initialExamLanguage);
 
   // Batteries State
@@ -62,12 +65,11 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
     let isCancelled = false;
     const fetchAdminQuestions = async () => {
       try {
-        const res = await fetch('/api/db', {
+        const data = offline ? { success: true, ...offline.customQs, title: offline.title } : await (await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'get-custom-questions', data: { testId } })
-        });
-        const data = await res.json();
+        })).json();
         if (!isCancelled && data.success && Array.isArray(data.questions) && data.questions.length > 0) {
           const parsedBatteries = buildCbatBatteriesFromCustomQuestions(
             data.questions, 
@@ -198,6 +200,13 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
       window.removeEventListener('pagehide', saveOnLeave);
       document.removeEventListener('visibilitychange', onVisibility);
     };
+  }, [progressReady]);
+
+  // Windows app: exam mode (full screen, no screenshots, refresh/back keys off) during the test
+  useEffect(() => {
+    if (!progressReady) return;
+    setDesktopExamMode(true);
+    return () => setDesktopExamMode(false);
   }, [progressReady]);
 
   const activeBattery = batteries[batteryIdx];
@@ -386,6 +395,15 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
     clearLocalProgress(testId, currentUser?.id);
     const progressFlushed = progressSyncRef.current ? progressSyncRef.current.stopAndFlush() : Promise.resolve();
 
+    if (offline) {
+      offline.onMockSubmitted({
+        localId: newLocalId(), testId, title: paperTitle ? `Station Master CBAT - ${paperTitle}` : 'Station Master CBAT (Psycho Test) Full Mock',
+        score: totalObtainedMarks, maxScore: totalMaxMarks, accuracy, durationSeconds: 1800, violations: 0,
+        responses: savedResponses, completedAt: new Date().toISOString(),
+      }).finally(() => router.push(offline.analysisHref));
+      return;
+    }
+
     // Save attempt to user profile via AuthContext
     if (currentUser && addAttempt) {
       try {
@@ -404,8 +422,12 @@ export default function CbatExamEngine({ testId, initialExamLanguage = 'en' }: C
       }
     }
 
-    // Forward to full RDSO T-Score Analysis page
-    router.push(`/exam/${testId}/analysis`);
+    // Forward to full RDSO T-Score Analysis page once the server has saved and scored it
+    progressFlushed.finally(async () => {
+      await new Promise(r => setTimeout(r, 0));
+      await waitForAttemptSave();
+      router.push(`/exam/${testId}/analysis`);
+    });
   };
 
   if (loadingQuestions || !progressReady) {

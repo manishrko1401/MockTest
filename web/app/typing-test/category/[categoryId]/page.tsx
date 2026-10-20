@@ -41,6 +41,7 @@ import {
 import { SiteHeader, SiteFooter } from '../../../components/SiteUI';
 import { TypingExamTour } from '../../../components/TypingTour';
 import { resetStaleTypingLocalData } from '../../../lib/typingLocalReset';
+import OfflineDownloadButton from '../../../components/OfflineDownloadButton';
 import { TypingTest, TypingCategory, TypingAttempt, isSscExam, isSscCglExam, isSscChslExam, isAiimsExam, detectExamCategory, ExamCategoryConfig } from '../../../lib/typingTypes';
 
 const cleanDisplayTitle = (title: string) => {
@@ -1229,6 +1230,7 @@ export default function TypingCategoryDetailPage({
                                   {isHindi ? 'टेस्ट शुरू करें' : 'Start Test'}
                                 </Link>
                               )}
+                              <OfflineDownloadButton kind="typing" id={test.id} className="ml-1.5 h-7 align-middle" />
                             </td>
                           </tr>
                         );

@@ -14,7 +14,6 @@ function formatPublishDate(date: Date): string {
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-
 // Helper to fetch text with standard headers
 async function fetchUrl(url: string): Promise<string> {
   const response = await fetch(url, {
@@ -39,11 +38,44 @@ type TargetCategory = {
 };
 
 const CATEGORY_CONFIG: TargetCategory[] = [
+  { name: 'Latest Jobs', category: 'notice', type: 'JOB', prefix: 'job_' },
   { name: 'Result', category: 'result', type: 'RESULT', prefix: 'res_' },
   { name: 'Admit Card', category: 'admit_card', type: 'ADMIT CARD', prefix: 'ac_' },
-  { name: 'Latest Jobs', category: 'notice', type: 'JOB', prefix: 'job_' },
   { name: 'Answer Key', category: 'answer_key', type: 'ANSWER KEY', prefix: 'ak_' }
 ];
+
+function detectCategoryFromTitle(title: string): TargetCategory {
+  const t = title.toLowerCase();
+  if (t.includes('result') || t.includes('merit list') || t.includes('marks') || t.includes('score card') || t.includes('selection list')) {
+    return { name: 'Result', category: 'result', type: 'RESULT', prefix: 'res_' };
+  }
+  if (t.includes('admit card') || t.includes('hall ticket') || t.includes('call letter') || t.includes('exam city') || t.includes('exam date') || t.includes('time table')) {
+    return { name: 'Admit Card', category: 'admit_card', type: 'ADMIT CARD', prefix: 'ac_' };
+  }
+  if (t.includes('answer key') || t.includes('omr sheet') || t.includes('answer-key') || t.includes('objection key')) {
+    return { name: 'Answer Key', category: 'answer_key', type: 'ANSWER KEY', prefix: 'ak_' };
+  }
+  return { name: 'Latest Jobs', category: 'notice', type: 'JOB', prefix: 'job_' };
+}
+
+// Concurrency runner
+async function mapConcurrent<T, R>(items: T[], concurrency: number, fn: (item: T, idx: number) => Promise<R>): Promise<R[]> {
+  const results: R[] = [];
+  let index = 0;
+  async function worker() {
+    while (index < items.length) {
+      const i = index++;
+      try {
+        results[i] = await fn(items[i], i);
+      } catch (err: any) {
+        // Continue worker
+      }
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
+}
 
 export async function GET(request: Request) {
   try {
@@ -57,7 +89,7 @@ export async function GET(request: Request) {
       if (denied) return denied;
     }
 
-    console.log(`Cron Sync started (forceResync: ${forceResync})...`);
+    console.log(`Cron Sync started from RojgarResult (forceResync: ${forceResync})...`);
     
     let newNoticesCount = 0;
     let updatedNoticesCount = 0;
@@ -69,159 +101,198 @@ export async function GET(request: Request) {
     const DEADLINE_MS = 50_000;
     const timeLeft = () => DEADLINE_MS - (Date.now() - runStartedAt);
 
-    type WorkItem = { id: string; title: string; url: string; isUpdate: boolean; existingLastDate?: string | null };
-    type CategoryQueue = { target: TargetCategory; queue: WorkItem[] };
-
-    const categoryQueues: CategoryQueue[] = [];
-    const listingErrors: Record<string, string> = {};
-
-    const ROJGAR_CATEGORY_URLS: Record<string, string> = {
-      'result': 'https://rojgarresult.com/result/',
-      'admit_card': 'https://rojgarresult.com/admit-card/',
-      'answer_key': 'https://rojgarresult.com/answer-key/',
-      'notice': 'https://rojgarresult.com/recruitments/'
+    type ScrapedNotice = {
+      title: string;
+      url: string;
+      category: string;
+      type: string;
+      prefix: string;
     };
 
-    // 1. Fetch live notices directly from RojgarResult as primary source
-    for (let idx = 0; idx < CATEGORY_CONFIG.length; idx++) {
-      const target = CATEGORY_CONFIG[idx];
-      const parsedItems: { title: string; url: string }[] = [];
-      const rojgarUrl = ROJGAR_CATEGORY_URLS[target.category];
+    const parsedItemsMap = new Map<string, ScrapedNotice>();
 
+    function addNoticeItem(rawHref: string, rawTitle: string, targetCat: TargetCategory) {
+      const cleanHref = rawHref.trim();
+      const cleanTitle = rawTitle
+        .replace(/<[^>]*>/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&#038;/g, '&')
+        .replace(/&#8211;/g, '-')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (
+        cleanHref.includes('rojgarresult.com') &&
+        !cleanHref.endsWith('/result/') &&
+        !cleanHref.endsWith('/admit-card/') &&
+        !cleanHref.endsWith('/answer-key/') &&
+        !cleanHref.endsWith('/recruitments/') &&
+        !cleanHref.endsWith('/admission/') &&
+        !cleanHref.endsWith('/syllabus/') &&
+        !cleanHref.includes('/page/') &&
+        !cleanHref.includes('/category/') &&
+        !cleanHref.includes('/tag/') &&
+        cleanHref !== 'https://rojgarresult.com/' &&
+        cleanHref !== 'https://rojgarresult.com' &&
+        cleanTitle.length > 5
+      ) {
+        if (!parsedItemsMap.has(cleanHref)) {
+          parsedItemsMap.set(cleanHref, {
+            title: cleanTitle,
+            url: cleanHref,
+            category: targetCat.category,
+            type: targetCat.type,
+            prefix: targetCat.prefix
+          });
+        }
+      }
+    }
+
+    // 1. Fetch RojgarResult Homepage (https://rojgarresult.com/) for freshest notices & trending banners
+    try {
+      const homeHtml = await fetchUrl('https://rojgarresult.com/');
+      
+      const homeSections = [
+        { marker: 'result-box', cat: { name: 'Result', category: 'result', type: 'RESULT', prefix: 'res_' } },
+        { marker: 'admitcard-box', cat: { name: 'Admit Card', category: 'admit_card', type: 'ADMIT CARD', prefix: 'ac_' } },
+        { marker: 'answerkey-box', cat: { name: 'Answer Key', category: 'answer_key', type: 'ANSWER KEY', prefix: 'ak_' } },
+        { marker: 'latest-jobs-section', cat: { name: 'Latest Jobs', category: 'notice', type: 'JOB', prefix: 'job_' } }
+      ];
+
+      for (const hs of homeSections) {
+        const sIdx = homeHtml.indexOf(hs.marker);
+        if (sIdx !== -1) {
+          const chunk = homeHtml.substring(sIdx, sIdx + 25000);
+          const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+          let m;
+          while ((m = h2Regex.exec(chunk)) !== null) {
+            addNoticeItem(m[1], m[2], hs.cat);
+          }
+        }
+      }
+
+      // Top pulse / marquee / highlights on home
+      const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+      let m;
+      while ((m = h2Regex.exec(homeHtml)) !== null) {
+        const cat = detectCategoryFromTitle(m[2]);
+        addNoticeItem(m[1], m[2], cat);
+      }
+      console.log(`Cron: Scraped ${parsedItemsMap.size} notices from RojgarResult Homepage`);
+    } catch (e: any) {
+      console.error('Cron: Failed to fetch RojgarResult homepage:', e.message);
+    }
+
+    // 2. Fetch live notices directly from RojgarResult Category pages
+    const ROJGAR_CATEGORY_URLS: Record<string, string> = {
+      'notice': 'https://rojgarresult.com/recruitments/',
+      'result': 'https://rojgarresult.com/result/',
+      'admit_card': 'https://rojgarresult.com/admit-card/',
+      'answer_key': 'https://rojgarresult.com/answer-key/'
+    };
+
+    for (const target of CATEGORY_CONFIG) {
+      const rojgarUrl = ROJGAR_CATEGORY_URLS[target.category];
       if (rojgarUrl) {
         try {
           const catHtml = await fetchUrl(rojgarUrl);
-          
-          // Pattern A: standard <h2><a href="...">Title</a></h2> in RojgarResult posts
           const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
           let m;
           while ((m = h2Regex.exec(catHtml)) !== null) {
-            const rawHref = m[1].trim();
-            const rawTitle = m[2]
-              .replace(/<[^>]*>/g, '')
-              .replace(/&amp;/g, '&')
-              .replace(/&#038;/g, '&')
-              .replace(/&#8211;/g, '-')
-              .replace(/\s+/g, ' ')
-              .trim();
-
-            if (
-              rawHref.includes('rojgarresult.com') &&
-              !rawHref.endsWith('/result/') &&
-              !rawHref.endsWith('/admit-card/') &&
-              !rawHref.endsWith('/answer-key/') &&
-              !rawHref.endsWith('/recruitments/') &&
-              !rawHref.includes('/page/') &&
-              !rawHref.includes('/category/') &&
-              !rawHref.includes('/tag/') &&
-              rawTitle.length > 5
-            ) {
-              parsedItems.push({ title: rawTitle, url: rawHref });
-            }
-          }
-
-          // Pattern B: gb-loop-item blocks
-          if (parsedItems.length === 0) {
-            const parts = catHtml.split('class="gb-loop-item');
-            for (let i = 1; i < parts.length; i++) {
-              const h2Match = /<h2[^>]*>([\s\S]+?)<\/h2>/i.exec(parts[i]);
-              if (h2Match) {
-                const hrefInH2 = /href="([^"]+)"/i.exec(h2Match[1]);
-                if (hrefInH2 && hrefInH2[1].includes('rojgarresult.com')) {
-                  const title = h2Match[1].replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
-                  parsedItems.push({ title, url: hrefInH2[1].trim() });
-                }
-              }
-            }
+            addNoticeItem(m[1], m[2], target);
           }
         } catch (e: any) {
           console.error(`Cron: Failed to fetch RojgarResult listing for ${target.name}:`, e.message);
-          listingErrors[target.name] = e.message;
         }
       }
-
-      // Fallback: If RojgarResult listing failed, try SarkariResult homepage as backup
-      if (parsedItems.length === 0) {
-        try {
-          const homeHtml = await fetchUrl('https://www.sarkariresult.com/');
-          const quickLists = homeHtml.split('<ul class="sarkari-quick-list">');
-          if (quickLists.length > idx + 1) {
-            const listContent = quickLists[idx + 1].split('</ul>')[0] || '';
-            const regex = /<li[^>]*><a\s+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi;
-            let match;
-            while ((match = regex.exec(listContent)) !== null) {
-              const rawHref = match[1].trim();
-              const rawTitle = match[2]
-                .replace(/&amp;/g, '&')
-                .replace(/&#038;/g, '&')
-                .replace(/&#8211;/g, '-')
-                .replace(/\s+/g, ' ')
-                .trim();
-              
-              if (rawHref.includes('sarkariresult.com') && rawTitle.length > 5) {
-                parsedItems.push({ title: rawTitle, url: rawHref });
-              }
-            }
-          }
-        } catch (fbErr: any) {
-          console.error(`Cron: Fallback SarkariResult also failed for ${target.name}:`, fbErr.message);
-        }
-      }
-
-      console.log(`Cron: Parsed ${parsedItems.length} items for ${target.name} from RojgarResult`);
-
-      // Deduplicate by URL so repeated links never collide
-      const uniqueItems: { title: string; url: string }[] = [];
-      const seenUrls = new Set<string>();
-      for (const item of parsedItems) {
-        if (!seenUrls.has(item.url)) {
-          seenUrls.add(item.url);
-          uniqueItems.push(item);
-        }
-      }
-
-      const idsByUrl = new Map<string, string>();
-      for (const item of uniqueItems) {
-        const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
-        idsByUrl.set(item.url, `${target.prefix}${hash}`);
-      }
-
-      const existingRecords = await prisma.notice.findMany({
-        where: { id: { in: Array.from(idsByUrl.values()) } },
-        select: { id: true, title: true, contentHtml: true, lastDate: true }
-      });
-      const existingById = new Map(existingRecords.map(r => [r.id, r]));
-
-      const queue: WorkItem[] = [];
-      for (const item of uniqueItems) {
-        const id = idsByUrl.get(item.url)!;
-        const existing = existingById.get(id);
-        if (existing) {
-          const needsLinksHeal = !existing.contentHtml || (!existing.contentHtml.toLowerCase().includes('important link') && !existing.contentHtml.toLowerCase().includes('useful link'));
-          if (forceResync || existing.title !== item.title || needsLinksHeal) {
-            queue.push({ id, title: item.title, url: item.url, isUpdate: true, existingLastDate: existing.lastDate });
-          }
-        } else {
-          queue.push({ id, title: item.title, url: item.url, isUpdate: false });
-        }
-      }
-
-      // Process newest daily notifications first (top of page)
-      console.log(`Cron: ${target.name} needs ${queue.length} new/updated notice(s) out of ${uniqueItems.length} unique parsed`);
-      categoryQueues.push({ target, queue });
     }
 
-    // Round-robin across categories within execution deadline
-    let madeProgress = true;
-    while (madeProgress && timeLeft() > 0) {
-      madeProgress = false;
-      for (const cq of categoryQueues) {
-        if (timeLeft() <= 0) break;
-        const work = cq.queue.shift();
-        if (!work) continue;
-        madeProgress = true;
+    console.log(`Cron: Total unique notices parsed from RojgarResult: ${parsedItemsMap.size}`);
 
-        const target = cq.target;
+    const allScraped = Array.from(parsedItemsMap.values());
+
+    // 3. Match against existing DB records
+    const idsByUrl = new Map<string, string>();
+    for (const item of allScraped) {
+      const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
+      idsByUrl.set(item.url, `${item.prefix}${hash}`);
+    }
+
+    const existingRecords = await prisma.notice.findMany({
+      where: {
+        OR: [
+          { id: { in: Array.from(idsByUrl.values()) } },
+          { rawUrl: { in: allScraped.map(i => i.url) } },
+          { url: { in: allScraped.map(i => i.url) } }
+        ]
+      },
+      select: { id: true, title: true, contentHtml: true, lastDate: true, rawUrl: true, url: true }
+    });
+
+    const existingById = new Map(existingRecords.map(r => [r.id, r]));
+    const existingByUrl = new Map<string, typeof existingRecords[0]>();
+    for (const r of existingRecords) {
+      if (r.rawUrl) existingByUrl.set(r.rawUrl.toLowerCase(), r);
+      if (r.url) existingByUrl.set(r.url.toLowerCase(), r);
+    }
+
+    type WorkItem = {
+      id: string;
+      title: string;
+      url: string;
+      category: string;
+      type: string;
+      isUpdate: boolean;
+      existingLastDate?: string | null;
+    };
+
+    const newItemsQueue: WorkItem[] = [];
+    const updateItemsQueue: WorkItem[] = [];
+
+    for (const item of allScraped) {
+      const computedId = idsByUrl.get(item.url)!;
+      const existing = existingById.get(computedId) || existingByUrl.get(item.url.toLowerCase());
+
+      if (existing) {
+        const hasContent = existing.contentHtml && existing.contentHtml.length > 5;
+        const titleChanged = existing.title !== item.title;
+        if (forceResync || titleChanged || !hasContent) {
+          updateItemsQueue.push({
+            id: existing.id,
+            title: item.title,
+            url: item.url,
+            category: item.category,
+            type: item.type,
+            isUpdate: true,
+            existingLastDate: existing.lastDate
+          });
+        }
+      } else {
+        newItemsQueue.push({
+          id: computedId,
+          title: item.title,
+          url: item.url,
+          category: item.category,
+          type: item.type,
+          isUpdate: false
+        });
+      }
+    }
+
+    console.log(`Cron: ${newItemsQueue.length} NEW notice(s) to insert, ${updateItemsQueue.length} notice(s) to update`);
+
+    // Process NEW NOTICES FIRST with high priority
+    const combinedWork = [...newItemsQueue, ...updateItemsQueue];
+
+    // Concurrently process items within deadline
+    let workIndex = 0;
+    while (workIndex < combinedWork.length && timeLeft() > 5000) {
+      const batchSize = Math.min(5, combinedWork.length - workIndex);
+      const batch = combinedWork.slice(workIndex, workIndex + batchSize);
+      workIndex += batchSize;
+
+      await mapConcurrent(batch, 5, async (work) => {
         let dateObj = new Date();
         let directUrl = work.url;
         let lastDate: string | null = work.existingLastDate ?? null;
@@ -229,7 +300,7 @@ export async function GET(request: Request) {
 
         try {
           const pageHtml = await fetchUrl(work.url);
-          directUrl = extractDirectLink(pageHtml, work.url, target.category);
+          directUrl = extractDirectLink(pageHtml, work.url, work.category);
           contentHtml = extractNoticeContent(pageHtml);
 
           const parsedLastDate = extractLastDate(pageHtml);
@@ -243,7 +314,7 @@ export async function GET(request: Request) {
             }
           }
         } catch (err: any) {
-          console.error(`Cron: Warning: Failed to fetch detail page for ${work.url}:`, err.message);
+          console.error(`Cron: Detail fetch failed for ${work.url}:`, err.message);
         }
 
         const dateStr = formatPublishDate(dateObj);
@@ -255,14 +326,12 @@ export async function GET(request: Request) {
           try {
             contentLink = await uploadNoticeHtmlToTigris(work.id, contentHtml);
           } catch (e: any) {
-            console.error(`Failed to upload notice ${work.id} HTML to Tigris:`, e.message);
             contentLink = contentHtml;
           }
         }
 
         try {
           if (work.isUpdate) {
-            console.log(`Cron: Updating ${target.name}: "${work.title}"`);
             await prisma.notice.update({
               where: { id: work.id },
               data: {
@@ -272,14 +341,12 @@ export async function GET(request: Request) {
                 url: directUrl,
                 rawUrl: work.url,
                 lastDate,
-                contentHtml: contentLink,
-                createdAt: createdAtTimestamp
+                ...(contentLink ? { contentHtml: contentLink } : {})
               }
             });
             updatedNoticesCount++;
             updatedTitles.push(work.title);
           } else {
-            console.log(`Cron: Found NEW ${target.name}: "${work.title}"`);
             await prisma.notice.upsert({
               where: { id: work.id },
               update: {
@@ -289,15 +356,15 @@ export async function GET(request: Request) {
                 url: directUrl,
                 rawUrl: work.url,
                 lastDate,
-                contentHtml: contentLink
+                ...(contentLink ? { contentHtml: contentLink } : {})
               },
               create: {
                 id: work.id,
                 title: work.title,
                 date: dateStr,
                 publishDate: publishDateStr,
-                type: target.type,
-                category: target.category,
+                type: work.type,
+                category: work.category,
                 url: directUrl,
                 rawUrl: work.url,
                 lastDate,
@@ -309,15 +376,15 @@ export async function GET(request: Request) {
             importedTitles.push(work.title);
           }
         } catch (dbErr: any) {
-          console.error(`Cron: Database error saving notice ${work.id} ("${work.title}"):`, dbErr.message);
+          console.error(`Cron: Database error for ${work.id} ("${work.title}"):`, dbErr.message);
         }
         importedIndex++;
-      }
+      });
     }
 
-    const remainingBacklog = categoryQueues.reduce((sum, cq) => sum + cq.queue.length, 0);
+    const remainingBacklog = combinedWork.length - workIndex;
     if (remainingBacklog > 0) {
-      console.log(`Cron: Deadline reached with ${remainingBacklog} notice(s) still queued; they'll be picked up on the next run.`);
+      console.log(`Cron: Deadline reached with ${remainingBacklog} notice(s) still remaining for next run.`);
     }
 
     if (newNoticesCount > 0 || updatedNoticesCount > 0) {
@@ -330,12 +397,11 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       message: remainingBacklog > 0
-        ? `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices. ${remainingBacklog} more queued for the next run.`
-        : `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices.`,
+        ? `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices. ${remainingBacklog} more queued for next run.`
+        : `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices from RojgarResult.`,
       imported: importedTitles,
       updated: updatedTitles,
-      remainingBacklog,
-      ...(Object.keys(listingErrors).length > 0 ? { listingErrors } : {})
+      remainingBacklog
     });
   } catch (error: any) {
     console.error("Cron Error:", error);

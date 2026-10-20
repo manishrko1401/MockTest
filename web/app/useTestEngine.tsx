@@ -1,3 +1,4 @@
+import { scoreSession } from './lib/examScoring';
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 
 // ============================================================================
@@ -638,69 +639,14 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
 
     case 'SUBMIT_EXAM': {
       if (state.isExamSubmitted) return state;
-
-      // Evaluation Logic
-      let totalMarks = 0;
-      let obtainedMarks = 0;
-      let correctCount = 0;
-      let incorrectCount = 0;
-      let unattemptedCount = 0;
-
-      session.sections.forEach((section) => {
-        const questions = getSectionQuestions(session, session.sections.indexOf(section));
-
-        questions.forEach((q) => {
-          const resp = state.responses[q.id];
-          const positive = q.positiveMark !== undefined && q.positiveMark !== null ? Number(q.positiveMark) : Number(section.positiveMark);
-          const negative = q.negativeMark !== undefined && q.negativeMark !== null ? Number(q.negativeMark) : Number(section.negativeMark);
-
-          totalMarks += positive;
-
-          // TCS iON scoring validation rule:
-          // Count only ANSWERED (3) or ANSWERED_AND_MARKED_FOR_REVIEW (5)
-          if (resp && (resp.state === 3 || resp.state === 5 || (resp.selectedOptionIndex !== null && resp.selectedOptionIndex !== undefined))) {
-            // RPSC RAS: Option index 4 = "Leave Question Unattempted" — 0 marks, no penalty
-            if (state.isRpscRasMode && resp.selectedOptionIndex === 4) {
-              unattemptedCount += 1;
-            } else if (resp.selectedOptionIndex === q.correctOptionIndex) {
-              obtainedMarks += positive;
-              correctCount += 1;
-            } else {
-              obtainedMarks -= negative;
-              incorrectCount += 1;
-            }
-          } else {
-            // RPSC RAS: If question is still completely unattempted without Option 5 selected, apply penalty
-            if (state.isRpscRasMode) {
-              const rpscPenalty = negative > 0 ? negative : 0.44;
-              obtainedMarks -= rpscPenalty;
-              incorrectCount += 1;
-              unattemptedCount += 1;
-            } else {
-              unattemptedCount += 1;
-            }
-          }
-        });
-      });
-
-      const accuracyPercentage =
-        correctCount + incorrectCount > 0
-          ? Math.round((correctCount / (correctCount + incorrectCount)) * 10000) / 100
-          : 0;
-
+      // Same rules as the server's re-scoring (app/lib/examScoring.ts). Before submission the
+      // browser has no answer key, so this is provisional; the saved result comes from the server.
       return {
         ...state,
         isTimerRunning: false,
         isExamSubmitted: true,
         isExtraTimeMode: false,
-        score: {
-          totalMarks: Math.round(totalMarks * 100) / 100,
-          obtainedMarks: Math.round(obtainedMarks * 100) / 100,
-          correctCount,
-          incorrectCount,
-          unattemptedCount,
-          accuracyPercentage,
-        },
+        score: scoreSession(session, state.responses, state.isRpscRasMode),
       };
     }
 

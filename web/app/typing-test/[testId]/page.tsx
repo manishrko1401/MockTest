@@ -37,6 +37,8 @@ import {
   User
 } from 'lucide-react';
 import { resetStaleTypingLocalData } from '../../lib/typingLocalReset';
+import { setDesktopExamMode } from '../../lib/desktopApp';
+import { useOfflineTyping, newLocalId } from '../../lib/offlineExam';
 import {
   TypingTest,
   TypingAttempt,
@@ -82,7 +84,10 @@ const cleanDisplayTitle = (title: string) => {
 };
 
 export default function TCSiONTypingTerminalPage() {
-  const { testId } = useParams();
+  const params = useParams();
+  // Offline (Windows app): the test comes from the downloaded package, results go to the app's outbox
+  const offline = useOfflineTyping();
+  const testId = offline?.testId || params?.testId;
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewMode = searchParams.get('view') || searchParams.get('mode');
@@ -275,6 +280,11 @@ export default function TCSiONTypingTerminalPage() {
 
   // Drop browser copies of typing data from before the last server-side reset
   useEffect(() => { resetStaleTypingLocalData(); }, []);
+
+  // Windows app: exam mode (full screen, no screenshots, refresh/back keys off) while the test runs
+  const typingInProgress = !isAnalysisMode && !!currentUser && !!test && phase !== 'RESULT';
+  useEffect(() => { setDesktopExamMode(typingInProgress); }, [typingInProgress]);
+  useEffect(() => () => setDesktopExamMode(false), []);
 
   useEffect(() => {
     const audio = typingAudioRef.current;
@@ -568,6 +578,22 @@ export default function TCSiONTypingTerminalPage() {
           }
         }
 
+        if (offline) {
+          const currentTest = offline.typingTest;
+          setTest(currentTest);
+          currentLoadedIdRef.current = currentTestId;
+          loadedTestIdRef.current = currentTest.id;
+          const hasResultSession = typeof window !== 'undefined' && sessionStorage.getItem(`typing_phase_${currentTest.id}`) === 'RESULT';
+          if (isAnalysisMode || hasResultSession) {
+            await loadAttemptForAnalysis(currentTest);
+          } else if (currentUser) {
+            initDemoPhase(currentTest);
+          } else {
+            setIsTimerRunning(false);
+          }
+          return;
+        }
+
         const res = await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -856,6 +882,12 @@ export default function TCSiONTypingTerminalPage() {
           setAttemptsList(updatedLast2);
           setSelectedAttemptIndex(0);
         } catch (e) {}
+      }
+
+      if (offline) {
+        // Kept on this PC (the result above is already saved for this screen); uploaded when online
+        await offline.onTypingSubmitted({ ...attemptData, localId: newLocalId(), completedAt: new Date().toISOString() });
+        return;
       }
 
       const res = await fetch('/api/db', {

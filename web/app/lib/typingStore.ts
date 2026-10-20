@@ -445,7 +445,13 @@ export async function saveTypingAttempt(attempt: Partial<TypingAttempt>): Promis
       targetText: attempt.targetText || '',
       allowRetype: attempt.allowRetype,
       retypeCycles: attempt.retypeCycles,
-      detailedMistakes: attempt.detailedMistakes as any || []
+      detailedMistakes: attempt.detailedMistakes as any || [],
+      // Attempts finished offline in the Windows app keep their real time (up to 90 days back)
+      ...((() => {
+        const t = attempt.completedAt ? new Date(attempt.completedAt as any).getTime() : NaN;
+        return Number.isFinite(t) && t <= Date.now() + 60_000 && t >= Date.now() - 90 * 86400000
+          ? { completedAt: new Date(t), createdAt: new Date(t) } : {};
+      })()),
     }
   });
 

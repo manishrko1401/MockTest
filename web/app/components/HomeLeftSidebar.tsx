@@ -4,7 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
+import { useIsDesktopApp, exitDesktopApp } from '../lib/desktopApp';
+import { WindowsAppMenuItem } from './WindowsAppDownload';
 import {
+  HardDriveDownload,
+  CalendarCheck,
+  Power,
   Trophy,
   BookOpen,
   Award,
@@ -47,6 +52,7 @@ export default function HomeLeftSidebar({
   const { currentUser, language, noticesList } = useAuth();
   const t = TRANSLATIONS[language];
   const isHindi = language === 'hi';
+  const inDesktopApp = useIsDesktopApp();
   const isPassPro = currentUser?.subscriptionTier === 'Testbook Pass Pro' || currentUser?.subscriptionTier === 'Testbook Pass';
 
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -108,6 +114,14 @@ export default function HomeLeftSidebar({
       href: '/typing-test',
       icon: Keyboard,
       iconColor: 'text-[#1e4e79] dark:text-blue-400',
+    },
+    {
+      id: 'planner',
+      title: isHindi ? 'स्टडी प्लानर' : 'Study Planner',
+      subtitle: isHindi ? 'टू-डू, दैनिक लक्ष्य व परीक्षा गिनती' : 'To-do, Daily Targets & Exam Countdown',
+      href: '/planner',
+      icon: CalendarCheck,
+      iconColor: 'text-teal-600 dark:text-teal-400',
     },
     {
       id: 'notices',
@@ -471,6 +485,48 @@ export default function HomeLeftSidebar({
               </div>
               <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
             </button>
+
+            {/* Offline tests: only inside the Windows app */}
+            {inDesktopApp && (
+              <Link href="/offline" className="w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 hover:bg-[#f2f6fa] dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-200 group">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[#eef3f8] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[#1e4e79] dark:text-blue-400 shrink-0">
+                    <HardDriveDownload className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-100 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-colors block leading-tight">{isHindi ? 'ऑफ़लाइन टेस्ट' : 'Offline Tests'}</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal block mt-0.5">{isHindi ? 'बिना इंटरनेट टेस्ट दें' : 'Attempt without internet'}</span>
+                  </div>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 transition-all shrink-0" />
+              </Link>
+            )}
+
+            {/* Download the Windows app: website only (the right installer for this PC) */}
+            {!inDesktopApp && <WindowsAppMenuItem hi={isHindi} />}
+
+            {/* Exit App: only inside the Windows app */}
+            {inDesktopApp && (
+              <button
+                type="button"
+                onClick={() => exitDesktopApp(isHindi)}
+                className="w-full flex items-center justify-between py-2.5 px-3 text-left transition-colors duration-150 cursor-pointer group hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-700 dark:text-slate-200"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 shrink-0">
+                    <Power className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-red-700 dark:text-red-400 block leading-tight">
+                      {isHindi ? 'ऐप बंद करें' : 'Exit App'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal block mt-0.5">
+                      {isHindi ? 'मॉक टेस्ट हब बंद करें' : 'Close Mock Test Hub'}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
         </div>
 

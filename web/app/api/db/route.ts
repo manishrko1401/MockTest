@@ -44,6 +44,10 @@ import {
   verifyPassword,
   isPasswordHash,
 } from '../../lib/serverAuth';
+import { PLANNER_ACTIONS, handlePlannerAction } from '../../lib/planner';
+import { generateExamSession } from '../../lib/examUtils';
+import { notifyStaff, studentLabel, shorten } from '../../lib/adminPush';
+import { scoreSession, scoreCbat, isCbatTest, isRpscRasTest, stripAnswers, ScoreResult } from '../../lib/examScoring';
 
 // -----------------------------------------------------------------------------
 // Who may call each action (see ACCESS CONTROL in POST). Not listed = refused.
@@ -68,7 +72,8 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   'bootstrap': { level: 'public' },
   'catalog-sync': { level: 'public' },
   'get-tests-by-series': { level: 'public' },
-  'get-custom-questions': { level: 'public' },
+  'get-custom-questions': { level: 'public', optionalIdentity: true },
+  'test-access': { level: 'public', optionalIdentity: true },
   'get-single-notice-content': { level: 'public' },
   'get-typing-categories': { level: 'public', optionalIdentity: true },
   'get-typing-passages': { level: 'public' },
@@ -88,6 +93,8 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   'complete-tour': { level: 'user' },
   'toggle-bookmark': { level: 'user' },
   'add-attempt': { level: 'user' },
+  'offline-download': { level: 'user' },
+  'offline-bookmarks': { level: 'user' },
   'save-exam-progress': { level: 'user' },
   'get-exam-progress': { level: 'user' },
   'save-ongoing-session': { level: 'user' },
@@ -113,6 +120,8 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   'locker-reset-pin-with-password': { level: 'user' },
   'locker-send-reset-otp': { level: 'user' },
   'locker-verify-otp-and-reset-pin': { level: 'user' },
+  // Study Planner (app/lib/planner.ts)
+  ...Object.fromEntries(PLANNER_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
 
   // Staff: ADMIN only
   'admin-data': { level: 'staff', roles: [...SUPPORT_ROLES, ...CONTENT_ROLES, ...NOTICE_ROLES] }, // non-admins get a reduced list
@@ -388,6 +397,10 @@ export async function POST(request: Request) {
       }
     }
 
+    if ((PLANNER_ACTIONS as readonly string[]).includes(action)) {
+      return await handlePlannerAction(action, data);
+    }
+
     switch (action) {
       case 'request-password-reset':
         return await handleRequestPasswordReset(data);
@@ -467,8 +480,14 @@ export async function POST(request: Request) {
       case 'save-custom-questions':
       case 'bulk-import-questions':
         return await handleSaveCustomQuestions(data || body);
+      case 'offline-download':
+        return await handleOfflineDownload(data, requester!);
+      case 'offline-bookmarks':
+        return await handleOfflineBookmarks(data, requester!);
+      case 'test-access':
+        return await handleTestAccess(data, requester);
       case 'get-custom-questions':
-        return await handleGetCustomQuestions(data || body);
+        return await handleGetCustomQuestions(data || body, requester, request);
       case 'reorder-categories':
         return await handleReorderCategories(data);
       case 'reorder-subcategories':
@@ -477,8 +496,15 @@ export async function POST(request: Request) {
         return await handleReorderSubSubCategories(data);
       case 'reorder-mocktests':
         return await handleReorderMockTests(data);
-      case 'report-question':
-        return await handleReportQuestion(data);
+      case 'report-question': {
+        const res = await handleReportQuestion(data);
+        if (res.ok) notifyStaff('report', async () => ({
+          title: `Question reported${data?.mockTestTitle ? ` · ${shorten(data.mockTestTitle, 60)}` : ''}`,
+          body: `${await studentLabel(data?.userId, 'Visitor')}: ${shorten(data?.message || '')}`,
+          data: { screen: 'reports' },
+        }));
+        return res;
+      }
       case 'delete-reported-question':
         return await handleDeleteReportedQuestion(data);
       case 'get-support-messages':
@@ -511,8 +537,15 @@ export async function POST(request: Request) {
         return await handleGetAttempts();
       case 'get-session-analysis':
         return await handleGetAdminSessionAnalysis(data || body);
-      case 'submit-suggestion':
-        return await handleSubmitSuggestion(data);
+      case 'submit-suggestion': {
+        const res = await handleSubmitSuggestion(data);
+        if (res.ok) notifyStaff('suggestion', () => ({
+          title: `New suggestion · ${shorten(data?.category || 'General', 40)}`,
+          body: `${shorten(data?.name || 'Visitor', 40)}: ${shorten(data?.message || '')}`,
+          data: { screen: 'suggestions' },
+        }));
+        return res;
+      }
       case 'get-suggestions':
         return await handleGetSuggestions();
       case 'update-suggestion-status':
@@ -979,7 +1012,7 @@ async function handleBootstrap(req?: Request) {
   // EGRESS-OPT: Fetch Notices with a PER-CATEGORY cap, not one shared pool.
   //   - Announcements: ALL of them (no limit) — permanent home-page banner items that must
   //     always be returned regardless of how much other content has synced since.
-  //   - Result / Admit Card / Answer Key / Notice(Jobs): each capped independently at 40.
+  //   - Result / Admit Card / Answer Key / Notice(Jobs): each capped independently at 60.
   // Categories sync at very different volumes (Jobs alone can post 10x what Result does in
   // a day), so a single shared "100 most recent across all categories" pool lets the highest-
   // volume category crowd every other one out entirely — that's exactly what happened here:
@@ -999,12 +1032,12 @@ async function handleBootstrap(req?: Request) {
       orderBy: { createdAt: 'desc' },
       select: noticeSelect,
     }),
-    // 40 most recent per category, fetched independently so none can starve the others
+    // 60 most recent per category, fetched independently so none can starve the others
     ...NOTICE_CATEGORIES.map(category =>
       prisma.notice.findMany({
         where: { category },
         orderBy: { createdAt: 'desc' },
-        take: 40,
+        take: 60,
         select: noticeSelect,
       })
     ),
@@ -2131,8 +2164,249 @@ async function ensureMockTestExists(testId: string, title?: string, maxMarks?: n
   }
 }
 
+/** A real past date (up to 90 days back) from the client, or null. */
+function pastDate(value: unknown): Date | null {
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+  const d = new Date(value);
+  const t = d.getTime();
+  return Number.isFinite(t) && t <= Date.now() + 60_000 && t >= Date.now() - 90 * 86400000 ? d : null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Offline tests (Windows app). A download is encrypted for one device: the app sends its X25519
+// public key, the server encrypts the package with an ephemeral key + HKDF-SHA256 + AES-256-GCM.
+// Only that PC's app (whose private key is kept with Windows DPAPI) can open it.
+// ---------------------------------------------------------------------------------------------
+const OFFLINE_DAYS = 30;
+const X25519_SPKI_PREFIX = Buffer.from('302a300506032b656e032100', 'hex');
+
+function encryptForDevice(payload: unknown, devicePublicKeyB64: string) {
+  const raw = Buffer.from(devicePublicKeyB64, 'base64');
+  if (raw.length !== 32) throw new Error('Invalid device key');
+  const devicePub = crypto.createPublicKey({ key: Buffer.concat([X25519_SPKI_PREFIX, raw]), format: 'der', type: 'spki' });
+  const eph = crypto.generateKeyPairSync('x25519');
+  const shared = crypto.diffieHellman({ privateKey: eph.privateKey, publicKey: devicePub });
+  const salt = crypto.randomBytes(16);
+  const key = Buffer.from(crypto.hkdfSync('sha256', shared, salt, Buffer.from('mth-offline-v1'), 32));
+  const nonce = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
+  const ct = Buffer.concat([cipher.update(JSON.stringify(payload)), cipher.final(), cipher.getAuthTag()]);
+  const epk = (eph.publicKey.export({ format: 'der', type: 'spki' }) as Buffer).subarray(-32);
+  return JSON.stringify({ v: 1, epk: epk.toString('base64'), salt: salt.toString('base64'), nonce: nonce.toString('base64'), ct: ct.toString('base64') });
+}
+
+/** Question images become part of the (encrypted) download, so they work offline. */
+async function embedImages(questions: any[]): Promise<any[]> {
+  let json = JSON.stringify(questions);
+  const urls = [...new Set(json.match(/https?:\/\/[^"'\s)\\]+?\.(?:png|jpe?g|gif|webp|svg)(?:\?[^"'\s)\\]*)?/gi) || [])].slice(0, 120);
+  let total = 0;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) continue;
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length > 3 * 1024 * 1024 || total + buf.length > 25 * 1024 * 1024) continue;
+      total += buf.length;
+      const type = res.headers.get('content-type') || 'image/png';
+      json = json.split(url).join(`data:${type};base64,${buf.toString('base64')}`);
+    } catch { /* keep the link; it loads when online */ }
+  }
+  return JSON.parse(json);
+}
+
+/** The test's place in the catalog (title, timing, category names) as a one-test catalog. */
+function catalogEntryFor(catalog: any[], testId: string) {
+  for (const cat of catalog || []) {
+    for (const sub of cat.subCategories || []) {
+      const direct = (sub.tests || []).find((t: any) => t.id === testId);
+      if (direct) return [{ id: cat.id, name: cat.name, subCategories: [{ id: sub.id, name: sub.name, tests: [direct] }] }];
+      for (const ss of sub.subSubCategories || []) {
+        const t = (ss.tests || []).find((x: any) => x.id === testId);
+        if (t) return [{ id: cat.id, name: cat.name, subCategories: [{ id: sub.id, name: sub.name, subSubCategories: [{ ...ss, tests: [t] }] }] }];
+      }
+    }
+  }
+  return [];
+}
+
+async function handleOfflineDownload(data: any, requester: { id: string; role: string }) {
+  const { kind, id, devicePublicKey } = data || {};
+  if ((kind !== 'mock' && kind !== 'typing') || typeof id !== 'string' || !id || typeof devicePublicKey !== 'string') {
+    return NextResponse.json({ success: false, error: 'Invalid download request' }, { status: 400 });
+  }
+  const limit = checkRateLimit(`offline_download:${requester.id}`, 40, 24 * 60 * 60 * 1000);
+  if (!limit.allowed) {
+    return NextResponse.json({ success: false, error: 'Daily download limit reached. Please try again tomorrow.' }, { status: 429 });
+  }
+  const isStaff = requester.role !== 'STUDENT';
+  const now = Date.now();
+  let payload: any;
+  let meta: any;
+
+  if (kind === 'mock') {
+    const { mockTest, questions } = await loadTestQuestions(id);
+    if (!mockTest || !questions?.length) return NextResponse.json({ success: false, error: 'This test has no questions yet.' }, { status: 404 });
+    if (!isStaff) {
+      const u = await prisma.user.findUnique({ where: { id: requester.id }, select: { subscriptionTier: true } });
+      if (!tierAllows(mockTest.requiredTierName || 'None', u?.subscriptionTier)) {
+        return NextResponse.json({ success: false, error: 'This is a PRO test. Unlock it to download.', code: 'PRO_REQUIRED' }, { status: 403 });
+      }
+    }
+    const catalog = catalogCache.examCatalog || await getCompiledExamCatalog();
+    const past = await prisma.userTestSession.findMany({
+      where: { userId: requester.id, mockTestId: mockTest.id, status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] } },
+      orderBy: { completedAt: 'desc' },
+      take: 3,
+      include: { responses: { select: { questionId: true, selectedOptionIndex: true, state: true, elapsedSeconds: true } } },
+    });
+    const withImages = await embedImages(questions);
+    const version = crypto.createHash('sha256').update(JSON.stringify(questions)).digest('hex').slice(0, 16);
+    payload = {
+      v: 1, kind, id: mockTest.id, userId: requester.id, title: mockTest.title, version,
+      downloadedAt: now, expiresAt: now + OFFLINE_DAYS * 86400000,
+      data: {
+        isCbat: isCbatTest(mockTest.id, catalog),
+        catalog: catalogEntryFor(catalog, mockTest.id),
+        customQs: {
+          questions: withImages,
+          positiveMarks: mockTest.positiveMarks, negativeMarks: mockTest.negativeMarks,
+          durationMinutes: mockTest.durationMinutes, questionsCount: mockTest.questionsCount, maxMarks: mockTest.maxMarks,
+          hasSectionalTiming: mockTest.hasSectionalTiming, sectionalTimings: mockTest.sectionalTimings,
+          lockSectionOnSubmit: mockTest.lockSectionOnSubmit, sections: mockTest.sections,
+        },
+        pastAttempts: past.map(s => ({
+          id: s.id, testId: mockTest.id, title: mockTest.title, score: s.finalScore ?? 0, maxScore: s.maxScore ?? mockTest.maxMarks ?? 0,
+          accuracy: s.accuracyPercentage ?? 0, durationSeconds: s.timeSpentSeconds, status: s.status, violations: s.violationsCount,
+          date: s.startedAt.toISOString().split('T')[0], startedAt: s.startedAt.toISOString(),
+          completedAt: s.completedAt ? s.completedAt.toISOString() : null, createdAt: s.createdAt.toISOString(),
+          responses: Object.fromEntries(s.responses.map(r => [r.questionId, { selectedOptionIndex: r.selectedOptionIndex, elapsedSeconds: r.elapsedSeconds, state: r.state }])),
+        })),
+      },
+    };
+    meta = { title: mockTest.title, subtitle: `${questions.length} questions · ${mockTest.durationMinutes || ''} min`.replace(' ·  min', ''), questions: questions.length };
+  } else {
+    const test = await getTypingTestById(id);
+    if (!test || !test.passageText) return NextResponse.json({ success: false, error: 'Typing test not found.' }, { status: 404 });
+    const category = (await getTypingCategories()).find(c => c.id === test.categoryId);
+    if (category && category.isActive === false && !isStaff) {
+      return NextResponse.json({ success: false, error: 'This typing test is not available.' }, { status: 404 });
+    }
+    payload = {
+      v: 1, kind, id: test.id, userId: requester.id, title: test.title,
+      version: String((test as any).updatedAt || ''), downloadedAt: now, expiresAt: now + OFFLINE_DAYS * 86400000,
+      data: { test, categoryName: category?.name || '' },
+    };
+    meta = { title: test.title, subtitle: category?.name || '', questions: null };
+  }
+
+  try {
+    return NextResponse.json({ success: true, meta, envelope: encryptForDevice(payload, devicePublicKey) });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Invalid device key' }, { status: 400 });
+  }
+}
+
+/**
+ * Bookmarked questions of one test, encrypted for this PC, so the Bookmarks page works offline.
+ * The app asks right after a bookmark is added (only that test is rebuilt). Questions are built
+ * exactly as the online Bookmarks page builds them, with the same answer rules as
+ * get-custom-questions (answers only after finishing the test, PRO lock).
+ */
+async function handleOfflineBookmarks(data: any, requester: { id: string; role: string }) {
+  const { devicePublicKey, testId, questionIds } = data || {};
+  if (typeof devicePublicKey !== 'string' || typeof testId !== 'string' || !/^[A-Za-z0-9_-]{1,120}$/.test(testId)
+    || !Array.isArray(questionIds) || questionIds.length === 0 || questionIds.length > 300 || !questionIds.every((q: unknown) => typeof q === 'string')) {
+    return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
+  }
+  const limit = checkRateLimit(`offline_bookmarks:${requester.id}`, 500, 24 * 60 * 60 * 1000);
+  if (!limit.allowed) return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
+
+  const isStaff = requester.role !== 'STUDENT';
+  let test: any = { status: 'missing', title: '', questions: [], sectionNames: {} };
+  const { mockTest, questions: fullQuestions } = await loadTestQuestions(testId);
+  if (fullQuestions?.length) {
+    const [u, done] = isStaff ? [null, null] : await Promise.all([
+      prisma.user.findUnique({ where: { id: requester.id }, select: { subscriptionTier: true } }),
+      prisma.userTestSession.findFirst({
+        where: { userId: requester.id, mockTestId: { in: [mockTest?.id, testId].filter(Boolean) as string[] }, status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] } },
+        select: { id: true },
+      }),
+    ]);
+    const withAnswers = isStaff || !!done;
+    if (withAnswers || tierAllows(mockTest?.requiredTierName || 'None', u?.subscriptionTier)) {
+      const catalog = catalogCache.examCatalog || await getCompiledExamCatalog();
+      const session = generateExamSession(testId, catalog, {
+        questions: withAnswers ? fullQuestions : stripAnswers(fullQuestions),
+        positiveMarks: mockTest?.positiveMarks, negativeMarks: mockTest?.negativeMarks,
+        durationMinutes: mockTest?.durationMinutes, questionsCount: mockTest?.questionsCount, maxMarks: mockTest?.maxMarks,
+        hasSectionalTiming: mockTest?.hasSectionalTiming, sectionalTimings: mockTest?.sectionalTimings, sections: mockTest?.sections,
+      });
+      const wanted = new Set<string>(questionIds);
+      const picked = session.questions.map((q: any, i: number) => ({ ...q, qNo: i + 1 })).filter((q: any) => wanted.has(q.id));
+      test = {
+        status: 'ready',
+        title: mockTest?.title || session.testTitle,
+        questions: await embedImages(picked),
+        sectionNames: Object.fromEntries(session.sections.map((s: any) => [s.id, s.name])),
+      };
+    } else {
+      test = { ...test, title: mockTest?.title || '' };
+    }
+  } else if (mockTest?.title) {
+    test = { ...test, title: mockTest.title };
+  }
+
+  const now = Date.now();
+  const payload = {
+    v: 1, kind: 'bookmarks', id: testId, userId: requester.id, title: test.title || 'Bookmarked questions',
+    version: crypto.createHash('sha256').update(JSON.stringify(questionIds)).digest('hex').slice(0, 16),
+    downloadedAt: now, expiresAt: now + OFFLINE_DAYS * 86400000,
+    data: { testId, questionIds, test },
+  };
+  const meta = { title: payload.title, subtitle: `${questionIds.length} bookmarked`, questions: questionIds.length };
+  try {
+    return NextResponse.json({ success: true, meta, envelope: encryptForDevice(payload, devicePublicKey) });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Invalid device key' }, { status: 400 });
+  }
+}
+
+/** Scores an attempt with the server's own answer key (null if the test has no stored questions). */
+async function gradeAttempt(testId: string, responses: Record<string, any>, lang1?: string, lang2?: string): Promise<ScoreResult | null> {
+  try {
+    const { mockTest, questions } = await loadTestQuestions(testId);
+    if (!questions?.length) return null;
+    const catalog = catalogCache.examCatalog || await getCompiledExamCatalog();
+    if (isCbatTest(testId, catalog)) return scoreCbat(questions, responses);
+    const session = generateExamSession(testId, catalog, {
+      questions,
+      positiveMarks: mockTest?.positiveMarks,
+      negativeMarks: mockTest?.negativeMarks,
+      durationMinutes: mockTest?.durationMinutes,
+      sections: mockTest?.sections,
+    }, typeof lang1 === 'string' ? lang1 : undefined, typeof lang2 === 'string' ? lang2 : undefined);
+    if (!session.questions.length) return null;
+    return scoreSession(session, responses, isRpscRasTest(testId, session));
+  } catch (err) {
+    console.error('Failed to grade attempt on the server:', err);
+    return null;
+  }
+}
+
 async function handleAddAttempt(data: any, request?: Request) {
-  const { userId, testId, title, score, maxScore, accuracy, durationSeconds, violations, responses } = data;
+  const { userId, testId, title, durationSeconds, violations, responses } = data;
+  let { score, maxScore, accuracy } = data;
+  // Results finished offline (Windows app) keep the time they were really completed
+  const offlineCompletedAt = pastDate(data.completedAt);
+
+  // The result is worked out here from the student's answers, not taken from the browser
+  // (which no longer has the answer key before submitting, and could be tampered with).
+  const graded = responses && typeof responses === 'object' ? await gradeAttempt(testId, responses, data.lang1, data.lang2) : null;
+  if (graded) {
+    score = graded.obtainedMarks;
+    maxScore = graded.totalMarks;
+    accuracy = graded.accuracyPercentage;
+  }
 
   // Sanity-clamp the client-reported score/accuracy before it's written as permanent
   // result data. The client (useTestEngine.tsx SUBMIT_EXAM) is the only place that computes
@@ -2238,7 +2512,7 @@ async function handleAddAttempt(data: any, request?: Request) {
       timeSpentSeconds: actualTimeSpent,
       violationsCount: typeof violations === 'number' && !isNaN(violations) ? Math.round(violations) : 0,
       remainingSeconds: 0,
-      completedAt: new Date(),
+      completedAt: offlineCompletedAt || new Date(),
       testbookRank,
       testbookPercentile,
       source: source || 'web',
@@ -2377,7 +2651,9 @@ async function handleAddAttempt(data: any, request?: Request) {
   return NextResponse.json({
     success: true,
     coins: updatedCoins,
-    referralCoinsCredited: updatedReferralCoinsCredited
+    referralCoinsCredited: updatedReferralCoinsCredited,
+    sessionId: session.id,
+    result: { score: safeScore, maxScore: storedMaxScore, accuracy: safeAccuracy, ...(graded ? { correct: graded.correctCount, incorrect: graded.incorrectCount, unattempted: graded.unattemptedCount } : {}) },
   });
 }
 
@@ -2397,8 +2673,12 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
   }
   if (!source) source = 'web';
 
-  // Ensure mock test record exists in database before creating session
-  await ensureMockTestExists(testId, title, undefined, timeRemaining ? Math.ceil(timeRemaining / 60) : 60);
+  // Progress is only kept on the server for real tests. Saving progress must never create a
+  // test (an exam id or sample test opened by URL used to appear as a new test in the first
+  // test series); the browser keeps its own copy either way.
+  if (!(await prisma.mockTest.findUnique({ where: { id: testId }, select: { id: true } }))) {
+    return NextResponse.json({ success: true, stored: 'local' });
+  }
 
   const existing = await prisma.userTestSession.findFirst({
     where: {
@@ -2495,7 +2775,10 @@ async function handleSaveExamProgress(data: any) {
   const sectionIdx = toInt(snapshot.currentSectionIndex);
   const questionIdx = toInt(snapshot.currentQuestionIndex);
 
-  await ensureMockTestExists(testId, snapshot.title, undefined, remaining ? Math.ceil(remaining / 60) : 60);
+  // Never create a test just to hold progress (see handleSaveOngoingSession)
+  if (!(await prisma.mockTest.findUnique({ where: { id: testId }, select: { id: true } }))) {
+    return NextResponse.json({ success: true, stored: 'local' });
+  }
 
   let session = await prisma.userTestSession.findFirst({
     where: { userId, mockTestId: testId, status: 'ONGOING' },
@@ -3703,14 +3986,9 @@ async function handleSaveCustomQuestions(rawPayload: any) {
   }
 }
 
-async function handleGetCustomQuestions(rawPayload: any) {
-  const payload = rawPayload?.data || rawPayload || {};
-  const testId = payload.testId || rawPayload?.testId;
-  const categoryId = payload.categoryId || rawPayload?.categoryId;
-
-  if (!testId && !categoryId) {
-    return NextResponse.json({ success: true, customQuestions: null, questions: null });
-  }
+/** A test's full question list (with answers) as stored — for server use only. */
+async function loadTestQuestions(testId?: string, categoryId?: string) {
+  if (!testId && !categoryId) return { mockTest: null as any, questions: null as any[] | null, s3Url: null as string | null };
 
   const candidateIds: string[] = [];
   if (testId) candidateIds.push(testId);
@@ -3741,6 +4019,8 @@ async function handleGetCustomQuestions(rawPayload: any) {
     mockTest = await prisma.mockTest.findUnique({
       where: { id: cid },
       select: {
+        id: true,
+        requiredTierName: true,
         customQuestions: true,
         positiveMarks: true,
         negativeMarks: true,
@@ -3814,10 +4094,88 @@ async function handleGetCustomQuestions(rawPayload: any) {
     s3Url = (mockTest.customQuestions as any).url;
   }
 
+  return { mockTest, questions: Array.isArray(questions) ? questions : null, s3Url };
+}
+
+const tierAllows = (required: string, userTier: string | null | undefined) =>
+  required === 'None' ||
+  (required === 'Testbook Pass' && (userTier === 'Testbook Pass' || userTier === 'Testbook Pass Pro')) ||
+  (required === 'Testbook Pass Pro' && userTier === 'Testbook Pass Pro');
+
+/**
+ * Can this visitor open the test, and does it have uploaded questions? Checked by the exam page
+ * before the exam starts, so a locked or empty test shows a clear message instead of sample
+ * questions. Same rules as get-custom-questions; nothing about the questions is returned.
+ */
+async function handleTestAccess(data: any, requester: { id: string; role: string } | null) {
+  const testId = typeof data?.testId === 'string' ? data.testId : '';
+  if (!testId) return NextResponse.json({ success: false, error: 'Missing testId' }, { status: 400 });
+  const rows = await prisma.$queryRaw<{ id: string; title: string; requiredTierName: string | null; hasQuestions: boolean }[]>`
+    SELECT id, title, "requiredTierName", ("customQuestions" IS NOT NULL AND "customQuestions" <> 'null'::jsonb) AS "hasQuestions"
+    FROM mock_tests WHERE id = ${testId} LIMIT 1`;
+  const test = rows[0];
+  if (!test) return NextResponse.json({ success: true, exists: false, locked: null, hasQuestions: false, loggedIn: !!requester });
+
+  const isStaff = !!requester && requester.role !== 'STUDENT';
+  const requiredTier = test.requiredTierName || 'None';
+  let allowed = isStaff || requiredTier === 'None';
+  if (!allowed && requester) {
+    const [u, done] = await Promise.all([
+      prisma.user.findUnique({ where: { id: requester.id }, select: { subscriptionTier: true } }),
+      prisma.userTestSession.findFirst({ where: { userId: requester.id, mockTestId: test.id, status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] } }, select: { id: true } }),
+    ]);
+    allowed = !!done || tierAllows(requiredTier, u?.subscriptionTier);
+  }
+  return NextResponse.json({
+    success: true, exists: true, title: test.title, loggedIn: !!requester,
+    locked: allowed ? null : requiredTier, hasQuestions: test.hasQuestions,
+  });
+}
+
+// Questions for a test. Answers and solutions are only sent to staff and to students who
+// have already submitted the test (analysis, bookmarks); everyone else gets the questions
+// without them, so the answer key can't be read before or during a test. PRO tests are
+// only sent to students whose plan includes them.
+// Mobile app builds from before this change score on the phone and still get the answers
+// when logged in, until LEGACY_APP_FULL_QUESTIONS=0 is set after the updated apps ship.
+async function handleGetCustomQuestions(rawPayload: any, requester: { id: string; role: string } | null = null, request?: Request) {
+  const payload = rawPayload?.data || rawPayload || {};
+  const testId = payload.testId || rawPayload?.testId;
+  const categoryId = payload.categoryId || rawPayload?.categoryId;
+
+  if (!testId && !categoryId) {
+    return NextResponse.json({ success: true, customQuestions: null, questions: null });
+  }
+
+  const { mockTest, questions: fullQuestions, s3Url } = await loadTestQuestions(testId, categoryId);
+  const isStaff = !!requester && requester.role !== 'STUDENT';
+  const requiredTier = mockTest?.requiredTierName || 'None';
+
+  let userTier: string | null = null;
+  let attempted = false;
+  if (requester && !isStaff && mockTest?.id) {
+    const [u, done] = await Promise.all([
+      requiredTier !== 'None' ? prisma.user.findUnique({ where: { id: requester.id }, select: { subscriptionTier: true } }) : null,
+      prisma.userTestSession.findFirst({
+        where: { userId: requester.id, mockTestId: { in: [mockTest.id, testId].filter(Boolean) }, status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] } },
+        select: { id: true },
+      }),
+    ]);
+    userTier = u?.subscriptionTier ?? null;
+    attempted = !!done;
+  }
+
+  const locked = !isStaff && !attempted && !tierAllows(requiredTier, userTier);
+  const legacyApp = !!requester && !isStaff && !(request && readCookie(request, AUTH_COOKIE)) && process.env.LEGACY_APP_FULL_QUESTIONS !== '0';
+  const withAnswers = isStaff || attempted || legacyApp;
+  const questions = !fullQuestions || locked ? null : withAnswers ? fullQuestions : stripAnswers(fullQuestions);
+
   return NextResponse.json({
     success: true,
     title: mockTest?.title ?? null,
-    url: s3Url,
+    url: isStaff ? s3Url : null,
+    locked: locked ? requiredTier : null,
+    answersIncluded: !!questions && withAnswers,
     questions,
     customQuestions: questions,
     positiveMarks: mockTest?.positiveMarks ?? null,
@@ -4665,6 +5023,15 @@ async function handleSendSupportMessage(data: any) {
       isRead: false
     }
   });
+
+  if (actualSender === 'STUDENT') {
+    notifyStaff('support', async () => ({
+      title: await studentLabel(userId),
+      body: shorten(message),
+      data: { screen: 'chat', userId },
+      tag: `chat-${userId}`, // one notification per student, updated with the latest message
+    }));
+  }
 
   return NextResponse.json({
     success: true,

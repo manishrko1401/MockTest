@@ -12,6 +12,7 @@ import { useIsMobile } from '../../useIsMobile';
 import HomeSupportWidget from '../../components/HomeSupportWidget';
 import { SiteHeader, PageTitle, btnSecondary } from '../../components/SiteUI';
 import MockTestsTour, { requestTestsTourStart } from '../../components/MockTestsTour';
+import OfflineDownloadButton from '../../components/OfflineDownloadButton';
 import BookmarkedQuestions from '../../components/BookmarkedQuestions';
 
 import { processQuestionHtml, decodeHtml } from '../../lib/mathUtils';
@@ -1232,6 +1233,7 @@ export default function MockTestsCatalog() {
                                               {hasPass ? 'Start Practice Test' : 'Unlock with Pass'}
                                             </button>
                                           )}
+                                          {hasPass && <OfflineDownloadButton kind="mock" id={test.id} className="shrink-0" />}
                                         </div>
                                       </div>
                                     );
@@ -1361,6 +1363,7 @@ export default function MockTestsCatalog() {
                                         {hasPass ? 'Start Practice Test' : 'Unlock with Pass'}
                                       </button>
                                     )}
+                                    {hasPass && <OfflineDownloadButton kind="mock" id={test.id} className="shrink-0" />}
                                   </div>
                                 </div>
                               );
@@ -2232,6 +2235,7 @@ export default function MockTestsCatalog() {
                                           {hasPass ? 'Start Practice Test' : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
                                         </button>
                                       )}
+                                      {hasPass && <OfflineDownloadButton kind="mock" id={test.id} className="shrink-0" />}
                                     </div>
                                   </div>
                                 );
@@ -2368,6 +2372,7 @@ export default function MockTestsCatalog() {
                                     {hasPass ? 'Start Practice Test' : (language === 'hi' ? 'पास के साथ अनलॉक करें' : 'Unlock with Pass')}
                                   </button>
                                 )}
+                                {hasPass && <OfflineDownloadButton kind="mock" id={test.id} className="shrink-0" />}
                               </div>
                             </div>
                           );

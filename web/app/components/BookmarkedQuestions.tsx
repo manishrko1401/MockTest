@@ -16,11 +16,19 @@ import MathJaxText from '../lib/MathJaxText';
 // with a Remove button instead of silently disappearing.
 // -----------------------------------------------------------------------------
 
-type TestQuestions = {
+export type TestQuestions = {
   status: 'ready' | 'missing' | 'error';
   title: string;
   questions: any[];
   sectionNames: Record<string, string>;
+};
+
+/** Bookmarks stored on this PC by the Windows app (offline Bookmarks page). */
+export type OfflineBookmarks = {
+  bookmarks: { testId: string; questionId: string }[];
+  tests: Record<string, TestQuestions>;
+  /** Analysis link for tests downloaded to this PC (null: no link offline) */
+  analysisHref: (testId: string) => string | null;
 };
 
 const keyOf = (testId: string, questionId: string) => `${testId}\u0000${questionId}`;
@@ -34,13 +42,14 @@ const PLACEHOLDER_EXPLANATIONS = new Set([
 ]);
 const realText = (s: unknown) => (typeof s === 'string' && s.trim() && !PLACEHOLDER_EXPLANATIONS.has(s.trim()) ? s : '');
 
-export default function BookmarkedQuestions() {
+export default function BookmarkedQuestions({ offline }: { offline?: OfflineBookmarks } = {}) {
   const { currentUser, toggleBookmark, language, examCatalog } = useAuth();
   const isHi = language === 'hi';
   const lang = isHi ? 'hi' : 'en';
 
-  const bookmarks = useMemo(() => [...(currentUser?.bookmarkedQuestions || [])].reverse(), [currentUser?.bookmarkedQuestions]); // newest first
-  const [byTest, setByTest] = useState<Record<string, TestQuestions>>({});
+  const sourceList = offline ? offline.bookmarks : currentUser?.bookmarkedQuestions;
+  const bookmarks = useMemo(() => [...(sourceList || [])].reverse(), [sourceList]); // newest first
+  const [byTest, setByTest] = useState<Record<string, TestQuestions>>(() => offline?.tests || {});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [testFilter, setTestFilter] = useState<string>('all');
   const [reloadTick, setReloadTick] = useState(0);
@@ -63,7 +72,7 @@ export default function BookmarkedQuestions() {
   const testIds = useMemo(() => [...new Set(bookmarks.map(b => b.testId))], [bookmarks]);
   useEffect(() => {
     const missing = testIds.filter(id => !byTest[id]);
-    if (missing.length === 0) return;
+    if (offline || missing.length === 0) return;
     let cancelled = false;
 
     missing.forEach(async (testId) => {
@@ -118,14 +127,16 @@ export default function BookmarkedQuestions() {
     if (testFilter !== 'all' && !testIds.includes(testFilter)) setTestFilter('all');
   }, [testFilter, testIds]);
 
-  const titleOf = (testId: string) => catalogTitles[testId] || byTest[testId]?.title || (isHi ? 'हटाया गया टेस्ट' : 'Removed test');
+  const tests = offline ? offline.tests : byTest;
+  const titleOf = (testId: string) => catalogTitles[testId] || tests[testId]?.title
+    || (offline ? (isHi ? 'टेस्ट' : 'Test') : (isHi ? 'हटाया गया टेस्ट' : 'Removed test'));
 
-  if (!currentUser || bookmarks.length === 0) {
+  if ((!currentUser && !offline) || bookmarks.length === 0) {
     return (
       <div className="text-center py-12 sm:py-16 px-4 bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
         <Bookmark className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
         <p className="text-slate-700 dark:text-slate-300 text-sm font-semibold">
-          {!currentUser
+          {!currentUser && !offline
             ? (isHi ? 'बुकमार्क देखने के लिए लॉग इन करें' : 'Log in to see your bookmarks')
             : (isHi ? 'अभी तक कोई बुकमार्क नहीं' : 'No bookmarks saved yet')}
         </p>
@@ -165,7 +176,7 @@ export default function BookmarkedQuestions() {
 
       {visible.map((bm) => {
         const k = keyOf(bm.testId, bm.questionId);
-        const test = byTest[bm.testId];
+        const test = tests[bm.testId];
         const removeBtn = (
           <button
             type="button"
@@ -183,6 +194,20 @@ export default function BookmarkedQuestions() {
           </span>
         );
 
+        // Offline: bookmarked without internet in a test that isn't downloaded
+        const notSavedYet = (
+          <div key={k} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">{testLabel}</div>
+              {removeBtn}
+            </div>
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+              {isHi ? 'यह प्रश्न इंटरनेट आने पर ऑफ़लाइन के लिए सेव होगा।' : 'This question will be saved for offline use when you are back online.'}
+            </p>
+          </div>
+        );
+
+        if (!test && offline) return notSavedYet;
         if (!test) {
           return (
             <div key={k} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-4">
@@ -218,6 +243,7 @@ export default function BookmarkedQuestions() {
         const qIndex = test.questions.findIndex(q => q.id === bm.questionId);
         const q = qIndex >= 0 ? test.questions[qIndex] : null;
 
+        if (!q && offline) return notSavedYet;
         if (!q) {
           return (
             <div key={k} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-4">
@@ -257,7 +283,7 @@ export default function BookmarkedQuestions() {
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     {testLabel}
                     <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      {isHi ? 'प्रश्न' : 'Q'} {qIndex + 1}{sectionName ? ` · ${sectionName}` : ''}
+                      {isHi ? 'प्रश्न' : 'Q'} {q.qNo ?? qIndex + 1}{sectionName ? ` · ${sectionName}` : ''}
                     </span>
                   </div>
                   <MathJaxText
@@ -321,12 +347,17 @@ export default function BookmarkedQuestions() {
                   </div>
                 )}
 
-                <Link
-                  href={`/exam/${bm.testId}/analysis`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-[#1e4e79] dark:text-blue-300 hover:underline"
-                >
-                  {isHi ? 'टेस्ट विश्लेषण खोलें' : 'Open test analysis'} <ExternalLink className="h-3 w-3" />
-                </Link>
+                {(() => {
+                  const href = offline ? offline.analysisHref(bm.testId) : `/exam/${bm.testId}/analysis`;
+                  return href ? (
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[#1e4e79] dark:text-blue-300 hover:underline"
+                    >
+                      {isHi ? 'टेस्ट विश्लेषण खोलें' : 'Open test analysis'} <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  ) : null;
+                })()}
               </div>
             )}
           </div>

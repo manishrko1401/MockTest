@@ -7,6 +7,8 @@ import { prisma } from './prisma';
 // caller can't make up:
 //   - Website: the `tb_auth` cookie — a random login token, HttpOnly (page
 //     scripts can't read it), stored in auth_sessions only as a SHA-256 hash.
+//   - Admin app (Android): the same kind of login token as the website, sent as
+//     `Authorization: Bearer <token>` (one session per device; see /api/admin-app).
 //   - Mobile apps: the login session id returned by `login`
 //     (users.currentSessionId), sent as the `x-session-id` header or
 //     `data.authSessionId` / `data.sessionId`.
@@ -118,6 +120,12 @@ export async function getWebSessionUser(token: string | null | undefined): Promi
 export async function getRequester(request: Request, body?: any): Promise<Requester | null> {
   const webUser = await getWebSessionUser(readCookie(request, AUTH_COOKIE));
   if (webUser) return webUser;
+
+  const bearer = request.headers.get('authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1];
+  if (bearer) {
+    const tokenUser = await getWebSessionUser(bearer);
+    if (tokenUser) return tokenUser;
+  }
 
   // Mobile apps: the login session id
   const data = body?.data;

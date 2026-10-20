@@ -1,0 +1,10 @@
+node_modules/
+android/
+.expo/
+dist/
+*.apk
+# Signing key and its passwords: keep a private backup (needed for every update)
+keystore/
+# Firebase config (private to this project)
+google-services.json
+release/

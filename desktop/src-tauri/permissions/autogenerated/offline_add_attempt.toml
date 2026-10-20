@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-offline-add-attempt"
+description = "Enables the offline_add_attempt command without any pre-configured scope."
+commands.allow = ["offline_add_attempt"]
+
+[[permission]]
+identifier = "deny-offline-add-attempt"
+description = "Denies the offline_add_attempt command without any pre-configured scope."
+commands.deny = ["offline_add_attempt"]

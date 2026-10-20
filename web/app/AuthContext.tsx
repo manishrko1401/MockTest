@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { clearLocalProgress } from './lib/examProgress';
+import { isDesktopApp } from './lib/desktopApp';
+import { bookmarkChanged, bookmarkNotSaved, ACCOUNT_BOOKMARKS } from './lib/offlineBookmarks';
 
 export interface MockTestItem {
   id: string;
@@ -204,8 +206,11 @@ interface AuthContextType {
     accuracy: number,
     durationSeconds: number,
     violations: number,
-    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>
+    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>,
+    extra?: { lang1?: string; lang2?: string }
   ) => void;
+  /** Resolves when the last submitted attempt has been saved and scored by the server (max 10s). */
+  waitForAttemptSave: () => Promise<void>;
   toggleBookmark: (testId: string, questionId: string) => void;
   resetAttempt: (userId: string, sessionId: string) => void;
   claimPassPro: (userId: string, tier?: string, coins?: number, expiry?: string) => Promise<{ success: boolean; error?: string }>;
@@ -2057,7 +2062,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     accuracy: number,
     durationSeconds: number,
     violations: number,
-    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>
+    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>,
+    extra?: { lang1?: string; lang2?: string }
   ) => {
     if (!currentUser) return;
 
@@ -2096,7 +2102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
     const source = isMobileView ? 'mobile_web' : 'web';
 
-    fetch('/api/db', {
+    // The server scores the attempt with its own answer key; its result replaces the
+    // provisional one shown here. Pages wait for this (waitForAttemptSave) before analysis.
+    pendingAttemptRef.current = fetch('/api/db', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2111,13 +2119,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           durationSeconds,
           violations,
           responses,
-          source
+          source,
+          ...(extra || {}),
         }
       })
     })
       .then(res => res.json())
       .then(resData => {
         if (resData.success) {
+          if (resData.result) {
+            const r = resData.result;
+            setCurrentUser(prev => prev ? {
+              ...prev,
+              testSessions: prev.testSessions.map(s => s.id === newRecord.id
+                ? { ...s, id: resData.sessionId || s.id, score: r.score, maxScore: r.maxScore ?? s.maxScore, accuracy: r.accuracy }
+                : s),
+            } : prev);
+          }
           if (resData.coins !== undefined) {
             setCurrentUser(prev => prev ? {
               ...prev,
@@ -2129,6 +2147,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         }
       })
       .catch(err => console.error("Add attempt API error:", err));
+  };
+
+  const pendingAttemptRef = React.useRef<Promise<unknown> | null>(null);
+  const waitForAttemptSave = async () => {
+    const pending = pendingAttemptRef.current;
+    if (!pending) return;
+    await Promise.race([pending.catch(() => {}), new Promise(r => setTimeout(r, 10000))]);
   };
 
   const saveOngoingSession = (
@@ -2231,6 +2256,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }).then(() => undefined).catch(err => console.error("Clear ongoing session error:", err));
   };
 
+  // Keep the saved copy of the user in step with bookmark changes, so a page opened
+  // without internet (Windows app) shows the latest bookmarks
+  const cachedBookmarks = currentUser?.bookmarkedQuestions;
+  useEffect(() => {
+    if (!currentUser?.id || !cachedBookmarks) return;
+    try {
+      const raw = localStorage.getItem(CACHE_KEY_USER);
+      const saved = raw ? JSON.parse(raw) : null;
+      if (saved?.id === currentUser.id) localStorage.setItem(CACHE_KEY_USER, JSON.stringify({ ...saved, bookmarkedQuestions: cachedBookmarks }));
+    } catch { /* storage full */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cachedBookmarks]);
+
+  // Bookmarks made offline in the Windows app were uploaded: show the account's list
+  useEffect(() => {
+    const onUploaded = (e: Event) => {
+      const list = (e as CustomEvent<{ testId: string; questionId: string }[]>).detail;
+      if (Array.isArray(list)) setCurrentUser(prev => (prev ? { ...prev, bookmarkedQuestions: list } : prev));
+    };
+    window.addEventListener(ACCOUNT_BOOKMARKS, onUploaded);
+    return () => window.removeEventListener(ACCOUNT_BOOKMARKS, onUploaded);
+  }, []);
+
   const toggleBookmark = (testId: string, questionId: string) => {
     if (!currentUser) return;
     const userId = currentUser.id;
@@ -2248,6 +2296,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     };
 
     setBookmarks(list => apply(list, bookmarked));
+    // Windows app: download this question for the offline Bookmarks page right away
+    bookmarkChanged(userId, testId, questionId, bookmarked);
 
     fetch('/api/db', {
       method: 'POST',
@@ -2262,6 +2312,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         if (!result?.success) throw new Error(result?.error || 'Bookmark not saved');
       })
       .catch(err => {
+        // No internet in the Windows app: keep the bookmark and send it when back online
+        const noInternet = isDesktopApp() && (err instanceof TypeError || (typeof navigator !== 'undefined' && !navigator.onLine));
+        bookmarkNotSaved(userId, testId, questionId, bookmarked, noInternet);
+        if (noInternet) return;
         console.error("Toggle bookmark error:", err);
         // Not saved on the server: undo the change on screen
         setBookmarks(list => apply(list, !bookmarked));
@@ -2536,6 +2590,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         updateTrackedJobs,
         completeTour,
         addAttempt,
+        waitForAttemptSave,
         toggleBookmark,
         resetAttempt,
         saveOngoingSession,

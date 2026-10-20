@@ -1,0 +1,19 @@
+{
+  "name": "mocktesthub-desktop",
+  "private": true,
+  "version": "1.0.1",
+  "description": "Mock Test Hub for Windows (x64 and ARM64) — a Tauri window around https://mocktesthub.vercel.app",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build:arm64": "tauri build --target aarch64-pc-windows-msvc",
+    "build:x64": "tauri build --target x86_64-pc-windows-msvc",
+    "build:all": "npm run build:arm64 && npm run build:x64",
+    "icons": "python branding/make_branding.py && tauri icon app-icon.png",
+    "build:qa": "tauri build --target aarch64-pc-windows-msvc --config src-tauri/tauri.qa.conf.json",
+    "publish:web": "node scripts/publish-installers.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.1"
+  }
+}

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../AuthContext';
 import { GuidedTour, TourStep, setPendingTour, peekPendingTour, clearPendingTour } from './GuidedTour';
+import { useIsDesktopApp } from '../lib/desktopApp';
+import { OFFLINE_TOUR_STEPS, appOfflineTourSeen, markAppOfflineTourSeen } from './offlineTourSteps';
 
 // -----------------------------------------------------------------------------
 // Typing Tests tour. Part 1 runs on /typing-test and ends by opening one exam with
@@ -13,7 +15,17 @@ import { GuidedTour, TourStep, setPendingTour, peekPendingTour, clearPendingTour
 
 export const START_TYPING_TOUR_EVENT = 'mth:start-typing-tour';
 const LOCAL_DONE_KEY = 'mth_typing_tour_done';
-const TOTAL_NUMBERED_STEPS = 9; // 3 on the hub + 6 on the exam page
+const HUB_NUMBERED_STEPS = 3;
+/** Steps on the exam page; the Windows app adds download-for-offline and My offline tests */
+const examSteps = (inApp: boolean): TourStep[] => {
+  if (!inApp) return EXAM_STEPS;
+  const list = [...EXAM_STEPS];
+  const startIdx = list.findIndex(s => s.targets.includes('[data-tour="tt-start"]'));
+  list.splice(startIdx + 1, 0, OFFLINE_TOUR_STEPS.downloadPassage(['[data-tour="tt-start"] [data-tour="offline-download"]', '[data-tour="tt-start"]']));
+  list.push(OFFLINE_TOUR_STEPS.myOfflineTests());
+  return list;
+};
+const totalNumberedSteps = (inApp: boolean) => HUB_NUMBERED_STEPS + examSteps(inApp).length;
 
 export function requestTypingTourStart() {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(START_TYPING_TOUR_EVENT));
@@ -113,7 +125,9 @@ function useTypingTourDone() {
 
 /** Part 1 — on the Typing Tests page. */
 export function TypingHubTour({ ready, targetId, resetFilters }: { ready: boolean; targetId: string | null; resetFilters: () => void }) {
-  const { language } = useAuth();
+  const { language, currentUser } = useAuth();
+  const inApp = useIsDesktopApp() && !!currentUser;
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const router = useRouter();
   const done = useTypingTourDone();
   const [open, setOpen] = useState(false);
@@ -138,12 +152,27 @@ export function TypingHubTour({ ready, targetId, resetFilters }: { ready: boolea
     return () => window.removeEventListener(START_TYPING_TOUR_EVENT, start);
   }, [start]);
 
+  // Finished the tour before the offline features: show only what's new, once on this PC
+  useEffect(() => {
+    if (!inApp || done !== true || open || startedRef.current || !ready || appOfflineTourSeen('typing')) return;
+    const timer = setTimeout(() => { startedRef.current = true; setWhatsNewOpen(true); }, 1200);
+    return () => clearTimeout(timer);
+  }, [inApp, done, open, ready]);
+
+  const whatsNewSteps: TourStep[] = useMemo(() => [
+    OFFLINE_TOUR_STEPS.newIntro('typing'),
+    OFFLINE_TOUR_STEPS.downloadPassage([]),
+    OFFLINE_TOUR_STEPS.myOfflineTests(),
+  ], []);
+
   const finish = () => {
     setOpen(false);
+    setWhatsNewOpen(false);
     if (targetId) { setPendingTour('typing'); router.push(`/typing-test/category/${targetId}`); }
   };
 
   return (
+    <>
     <GuidedTour
       open={open}
       steps={HUB_STEPS}
@@ -153,14 +182,28 @@ export function TypingHubTour({ ready, targetId, resetFilters }: { ready: boolea
       startLabel={{ en: 'Start guide', hi: 'गाइड शुरू करें' }}
       finishLabel={{ en: 'Open this exam', hi: 'यह परीक्षा खोलें' }}
       stepOffset={-1}
-      totalSteps={TOTAL_NUMBERED_STEPS}
+      totalSteps={totalNumberedSteps(inApp)}
     />
+    <GuidedTour
+      open={whatsNewOpen && !open}
+      steps={whatsNewSteps}
+      language={language}
+      onFinish={() => { setWhatsNewOpen(false); markAppOfflineTourSeen('typing'); }}
+      introLabel={{ en: 'What’s new', hi: 'नया क्या है' }}
+      startLabel={{ en: 'Show me', hi: 'दिखाएं' }}
+      finishLabel={{ en: 'Got it', hi: 'समझ गया' }}
+      stepOffset={-1}
+      totalSteps={whatsNewSteps.length - 1}
+    />
+    </>
   );
 }
 
 /** Part 2 — on an exam's typing page, started by ?tour=typing. */
 export function TypingExamTour({ ready }: { ready: boolean }) {
   const { language, completeTour, currentUser } = useAuth();
+  const inApp = useIsDesktopApp() && !!currentUser;
+  const steps = useMemo(() => examSteps(inApp), [inApp]);
   const [open, setOpen] = useState(false);
   const [wantTour] = useState(() => peekPendingTour('typing'));
   const startedRef = useRef(false);
@@ -177,6 +220,7 @@ export function TypingExamTour({ ready }: { ready: boolean }) {
 
   const finish = () => {
     setOpen(false);
+    if (inApp) markAppOfflineTourSeen('typing');
     if (currentUser) completeTour('typing');
     try { localStorage.setItem(LOCAL_DONE_KEY, '1'); } catch { /* ignore */ }
   };
@@ -184,11 +228,11 @@ export function TypingExamTour({ ready }: { ready: boolean }) {
   return (
     <GuidedTour
       open={open}
-      steps={EXAM_STEPS}
+      steps={steps}
       language={language}
       onFinish={finish}
-      stepOffset={3}
-      totalSteps={TOTAL_NUMBERED_STEPS}
+      stepOffset={HUB_NUMBERED_STEPS}
+      totalSteps={totalNumberedSteps(inApp)}
     />
   );
 }

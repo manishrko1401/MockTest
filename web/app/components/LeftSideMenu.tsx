@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
 import {
+  CalendarCheck,
   Trophy,
   BookOpen,
   Zap,
@@ -266,6 +267,28 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
                   </div>
                   <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'एसएससी, रेलवे व कोर्ट टाइपिंग' : 'SSC, RRB & Court DEST Exam'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform shrink-0" />
+            </Link>
+
+            {/* 2.6 STUDY PLANNER */}
+            <Link
+              href="/planner"
+              onClick={onClose}
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-md bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 transition-transform">
+                  <CalendarCheck className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
+                    {isHindi ? 'स्टडी प्लानर' : 'Study Planner'}
+                  </h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    {isHindi ? 'टू-डू, दैनिक लक्ष्य व परीक्षा गिनती' : 'To-do, daily targets & exam countdown'}
                   </p>
                 </div>
               </div>

@@ -1,0 +1,31 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "site",
+  "description": "What the Mock Test Hub website may ask the app to do: exam mode, exit, notifications and the encrypted offline-test store. Nothing else (no files, no shell).",
+  "windows": [
+    "main"
+  ],
+  "remote": {
+    "urls": [
+      "https://mocktesthub.vercel.app/*",
+      "http://localhost:3000/*"
+    ]
+  },
+  "permissions": [
+    "core:event:default",
+    "allow-set-exam-mode",
+    "allow-exit-app",
+    "allow-offline-device-key",
+    "allow-offline-store",
+    "allow-offline-list",
+    "allow-offline-open",
+    "allow-offline-delete",
+    "allow-offline-add-attempt",
+    "allow-offline-attempts",
+    "allow-outbox-list",
+    "allow-outbox-remove",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "notification:allow-notify"
+  ]
+}

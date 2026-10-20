@@ -10,7 +10,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Trophy, Moon, Sun, Menu, X, ChevronDown, ChevronRight, LayoutDashboard, LogOut, User, Eye, EyeOff, Compass } from 'lucide-react';
+import { Trophy, Moon, Sun, Menu, X, ChevronDown, ChevronRight, LayoutDashboard, LogOut, User, Eye, EyeOff, Compass, Power, HardDriveDownload } from 'lucide-react';
+import { useIsDesktopApp, exitDesktopApp } from '../lib/desktopApp';
+import { WindowsAppDropdownItem, WindowsAppFooterLink } from './WindowsAppDownload';
 import { requestTourStart } from './WelcomeTour';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
@@ -30,6 +32,7 @@ const NAV = [
   { href: '/typing-test', en: 'Typing Tests', hi: 'टाइपिंग टेस्ट' },
   { href: '/updates', en: 'Notices', hi: 'सूचनाएं' },
   { href: '/locker', en: 'Document Locker', hi: 'दस्तावेज़ लॉकर' },
+  { href: '/planner', en: 'Study Planner', hi: 'स्टडी प्लानर' },
 ];
 
 const TOUR_ANCHORS: Record<string, string> = {
@@ -41,6 +44,7 @@ const TOUR_ANCHORS: Record<string, string> = {
 
 export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
   const { currentUser, theme, toggleTheme, language, setLanguage, logout } = useAuth();
+  const inDesktopApp = useIsDesktopApp();
   const t = TRANSLATIONS[language];
   const hi = language === 'hi';
   const pathname = usePathname() || '/';
@@ -158,12 +162,23 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
                       <LayoutDashboard className="h-4 w-4 text-slate-400" />{t.navAdmin}
                     </Link>
                   )}
+                  {inDesktopApp && (
+                    <Link href="/offline" role="menuitem" className="flex items-center gap-2 mx-1 px-2 py-2 rounded-md text-slate-700 dark:text-slate-200 transition-colors hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white">
+                      <HardDriveDownload className="h-4 w-4 text-slate-400" />{hi ? 'ऑफ़लाइन टेस्ट' : 'Offline tests'}
+                    </Link>
+                  )}
+                  {!inDesktopApp && <WindowsAppDropdownItem hi={hi} onDone={() => setMenuOpen(false)} />}
                   <button type="button" role="menuitem" onClick={startTour} className="w-[calc(100%-0.5rem)] flex items-center gap-2 mx-1 px-2 py-2 rounded-md text-left text-slate-700 dark:text-slate-200 transition-colors hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer">
                     <Compass className="h-4 w-4 text-slate-400" />{hi ? 'टूर देखें' : 'Take the tour'}
                   </button>
                   <button type="button" role="menuitem" onClick={signOut} className="w-[calc(100%-0.5rem)] flex items-center gap-2 mx-1 px-2 py-2 rounded-md text-left text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer">
                     <LogOut className="h-4 w-4" />{t.signOut}
                   </button>
+                  {inDesktopApp && (
+                    <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); exitDesktopApp(hi); }} className="w-[calc(100%-0.5rem)] flex items-center gap-2 mx-1 px-2 py-2 rounded-md text-left text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer">
+                      <Power className="h-4 w-4" />{hi ? 'ऐप बंद करें' : 'Exit App'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -214,6 +229,9 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
               </button>
               {user && (
                 <button onClick={signOut} className="ml-auto h-8 px-3 rounded-md text-xs font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer">{t.signOut}</button>
+              )}
+              {inDesktopApp && (
+                <button onClick={() => exitDesktopApp(hi)} className={`${user ? '' : 'ml-auto '}h-8 px-3 rounded-md text-xs font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer inline-flex items-center gap-1.5`}><Power className="h-3.5 w-3.5" />{hi ? 'ऐप बंद करें' : 'Exit App'}</button>
               )}
             </div>
           </nav>
@@ -345,6 +363,7 @@ export function SiteFooter() {
           <Link href="/contact" className="hover:text-slate-800 dark:hover:text-slate-200">{hi ? 'संपर्क करें' : 'Contact'}</Link>
           <Link href="/terms" className="hover:text-slate-800 dark:hover:text-slate-200">{hi ? 'नियम और शर्तें' : 'Terms'}</Link>
           <Link href="/privacy" className="hover:text-slate-800 dark:hover:text-slate-200">{hi ? 'गोपनीयता नीति' : 'Privacy'}</Link>
+          <WindowsAppFooterLink hi={hi} />
         </div>
       </div>
     </footer>

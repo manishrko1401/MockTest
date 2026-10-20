@@ -14,6 +14,7 @@ import BackgroundArts from './components/BackgroundArts';
 import LiveUpdatesBar from './components/LiveUpdatesBar';
 import LeftSideMenu from './components/LeftSideMenu';
 import HomeLeftSidebar from './components/HomeLeftSidebar';
+import { WindowsAppCard } from './components/WindowsAppDownload';
 import HomeHeroBannerCarousel from './components/HomeHeroBannerCarousel';
 import HomeShortcutsSection from './components/HomeShortcutsSection';
 import HomeChatSection from './components/HomeChatSection';
@@ -1062,6 +1063,9 @@ const formatSubCategoryName = (name: string) => {
               <ChevronRight className="h-4 w-4 text-slate-400 opacity-40 group-hover:opacity-100 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden 2xl:block" />
             </Link>
           </div>
+
+          {/* Windows app (website on a Windows PC only) */}
+          <WindowsAppCard hi={language === 'hi'} />
 
       {/* POPULAR EXAM CATEGORIES MARQUEE SECTION (Full width, 0 padding from left & right edges) */}
       <div className="-mx-3 md:-mx-6 w-[calc(100%+1.5rem)] md:w-[calc(100%+3rem)]">
