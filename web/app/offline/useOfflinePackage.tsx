@@ -7,6 +7,7 @@ import { useAuth } from '../AuthContext';
 import { isDesktopApp, offlineOpen, offlineAttempts, offlineAddAttempt, setDesktopExamMode, OfflineKind } from '../lib/desktopApp';
 import { OfflineMockAttempt } from '../lib/offlineExam';
 import { SiteHeader, SectionCard, btnPrimary, pageBg, container } from '../components/SiteUI';
+import ExamWatermark from '../components/ExamWatermark';
 
 // Opens a downloaded test (decrypted in memory by the app) for the /offline/* pages.
 
@@ -88,7 +89,6 @@ export const SuspenseWrap = ({ children }: { children: React.ReactNode }) => <Re
  * with the student's name and candidate code (discourages phone photos, traces leaks).
  */
 export function OfflineGuard({ screenshotBlock = true, children }: { screenshotBlock?: boolean; children: React.ReactNode }) {
-  const { currentUser } = useAuth();
   useEffect(() => {
     const isField = (t: EventTarget | null) => t instanceof HTMLElement && !!t.closest('input, textarea, [contenteditable="true"]');
     const block = (e: Event) => { if (!isField(e.target)) e.preventDefault(); };
@@ -111,17 +111,10 @@ export function OfflineGuard({ screenshotBlock = true, children }: { screenshotB
     };
   }, [screenshotBlock]);
 
-  const mark = currentUser ? `${currentUser.name}${(currentUser as any).candidateCode ? ` · ${(currentUser as any).candidateCode}` : ''}` : 'Mock Test Hub';
   return (
     <>
       {children}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[9999] overflow-hidden select-none">
-        <div className="absolute -inset-1/2 flex flex-wrap content-start gap-x-24 gap-y-20 rotate-[-24deg] opacity-[0.06] dark:opacity-[0.08]">
-          {Array.from({ length: 160 }, (_, i) => (
-            <span key={i} className="text-sm font-semibold text-slate-900 dark:text-white whitespace-nowrap">{mark}</span>
-          ))}
-        </div>
-      </div>
+      <ExamWatermark />
     </>
   );
 }

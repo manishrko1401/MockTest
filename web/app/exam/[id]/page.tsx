@@ -20,6 +20,7 @@ import MathJaxText from '../../lib/MathJaxText';
 import MathJaxLoader from '../../components/MathJaxLoader';
 import CbatExamEngine from './CbatExamEngine';
 import ExamAccessGate from './ExamAccessGate';
+import ExamWatermark from '../../components/ExamWatermark';
 import { setDesktopExamMode } from '../../lib/desktopApp';
 import { isCbatTest, isRpscRasTest } from '../../lib/examScoring';
 import { useOfflineMock, newLocalId } from '../../lib/offlineExam';
@@ -3219,7 +3220,13 @@ export default function DynamicExamPage() {
   const { examCatalog } = useAuth();
   const testId = offline?.testId || (params?.id as string) || "ssc_cgl_tier1";
   if (offline) return <ExamPage />;
-  return <ExamAccessGate testId={testId} isCbat={isCbatTest(testId, examCatalog)}><ExamPage /></ExamAccessGate>;
+  return (
+    <ExamAccessGate testId={testId} isCbat={isCbatTest(testId, examCatalog)}>
+      <ExamPage />
+      {/* Same watermark as the offline test screen (not shown to staff) */}
+      <ExamWatermark hideForStaff />
+    </ExamAccessGate>
+  );
 }
 
 function ExamPage() {

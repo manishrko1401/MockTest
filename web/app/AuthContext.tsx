@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { clearLocalProgress } from './lib/examProgress';
 import { isDesktopApp } from './lib/desktopApp';
 import { bookmarkChanged, bookmarkNotSaved, ACCOUNT_BOOKMARKS } from './lib/offlineBookmarks';
@@ -906,6 +906,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     });
   };
 
+  const userCheckRetries = useRef(0);
   const fetchUsersList = async () => {
     try {
       const getCookie = (name: string) => {
@@ -958,15 +959,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       // 🚀 Fire bootstrap + user fetch IN PARALLEL — eliminates the serial waterfall
       const bootstrapRes = requestBootstrap(storedETag);
 
-      const userPromise = savedUserId
+      // The HTTP status is kept: only a 401 means the login is really over (see below)
+      const userPromise: Promise<{ status: number; json: any } | null> = savedUserId
         ? fetch('/api/db', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'get-user-details', data: { userId: savedUserId } })
-          }).then(r => r.json())
+          }).then(async r => ({ status: r.status, json: await r.json().catch(() => null) }), () => ({ status: 0, json: null }))
         : Promise.resolve(null);
 
-      let [bootstrapRaw, userData] = await Promise.all([bootstrapRes, userPromise]);
+      let [bootstrapRaw, userRes] = await Promise.all([bootstrapRes, userPromise]);
+      const userData = userRes?.json;
 
       // PERF: 304 = catalog/notices haven't changed — use cached data, save 100% egress
       if (bootstrapRaw.status === 304 && hasUsableCache) {
@@ -1005,11 +1008,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           setCurrentUser(userData.user);
           syncUserCookieAndCache(userData.user);
         }
-      } else if (savedUserId) {
+      } else if (savedUserId && userRes && (userRes.status === 401 || userData?.code === 'AUTH_REQUIRED')) {
+        // The server says the login has expired or was revoked: signed out
         document.cookie = "tb_user_id=;path=/;max-age=0";
         setCurrentUser(null);
         syncUserCookieAndCache(null);
+      } else if (savedUserId) {
+        // Server error, timeout, busy or no internet (common for a minute after a new version
+        // goes live): stay signed in with the saved details and check again shortly. Before,
+        // any of these signed the student out.
+        if (userCheckRetries.current < 3) {
+          userCheckRetries.current += 1;
+          setTimeout(() => { fetchUsersList(); }, 20_000);
+        }
       }
+      if (userData?.success) userCheckRetries.current = 0;
     } catch (err) {
       console.error("Fetch data error:", err);
     }
