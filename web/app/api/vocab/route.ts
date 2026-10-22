@@ -264,7 +264,7 @@ export async function POST(req: Request) {
 
     if (action === 'delete') {
       const { id } = data;
-      let updatedList = (vocabCache.items || readLocalCatalog() || DEFAULT_VOCAB).filter((i: any) => i.id !== Number(id));
+      const updatedList = (vocabCache.items || readLocalCatalog() || DEFAULT_VOCAB).filter((i: any) => i.id !== Number(id));
       saveLocalCatalog(updatedList);
 
       if ((prisma as any).vocab && id) {

@@ -161,7 +161,7 @@ export async function deleteTypingPassageFromTigris(referenceUriOrKey: string): 
     return true;
   }
 
-  let key = referenceUriOrKey.replace('tigris-typing://', '').replace('tigris://', '');
+  const key = referenceUriOrKey.replace('tigris-typing://', '').replace('tigris://', '');
   const s3 = getS3Client();
   if (!s3) return false;
 

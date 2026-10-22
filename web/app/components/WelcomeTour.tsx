@@ -24,8 +24,8 @@ const STEPS: TourStep[] = [
     targets: [],
     title: { en: 'Welcome to MockTest Hub', hi: 'MockTest Hub में आपका स्वागत है' },
     body: {
-      en: 'Take a one-minute tour of the main features: mock tests, typing tests, notices and your document locker.',
-      hi: 'मुख्य सुविधाओं का एक मिनट का परिचय लें: मॉक टेस्ट, टाइपिंग टेस्ट, सूचनाएं और आपका दस्तावेज़ लॉकर।',
+      en: 'Take a one-minute tour of the main features: mock tests, typing tests, notices, your document locker, the study planner and tests with friends.',
+      hi: 'मुख्य सुविधाओं का एक मिनट का परिचय लें: मॉक टेस्ट, टाइपिंग टेस्ट, सूचनाएं, आपका दस्तावेज़ लॉकर, स्टडी प्लानर और दोस्तों के साथ टेस्ट।',
     },
   },
   {
@@ -58,6 +58,22 @@ const STEPS: TourStep[] = [
     body: {
       en: 'Keep application numbers, passwords, admit cards and results in one place. Files are stored in your own Google Drive and the locker is protected by your 4-digit PIN.',
       hi: 'आवेदन संख्या, पासवर्ड, प्रवेश पत्र और परिणाम एक स्थान पर रखें। फ़ाइलें आपकी अपनी Google Drive में रहती हैं और लॉकर आपके 4-अंकीय PIN से सुरक्षित है।',
+    },
+  },
+  {
+    targets: ['[data-tour="nav-planner"]'],
+    title: { en: 'Study Planner', hi: 'स्टडी प्लानर' },
+    body: {
+      en: 'Plan your daily study tasks, set daily mock and typing test targets that fill in by themselves, count down to your exams and track your syllabus chapter by chapter.',
+      hi: 'रोज़ के पढ़ाई के कार्य तय करें, दैनिक मॉक और टाइपिंग टेस्ट लक्ष्य रखें जो अपने आप भरते हैं, परीक्षा की उलटी गिनती देखें और अध्याय-दर-अध्याय सिलेबस ट्रैक करें।',
+    },
+  },
+  {
+    targets: ['[data-tour="nav-friends"]'],
+    title: { en: 'With Friends', hi: 'दोस्तों के साथ' },
+    body: {
+      en: 'Take the same mock test with friends in a room, then compare marks and the time on every question and discuss questions together. Add friends with their Friend code and chat with them. A red number here shows new friend requests and messages.',
+      hi: 'रूम में दोस्तों के साथ एक ही मॉक टेस्ट दें, फिर अंक और हर प्रश्न पर लगा समय मिलाएं और प्रश्नों पर साथ में चर्चा करें। मित्र कोड से दोस्त जोड़ें और उनसे चैट करें। यहां लाल संख्या नए मित्र अनुरोध और संदेश बताती है।',
     },
   },
   {

@@ -530,7 +530,7 @@ export function buildCbatBatteriesFromCustomQuestions(
       }
 
       // Clean prompt text (strip img tags and html markup)
-      let promptText = htmlText
+      const promptText = htmlText
         .replace(/<img[^>]*>/gi, '')
         .replace(/<\/p>/gi, ' ')
         .replace(/<[^>]+>/g, '')

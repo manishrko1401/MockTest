@@ -360,6 +360,7 @@ export default function TypingTestPortalPage() {
 
       <PageTitle
         crumbs={[{ label: isHindi ? 'होम' : 'Home', href: '/' }, { label: isHindi ? 'टाइपिंग टेस्ट' : 'Typing Tests' }]}
+        back={{ href: '/', label: isHindi ? 'होम पर वापस जाएं' : 'Back to Home' }}
         title={isHindi ? 'टाइपिंग टेस्ट' : 'Typing Tests'}
         subtitle={isHindi
           ? 'सरकारी भर्ती परीक्षाओं के आधिकारिक पैटर्न पर आधारित कंप्यूटर टाइपिंग टेस्ट का अभ्यास करें।'

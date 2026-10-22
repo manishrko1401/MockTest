@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { CalendarClock, Check, ChevronLeft, ChevronRight, Plus, Target, Trash2, X } from 'lucide-react-native';
 import { request, friendlyError } from '../api';
 import { useI18n } from '../i18n';
-import { useNav } from '../nav';
 import { useTheme } from '../theme';
-import { Button, Card, confirm, Empty, ErrorBox, Field, Header, HeaderButton, Loading, Pill, SectionTitle, Segmented } from '../ui';
+import { Button, Card, confirm, Empty, ErrorBox, Field, Header, HeaderButton, Loading, Pill, ProgressBar, SectionTitle, Segmented, Sheet } from '../ui';
 import {
   addDays, chapterCounts, checkinKey, daysBetween, isDone, isRepeating, localDay, newId, percent, PlannerData, PlannerExam, PlannerTask,
   revisionDue, Syllabus, syllabusCounts, tasksForDay,
@@ -24,7 +22,6 @@ const prettyDay = (d: string, hi: boolean) => new Date(`${d}T00:00:00`).toLocale
 export default function PlannerScreen() {
   const t = useTheme();
   const { hi } = useI18n();
-  const nav = useNav();
   const [data, setData] = useState<PlannerData | null>(null);
   const [error, setError] = useState('');
   const [section, setSection] = useState<Section>('today');
@@ -56,7 +53,7 @@ export default function PlannerScreen() {
     try { await request('planner-set-done', { id: task.id, done, day }); } catch (e) { setError(friendlyError(e)); load(); }
   };
 
-  if (!data) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title={L('Study Planner', 'स्टडी प्लानर')} onBack={nav.pop} />{error ? <ErrorBox message={error} onRetry={load} /> : <Loading />}</View>;
+  if (!data) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header large title={L('Study Planner', 'स्टडी प्लानर')} />{error ? <ErrorBox message={error} onRetry={load} /> : <Loading />}</View>;
 
   const today = data.today;
   const act = data.activity[today] || { mock: 0, typing: 0 };
@@ -65,7 +62,7 @@ export default function PlannerScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={L('Study Planner', 'स्टडी प्लानर')} onBack={nav.pop}
+      <Header large title={L('Study Planner', 'स्टडी प्लानर')}
         right={section === 'tasks' || section === 'today' ? <HeaderButton label="Add task" icon={<Plus size={24} color={t.headerText} />} onPress={() => setEditTask({ dueDate: day, category: 'study', priority: 'medium', repeatDays: [] })} />
           : section === 'exams' ? <HeaderButton label="Add exam" icon={<Plus size={24} color={t.headerText} />} onPress={() => setEditExam({ examDate: addDays(today, 30) })} /> : undefined} />
       <Segmented options={[
@@ -83,9 +80,7 @@ export default function PlannerScreen() {
                   <View key={String(label)} style={{ flex: 1 }}>
                     <Text style={{ color: t.textSoft, fontSize: 12 }}>{label as string}</Text>
                     <Text style={{ color: t.text, fontSize: 20, fontWeight: '900' }}>{done as number}<Text style={{ color: t.textMuted, fontSize: 14 }}> / {goal as number}</Text></Text>
-                    <View style={{ height: 6, borderRadius: 3, backgroundColor: t.cardAlt, marginTop: 6 }}>
-                      <View style={{ height: 6, borderRadius: 3, width: `${Math.min(100, percent(done as number, goal as number))}%`, backgroundColor: (done as number) >= (goal as number) ? t.success : t.primary }} />
-                    </View>
+                    <View style={{ marginTop: 8 }}><ProgressBar value={percent(done as number, goal as number) / 100} color={(done as number) >= (goal as number) ? t.success : t.primary} /></View>
                   </View>
                 ))}
               </Card>
@@ -193,24 +188,6 @@ function Chips<K extends string | number>({ options, value, onChange }: { option
         </Pressable>
       ))}
     </View>
-  );
-}
-
-function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  const t = useTheme();
-  const insets = useSafeAreaInsets();
-  return (
-    <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'flex-end' }}>
-        <View style={{ backgroundColor: t.bg, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '92%' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-            <Text style={{ color: t.text, fontSize: 17, fontWeight: '800', flex: 1 }}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={10} accessibilityLabel="Close"><X size={22} color={t.text} /></Pressable>
-          </View>
-          <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 20 + insets.bottom }} keyboardShouldPersistTaps="handled">{children}</ScrollView>
-        </View>
-      </View>
-    </Modal>
   );
 }
 
@@ -331,9 +308,7 @@ function SyllabusList({ data, onOpen, onChanged }: { data: PlannerData; onOpen: 
             <Card style={{ marginBottom: 10 }}>
               <Text style={{ color: t.text, fontWeight: '800' }}>{s.name}</Text>
               <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 2 }}>{c.done}/{c.total} {L('chapters done', 'अध्याय पूरे')} · {s.subjects.length} {L('subjects', 'विषय')}</Text>
-              <View style={{ height: 6, borderRadius: 3, backgroundColor: t.cardAlt, marginTop: 8 }}>
-                <View style={{ height: 6, borderRadius: 3, width: `${percent(c.done, c.total)}%`, backgroundColor: t.success }} />
-              </View>
+              <View style={{ marginTop: 10 }}><ProgressBar value={percent(c.done, c.total) / 100} color={t.success} /></View>
             </Card>
           </Pressable>
         );

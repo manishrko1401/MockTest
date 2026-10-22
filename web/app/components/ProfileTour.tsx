@@ -120,8 +120,8 @@ export default function ProfileTour({ ready, openSection }: { ready: boolean; op
       targets: CONTENT,
       title: { en: 'Membership', hi: 'सदस्यता' },
       body: {
-        en: 'Your current plan and what it unlocks. Premium (PRO) mock tests need a pass, which you can claim or unlock with coins.',
-        hi: 'आपका वर्तमान प्लान और उससे मिलने वाली सुविधाएं। प्रीमियम (PRO) मॉक टेस्ट के लिए पास चाहिए, जिसे आप क्लेम कर सकते हैं या कॉइन्स से अनलॉक कर सकते हैं।',
+        en: 'Your current plan and what it unlocks. Premium (PRO) mock tests need a pass, which you can claim here.',
+        hi: 'आपका वर्तमान प्लान और उससे मिलने वाली सुविधाएं। प्रीमियम (PRO) मॉक टेस्ट के लिए पास चाहिए, जिसे आप यहां क्लेम कर सकते हैं।',
       },
       onNext: go('referrals'),
       noBack: true,
@@ -130,8 +130,8 @@ export default function ProfileTour({ ready, openSection }: { ready: boolean; op
       targets: CONTENT,
       title: { en: 'Refer & earn', hi: 'रेफर करें और कमाएं' },
       body: {
-        en: 'Copy your referral code and share it with friends. When they register, you both earn coins.',
-        hi: 'अपना रेफ़रल कोड कॉपी करें और दोस्तों के साथ साझा करें। उनके पंजीकरण करने पर आप दोनों को कॉइन्स मिलते हैं।',
+        en: 'Copy your referral code and share it with friends. When they finish their first mock test, you get 20 coins and they get 10.',
+        hi: 'अपना रेफ़रल कोड कॉपी करें और दोस्तों के साथ साझा करें। उनका पहला मॉक टेस्ट पूरा होने पर आपको 20 और उन्हें 10 कॉइन्स मिलते हैं।',
       },
       onNext: go('preferences'),
       noBack: true,

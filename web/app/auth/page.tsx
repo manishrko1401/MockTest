@@ -11,6 +11,9 @@ import { TRANSLATIONS } from '../translations';
 import { isDisposableEmail } from '../lib/botProtection';
 import { signInWithGoogle } from '../lib/googleDriveWeb';
 
+// A friend's referral code from an invite link, kept until sign-up
+const REF_KEY = 'mth_invite_ref';
+
 export default function AuthPage() {
   const { login, signup, loginWithGoogle, theme, toggleTheme, language, setLanguage, usersList } = useAuth();
   const router = useRouter();
@@ -25,6 +28,16 @@ export default function AuthPage() {
       if (params.get('tab') === 'signup' || params.get('mode') === 'signup') {
         setActiveTab('signup');
       }
+      // Invite link (/auth?ref=CODE): fill in the friend's code and open sign-up. Kept for this
+      // browser, so the code still counts if they look around first and sign up later.
+      const ref = (params.get('ref') || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40);
+      let invite = ref;
+      try {
+        if (ref) localStorage.setItem(REF_KEY, ref);
+        else invite = localStorage.getItem(REF_KEY) || '';
+      } catch { /* storage blocked */ }
+      if (invite) setReferralCodeInput(invite);
+      if (ref) setActiveTab('signup');
       const targetRedirect = params.get('redirect') || params.get('returnUrl');
       if (targetRedirect && targetRedirect.startsWith('/') && !targetRedirect.startsWith('//')) {
         setRedirectUrl(targetRedirect);
@@ -128,7 +141,7 @@ export default function AuthPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setResetSuccess(language === 'hi' ? 'सत्यापन कोड आपके ईमेल पर भेज दिया गया है।' : 'Verification code has been sent to your email.');
+        setResetSuccess(language === 'hi' ? 'अगर इस ईमेल से कोई खाता है, तो सत्यापन कोड भेज दिया गया है। अपना इनबॉक्स और स्पैम फ़ोल्डर देखें।' : 'If an account exists for this email, a verification code has been sent. Check your inbox and spam folder.');
         setResetStep(2);
       } else {
         setResetError(data.error || (language === 'hi' ? 'ईमेल भेजने में विफल।' : 'Failed to request reset.'));
@@ -150,8 +163,8 @@ export default function AuthPage() {
       setResetError(language === 'hi' ? 'कृपया नया पासवर्ड दर्ज करें।' : 'Please enter a new password.');
       return;
     }
-    if (resetNewPassword.length < 4) {
-      setResetError(language === 'hi' ? 'पासवर्ड कम से कम 4 वर्णों का होना चाहिए।' : 'Password must be at least 4 characters long.');
+    if (resetNewPassword.trim().length < 6) {
+      setResetError(language === 'hi' ? 'पासवर्ड कम से कम 6 वर्णों का होना चाहिए।' : 'Password must be at least 6 characters long.');
       return;
     }
 
@@ -250,6 +263,11 @@ export default function AuthPage() {
         return;
       }
 
+      if (!turnstileToken) {
+        setErrorMsg(language === 'hi' ? 'कृपया सुरक्षा जांच पूरी करें।' : 'Please complete the security check.');
+        return;
+      }
+
       setLoading(true);
       try {
         const res = await signup(
@@ -262,10 +280,14 @@ export default function AuthPage() {
           turnstileToken || undefined
         );
         if (res.success) {
+          try { localStorage.removeItem(REF_KEY); } catch { /* ignore */ }
           localStorage.setItem('show_signup_congrats_popup', 'true');
           router.push(redirectUrl);
         } else {
           setErrorMsg(res.error || t.authSignupFail || 'Email address already registered. Please login.');
+          // a captcha token works once: get a fresh one for the next try
+          setTurnstileToken(null);
+          try { if (turnstileWidgetId.current) (window as any).turnstile?.reset(turnstileWidgetId.current); } catch { /* ignore */ }
         }
       } finally {
         setLoading(false);
@@ -295,10 +317,12 @@ export default function AuthPage() {
         googleProfile.email,
         googleProfile.name,
         googleProfile.picture,
-        googleProfile.accessToken
+        googleProfile.accessToken,
+        referralCodeInput.trim() || undefined
       );
 
       if (res.success) {
+        try { localStorage.removeItem(REF_KEY); } catch { /* ignore */ }
         router.push(redirectUrl);
       } else {
         setErrorMsg(res.error || 'Failed to authenticate with Google.');
@@ -426,7 +450,7 @@ export default function AuthPage() {
                     </Field>
                     <div className="md:col-span-2">
                       <Field label={t.authRefOptional}>
-                        <IconInput icon={Gift} type="text" value={referralCodeInput} onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())} placeholder="e.g. TB-RAHUL-1029" />
+                        <IconInput icon={Gift} type="text" value={referralCodeInput} onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())} placeholder="e.g. MT-7KQ2" />
                       </Field>
                     </div>
                     <div className="md:col-span-2 flex flex-col items-center gap-1.5 pt-1">

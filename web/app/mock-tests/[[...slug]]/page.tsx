@@ -1,6 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+
+// Runs before the browser paints (plain effect on the server), so the page never shows a
+// blank frame or the wrong level for a moment when it opens.
+const useBeforePaint = typeof window !== 'undefined' ? React.useLayoutEffect : useEffect;
 import { useAuth, TestCategory, TestSubCategory, MockTestItem } from '../../AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { TEST_SERIES_BASE, buildTestSeriesPath, resolveTestSeriesPath, testSeriesSegments } from '../../lib/testSeriesUrl';
@@ -192,7 +196,7 @@ export default function MockTestsCatalog() {
   const [examSearchQuery, setExamSearchQuery] = useState('');
   const [sidebarSearch, setSidebarSearch] = useState('');
 
-  useEffect(() => {
+  useBeforePaint(() => {
     setMounted(true);
   }, []);
 
@@ -411,9 +415,13 @@ export default function MockTestsCatalog() {
   // update state, and state is then written back to the URL as a new history entry.
   const pathname = usePathname() || TEST_SERIES_BASE;
   const appliedPathRef = React.useRef<string | null>(null); // path that matches the current state
+  // Path the URL just asked for, until the state has caught up with it. Until then the
+  // state -> URL effect must not write the old state back (that bounced the page between
+  // /mock-tests and the series address forever: the flicker after "Back to Test Series").
+  const pendingPathRef = React.useRef<string | null>(null);
 
-  // URL -> state
-  useEffect(() => {
+  // URL -> state (before paint, so opening a series link doesn't flash the category list first)
+  useBeforePaint(() => {
     if (typeof window === 'undefined' || testSeriesCatalog.length === 0) return;
     let segments = testSeriesSegments(pathname);
     let isLegacyLink = false;
@@ -429,6 +437,7 @@ export default function MockTestsCatalog() {
     const r = resolveTestSeriesPath(testSeriesCatalog, segments);
     const resolvedPath = buildTestSeriesPath(r.categoryId, r.examId, r.seriesId);
     appliedPathRef.current = resolvedPath;
+    pendingPathRef.current = buildTestSeriesPath(selectedCategory, selectedSubCategory, activeSubSubId) === resolvedPath ? null : resolvedPath;
     setSelectedCategory(r.categoryId);
     setSelectedSubCategory(r.examId);
     setActiveSubSubId(r.seriesId);
@@ -444,6 +453,10 @@ export default function MockTestsCatalog() {
   useEffect(() => {
     if (typeof window === 'undefined' || appliedPathRef.current === null) return;
     const target = buildTestSeriesPath(selectedCategory, selectedSubCategory, activeSubSubId);
+    if (pendingPathRef.current !== null) {
+      if (target === pendingPathRef.current) pendingPathRef.current = null; // state caught up
+      return;
+    }
     if (target === appliedPathRef.current) return;
     appliedPathRef.current = target;
     window.history.pushState(null, '', target);
@@ -1420,6 +1433,7 @@ export default function MockTestsCatalog() {
     <div className="h-screen max-h-screen w-full flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden">
       
       <SiteHeader fluid />
+      <h1 className="sr-only">{language === 'hi' ? 'टेस्ट सीरीज' : 'Test Series'}</h1>
 
       {/* Main split-pane content */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">

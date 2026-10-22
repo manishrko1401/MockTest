@@ -26,7 +26,9 @@ export async function GET(request: Request) {
     const oldSessions = await prisma.userTestSession.findMany({
       where: {
         status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] },
-        completedAt: { lt: cutoffDate }
+        completedAt: { lt: cutoffDate },
+        // only sessions that still have rows, so each run moves on to the next 1000
+        responses: { some: {} },
       },
       select: { id: true },
       take: 1000 // Process in batches to avoid timeouts

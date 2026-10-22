@@ -1,14 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { FlatList, Modal, Pressable, ScrollView, Share, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Flag, RotateCcw, X } from 'lucide-react-native';
+import { AArrowDown, AArrowUp, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Clock, Flag, RotateCcw, Share2, Swords, Target, Trophy, Users, X } from 'lucide-react-native';
 import { request, friendlyError } from '../api';
 import { useData, flattenTests } from '../data';
 import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { useTheme } from '../theme';
-import { Button, Card, Empty, ErrorBox, Header, HeaderButton, KeyValue, ListRow, Loading, Pill, SectionTitle, Segmented, stripHtml } from '../ui';
+import { Button, Card, Dialog, Empty, ErrorBox, Header, HeaderButton, KeyValue, ListRow, Loading, Pill, ProgressBar, Ring, SectionTitle, Segmented, Skeleton, round2, stripHtml, StatusBarFor } from '../ui';
+import { useExamFont } from './ExamRunScreen';
+import { CreateRoomSheet } from './TestScreens';
+import { api, MyRoom } from '../friendsApi';
 import QuestionView from '../QuestionView';
 import { generateExamSession, EXPLANATIONS } from '../shared/examUtils';
 import { isCbatTest, isRpscRasTest, scoreSession } from '../shared/examScoring';
@@ -77,7 +80,7 @@ const fmtTime = (s: number) => `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
 
 /** Questions with answers for a test the student has finished (cached for the session). */
 const sessionCache = new Map<string, ActiveSession>();
-async function loadAnsweredSession(testId: string, catalog: any[], l1?: string, l2?: string) {
+export async function loadAnsweredSession(testId: string, catalog: any[], l1?: string, l2?: string) {
   const key = `${testId}|${l1 || ''}|${l2 || ''}`;
   const hit = sessionCache.get(key);
   if (hit) return hit;
@@ -91,13 +94,13 @@ async function loadAnsweredSession(testId: string, catalog: any[], l1?: string, 
   return session;
 }
 
-const explanationOf = (q: Question, lang: 'en' | 'hi') => {
+export const explanationOf = (q: Question, lang: 'en' | 'hi') => {
   const e: any = (EXPLANATIONS as any)?.[q.id] || q.explanation || {};
   const text = (lang === 'hi' ? e.hi : e.en) || e.en || '';
   return /under review|provided\.|समीक्षा|प्रदान की गई/.test(text) ? '' : text;
 };
 
-function questionInput(q: Question, lang: 'en' | 'hi') {
+export function questionInput(q: Question, lang: 'en' | 'hi') {
   const c = lang === 'hi' && q.content.hi?.questionText ? q.content.hi : q.content.en;
   return {
     comprehension: c.comprehension, questionText: c.questionText, imageUrl: c.imageUrl,
@@ -152,6 +155,11 @@ export function AnalysisScreen({ testId, attemptId, offline }: { testId: string;
     ]).then(([s, r]) => { setSession(s); setResponses(r); }, e => setError(friendlyError(e)));
   }, [record?.id, testId, catalog, user.id, offline, pkg]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Friends rooms for this test (to compare) and the "take with friends" sheet
+  const [rooms, setRooms] = useState<MyRoom[]>([]);
+  const [roomSheet, setRoomSheet] = useState(false);
+  useEffect(() => { if (!offline) api<{ rooms: MyRoom[] }>('room-mine', { testId }).then(r => setRooms(r.rooms || []), () => {}); }, [testId, offline]);
+
   if (!record) {
     return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title={hi ? 'परिणाम' : 'Result'} onBack={nav.pop} />{error ? <ErrorBox message={error} /> : offline && !pkg ? <Loading /> : <Empty title={hi ? 'अभी कोई प्रयास नहीं' : 'No attempts yet'} />}</View>;
   }
@@ -164,95 +172,142 @@ export function AnalysisScreen({ testId, attemptId, offline }: { testId: string;
     return r.selectedOptionIndex === q.correctOptionIndex ? 'correct' : 'wrong';
   };
   const timeTaken = responses ? Object.values(responses).reduce((a, r) => a + (r.elapsedSeconds || 0), 0) : record.durationSeconds || 0;
+  const pct = record.maxScore ? Math.max(0, (record.score || 0) / record.maxScore) : 0;
+  const scoreColor = pct >= 0.6 ? t.success : pct >= 0.35 ? t.accent : t.danger;
+  const cbat = isCbatTest(testId, catalog);
+  const shareScore = () => Share.share({
+    message: hi
+      ? `मैंने MockTest Hub पर "${record.title}" में ${round2(record.score)}/${record.maxScore} अंक पाए (${Math.round(record.accuracy || 0)}% सटीकता)। आप भी दें: https://mocktesthub.vercel.app`
+      : `I scored ${round2(record.score)}/${record.maxScore} in "${record.title}" on MockTest Hub (${Math.round(record.accuracy || 0)}% accuracy). Try it: https://mocktesthub.vercel.app`,
+  }).catch(() => {});
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={hi ? 'परिणाम विश्लेषण' : 'Result analysis'} subtitle={record.title} onBack={nav.pop} />
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 30 }}>
+      <Header title={hi ? 'परिणाम विश्लेषण' : 'Result analysis'} subtitle={record.title} onBack={nav.pop}
+        right={<HeaderButton label={hi ? 'शेयर' : 'Share'} icon={<Share2 size={20} color={t.headerText} />} onPress={shareScore} />} />
+      <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
         {attempts.length > 1 ? (
-          <Segmented options={attempts.slice(0, 5).map((a, i) => ({ key: a.id, label: i === 0 ? (hi ? 'नवीनतम' : 'Latest') : a.date }))} value={record.id} onChange={setSelId} />
+          <Segmented options={attempts.slice(0, 6).map((a, i) => ({ key: a.id, label: i === 0 ? (hi ? 'नवीनतम' : 'Latest') : a.date }))} value={record.id} onChange={setSelId} />
         ) : null}
-        {error ? <ErrorBox message={error} /> : null}
+        <View style={{ paddingHorizontal: 16, paddingTop: attempts.length > 1 ? 0 : 14 }}>
+          {error ? <ErrorBox style={{ marginHorizontal: 0 }} message={error} /> : null}
 
-        <Card style={{ alignItems: 'center' }}>
-          <Text style={{ color: t.textSoft, fontWeight: '600' }}>{hi ? 'आपका स्कोर' : 'Your score'}</Text>
-          <Text style={{ color: t.primary, fontSize: 40, fontWeight: '900' }}>{Math.round((record.score || 0) * 100) / 100}<Text style={{ fontSize: 20, color: t.textSoft }}> / {record.maxScore}</Text></Text>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Pill text={`${hi ? 'शुद्धता' : 'Accuracy'} ${Math.round(record.accuracy || 0)}%`} tone="primary" />
-            <Pill text={`${hi ? 'समय' : 'Time'} ${fmtTime(timeTaken)}`} />
-            {record.violations ? <Pill text={`${hi ? 'उल्लंघन' : 'Violations'} ${record.violations}`} tone="danger" /> : null}
-          </View>
-          {score ? (
-            <View style={{ flexDirection: 'row', marginTop: 14, alignSelf: 'stretch' }}>
-              {[[score.correctCount, hi ? 'सही' : 'Correct', t.success], [score.incorrectCount, hi ? 'गलत' : 'Wrong', t.danger], [score.unattemptedCount, hi ? 'छोड़े' : 'Skipped', t.textMuted]].map(([n, l, c]) => (
-                <View key={String(l)} style={{ flex: 1, alignItems: 'center' }}>
-                  <Text style={{ color: c as string, fontSize: 22, fontWeight: '900' }}>{n as number}</Text>
-                  <Text style={{ color: t.textSoft, fontSize: 12 }}>{l as string}</Text>
-                </View>
-              ))}
+          {/* Score */}
+          <Card>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+              <Ring value={pct} size={112} stroke={11} color={scoreColor}>
+                <Text style={{ color: t.text, fontSize: 22, fontWeight: '900' }}>{round2(record.score || 0)}</Text>
+                <Text style={{ color: t.textMuted, fontSize: 12, fontWeight: '700' }}>/ {record.maxScore}</Text>
+              </Ring>
+              <View style={{ flex: 1, gap: 8 }}>
+                <Text style={{ color: t.textSoft, fontWeight: '700', fontSize: 13 }}>{hi ? 'आपका स्कोर' : 'Your score'}</Text>
+                <Pill tone="primary" icon={<Target size={12} color={t.primary} />} text={`${hi ? 'सटीकता' : 'Accuracy'} ${Math.round(record.accuracy || 0)}%`} />
+                <Pill icon={<Clock size={12} color={t.textSoft} />} text={`${hi ? 'समय' : 'Time'} ${fmtTime(timeTaken)}`} />
+                {record.violations ? <Pill tone="danger" text={`${hi ? 'उल्लंघन' : 'Violations'} ${record.violations}`} /> : null}
+              </View>
             </View>
-          ) : null}
-        </Card>
-
-        {record.testbookRank || testItem?.testbookTopperScore ? (
-          <>
-            <SectionTitle>{hi ? 'आप कहां हैं' : 'Where you stand'}</SectionTitle>
-            <Card>
-              {record.testbookRank ? <KeyValue label={hi ? 'अनुमानित रैंक' : 'Estimated rank'} value={`#${record.testbookRank}${testItem?.testbookTotalUsers ? ` / ${testItem.testbookTotalUsers.toLocaleString('en-IN')}` : ''}`} /> : null}
-              {record.testbookPercentile != null ? <KeyValue label={hi ? 'पर्सेंटाइल' : 'Percentile'} value={`${record.testbookPercentile}`} /> : null}
-              {testItem?.testbookTopperScore ? <KeyValue label={hi ? 'टॉपर स्कोर' : 'Topper score'} value={testItem.testbookTopperScore} /> : null}
-              {testItem?.testbookAverageScore ? <KeyValue label={hi ? 'औसत स्कोर' : 'Average score'} value={testItem.testbookAverageScore} /> : null}
-              {testItem?.testbookCutoffScore ? <KeyValue label={hi ? 'कट-ऑफ' : 'Cut-off'} value={`${testItem.testbookCutoffScore} · ${record.score >= testItem.testbookCutoffScore ? (hi ? 'ऊपर ✓' : 'above ✓') : (hi ? 'नीचे' : 'below')}`} /> : null}
-              {testItem?.testbookTopperScore && record.maxScore ? (
-                <View style={{ marginTop: 12 }}>
-                  <View style={{ height: 10, borderRadius: 5, backgroundColor: t.cardAlt, overflow: 'hidden' }}>
-                    <View style={{ width: `${Math.max(2, Math.min(100, (record.score / record.maxScore) * 100))}%`, height: 10, backgroundColor: t.primary, borderRadius: 5 }} />
+            {score ? (
+              <View style={{ flexDirection: 'row', marginTop: 16, gap: 8 }}>
+                {[[score.correctCount, hi ? 'सही' : 'Correct', t.success, t.successSoft], [score.incorrectCount, hi ? 'गलत' : 'Wrong', t.danger, t.dangerSoft], [score.unattemptedCount, hi ? 'छोड़े' : 'Skipped', t.textSoft, t.cardAlt]].map(([n, l, c, bg]) => (
+                  <View key={String(l)} style={{ flex: 1, alignItems: 'center', backgroundColor: bg as string, borderRadius: 12, paddingVertical: 10 }}>
+                    <Text style={{ color: c as string, fontSize: 22, fontWeight: '900' }}>{n as number}</Text>
+                    <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: '700' }}>{l as string}</Text>
                   </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-                    <Text style={{ color: t.textMuted, fontSize: 11 }}>0</Text>
-                    <Text style={{ color: t.textMuted, fontSize: 11 }}>{hi ? 'टॉपर' : 'Topper'} {testItem.testbookTopperScore}</Text>
-                    <Text style={{ color: t.textMuted, fontSize: 11 }}>{record.maxScore}</Text>
-                  </View>
-                </View>
-              ) : null}
-            </Card>
-          </>
-        ) : null}
-
-        {session && responses ? (
-          <>
-            {isCbatTest(testId, catalog) ? <CbatTScoreCard session={session} status={status} /> : null}
-            {session.sections.length > 1 ? (
-              <>
-                <SectionTitle>{hi ? 'सेक्शन-वार प्रदर्शन' : 'Section-wise performance'}</SectionTitle>
-                <Card style={{ paddingVertical: 4 }}>
-                  {session.sections.map((sec, i) => {
-                    const qs = session.questions.filter(q => q.sectionId === sec.id);
-                    const c = qs.filter(q => status(q) === 'correct').length;
-                    const w = qs.filter(q => status(q) === 'wrong').length;
-                    const marks = qs.reduce((m, q) => m + (status(q) === 'correct' ? (q.positiveMark ?? sec.positiveMark) : status(q) === 'wrong' ? -(q.negativeMark ?? sec.negativeMark) : 0), 0);
-                    return (
-                      <View key={sec.id} style={{ paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: t.border }}>
-                        <View style={{ flexDirection: 'row' }}>
-                          <Text style={{ color: t.text, fontWeight: '700', flex: 1 }}>{sec.name}</Text>
-                          <Text style={{ color: t.primary, fontWeight: '800' }}>{Math.round(marks * 100) / 100}</Text>
-                        </View>
-                        <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 2 }}>✓ {c}  ✗ {w}  – {qs.length - c - w}  ·  {qs.length} {hi ? 'प्रश्न' : 'questions'}</Text>
-                      </View>
-                    );
-                  })}
-                </Card>
-              </>
+                ))}
+              </View>
             ) : null}
+          </Card>
 
-            <SectionTitle>{hi ? 'समाधान' : 'Solutions'}</SectionTitle>
-            <SolutionsList session={session} status={status} onOpen={(list, index) => setViewer({ list, index })} />
-          </>
-        ) : !error ? <Loading /> : null}
+          {/* Where you stand */}
+          {record.testbookRank || testItem?.testbookTopperScore ? (
+            <>
+              <SectionTitle>{hi ? 'आप कहां हैं' : 'Where you stand'}</SectionTitle>
+              <Card>
+                {record.testbookRank ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                    <Trophy size={22} color={t.accent} />
+                    <Text style={{ color: t.text, fontWeight: '900', fontSize: 18 }}>#{record.testbookRank}</Text>
+                    <Text style={{ color: t.textSoft, flex: 1 }}>{testItem?.testbookTotalUsers ? `${hi ? 'में से' : 'of'} ${testItem.testbookTotalUsers.toLocaleString('en-IN')}` : ''}</Text>
+                    {record.testbookPercentile != null ? <Pill tone="success" text={`${record.testbookPercentile} %ile`} /> : null}
+                  </View>
+                ) : null}
+                {testItem?.testbookTopperScore && record.maxScore ? (
+                  <View style={{ marginBottom: 6 }}>
+                    <ProgressBar value={pct} color={scoreColor} height={10} />
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+                      <Text style={{ color: t.textMuted, fontSize: 11.5 }}>0</Text>
+                      <Text style={{ color: t.textMuted, fontSize: 11.5 }}>{hi ? 'आप' : 'You'} {round2(record.score)} · {hi ? 'टॉपर' : 'Topper'} {testItem.testbookTopperScore}</Text>
+                      <Text style={{ color: t.textMuted, fontSize: 11.5 }}>{record.maxScore}</Text>
+                    </View>
+                  </View>
+                ) : null}
+                {testItem?.testbookTopperScore ? <KeyValue label={hi ? 'टॉपर स्कोर' : 'Topper score'} value={testItem.testbookTopperScore} /> : null}
+                {testItem?.testbookAverageScore ? <KeyValue label={hi ? 'औसत स्कोर' : 'Average score'} value={testItem.testbookAverageScore} /> : null}
+                {testItem?.testbookCutoffScore ? <KeyValue last label={hi ? 'कट-ऑफ' : 'Cut-off'} value={<Text style={{ color: record.score >= testItem.testbookCutoffScore ? t.success : t.danger, fontWeight: '800' }}>{testItem.testbookCutoffScore} · {record.score >= testItem.testbookCutoffScore ? (hi ? 'ऊपर ✓' : 'above ✓') : (hi ? 'नीचे' : 'below')}</Text>} /> : null}
+              </Card>
+            </>
+          ) : null}
 
-        {record.offline ? <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 12 }}>{hi ? 'यह प्रयास ऑफ़लाइन दिया गया। इंटरनेट आने पर यह आपके खाते में अपलोड हो जाएगा और सर्वर इसे फिर से जांचेगा।' : 'Taken offline. It is uploaded to your account (and re-checked by the server) when you are online.'}</Text> : null}
-        <Button style={{ marginTop: 18 }} outline title={hi ? 'फिर से दें' : 'Retake test'} icon={<RotateCcw size={18} color={t.primary} />}
-          onPress={() => nav.replace(offline ? { name: 'examRun', testId, offline: true } : { name: 'testInfo', testId })} />
+          {session && responses ? (
+            <>
+              {cbat ? <CbatTScoreCard session={session} status={status} /> : null}
+              {session.sections.length > 1 ? (
+                <>
+                  <SectionTitle>{hi ? 'सेक्शन-वार प्रदर्शन' : 'Section-wise performance'}</SectionTitle>
+                  <Card style={{ gap: 14 }}>
+                    {session.sections.map(sec => {
+                      const qs = session.questions.filter(q => q.sectionId === sec.id);
+                      const c = qs.filter(q => status(q) === 'correct').length;
+                      const w = qs.filter(q => status(q) === 'wrong').length;
+                      const marks = qs.reduce((m, q) => m + (status(q) === 'correct' ? (q.positiveMark ?? sec.positiveMark) : status(q) === 'wrong' ? -(q.negativeMark ?? sec.negativeMark) : 0), 0);
+                      const max = qs.reduce((m, q) => m + (q.positiveMark ?? sec.positiveMark), 0) || 1;
+                      return (
+                        <View key={sec.id}>
+                          <View style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 6 }}>
+                            <Text style={{ color: t.text, fontWeight: '800', flex: 1 }} numberOfLines={1}>{sec.name}</Text>
+                            <Text style={{ color: t.text, fontWeight: '900' }}>{round2(marks)}</Text>
+                            <Text style={{ color: t.textMuted, fontWeight: '700' }}> / {round2(max)}</Text>
+                          </View>
+                          <ProgressBar value={marks / max} color={marks / max >= 0.6 ? t.success : marks / max >= 0.35 ? t.accent : t.danger} />
+                          <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 6 }}>
+                            <Text style={{ color: t.success, fontWeight: '800' }}>✓ {c}</Text>   <Text style={{ color: t.danger, fontWeight: '800' }}>✗ {w}</Text>   – {qs.length - c - w}  ·  {qs.length} {hi ? 'प्रश्न' : 'questions'}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </Card>
+                </>
+              ) : null}
+
+              <SectionTitle>{hi ? 'समाधान' : 'Solutions'}</SectionTitle>
+              <SolutionsList session={session} status={status} onOpen={(list, index) => setViewer({ list, index })} />
+            </>
+          ) : !error ? <View style={{ marginTop: 16 }}><Skeleton rows={3} height={90} /></View> : null}
+
+          {/* With friends */}
+          {!offline && rooms.length ? (
+            <>
+              <SectionTitle>{hi ? 'दोस्तों से तुलना' : 'Compare with friends'}</SectionTitle>
+              {rooms.slice(0, 3).map(r => (
+                <Card key={r.code} onPress={() => nav.push({ name: 'room', code: r.code })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <Users size={20} color={t.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: t.text, fontWeight: '800' }}>{hi ? 'रूम' : 'Room'} {r.code}</Text>
+                    <Text style={{ color: t.textSoft, fontSize: 12.5 }}>{r.members} {hi ? 'सदस्य' : 'members'}</Text>
+                  </View>
+                  <ChevronRight size={18} color={t.textMuted} />
+                </Card>
+              ))}
+            </>
+          ) : null}
+
+          {record.offline ? <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 12 }}>{hi ? 'यह प्रयास ऑफ़लाइन दिया गया। इंटरनेट आने पर यह आपके खाते में अपलोड हो जाएगा और सर्वर इसे फिर से जांचेगा।' : 'Taken offline. It is uploaded to your account (and re-checked by the server) when you are online.'}</Text> : null}
+          <View style={{ gap: 10, marginTop: 20 }}>
+            {!offline && !cbat ? <Button soft title={hi ? 'दोस्तों के साथ दें' : 'Take with friends'} icon={<Swords size={18} color={t.primary} />} onPress={() => setRoomSheet(true)} /> : null}
+            <Button outline title={hi ? 'फिर से दें' : 'Retake test'} icon={<RotateCcw size={18} color={t.primary} />}
+              onPress={() => nav.replace(offline ? { name: 'examRun', testId, offline: true } : { name: 'testInfo', testId })} />
+          </View>
+        </View>
       </ScrollView>
 
       {viewer && session && responses ? (
@@ -262,6 +317,7 @@ export function AnalysisScreen({ testId, attemptId, offline }: { testId: string;
           onClose={() => setViewer(null)} onIndex={i => setViewer(v => (v ? { ...v, index: i } : v))}
         />
       ) : null}
+      {roomSheet ? <CreateRoomSheet testId={testId} testTitle={record.title} onClose={() => setRoomSheet(false)} /> : null}
     </View>
   );
 }
@@ -274,29 +330,35 @@ function SolutionsList({ session, status, onOpen }: { session: ActiveSession; st
   const ordered = useMemo(() => session.sections.flatMap(s => session.questions.filter(q => q.sectionId === s.id).sort((a, b) => a.orderIndex - b.orderIndex)), [session]);
   const marks = new Set((user.bookmarkedQuestions || []).filter(b => b.testId === session.testId).map(b => b.questionId));
   const list = ordered.filter(q => filter === 'all' || (filter === 'bookmarked' ? marks.has(q.id) : status(q) === filter));
-  const colors: Record<string, string> = { correct: t.success, wrong: t.danger, skipped: t.textMuted };
+  const colors: Record<string, [string, string]> = { correct: [t.success, t.dark ? '#0b111c' : '#fff'], wrong: [t.danger, t.dark ? '#0b111c' : '#fff'], skipped: [t.cardAlt, t.text] };
   return (
     <>
-      <Segmented
-        options={[
-          { key: 'all', label: `${hi ? 'सभी' : 'All'} ${ordered.length}` },
-          { key: 'correct', label: `${hi ? 'सही' : 'Correct'} ${ordered.filter(q => status(q) === 'correct').length}` },
-          { key: 'wrong', label: `${hi ? 'गलत' : 'Wrong'} ${ordered.filter(q => status(q) === 'wrong').length}` },
-          { key: 'skipped', label: `${hi ? 'छोड़े' : 'Skipped'} ${ordered.filter(q => status(q) === 'skipped').length}` },
-          { key: 'bookmarked', label: `${hi ? 'बुकमार्क' : 'Bookmarked'} ${marks.size}` },
-        ]}
-        value={filter} onChange={setFilter as any}
-      />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-        {list.map((q, i) => (
-          <Pressable key={q.id} onPress={() => onOpen(list, i)}
-            style={{ width: 44, height: 40, borderRadius: 8, backgroundColor: colors[status(q)] + (status(q) === 'skipped' ? '33' : ''), alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: status(q) === 'skipped' ? t.text : '#fff', fontWeight: '800' }}>{ordered.indexOf(q) + 1}</Text>
-            {marks.has(q.id) ? <View style={{ position: 'absolute', top: 2, right: 3, width: 6, height: 6, borderRadius: 3, backgroundColor: '#facc15' }} /> : null}
-          </Pressable>
-        ))}
+      <View style={{ marginHorizontal: -16 }}>
+        <Segmented
+          options={[
+            { key: 'all', label: `${hi ? 'सभी' : 'All'} ${ordered.length}` },
+            { key: 'correct', label: `${hi ? 'सही' : 'Correct'} ${ordered.filter(q => status(q) === 'correct').length}` },
+            { key: 'wrong', label: `${hi ? 'गलत' : 'Wrong'} ${ordered.filter(q => status(q) === 'wrong').length}` },
+            { key: 'skipped', label: `${hi ? 'छोड़े' : 'Skipped'} ${ordered.filter(q => status(q) === 'skipped').length}` },
+            { key: 'bookmarked', label: `${hi ? 'बुकमार्क' : 'Bookmarked'} ${marks.size}` },
+          ]}
+          value={filter} onChange={setFilter as any}
+        />
       </View>
-      {list.length === 0 ? <Text style={{ color: t.textMuted, marginTop: 8 }}>{hi ? 'कोई प्रश्न नहीं।' : 'No questions here.'}</Text> : null}
+      <Card style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: 12 }}>
+        {list.map((q, i) => {
+          const [bg, fg] = colors[status(q)];
+          return (
+            <Pressable key={q.id} onPress={() => onOpen(list, i)} accessibilityLabel={`${hi ? 'प्रश्न' : 'Question'} ${ordered.indexOf(q) + 1}`}
+              style={({ pressed }) => ({ width: 46, height: 42, borderRadius: 10, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1, borderWidth: status(q) === 'skipped' ? 1 : 0, borderColor: t.border })}>
+              <Text style={{ color: fg, fontWeight: '900' }}>{ordered.indexOf(q) + 1}</Text>
+              {marks.has(q.id) ? <View style={{ position: 'absolute', top: 3, right: 4, width: 7, height: 7, borderRadius: 4, backgroundColor: '#facc15' }} /> : null}
+            </Pressable>
+          );
+        })}
+        {list.length === 0 ? <Text style={{ color: t.textMuted, padding: 4 }}>{hi ? 'कोई प्रश्न नहीं।' : 'No questions here.'}</Text> : null}
+      </Card>
+      <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 8 }}>{hi ? 'किसी प्रश्न पर टैप करें: सही उत्तर और व्याख्या देखें।' : 'Tap a question to see the correct answer and the explanation.'}</Text>
     </>
   );
 }
@@ -311,6 +373,7 @@ export function SolutionViewer({ testId, testTitle, list, index, lang, chosen, r
   const user = useUser();
   const { patchUser } = useSession();
   const insets = useSafeAreaInsets();
+  const font = useExamFont();
   const [qLang, setQLang] = useState(lang);
   const [report, setReport] = useState(false);
   const [reportText, setReportText] = useState('');
@@ -333,45 +396,54 @@ export function SolutionViewer({ testId, testTitle, list, index, lang, chosen, r
       setReport(false); setReportText(''); setNote(hi ? 'धन्यवाद! हमारी टीम इसकी जांच करेगी।' : 'Thank you! Our team will check it.');
     } catch (e) { setNote(friendlyError(e)); }
   };
+  const iconBtn = { width: 42, height: 42, alignItems: 'center' as const, justifyContent: 'center' as const, borderRadius: 21 };
 
   return (
-    <Modal visible animationType="slide" onRequestClose={onClose}>
+    <Modal visible animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <View style={{ flex: 1, backgroundColor: t.bg }}>
-        <View style={{ backgroundColor: t.header, paddingTop: insets.top, paddingHorizontal: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', height: 52, gap: 4 }}>
-            <Pressable onPress={onClose} style={{ padding: 8 }} accessibilityLabel="Close"><X size={22} color={t.headerText} /></Pressable>
-            <Text style={{ flex: 1, color: t.headerText, fontWeight: '800' }}>{hi ? 'प्रश्न' : 'Question'} {index + 1} / {list.length}</Text>
-            {q.content.hi?.questionText ? <Pressable onPress={() => setQLang(l => (l === 'hi' ? 'en' : 'hi'))} style={{ padding: 8 }}><Text style={{ color: t.headerText, fontWeight: '800' }}>{qLang === 'hi' ? 'EN' : 'हि'}</Text></Pressable> : null}
-            <Pressable onPress={toggleBookmark} style={{ padding: 8 }} accessibilityLabel="Bookmark">{marked ? <BookmarkCheck size={22} color="#facc15" /> : <Bookmark size={22} color={t.headerText} />}</Pressable>
-            <Pressable onPress={() => setReport(true)} style={{ padding: 8 }} accessibilityLabel="Report question"><Flag size={20} color={t.headerText} /></Pressable>
+        <View style={{ backgroundColor: t.card, paddingTop: insets.top, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: t.border }}>
+          <StatusBarFor color={t.card} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', height: 56, gap: 2 }}>
+            <Pressable onPress={onClose} style={iconBtn} accessibilityLabel={hi ? 'बंद करें' : 'Close'}><X size={22} color={t.text} /></Pressable>
+            <View style={{ flex: 1 }}>
+              <Text numberOfLines={1} style={{ color: t.text, fontWeight: '900', fontSize: 16 }}>{hi ? 'प्र.' : 'Q'} {index + 1}<Text style={{ color: t.textMuted, fontWeight: '700' }}> / {list.length}</Text></Text>
+            </View>
+            {q.content.hi?.questionText ? (
+              <Pressable onPress={() => setQLang(l => (l === 'hi' ? 'en' : 'hi'))} style={iconBtn} accessibilityLabel={hi ? 'भाषा बदलें' : 'Change language'}>
+                <View style={{ borderWidth: 1.5, borderColor: t.border, borderRadius: 7, paddingHorizontal: 5, paddingVertical: 1 }}><Text style={{ color: t.text, fontWeight: '900', fontSize: 12 }}>{qLang === 'hi' ? 'हि' : 'EN'}</Text></View>
+              </Pressable>
+            ) : null}
+            <Pressable onPress={font.smaller} style={iconBtn} accessibilityLabel={hi ? 'छोटा अक्षर' : 'Smaller text'}><AArrowDown size={19} color={t.text} /></Pressable>
+            <Pressable onPress={font.bigger} style={iconBtn} accessibilityLabel={hi ? 'बड़ा अक्षर' : 'Larger text'}><AArrowUp size={19} color={t.text} /></Pressable>
+            <Pressable onPress={toggleBookmark} style={iconBtn} accessibilityLabel={hi ? 'बुकमार्क' : 'Bookmark'}>{marked ? <BookmarkCheck size={21} color="#eab308" /> : <Bookmark size={21} color={t.text} />}</Pressable>
+            <Pressable onPress={() => setReport(true)} style={iconBtn} accessibilityLabel={hi ? 'प्रश्न रिपोर्ट करें' : 'Report question'}><Flag size={19} color={t.text} /></Pressable>
           </View>
         </View>
-        {note ? <Pressable onPress={() => setNote('')} style={{ padding: 10, backgroundColor: t.primarySoft }}><Text style={{ color: t.primary, fontWeight: '600' }}>{note}</Text></Pressable> : null}
+        {note ? <Pressable onPress={() => setNote('')} style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: t.primarySoft }}><Text style={{ color: t.primary, fontWeight: '700' }}>{note}</Text></Pressable> : null}
         <QuestionView
           pageKey={`${q.id}-${qLang}-review`}
           {...input}
           selected={null}
+          fontScale={font.scale}
           review={{ correct: q.correctOptionIndex, chosen: chosen(q), explanation: explanationOf(q, qLang) }}
           watermark={`${user.name} · ${user.candidateCode}`}
-          labels={{ passage: hi ? 'अनुच्छेद' : 'Passage', explanation: hi ? 'व्याख्या' : 'Explanation', yourAnswer: hi ? 'आपका उत्तर' : 'Your answer', correct: hi ? 'सही उत्तर' : 'Correct answer' }}
+          labels={{
+            passage: hi ? 'अनुच्छेद' : 'Passage', explanation: hi ? 'व्याख्या' : 'Solution', yourAnswer: hi ? 'आपका उत्तर' : 'Your answer', correct: hi ? 'सही उत्तर' : 'Correct answer',
+            skipped: hi ? 'उत्तर नहीं दिया' : 'Not answered', right: hi ? 'सही' : 'Correct', wrong: hi ? 'गलत' : 'Wrong',
+          }}
         />
-        <View style={{ flexDirection: 'row', gap: 10, padding: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
+        <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
           <Button style={{ flex: 1 }} outline title={hi ? 'पिछला' : 'Previous'} icon={<ChevronLeft size={18} color={t.primary} />} disabled={index === 0} onPress={() => onIndex(index - 1)} />
           <Button style={{ flex: 1 }} title={hi ? 'अगला' : 'Next'} icon={<ChevronRight size={18} color={t.primaryText} />} disabled={index === list.length - 1} onPress={() => onIndex(index + 1)} />
         </View>
-        <Modal visible={report} transparent animationType="fade" onRequestClose={() => setReport(false)}>
-          <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
-            <Card>
-              <Text style={{ color: t.text, fontSize: 17, fontWeight: '800' }}>{hi ? 'प्रश्न रिपोर्ट करें' : 'Report this question'}</Text>
-              <TextInput value={reportText} onChangeText={setReportText} multiline placeholder={hi ? 'क्या गलत है? (जैसे उत्तर गलत है)' : "What's wrong? (e.g. the answer is wrong)"} placeholderTextColor={t.textMuted}
-                style={{ minHeight: 90, marginTop: 12, color: t.text, borderWidth: 1, borderColor: t.border, borderRadius: 10, padding: 10, textAlignVertical: 'top' }} />
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                <Button style={{ flex: 1 }} outline title={hi ? 'रद्द करें' : 'Cancel'} onPress={() => setReport(false)} />
-                <Button style={{ flex: 1 }} title={hi ? 'भेजें' : 'Send'} disabled={reportText.trim().length < 3} onPress={sendReport} />
-              </View>
-            </Card>
+        <Dialog visible={report} onClose={() => setReport(false)} title={hi ? 'प्रश्न रिपोर्ट करें' : 'Report this question'}>
+          <TextInput value={reportText} onChangeText={setReportText} multiline placeholder={hi ? 'क्या गलत है? (जैसे उत्तर गलत है)' : "What's wrong? (e.g. the answer is wrong)"} placeholderTextColor={t.textMuted}
+            style={{ minHeight: 96, marginTop: 14, color: t.text, borderWidth: 1.5, borderColor: t.border, borderRadius: 12, padding: 12, textAlignVertical: 'top', backgroundColor: t.input, fontSize: 15 }} />
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+            <Button style={{ flex: 1 }} outline title={hi ? 'रद्द करें' : 'Cancel'} onPress={() => setReport(false)} />
+            <Button style={{ flex: 1 }} title={hi ? 'भेजें' : 'Send'} disabled={reportText.trim().length < 3} onPress={sendReport} />
           </View>
-        </Modal>
+        </Dialog>
       </View>
     </Modal>
   );

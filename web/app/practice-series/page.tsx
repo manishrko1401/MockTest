@@ -385,7 +385,7 @@ const DEFAULT_PRACTICE_CATALOG: TestCategory[] = [
 ];
 
 export default function PracticeSeriesPage() {
-  const { currentUser, examCatalog, theme, toggleTheme, language, setLanguage, logout, toggleBookmark, refreshCatalog } = useAuth();
+  const { currentUser, examCatalog, theme, toggleTheme, language, setLanguage, logout, toggleBookmark } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   const { isMobile, isMounted } = useIsMobile();
@@ -394,11 +394,6 @@ export default function PracticeSeriesPage() {
     router.replace('/mock-tests');
   }, [router]);
 
-  useEffect(() => {
-    if (refreshCatalog) {
-      refreshCatalog();
-    }
-  }, []);
 
   // customPracticeCategories is no longer needed — categories come from examCatalog (DB)
   // just like the test series page. Keeping state as empty to avoid breaking any lingering references.
@@ -669,8 +664,7 @@ export default function PracticeSeriesPage() {
   };
 
   // Categories are sourced entirely from examCatalog (DB-backed), same as test series.
-  // No localStorage needed — examCatalog is populated from the DB on every page load
-  // via refreshCatalog() (called at component mount above).
+  // No localStorage needed — examCatalog is populated from the DB by the site-wide bootstrap.
 
   const deletedCategoryIds = getDeletedCategoryIds();
 

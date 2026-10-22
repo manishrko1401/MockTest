@@ -200,13 +200,23 @@ export default function DocumentLockerPage() {
   const [connectingDrive, setConnectingDrive] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
 
+  // The server's unlock token, kept for this tab only (it is what lets the documents load)
+  const unlockKey = (uid: string) => `locker_token_${uid}`;
+  const readUnlockToken = (uid: string): string | null => {
+    try { return sessionStorage.getItem(unlockKey(uid)); } catch { return null; }
+  };
+  const saveUnlockToken = (uid: string, token: string | undefined) => {
+    if (!token) return;
+    try { sessionStorage.setItem(unlockKey(uid), token); } catch { /* ignore */ }
+  };
+
   // Check initial PIN status & Session unlock (5 min auto-lock)
   useEffect(() => {
     if (!currentUser) return;
 
     // Check if unlocked in current browser tab session with timestamp
     const sessionVal = sessionStorage.getItem(`locker_unlocked_${currentUser.id}`);
-    if (sessionVal) {
+    if (sessionVal && readUnlockToken(currentUser.id)) {
       const parsedTime = parseInt(sessionVal, 10);
       const isStillValid = !isNaN(parsedTime) && Date.now() - parsedTime < 5 * 60 * 1000;
       if (isStillValid || sessionVal === 'true') {
@@ -271,11 +281,15 @@ export default function DocumentLockerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'locker-get-docs',
-          data: { userId: currentUser.id },
+          data: { userId: currentUser.id, unlockToken: readUnlockToken(currentUser.id) },
         }),
       });
       const data = await res.json();
       if (data.success) {
+        if (data.locked) {
+          sessionStorage.removeItem(`locker_unlocked_${currentUser.id}`);
+          setIsUnlocked(false);
+        }
         setDocuments(data.documents || []);
         setIsDriveConnected(!!data.user?.isLockerConnected);
         setDriveEmail(data.user?.googleDriveEmail || null);
@@ -296,6 +310,12 @@ export default function DocumentLockerPage() {
       fetchLockerDocs();
     }
   }, [currentUser]);
+
+  // Unlocking loads the documents (they are only sent after the PIN)
+  useEffect(() => {
+    if (isUnlocked && currentUser) fetchLockerDocs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isUnlocked]);
 
   // Handle URL Query params (e.g. ?exam=SSC+CGL&action=upload)
   useEffect(() => {
@@ -352,13 +372,21 @@ export default function DocumentLockerPage() {
       const data = await res.json();
 
       if (data.success && data.isCorrect) {
+        saveUnlockToken(currentUser.id, data.unlockToken);
         setIsUnlocked(true);
         sessionStorage.setItem(`locker_unlocked_${currentUser.id}`, Date.now().toString());
         setEnteredPin('');
         setPinError(null);
       } else {
         setIsPinShake(true);
-        setPinError(language === 'hi' ? 'गलत पिन! कृपया पुनः प्रयास करें।' : 'Incorrect PIN. Please try again.');
+        const isHi = language === 'hi';
+        setPinError(
+          data.locked
+            ? (isHi ? 'बहुत अधिक गलत पिन। लॉकर 15 मिनट के लिए बंद है, या "पिन भूल गए" का उपयोग करें।' : 'Too many wrong PINs. The locker is locked for 15 minutes, or use "Forgot PIN".')
+            : typeof data.attemptsLeft === 'number'
+              ? (isHi ? `गलत पिन! ${data.attemptsLeft} प्रयास बाकी।` : `Incorrect PIN. ${data.attemptsLeft} attempt${data.attemptsLeft === 1 ? '' : 's'} left.`)
+              : (data.error || (isHi ? 'गलत पिन! कृपया पुनः प्रयास करें।' : 'Incorrect PIN. Please try again.'))
+        );
         setTimeout(() => {
           setIsPinShake(false);
           setEnteredPin('');
@@ -376,6 +404,8 @@ export default function DocumentLockerPage() {
   const handleLockVault = () => {
     if (!currentUser?.id) return;
     sessionStorage.removeItem(`locker_unlocked_${currentUser.id}`);
+    try { sessionStorage.removeItem(unlockKey(currentUser.id)); } catch { /* ignore */ }
+    setDocuments([]);
     setIsUnlocked(false);
     setEnteredPin('');
     setPinError(null);
@@ -412,7 +442,8 @@ export default function DocumentLockerPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setUserLockerPin(newPinInput);
+        saveUnlockToken(currentUser.id, data.unlockToken);
+        setUserLockerPin('set');
         setIsUnlocked(true);
         sessionStorage.setItem(`locker_unlocked_${currentUser.id}`, 'true');
         setPinSuccessMsg('Security PIN set successfully!');
@@ -499,7 +530,8 @@ export default function DocumentLockerPage() {
       const data = await res.json();
 
       if (data.success) {
-        setUserLockerPin(forgotNewPinInput.trim());
+        saveUnlockToken(currentUser.id, data.unlockToken);
+        setUserLockerPin('set');
         setIsUnlocked(true);
         sessionStorage.setItem(`locker_unlocked_${currentUser.id}`, 'true');
         setIsForgotPinModalOpen(false);
@@ -554,7 +586,8 @@ export default function DocumentLockerPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setUserLockerPin(changeNewPinInput.trim());
+        saveUnlockToken(currentUser.id, data.unlockToken);
+        setUserLockerPin('set');
         setIsChangePinModalOpen(false);
         setChangeOldPinInput('');
         setChangeNewPinInput('');
@@ -757,17 +790,23 @@ export default function DocumentLockerPage() {
         }
       }
 
-      await fetch('/api/db', {
+      const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'locker-delete-doc',
           data: {
-            id: docToDelete.id,
+            docId: docToDelete.id,
             userId: currentUser.id,
+            unlockToken: readUnlockToken(currentUser.id),
           },
         }),
       });
+      const result = await res.json().catch(() => null);
+      if (result?.locked) {
+        handleLockVault();
+        return;
+      }
 
       setDocuments((prev) => prev.filter((d) => d.id !== docToDelete.id));
       setDocToDelete(null);
@@ -821,7 +860,7 @@ export default function DocumentLockerPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    let updatedList = [...list];
+    const updatedList = [...list];
     if (index >= 0) {
       updatedList[index] = updatedJob;
     } else {
@@ -1477,6 +1516,7 @@ export default function DocumentLockerPage() {
       <SiteHeader />
       <PageTitle
         crumbs={[{ label: language === 'hi' ? 'होम' : 'Home', href: '/' }, { label: language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker' }]}
+        back={{ href: '/', label: language === 'hi' ? 'होम पर वापस जाएं' : 'Back to Home' }}
         title={language === 'hi' ? 'दस्तावेज़ लॉकर' : 'Document Locker'}
         subtitle={language === 'hi'
           ? 'अपने आवेदन क्रेडेंशियल्स, प्रवेश पत्र और परिणाम एक सुरक्षित स्थान पर रखें।'

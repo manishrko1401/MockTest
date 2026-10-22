@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "site",
-  "description": "What the Mock Test Hub website may ask the app to do: exam mode, exit, notifications and the encrypted offline-test store. Nothing else (no files, no shell).",
+  "description": "What the Mock Test Hub website may ask the app to do: exam mode, exit, notifications, the encrypted offline-test store and the app's version number. Nothing else (no files, no shell).",
   "windows": [
     "main"
   ],
@@ -13,6 +13,7 @@
   },
   "permissions": [
     "core:event:default",
+    "core:app:allow-version",
     "allow-set-exam-mode",
     "allow-exit-app",
     "allow-offline-device-key",

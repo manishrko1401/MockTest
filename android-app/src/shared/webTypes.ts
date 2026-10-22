@@ -62,6 +62,10 @@ export interface QuestionResponse {
   tempOptionIndex: number | null;     // Unsaved selection (active UI radio button state)
   state: PaletteState;
   elapsedSeconds: number;
+  /** When an option was last tapped (ms, the device's clock) */
+  pickedAt?: number;
+  /** When the saved answer was chosen (ms). Used by the integrity checks (answer bursts). */
+  answeredAt?: number;
 }
 
 export interface MockTestItem {
@@ -132,7 +136,7 @@ export interface MockTestRecord {
   createdAt?: string;
   positiveMarks?: number | null;
   negativeMarks?: number | null;
-  responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>;
+  responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>;
   timeRemaining?: number;
   currentSectionIndex?: number;
   currentQuestionIndex?: number;
@@ -192,6 +196,8 @@ export interface MockUser {
   lockerTourCompletedAt?: string | null;
   /** Account/profile page tour: null = not finished yet; undefined = unknown */
   profileTourCompletedAt?: string | null;
+  plannerTourCompletedAt?: string | null;
+  friendsTourCompletedAt?: string | null;
   currentSessionId?: string;
   candidateCode: string;
   name: string;

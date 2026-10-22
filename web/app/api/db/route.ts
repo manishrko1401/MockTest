@@ -7,9 +7,8 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } fro
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { 
   isDisposableEmail, 
-  isHoneypotTriggered, 
-  checkRateLimit, 
-  getClientIp, 
+  isHoneypotTriggered,
+  getClientIp,
   verifyTurnstileToken 
 } from '../../lib/botProtection';
 import {
@@ -45,8 +44,17 @@ import {
   isPasswordHash,
 } from '../../lib/serverAuth';
 import { PLANNER_ACTIONS, handlePlannerAction } from '../../lib/planner';
+import { ROOM_ACTIONS, handleRoomAction } from '../../lib/friendRooms';
+import { FRIEND_ACTIONS, handleFriendAction } from '../../lib/friends';
 import { generateExamSession } from '../../lib/examUtils';
 import { notifyStaff, studentLabel, shorten } from '../../lib/adminPush';
+import { hitLimit, clearLimit, countHits } from '../../lib/dbRateLimit';
+import { sanitizeNoticeHtml } from '../../lib/sanitizeNotice';
+import { INTEGRITY_ACTIONS, handleIntegrityAction, recordIntegrity, TimelineRow } from '../../lib/integrity';
+import { PLATFORM_ACTIONS, handlePlatformAction, classifyPlatform, recordPlatform, isAndroidAppRequest } from '../../lib/platformUsage';
+import { analyzeAttempt, countWords } from '../../lib/integrityRules';
+import { unstable_cache } from 'next/cache';
+import { CATALOG_TAG, NOTICES_TAG, CATALOG_REVALIDATE_S, NOTICES_REVALIDATE_S, invalidateShared } from '../../lib/sharedCache';
 import { scoreSession, scoreCbat, isCbatTest, isRpscRasTest, stripAnswers, ScoreResult } from '../../lib/examScoring';
 
 // -----------------------------------------------------------------------------
@@ -122,9 +130,15 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   'locker-verify-otp-and-reset-pin': { level: 'user' },
   // Study Planner (app/lib/planner.ts)
   ...Object.fromEntries(PLANNER_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
+  // Test with Friends (app/lib/friendRooms.ts)
+  ...Object.fromEntries(ROOM_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
+  ...Object.fromEntries(FRIEND_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
 
   // Staff: ADMIN only
   'admin-data': { level: 'staff', roles: [...SUPPORT_ROLES, ...CONTENT_ROLES, ...NOTICE_ROLES] }, // non-admins get a reduced list
+  // Exam integrity review (app/lib/integrity.ts): admins only
+  ...Object.fromEntries(INTEGRITY_ACTIONS.map(a => [a, { level: 'staff', roles: [] } as ActionAccess])),
+  ...Object.fromEntries(PLATFORM_ACTIONS.map(a => [a, { level: 'staff', roles: [] } as ActionAccess])),
   'save-profile-admin': { level: 'staff', roles: [] },
   'reset-attempt': { level: 'staff', roles: [] },
   'reset-referrals': { level: 'staff', roles: [] },
@@ -191,23 +205,35 @@ function actionAccess(action: string): ActionAccess | null {
   return Object.prototype.hasOwnProperty.call(ACTION_ACCESS, action) ? ACTION_ACCESS[action] : null;
 }
 
+/** A request from a web browser (they always send Origin / Sec-Fetch-* on POST; the apps do not). */
+function isBrowserRequest(request: Request): boolean {
+  return !!(request.headers.get('origin') || request.headers.get('sec-fetch-mode') || request.headers.get('sec-fetch-site'));
+}
+
+/** Drops the old-app session id from a user object sent to a browser. */
+async function withoutAppSession(res: Response): Promise<Response> {
+  try {
+    const json = await res.clone().json();
+    if (!json?.user || !('currentSessionId' in json.user)) return res;
+    const { currentSessionId, ...user } = json.user;
+    void currentSessionId;
+    const out = NextResponse.json({ ...json, user }, { status: res.status });
+    res.headers.forEach((value, key) => {
+      if (key.toLowerCase() === 'set-cookie') out.headers.append(key, value);
+      else if (key.toLowerCase() !== 'content-length' && key.toLowerCase() !== 'content-type') out.headers.set(key, value);
+    });
+    return out;
+  } catch {
+    return res;
+  }
+}
+
 /** Account fields that must never leave the server. */
 function stripSecrets<T extends Record<string, any>>(u: T): T {
   if (!u || typeof u !== 'object') return u;
   const { password, passwordHash, ...rest } = u as any;
   if ('lockerPin' in rest) rest.lockerPin = rest.lockerPin ? 'set' : null; // the page only needs to know a PIN exists
   return rest;
-}
-
-const otpCache = (global as any).otpCache || new Map<string, { code: string; expiresAt: number }>();
-if (process.env.NODE_ENV !== 'production') {
-  (global as any).otpCache = otpCache;
-}
-
-// Persistent Login Attempts tracker to lock brute-force attempts
-const loginAttempts = (global as any).loginAttempts || new Map<string, { count: number; lockedUntil: number }>();
-if (process.env.NODE_ENV !== 'production') {
-  (global as any).loginAttempts = loginAttempts;
 }
 
 // Persistent Exam Catalog and Notices Cache to survive Next.js dev server hot-reloads
@@ -256,24 +282,24 @@ function formatDateTime(date: Date) {
   }
 }
 
-// In-Memory Throttle Cache for User Presence (updates DB at most once per 2 minutes per user)
-const lastSeenCache = new Map<string, number>();
+// In-Memory Throttle Cache for User Presence (updates DB at most once per 2 minutes per user,
+// or straight away when the platform changes)
+const lastSeenCache = new Map<string, { at: number; platform: string | null }>();
 
-async function touchUserLastSeen(userId?: string, platform?: string): Promise<void> {
+/** platform: 'web_desktop' | 'web_mobile' | 'windows' | 'android', or null to keep the last one. */
+async function touchUserLastSeen(userId?: string, platform?: string | null): Promise<void> {
   if (!userId || typeof userId !== 'string' || !userId.trim()) return;
   const now = Date.now();
-  const lastUpdated = lastSeenCache.get(userId) || 0;
-  
-  // 2-minute throttle — only write to DB if user was last seen more than 2 minutes ago
-  if (now - lastUpdated > 2 * 60 * 1000) {
-    lastSeenCache.set(userId, now); // Update cache immediately so concurrent calls don't double-write
+  const last = lastSeenCache.get(userId);
+  const platformChanged = !!platform && platform !== last?.platform;
+
+  if (!last || platformChanged || now - last.at > 2 * 60 * 1000) {
+    lastSeenCache.set(userId, { at: now, platform: platform || last?.platform || null }); // so concurrent calls don't double-write
     try {
       await prisma.user.update({
         where: { id: userId },
-        data: {
-          lastSeen: new Date(),
-          lastPlatform: platform || 'web'
-        }
+        data: { lastSeen: new Date(), ...(platform ? { lastPlatform: platform } : {}) },
+        select: { id: true }, // EGRESS-OPT: don't send the whole user row back
       });
     } catch (e) {
       // Silently ignore — don't fail the main request over a presence update
@@ -314,7 +340,8 @@ export async function POST(request: Request) {
     const isRequesterAdmin = requesterRole === 'ADMIN';
 
     if (requester && action !== 'ping') {
-      touchUserLastSeen(requester.id, (data?.source || data?.platform || body?.source || body?.platform || 'web')); // not awaited
+      // Other requests keep "last seen" fresh; only the ping (and the Android app's own client) say which platform
+      touchUserLastSeen(requester.id, isAndroidAppRequest(request) ? 'android' : null); // not awaited
     }
 
     if (ACCESS.level !== 'public' && !requester) {
@@ -350,8 +377,25 @@ export async function POST(request: Request) {
       if (action === 'report-question' || action === 'submit-suggestion') data.userId = requesterUserId || null;
     }
 
+    // Public forms: limited per account / IP (each one also notifies staff), long text cut
+    if (action === 'report-question' || action === 'submit-suggestion') {
+      const who = requesterUserId || `ip:${getClientIp(request)}`;
+      const limit = await hitLimit(`${action}:${who}`, requesterUserId ? 30 : 10, 60 * 60 * 1000);
+      if (!limit.allowed) {
+        return NextResponse.json({ success: false, error: `Too many messages. Please try again in ${limit.retryAfterMinutes} minutes.` }, { status: 429 });
+      }
+      if (!data || typeof data !== 'object') data = {};
+      for (const [key, max] of [['message', 3000], ['questionText', 5000], ['name', 100], ['email', 254], ['category', 60], ['mockTestTitle', 300], ['mockTestId', 100], ['questionId', 100], ['candidateCode', 40], ['source', 20]] as const) {
+        if (typeof data[key] === 'string') data[key] = data[key].slice(0, max);
+        else if (data[key] !== undefined && data[key] !== null) data[key] = String(data[key]).slice(0, max);
+      }
+    }
+
     if (action === 'ping') {
-      if (requester) await touchUserLastSeen(requester.id, data?.platform || body?.platform || 'web');
+      if (requester) {
+        const seen = classifyPlatform(request, { ...(body || {}), ...(data && typeof data === 'object' ? data : {}) });
+        await Promise.all([touchUserLastSeen(requester.id, seen.platform), recordPlatform(requester.id, seen)]);
+      }
       return NextResponse.json({ success: true });
     }
 
@@ -384,7 +428,7 @@ export async function POST(request: Request) {
       } catch (err) {
         console.error('Failed to start login session:', err);
       }
-      return res;
+      return isBrowserRequest(request) ? await withoutAppSession(res) : res;
     }
 
     if (action) {
@@ -399,8 +443,8 @@ export async function POST(request: Request) {
         'refresh-catalog'
       ];
       if (writeActions.includes(action)) {
-        catalogCache.examCatalog = null;
-        catalogCache.noticesList = null;
+        catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+        catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
         catalogCache.etag = null;
       }
     }
@@ -409,9 +453,28 @@ export async function POST(request: Request) {
       return await handlePlannerAction(action, data);
     }
 
+    if ((PLATFORM_ACTIONS as readonly string[]).includes(action)) {
+      return await handlePlatformAction(action, data);
+    }
+    if ((INTEGRITY_ACTIONS as readonly string[]).includes(action)) {
+      return await handleIntegrityAction(action, data, requester!.id);
+    }
+
+    if ((FRIEND_ACTIONS as readonly string[]).includes(action)) {
+      return await handleFriendAction(action, data, requester!);
+    }
+
+    if ((ROOM_ACTIONS as readonly string[]).includes(action)) {
+      return await handleRoomAction(action, data, requester!, {
+        loadTestQuestions: (testId: string) => loadTestQuestions(testId),
+        getCatalog: async () => catalogCache.examCatalog || await getCompiledExamCatalog(),
+        tierAllows,
+      });
+    }
+
     switch (action) {
       case 'request-password-reset':
-        return await handleRequestPasswordReset(data);
+        return await handleRequestPasswordReset(data, request);
       case 'confirm-password-reset':
         return await handleConfirmPasswordReset(data);
       case 'bootstrap':
@@ -534,8 +597,10 @@ export async function POST(request: Request) {
         return await handleGetReferredFriends(data);
       case 'reset-referrals':
         return await handleResetReferrals();
-      case 'get-user-details':
-        return await handleGetUserDetails(data, requesterUserId);
+      case 'get-user-details': {
+        const res = await handleGetUserDetails(data, requesterUserId);
+        return isBrowserRequest(request) ? await withoutAppSession(res) : res;
+      }
       case 'complete-tour':
         return await handleCompleteTour(data, requesterUserId);
       case 'get-session-responses':
@@ -940,6 +1005,83 @@ async function handleGetTestsBySeries(data: {
 }
 
 
+/**
+ * The catalog as sent to browsers and apps: an exam's own `tests` list is left out when it
+ * is just its series' tests again (it was every test twice, about half of the download).
+ * The website rebuilds it (expandCatalog in AuthContext); the Android app reads both lists.
+ */
+function slimCatalog(catalog: any[]): any[] {
+  return (catalog || []).map((cat: any) => ({
+    ...cat,
+    subCategories: (cat.subCategories || []).map((sub: any) => {
+      const inSeries = new Set<string>();
+      for (const ss of sub.subSubCategories || []) for (const t of ss.tests || []) inSeries.add(t.id);
+      const tests = sub.tests || [];
+      if (!tests.length || !tests.every((t: any) => inSeries.has(t.id))) return sub;
+      const { tests: _dropped, ...rest } = sub;
+      void _dropped;
+      return rest;
+    }),
+  }));
+}
+
+/** The notices list sent with bootstrap (no notice bodies). Shared across server instances. */
+async function buildBootstrapNotices() {
+  const NOTICE_CATEGORIES = ['result', 'admit_card', 'answer_key', 'notice'] as const;
+  const noticeSelect = {
+    id: true, title: true, titleHi: true, date: true, publishDate: true,
+    type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
+  };
+
+  const [announcementNotices, ...categoryNotices] = await Promise.all([
+    // Always fetch ALL announcements (they are permanent banners, not time-bounded)
+    prisma.notice.findMany({
+      where: { category: 'announcement' },
+      orderBy: { createdAt: 'desc' },
+      select: noticeSelect,
+    }),
+    // 60 most recent per category, fetched independently so none can starve the others
+    ...NOTICE_CATEGORIES.map(category =>
+      prisma.notice.findMany({
+        where: { category },
+        orderBy: { createdAt: 'desc' },
+        take: 60,
+        select: noticeSelect,
+      })
+    ),
+  ]);
+  const regularNotices = categoryNotices.flat();
+
+  // Merge: announcements first, then regular notices (de-dup by id just in case)
+  const seenIds = new Set<string>();
+  const mergedNotices = [...announcementNotices, ...regularNotices].filter((n: any) => {
+    if (seenIds.has(n.id)) return false;
+    seenIds.add(n.id);
+    return true;
+  });
+
+  const noticesList = mergedNotices.map((n: any) => ({
+    id: n.id,
+    title: n.title,
+    titleHi: n.titleHi || undefined,
+    date: n.date,
+    publishDate: n.publishDate,
+    type: n.type,
+    category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial' | 'answer_key',
+    url: n.url || undefined,
+    rawUrl: n.rawUrl || undefined,
+    lastDate: n.lastDate || undefined,
+    imageUrl: n.imageUrl || undefined,
+    // Note: contentHtml is intentionally excluded from bootstrap to reduce Supabase Egress by 99%.
+    // Full notice HTML is loaded on demand when the user opens a notice detail page.
+  }));
+  return noticesList;
+}
+
+const readSharedNotices = unstable_cache(buildBootstrapNotices, ['bootstrap-notices-v1'], {
+  tags: [NOTICES_TAG], revalidate: NOTICES_REVALIDATE_S,
+});
+
 async function handleBootstrap(req?: Request) {
   // PERF: Use memory cache if populated and fresh (30 min TTL — catalog changes only via admin)
   // Generate a deterministic ETag from the cache timestamp so clients can skip re-fetching.
@@ -955,7 +1097,7 @@ async function handleBootstrap(req?: Request) {
       });
     }
     return NextResponse.json(
-      { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: catalogCache.examCatalog, reportedQuestionsList: [] },
+      { success: true, usersList: [], noticesList: catalogCache.noticesList, examCatalog: slimCatalog(catalogCache.examCatalog), reportedQuestionsList: [] },
       { headers: { 'ETag': etag, 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800' } }
     );
   }
@@ -1028,54 +1170,7 @@ async function handleBootstrap(req?: Request) {
   // a bulk backfill assigned Jobs rows a later createdAt than everything else, and the shared
   // top-100 query returned zero Result/Admit Card/Answer Key notices as a result. Capping each
   // category on its own guarantees every tab always has content, independent of sync timing.
-  const NOTICE_CATEGORIES = ['result', 'admit_card', 'answer_key', 'notice'] as const;
-  const noticeSelect = {
-    id: true, title: true, titleHi: true, date: true, publishDate: true,
-    type: true, category: true, url: true, rawUrl: true, lastDate: true, imageUrl: true,
-  };
-
-  const [announcementNotices, ...categoryNotices] = await Promise.all([
-    // Always fetch ALL announcements (they are permanent banners, not time-bounded)
-    prisma.notice.findMany({
-      where: { category: 'announcement' },
-      orderBy: { createdAt: 'desc' },
-      select: noticeSelect,
-    }),
-    // 60 most recent per category, fetched independently so none can starve the others
-    ...NOTICE_CATEGORIES.map(category =>
-      prisma.notice.findMany({
-        where: { category },
-        orderBy: { createdAt: 'desc' },
-        take: 60,
-        select: noticeSelect,
-      })
-    ),
-  ]);
-  const regularNotices = categoryNotices.flat();
-
-  // Merge: announcements first, then regular notices (de-dup by id just in case)
-  const seenIds = new Set<string>();
-  const mergedNotices = [...announcementNotices, ...regularNotices].filter((n: any) => {
-    if (seenIds.has(n.id)) return false;
-    seenIds.add(n.id);
-    return true;
-  });
-
-  const noticesList = mergedNotices.map((n: any) => ({
-    id: n.id,
-    title: n.title,
-    titleHi: n.titleHi || undefined,
-    date: n.date,
-    publishDate: n.publishDate,
-    type: n.type,
-    category: n.category as 'notice' | 'result' | 'admit_card' | 'announcement' | 'testimonial' | 'answer_key',
-    url: n.url || undefined,
-    rawUrl: n.rawUrl || undefined,
-    lastDate: n.lastDate || undefined,
-    imageUrl: n.imageUrl || undefined,
-    // Note: contentHtml is intentionally excluded from bootstrap to reduce Supabase Egress by 99%.
-    // Full notice HTML is loaded on demand when the user opens a notice detail page.
-  }));
+  const noticesList = await readSharedNotices();
 
   // Fetch Exam Catalog using optimized memory assembler
   const examCatalog = await getCompiledExamCatalog();
@@ -1085,7 +1180,7 @@ async function handleBootstrap(req?: Request) {
   catalogCache.examCatalog = examCatalog;
   catalogCache.noticesList = noticesList;
   catalogCache.noticesLastFetched = Date.now();
-  catalogCache.etag = `"cat-${crypto.createHash('sha1').update(JSON.stringify([noticesList, examCatalog])).digest('base64url').slice(0, 27)}"`;
+  catalogCache.etag = `"cat2-${crypto.createHash('sha1').update(JSON.stringify([noticesList, examCatalog])).digest('base64url').slice(0, 27)}"`;
 
   // Fetch Reported Questions is now disabled in public bootstrap.
   // Admins will fetch this data separately using the 'admin-data' action.
@@ -1103,7 +1198,7 @@ async function handleBootstrap(req?: Request) {
   }
 
   return NextResponse.json(
-    { success: true, usersList, noticesList, examCatalog, reportedQuestionsList },
+    { success: true, usersList, noticesList, examCatalog: slimCatalog(examCatalog), reportedQuestionsList },
     { headers: {
         'ETag': freshETag,
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=1800'
@@ -1307,6 +1402,55 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
   });
 }
 
+// ---- Refer & earn ----
+// A friend who signs up with a code and finishes a first mock test using at least 3/4 of its
+// time earns REFERRAL_FRIEND_COINS; the owner of the code earns REFERRAL_OWNER_COINS. Once per
+// referred account.
+const REFERRAL_FRIEND_COINS = 10;
+const REFERRAL_OWNER_COINS = 20;
+const REFERRAL_MIN_TIME_SHARE = 0.75;
+
+/** A new referral code (MT-XXXX) that no other account has. */
+async function newReferralCode(): Promise<string> {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O or 1/I, easy to read out
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const len = attempt < 6 ? 4 : 6;
+    let code = 'MT-';
+    for (let i = 0; i < len; i++) code += chars[crypto.randomInt(chars.length)];
+    const taken = await prisma.user.findFirst({ where: { referralCode: { equals: code, mode: 'insensitive' } }, select: { id: true } });
+    if (!taken) return code;
+  }
+  return `MT-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+}
+
+/** The account a referral code belongs to (any letter case), or null. */
+async function findReferrer(code: unknown) {
+  const c = typeof code === 'string' ? code.trim() : '';
+  if (!c || c.length > 40) return null;
+  return prisma.user.findFirst({ where: { referralCode: { equals: c, mode: 'insensitive' } }, select: { id: true, referralCode: true } });
+}
+
+/**
+ * Credits the referral coins after a finished attempt that used enough of the test's time.
+ * Safe against two submits at once: the friend's flag is switched in the same write that adds
+ * their coins, so only one request can pay out.
+ */
+async function creditReferralIfDue(userId: string, timeSpentSeconds: number, durationMinutes: number) {
+  const totalSec = Math.max(60, (durationMinutes || 60) * 60);
+  if (timeSpentSeconds < totalSec * REFERRAL_MIN_TIME_SHARE) return;
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { referredBy: true, referralCoinsCredited: true } });
+  if (!me?.referredBy || me.referralCoinsCredited) return;
+  const claimed = await prisma.user.updateMany({
+    where: { id: userId, referralCoinsCredited: false },
+    data: { coins: { increment: REFERRAL_FRIEND_COINS }, referralCoinsCredited: true },
+  });
+  if (claimed.count !== 1) return;
+  const referrer = await findReferrer(me.referredBy);
+  if (referrer && referrer.id !== userId) {
+    await prisma.user.update({ where: { id: referrer.id }, data: { coins: { increment: REFERRAL_OWNER_COINS } } });
+  }
+}
+
 async function handleSignup(data: any, request?: Request) {
   const { name, email, mobile, password, referralCodeInput, turnstileToken } = data;
 
@@ -1322,12 +1466,12 @@ async function handleSignup(data: any, request?: Request) {
 
   // 2. IP Rate Limiting: Restrict registration attempts per IP (max 5 signups per 30 minutes)
   const clientIp = request ? getClientIp(request) : '127.0.0.1';
-  const signupRate = checkRateLimit(`signup_ip:${clientIp}`, 5, 30 * 60 * 1000);
+  const signupRate = await hitLimit(`signup_ip:${clientIp}`, 5, 30 * 60 * 1000);
   if (!signupRate.allowed) {
     console.warn(`[BOT_PROTECTION] Rate limit exceeded for signup from IP: ${clientIp}`);
     return NextResponse.json({ 
       success: false, 
-      error: `Too many registration attempts from this network. Please try again in ${signupRate.resetTimeMinutes} minutes.` 
+      error: `Too many registration attempts from this network. Please try again in ${signupRate.retryAfterMinutes} minutes.` 
     }, { status: 429 });
   }
 
@@ -1350,8 +1494,12 @@ async function handleSignup(data: any, request?: Request) {
     }, { status: 400 });
   }
 
-  // 5. Cloudflare Turnstile Verification (if provided on web)
-  if (turnstileToken !== undefined && turnstileToken !== null && typeof turnstileToken === 'string') {
+  // 5. Cloudflare Turnstile Verification. Required for sign-ups from the website (a browser);
+  // the apps have no captcha widget and are limited by the IP limit above.
+  if (request && isBrowserRequest(request) && (typeof turnstileToken !== 'string' || !turnstileToken)) {
+    return NextResponse.json({ success: false, error: 'Please complete the security check.' }, { status: 400 });
+  }
+  if (typeof turnstileToken === 'string' && turnstileToken) {
     const turnstileResult = await verifyTurnstileToken(turnstileToken, clientIp);
     if (!turnstileResult.success) {
       console.warn(`[BOT_PROTECTION] Cloudflare Turnstile verification failed for IP: ${clientIp}`);
@@ -1370,27 +1518,16 @@ async function handleSignup(data: any, request?: Request) {
     return NextResponse.json({ success: false, error: 'User account already exists with this email.' }, { status: 400 });
   }
 
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let randStr = '';
-  for (let i = 0; i < 4; i++) {
-    randStr += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  const referralCode = `MT-${randStr}`;
-
-  let referredByCode: string | null = null;
-  if (referralCodeInput && referralCodeInput.trim() !== '') {
-    const referrer = await prisma.user.findFirst({
-      where: { referralCode: { equals: referralCodeInput.trim(), mode: 'insensitive' } },
-    });
-    if (referrer) {
-      referredByCode = referrer.referralCode;
-      // Increment referrer's count
-      await prisma.user.update({
-        where: { id: referrer.id },
-        data: { referralsCount: referrer.referralsCount + 1 },
-      });
+  // A referral code that was typed must exist (a typo would otherwise lose the reward silently)
+  let referrer: Awaited<ReturnType<typeof findReferrer>> = null;
+  if (typeof referralCodeInput === 'string' && referralCodeInput.trim() !== '') {
+    referrer = await findReferrer(referralCodeInput);
+    if (!referrer) {
+      return NextResponse.json({ success: false, error: 'This referral code does not exist. Please check it, or leave the box empty.' }, { status: 400 });
     }
   }
+  const referralCode = await newReferralCode();
+  const referredByCode = referrer?.referralCode ?? null;
 
   const newSessionId = crypto.randomUUID();
   const newUser = await prisma.user.create({
@@ -1411,6 +1548,9 @@ async function handleSignup(data: any, request?: Request) {
       currentSessionId: newSessionId,
     },
   });
+  if (referrer) {
+    await prisma.user.update({ where: { id: referrer.id }, data: { referralsCount: { increment: 1 } } }).catch(() => {});
+  }
 
   return NextResponse.json({
     success: true,
@@ -1438,32 +1578,40 @@ async function handleSignup(data: any, request?: Request) {
       typingTourCompletedAt: null,
       lockerTourCompletedAt: null,
       profileTourCompletedAt: null,
+      plannerTourCompletedAt: null,
+      friendsTourCompletedAt: null,
       testSessions: [],
       bookmarkedQuestions: [],
     },
   });
 }
+const LOGIN_MAX_WRONG = 5;
+const LOGIN_LOCK_MS = 15 * 60 * 1000;
+
 async function handleLogin(data: any, request?: Request) {
-  const { email, password } = data;
+  const { email, password } = data || {};
+  if (typeof email !== 'string' || !email.trim()) {
+    return NextResponse.json({ success: false, error: 'Please enter your email address.' }, { status: 400 });
+  }
   const trimmedEmail = email.trim().toLowerCase();
 
-  // IP-level rate limiting on login: max 15 attempts per 10 minutes per IP
+  // IP-level rate limiting on login: max 15 attempts per 10 minutes per IP (kept in the
+  // database, so every server instance counts the same attempts)
   const clientIp = request ? getClientIp(request) : '127.0.0.1';
-  const loginIpRate = checkRateLimit(`login_ip:${clientIp}`, 15, 10 * 60 * 1000);
+  const loginIpRate = await hitLimit(`login_ip:${clientIp}`, 15, 10 * 60 * 1000);
   if (!loginIpRate.allowed) {
     return NextResponse.json({
       success: false,
-      error: `Too many login attempts from this network. Please try again in ${loginIpRate.resetTimeMinutes} minutes.`
+      error: `Too many login attempts from this network. Please try again in ${loginIpRate.retryAfterMinutes} minutes.`
     }, { status: 429 });
   }
 
-  const now = Date.now();
-  const attempt = loginAttempts.get(trimmedEmail);
-  if (attempt && attempt.lockedUntil > now) {
-    const minsLeft = Math.ceil((attempt.lockedUntil - now) / 60000);
+  // 5 wrong passwords lock the account for 15 minutes
+  const wrongKey = `login_wrong:${trimmedEmail}`;
+  if (await countHits(wrongKey, LOGIN_LOCK_MS) >= LOGIN_MAX_WRONG) {
     return NextResponse.json({
       success: false,
-      error: `Too many failed login attempts. Account locked. Please try again in ${minsLeft} minutes.`
+      error: 'Too many failed login attempts. Account locked. Please try again in 15 minutes, or reset your password.'
     }, { status: 429 });
   }
 
@@ -1475,21 +1623,8 @@ async function handleLogin(data: any, request?: Request) {
     where: { email: trimmedEmail },
     include: {
       testSessions: {
-        // EGRESS-OPT: Only fetch most recent 30 sessions (not all history)
-        take: 30,
-        include: {
-          mockTest: {
-            select: {
-              title: true,
-              maxMarks: true,
-              durationMinutes: true,
-              positiveMarks: true,
-              negativeMarks: true,
-            }
-          },
-          // EGRESS-OPT: responses: true REMOVED — no longer fetched at login.
-          // Full responses are loaded lazily via get-session-responses when opening analysis.
-        },
+        take: 30, // EGRESS-OPT: recent sessions only; answers load when an analysis opens
+        select: SESSION_LIST_SELECT,
         orderBy: { startedAt: 'desc' },
       },
     },
@@ -1503,28 +1638,23 @@ async function handleLogin(data: any, request?: Request) {
     return NextResponse.json({ success: false, error: 'This user account is blocked by the administrator.' }, { status: 403 });
   }
 
-  if (!password || !(await verifyPassword(password, user.passwordHash))) {
-    const currentAttempt = attempt || { count: 0, lockedUntil: 0 };
-    currentAttempt.count += 1;
-    if (currentAttempt.count >= 5) {
-      currentAttempt.lockedUntil = now + 15 * 60 * 1000; // 15-minute lock
-      loginAttempts.set(trimmedEmail, currentAttempt);
+  if (typeof password !== 'string' || !password || !(await verifyPassword(password, user.passwordHash))) {
+    await hitLimit(wrongKey, 1000, LOGIN_LOCK_MS);
+    const remaining = LOGIN_MAX_WRONG - await countHits(wrongKey, LOGIN_LOCK_MS);
+    if (remaining <= 0) {
       return NextResponse.json({
         success: false,
         error: 'Too many failed login attempts. This account has been locked for 15 minutes.'
       }, { status: 429 });
-    } else {
-      loginAttempts.set(trimmedEmail, currentAttempt);
-      const remaining = 5 - currentAttempt.count;
-      return NextResponse.json({
-        success: false,
-        error: `Invalid password. ${remaining} attempts remaining before account lock.`
-      }, { status: 401 });
     }
+    return NextResponse.json({
+      success: false,
+      error: `Invalid password. ${remaining} attempts remaining before account lock.`
+    }, { status: 401 });
   }
 
   // Clear attempts tracker on success
-  loginAttempts.delete(trimmedEmail);
+  await clearLimit(wrongKey);
 
   // Older accounts still hold the plain password: replace it with a hash now. Only in
   // production — dev shares this database with the live site, whose deployed code may
@@ -1616,15 +1746,23 @@ const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '5701108568
 // The Android app signs in with its own Google OAuth client (package com.mocktesthub)
 const GOOGLE_ANDROID_CLIENT_ID = process.env.GOOGLE_ANDROID_CLIENT_ID || '570110856860-vmpk8qihkb834ihj1grthuf3kumc65q6.apps.googleusercontent.com';
 
-/** Asks Google who the access token belongs to. Only tokens issued to this site's client, for a verified email, count. */
+// Every OAuth client of our Google Cloud project counts (the app has one client per signing key:
+// the website's APK and Google Play's). Client ids start with the project number; only the
+// project's owners can create them.
+const GOOGLE_PROJECT_NUMBER = process.env.GOOGLE_PROJECT_NUMBER || GOOGLE_CLIENT_ID.split('-')[0];
+const isOurGoogleClient = (id: unknown) =>
+  typeof id === 'string' && (id === GOOGLE_CLIENT_ID || id === GOOGLE_ANDROID_CLIENT_ID
+    || (/^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/.test(id) && id.startsWith(`${GOOGLE_PROJECT_NUMBER}-`)));
+
+/** Asks Google who the access token belongs to. Only tokens issued to this site's clients, for a verified email, count. */
 async function verifyGoogleAccessToken(accessToken: unknown): Promise<{ email: string } | null> {
   if (typeof accessToken !== 'string' || accessToken.length < 20) return null;
   try {
     const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const info = await res.json();
-    const ours = [GOOGLE_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID];
-    const issuedToThisSite = ours.includes(info.aud) || ours.includes(info.azp);
+    const issuedToThisSite = isOurGoogleClient(info.aud) || isOurGoogleClient(info.azp);
+    if (!issuedToThisSite) console.warn('[google-auth] token from another OAuth client:', info.azp || info.aud);
     const emailVerified = info.email_verified === true || info.email_verified === 'true';
     if (!issuedToThisSite || !emailVerified || typeof info.email !== 'string') return null;
     return { email: info.email };
@@ -1653,18 +1791,8 @@ async function handleGoogleAuth(data: any, request?: Request) {
     where: { email: trimmedEmail },
     include: {
       testSessions: {
-        include: {
-          mockTest: {
-            select: {
-              title: true,
-              maxMarks: true,
-              durationMinutes: true,
-              positiveMarks: true,
-              negativeMarks: true,
-            }
-          },
-          responses: true,
-        },
+        take: 30, // EGRESS-OPT: recent sessions only; answers load when an analysis opens
+        select: SESSION_LIST_SELECT,
         orderBy: { startedAt: 'desc' },
       },
     },
@@ -1684,18 +1812,8 @@ async function handleGoogleAuth(data: any, request?: Request) {
       },
       include: {
         testSessions: {
-          include: {
-            mockTest: {
-              select: {
-                title: true,
-                maxMarks: true,
-                durationMinutes: true,
-                positiveMarks: true,
-                negativeMarks: true,
-              }
-            },
-            responses: true,
-          },
+          take: 30, // EGRESS-OPT: recent sessions only; answers load when an analysis opens
+          select: SESSION_LIST_SELECT,
           orderBy: { startedAt: 'desc' },
         },
       },
@@ -1771,13 +1889,10 @@ async function handleGoogleAuth(data: any, request?: Request) {
     return NextResponse.json({ success: true, user: mappedUser });
   }
 
-  // If user doesn't exist, create a new user account with Google
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let randStr = '';
-  for (let i = 0; i < 4; i++) {
-    randStr += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  const referralCode = `MT-${randStr}`;
+  // If user doesn't exist, create a new user account with Google (with the friend's referral
+  // code from the sign-up page or an invite link; an unknown code is ignored here)
+  const referralCode = await newReferralCode();
+  const referrer = await findReferrer(data?.referralCodeInput);
   const newSessionId = crypto.randomUUID();
 
   const newUser = await prisma.user.create({
@@ -1788,7 +1903,7 @@ async function handleGoogleAuth(data: any, request?: Request) {
       mobile: '',
       passwordHash: 'google_oauth_' + crypto.randomUUID(),
       referralCode,
-      referredBy: null,
+      referredBy: referrer?.referralCode ?? null,
       referralsCount: 0,
       role: 'STUDENT',
       subscriptionTier: 'None',
@@ -1799,6 +1914,9 @@ async function handleGoogleAuth(data: any, request?: Request) {
       profilePhoto: profilePhoto || null,
     },
   });
+  if (referrer) {
+    await prisma.user.update({ where: { id: referrer.id }, data: { referralsCount: { increment: 1 } } }).catch(() => {});
+  }
 
   return NextResponse.json({
     success: true,
@@ -1826,6 +1944,8 @@ async function handleGoogleAuth(data: any, request?: Request) {
       typingTourCompletedAt: null,
       lockerTourCompletedAt: null,
       profileTourCompletedAt: null,
+      plannerTourCompletedAt: null,
+      friendsTourCompletedAt: null,
       profilePhoto: newUser.profilePhoto,
       testSessions: [],
       bookmarkedQuestions: [],
@@ -1843,51 +1963,27 @@ async function handleGetReferredFriends(data: any) {
   }
 
   const friends = await prisma.user.findMany({
-    where: {
-      referredBy: {
-        equals: referralCode.trim(),
-        mode: 'insensitive'
-      }
-    },
-    include: {
-      testSessions: {
-        select: {
-          id: true,
-          status: true,
-          timeSpentSeconds: true,
-          mockTest: {
-            select: {
-              durationMinutes: true
-            }
-          }
-        }
-      }
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
+    where: { referredBy: { equals: referralCode.trim(), mode: 'insensitive' } },
+    select: { id: true, fullName: true, email: true, createdAt: true, referralCoinsCredited: true },
+    orderBy: { createdAt: 'desc' },
+    take: 500,
   });
 
-  const formattedFriends = friends.map((f: any) => {
-    const hasCompletedTest = Boolean(f.referralCoinsCredited) || f.testSessions.some((s: any) => {
-      return s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED';
-    });
-
-    return {
-      id: f.id,
-      name: f.fullName || 'Candidate',
-      email: f.email,
-      mobile: f.mobile,
-      candidateCode: f.candidateCode,
-      registeredDate: formatDateTime(f.createdAt),
-      hasCompletedTest,
-      coinsEarned: hasCompletedTest ? 20 : 0
-    };
-  });
+  // Only what the friend list shows: no mobile number, and the email masked (ab***@gmail.com)
+  const formattedFriends = friends.map(f => ({
+    id: f.id,
+    name: f.fullName || 'Candidate',
+    email: (f.email || '').replace(/^(.{2})[^@]*(@.*)$/, '$1***$2'),
+    registeredDate: formatDateTime(f.createdAt),
+    // Coins are paid once the friend's first test counted (see creditReferralIfDue)
+    hasCompletedTest: Boolean(f.referralCoinsCredited),
+    coinsEarned: f.referralCoinsCredited ? REFERRAL_OWNER_COINS : 0,
+  }));
 
   return NextResponse.json({
     success: true,
-    referredFriends: formattedFriends
+    referredFriends: formattedFriends,
+    rules: { ownerCoins: REFERRAL_OWNER_COINS, friendCoins: REFERRAL_FRIEND_COINS, minTimeShare: REFERRAL_MIN_TIME_SHARE },
   });
 }
 
@@ -2246,7 +2342,7 @@ async function handleOfflineDownload(data: any, requester: { id: string; role: s
   if ((kind !== 'mock' && kind !== 'typing') || typeof id !== 'string' || !id || typeof devicePublicKey !== 'string') {
     return NextResponse.json({ success: false, error: 'Invalid download request' }, { status: 400 });
   }
-  const limit = checkRateLimit(`offline_download:${requester.id}`, 40, 24 * 60 * 60 * 1000);
+  const limit = await hitLimit(`offline_download:${requester.id}`, 40, 24 * 60 * 60 * 1000);
   if (!limit.allowed) {
     return NextResponse.json({ success: false, error: 'Daily download limit reached. Please try again tomorrow.' }, { status: 429 });
   }
@@ -2330,7 +2426,7 @@ async function handleOfflineBookmarks(data: any, requester: { id: string; role: 
     || !Array.isArray(questionIds) || questionIds.length === 0 || questionIds.length > 300 || !questionIds.every((q: unknown) => typeof q === 'string')) {
     return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
   }
-  const limit = checkRateLimit(`offline_bookmarks:${requester.id}`, 500, 24 * 60 * 60 * 1000);
+  const limit = await hitLimit(`offline_bookmarks:${requester.id}`, 500, 24 * 60 * 60 * 1000);
   if (!limit.allowed) return NextResponse.json({ success: false, error: 'Too many requests. Please try again later.' }, { status: 429 });
 
   const isStaff = requester.role !== 'STUDENT';
@@ -2384,12 +2480,15 @@ async function handleOfflineBookmarks(data: any, requester: { id: string; role: 
 }
 
 /** Scores an attempt with the server's own answer key (null if the test has no stored questions). */
-async function gradeAttempt(testId: string, responses: Record<string, any>, lang1?: string, lang2?: string): Promise<ScoreResult | null> {
+type Graded = { score: ScoreResult; session: ReturnType<typeof generateExamSession> | null; durationMinutes: number; rpsc: boolean };
+
+async function gradeAttempt(testId: string, responses: Record<string, any>, lang1?: string, lang2?: string): Promise<Graded | null> {
   try {
     const { mockTest, questions } = await loadTestQuestions(testId);
     if (!questions?.length) return null;
     const catalog = catalogCache.examCatalog || await getCompiledExamCatalog();
-    if (isCbatTest(testId, catalog)) return scoreCbat(questions, responses);
+    // CBAT batteries are speed tests: scored, but not checked for speed
+    if (isCbatTest(testId, catalog)) return { score: scoreCbat(questions, responses), session: null, durationMinutes: mockTest?.durationMinutes || 60, rpsc: false };
     const session = generateExamSession(testId, catalog, {
       questions,
       positiveMarks: mockTest?.positiveMarks,
@@ -2398,11 +2497,50 @@ async function gradeAttempt(testId: string, responses: Record<string, any>, lang
       sections: mockTest?.sections,
     }, typeof lang1 === 'string' ? lang1 : undefined, typeof lang2 === 'string' ? lang2 : undefined);
     if (!session.questions.length) return null;
-    return scoreSession(session, responses, isRpscRasTest(testId, session));
+    const rpsc = isRpscRasTest(testId, session);
+    return { score: scoreSession(session, responses, rpsc), session, durationMinutes: mockTest?.durationMinutes || 60, rpsc };
   } catch (err) {
     console.error('Failed to grade attempt on the server:', err);
     return null;
   }
+}
+
+/** Runs the integrity rules on a submitted attempt and stores it for review when suspicious. */
+async function checkAttemptIntegrity(a: {
+  sessionId: string; userId: string; testId: string; graded: Graded; responses: Record<string, any>;
+  previousAttempts: number; violations: number; wallClockSeconds: number | null;
+}) {
+  const session = a.graded.session!;
+  const ordered = session.sections.flatMap(sec => session.questions.filter(q => q.sectionId === sec.id).sort((x, y) => x.orderIndex - y.orderIndex));
+  const text = (v: any) => (typeof v === 'string' ? v : v?.text || '');
+  const questions = ordered.map(q => ({
+    id: q.id,
+    correctIndex: typeof q.correctOptionIndex === 'number' ? q.correctOptionIndex : null,
+    words: countWords(text(q.content?.en?.questionText) + ' ' + text(q.content?.en?.comprehension))
+      + Math.round((q.content?.en?.options || []).reduce((n: number, o: any) => n + countWords(text(o)), 0) / 2),
+  }));
+  // How long other students usually take on each question (only questions with 5+ answers)
+  const med = await prisma.$queryRaw<{ q: string; m: number }[]>`
+    SELECT r."questionId" AS q, percentile_cont(0.5) WITHIN GROUP (ORDER BY r."elapsedSeconds") AS m
+    FROM question_response_states r JOIN user_test_sessions s ON s.id = r."sessionId"
+    WHERE s."mockTestId" = ${a.testId} AND s."userId" <> ${a.userId} AND r."selectedOptionIndex" IS NOT NULL
+    GROUP BY 1 HAVING COUNT(*) >= 5`;
+  const result = analyzeAttempt({
+    questions, responses: a.responses, durationMinutes: a.graded.durationMinutes,
+    medians: Object.fromEntries(med.map(r => [r.q, Number(r.m)])),
+    wallClockSeconds: a.wallClockSeconds, violations: a.violations, previousAttempts: a.previousAttempts, rpscOptionE: a.graded.rpsc,
+  });
+  if (result.level === 'ok') return;
+  const stamps = ordered.map(q => Number(a.responses[q.id]?.answeredAt) || 0).filter(x => x > 0);
+  const t0 = stamps.length ? Math.min(...stamps) : 0;
+  const timeline: TimelineRow[] = ordered.flatMap((q, i) => {
+    const r = a.responses[q.id];
+    if (!r) return [];
+    const sel = r.selectedOptionIndex ?? null;
+    const at = Number(r.answeredAt) || 0;
+    return [[i + 1, sel, sel === null ? null : sel === q.correctOptionIndex ? 1 : 0, Math.round(Number(r.elapsedSeconds) || 0), at && t0 ? at - t0 : null] as TimelineRow];
+  });
+  await recordIntegrity({ sessionId: a.sessionId, userId: a.userId, testId: a.testId, result, timeline });
 }
 
 async function handleAddAttempt(data: any, request?: Request) {
@@ -2415,9 +2553,9 @@ async function handleAddAttempt(data: any, request?: Request) {
   // (which no longer has the answer key before submitting, and could be tampered with).
   const graded = responses && typeof responses === 'object' ? await gradeAttempt(testId, responses, data.lang1, data.lang2) : null;
   if (graded) {
-    score = graded.obtainedMarks;
-    maxScore = graded.totalMarks;
-    accuracy = graded.accuracyPercentage;
+    score = graded.score.obtainedMarks;
+    maxScore = graded.score.totalMarks;
+    accuracy = graded.score.accuracyPercentage;
   }
 
   // Sanity-clamp the client-reported score/accuracy before it's written as permanent
@@ -2455,6 +2593,19 @@ async function handleAddAttempt(data: any, request?: Request) {
 
   // Ensure mock test record exists in database before creating session
   await ensureMockTestExists(testId, title, maxScore, durationSeconds ? Math.ceil(durationSeconds / 60) : 60);
+
+  // Integrity: when the server first saw this attempt (its first progress save) and how many
+  // finished attempts came before (a retake can know the answers)
+  let firstSeenAt: Date | null = null;
+  let previousAttempts = 0;
+  if (userId && testId) {
+    const [ongoing, prev] = await Promise.all([
+      offlineCompletedAt ? null : prisma.userTestSession.findFirst({ where: { userId, mockTestId: testId, status: 'ONGOING' }, orderBy: { startedAt: 'asc' }, select: { startedAt: true } }),
+      prisma.userTestSession.count({ where: { userId, mockTestId: testId, status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] } } }),
+    ]).catch(() => [null, 0] as const);
+    firstSeenAt = ongoing?.startedAt || null;
+    previousAttempts = prev || 0;
+  }
 
   // Remove any ongoing session first
   if (userId && testId) {
@@ -2531,55 +2682,12 @@ async function handleAddAttempt(data: any, request?: Request) {
     },
   });
 
-  // Check if this is the user's first completed session and if they have a pending referral
+  // Referral reward: the first attempt that used enough of the test's time (once per account)
   try {
-    const userObj = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { referredBy: true, referralCoinsCredited: true }
-    });
-
-    if (userObj && userObj.referredBy && !userObj.referralCoinsCredited) {
-      const completedSessions = await prisma.userTestSession.findMany({
-        where: {
-          userId,
-          status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] }
-        },
-        include: {
-          mockTest: true
-        }
-      });
-
-      const validSessionsCount = completedSessions.filter((s: any) => {
-        const durationMinutes = s.mockTest?.durationMinutes || 60;
-        const totalSec = durationMinutes * 60;
-        return s.timeSpentSeconds >= totalSec * 0.75;
-      }).length;
-
-      if (validSessionsCount === 1) {
-        // 1. Credit 10 coins to the referred user and set referralCoinsCredited: true
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            coins: { increment: 10 },
-            referralCoinsCredited: true
-          }
-        });
-
-        // 2. Find the referrer by referralCode and credit 20 coins
-        const referrer = await prisma.user.findFirst({
-          where: { referralCode: { equals: userObj.referredBy.trim(), mode: 'insensitive' } }
-        });
-
-        if (referrer) {
-          await prisma.user.update({
-            where: { id: referrer.id },
-            data: {
-              coins: { increment: 20 }
-            }
-          });
-        }
-      }
-    }
+    const durationMinutes = graded?.durationMinutes
+      ?? (await prisma.mockTest.findUnique({ where: { id: testId }, select: { durationMinutes: true } }))?.durationMinutes
+      ?? 60;
+    await creditReferralIfDue(userId, actualTimeSpent, durationMinutes);
   } catch (err) {
     console.error("Failed to credit referral coins:", err);
   }
@@ -2607,6 +2715,19 @@ async function handleAddAttempt(data: any, request?: Request) {
       }
     } catch {
       // Response state is best-effort — session score is already persisted
+    }
+  }
+
+  // Integrity checks (never blocks the result; suspicious attempts go to the admin review list)
+  if (graded?.session && responses && typeof responses === 'object') {
+    try {
+      await checkAttemptIntegrity({
+        sessionId: session.id, userId, testId, graded, responses, previousAttempts,
+        violations: typeof violations === 'number' ? violations : 0,
+        wallClockSeconds: firstSeenAt ? Math.max(0, (Date.now() - firstSeenAt.getTime()) / 1000) : null,
+      });
+    } catch (err) {
+      console.error('Integrity check failed:', err);
     }
   }
 
@@ -2665,7 +2786,7 @@ async function handleAddAttempt(data: any, request?: Request) {
     coins: updatedCoins,
     referralCoinsCredited: updatedReferralCoinsCredited,
     sessionId: session.id,
-    result: { score: safeScore, maxScore: storedMaxScore, accuracy: safeAccuracy, ...(graded ? { correct: graded.correctCount, incorrect: graded.incorrectCount, unattempted: graded.unattemptedCount } : {}) },
+    result: { score: safeScore, maxScore: storedMaxScore, accuracy: safeAccuracy, ...(graded ? { correct: graded.score.correctCount, incorrect: graded.score.incorrectCount, unattempted: graded.score.unattemptedCount } : {}) },
   });
 }
 
@@ -2955,7 +3076,7 @@ async function handleAddNotice(data: any) {
     },
   });
 
-  catalogCache.noticesList = null;
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -2983,7 +3104,7 @@ async function handleEditNotice(data: any) {
     },
   });
 
-  catalogCache.noticesList = null;
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -2994,7 +3115,7 @@ async function handleGetSingleNoticeContent(data: any) {
     return NextResponse.json({ success: false, error: 'Notice ID is required' }, { status: 400 });
   }
 
-  let notice = await prisma.notice.findUnique({
+  const notice = await prisma.notice.findUnique({
     where: { id },
     select: {
       id: true,
@@ -3110,6 +3231,8 @@ async function handleGetSingleNoticeContent(data: any) {
     }
   }
 
+  // Copied from other websites: only plain formatting reaches the page
+  if (notice.contentHtml) notice.contentHtml = sanitizeNoticeHtml(notice.contentHtml);
   return NextResponse.json({ success: true, notice });
 }
 
@@ -3120,7 +3243,7 @@ async function handleDeleteNotice(data: any) {
     where: { id },
   });
 
-  catalogCache.noticesList = null;
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -3159,8 +3282,8 @@ async function handleAddCategory(rawPayload: any) {
   });
 
   // Clear in-memory catalog cache so all live users receive fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -3194,8 +3317,8 @@ async function handleDeleteCategory(data: any) {
     });
 
     // Clear in-memory catalog cache so all live users receive fresh data
-    catalogCache.examCatalog = null;
-    catalogCache.noticesList = null;
+    catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+    catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
@@ -3408,8 +3531,8 @@ async function handleDeleteMockTest(data: any) {
     }
 
     // Bust in-memory catalog cache so all live users receive fresh data immediately
-    catalogCache.examCatalog = null;
-    catalogCache.noticesList = null;
+    catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+    catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
@@ -3448,8 +3571,8 @@ async function handleEditCategory(rawPayload: any) {
   });
 
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -3466,8 +3589,8 @@ async function handleEditSubCategory(data: any) {
   });
 
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -3484,8 +3607,8 @@ async function handleEditSubSubCategory(data: any) {
   });
 
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -3552,8 +3675,8 @@ async function handleEditMockTestTitle(data: any) {
   }
 
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
   return NextResponse.json({ success: true });
 }
@@ -3584,8 +3707,8 @@ async function handleSaveSectionRules(data: any) {
       });
     }
 
-    catalogCache.examCatalog = null;
-    catalogCache.noticesList = null;
+    catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+    catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
     return NextResponse.json({ success: true, count: sections.length });
   } catch (err: any) {
@@ -3603,8 +3726,8 @@ async function handleReorderCategories(data: any) {
     });
   }
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
   return NextResponse.json({ success: true });
 }
 
@@ -3617,8 +3740,8 @@ async function handleReorderSubCategories(data: any) {
     });
   }
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
   return NextResponse.json({ success: true });
 }
 
@@ -3631,8 +3754,8 @@ async function handleReorderSubSubCategories(data: any) {
     });
   }
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
   return NextResponse.json({ success: true });
 }
 
@@ -3645,8 +3768,8 @@ async function handleReorderMockTests(data: any) {
     });
   }
   // Bust in-memory catalog cache so next sync serves fresh data
-  catalogCache.examCatalog = null;
-  catalogCache.noticesList = null;
+  catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+  catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
   return NextResponse.json({ success: true });
 }
 
@@ -3864,7 +3987,7 @@ async function handleSaveCustomQuestions(rawPayload: any) {
 
   try {
     // 1. Check if the target mock test already exists in the database by slug or raw ID
-    let existingMockTest = await prisma.mockTest.findFirst({
+    const existingMockTest = await prisma.mockTest.findFirst({
       where: {
         OR: [
           { id: targetId },
@@ -3982,8 +4105,8 @@ async function handleSaveCustomQuestions(rawPayload: any) {
     }
 
     // Clear in-memory catalog cache so all live users receive fresh data
-    catalogCache.examCatalog = null;
-    catalogCache.noticesList = null;
+    catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+    catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
 
     return NextResponse.json({
       success: true,
@@ -4180,8 +4303,11 @@ async function handleGetCustomQuestions(rawPayload: any, requester: { id: string
   const locked = !isStaff && !attempted && !tierAllows(requiredTier, userTier);
   // Old mobile app builds (session id header, no cookie). The new Android app sends a bearer
   // token and gets answers only after submitting, like the website.
+  // Off by default: anyone could copy their session id and pretend to be the old app.
+  // (No old-app users in the last 30 days when this was switched off, Oct 2026.)
   const legacyApp = !!requester && !isStaff && !(request && (readCookie(request, AUTH_COOKIE) || request.headers.get('authorization')))
-    && process.env.LEGACY_APP_FULL_QUESTIONS !== '0';
+    && !(request && isBrowserRequest(request))
+    && process.env.LEGACY_APP_FULL_QUESTIONS === '1';
   const withAnswers = isStaff || attempted || legacyApp;
   const questions = !fullQuestions || locked ? null : withAnswers ? fullQuestions : stripAnswers(fullQuestions);
 
@@ -4243,9 +4369,30 @@ async function handleReportQuestion(data: any) {
 // ---------------------------------------------------------------------------
 // Optimized Memory Assembly Compiler for Exam Catalog
 // ---------------------------------------------------------------------------
+/** The server-side shape: an exam's `tests` list is rebuilt from its series (see slimCatalog). */
+function expandCatalogOnServer(catalog: any[]): any[] {
+  return (catalog || []).map((cat: any) => ({
+    ...cat,
+    subCategories: (cat.subCategories || []).map((sub: any) =>
+      Array.isArray(sub.tests) ? sub : { ...sub, tests: (sub.subSubCategories || []).flatMap((ss: any) => ss.tests || []) }),
+  }));
+}
+
+// Shared by all server instances (Next data cache), so the database is read about once per
+// CATALOG_REVALIDATE_S or after an admin change, not every few minutes per instance.
+const readSharedCatalog = unstable_cache(
+  async () => slimCatalog(await buildExamCatalog()),
+  ['exam-catalog-v1'],
+  { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE_S },
+);
+
 async function getCompiledExamCatalog() {
+  return expandCatalogOnServer(await readSharedCatalog());
+}
+
+async function buildExamCatalog() {
   // Safe runtime schema patch: run once on boot to avoid executing 8 DDL queries on every request
-  // PERF: The schema is synced by `prisma db push` during every build, so these DDL statements
+  // PERF: The schema is applied with `npm run db:push` (scripts/safe-db-push.mjs), so these DDL statements
   // are redundant on each cold start (8 sequential round trips + table locks). Opt in with
   // RUN_RUNTIME_SCHEMA_PATCH=1 if a database ever needs the legacy patch applied.
   if (!schemaPatched && process.env.RUN_RUNTIME_SCHEMA_PATCH === '1') {
@@ -4420,8 +4567,8 @@ async function getCompiledExamCatalog() {
 // ---------------------------------------------------------------------------
 async function handleRefreshCatalog() {
   try {
-    catalogCache.examCatalog = null;
-    catalogCache.noticesList = null;
+    catalogCache.examCatalog = null; invalidateShared(CATALOG_TAG);
+    catalogCache.noticesList = null; invalidateShared(NOTICES_TAG);
     const examCatalog = await getCompiledExamCatalog();
     return NextResponse.json({ success: true, examCatalog });
   } catch (error: any) {
@@ -5167,10 +5314,45 @@ async function handleDeleteReportedQuestion(data: any) {
 // Read/written with raw SQL so it works even before the Prisma client is regenerated.
 // undefined means "unknown" (e.g. column missing) and never triggers the tour.
 // ---------------------------------------------------------------------------
-type TourFlags = { tourCompletedAt?: string | null; noticesTourCompletedAt?: string | null; testsTourCompletedAt?: string | null; typingTourCompletedAt?: string | null; lockerTourCompletedAt?: string | null; profileTourCompletedAt?: string | null };
+type TourFlags = {
+  tourCompletedAt?: string | null; noticesTourCompletedAt?: string | null; testsTourCompletedAt?: string | null; typingTourCompletedAt?: string | null;
+  lockerTourCompletedAt?: string | null; profileTourCompletedAt?: string | null; plannerTourCompletedAt?: string | null; friendsTourCompletedAt?: string | null;
+};
+
+// Newer page tours (Study Planner, With Friends) are kept in their own small table instead of
+// one more users column each: one row per user and finished tour.
+const TABLE_TOURS = ['planner', 'friends'] as const;
+let userToursReady: Promise<void> | null = null;
+function ensureUserToursTable(): Promise<void> {
+  if (!userToursReady) {
+    userToursReady = (async () => {
+      await prisma.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS user_tours (
+        "userId" TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        tour TEXT NOT NULL,
+        "completedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+        PRIMARY KEY ("userId", tour)
+      )`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE user_tours ENABLE ROW LEVEL SECURITY`);
+    })().catch(err => { userToursReady = null; throw err; });
+  }
+  return userToursReady;
+}
+
+async function readTableTours(userId: string): Promise<Pick<TourFlags, 'plannerTourCompletedAt' | 'friendsTourCompletedAt'>> {
+  try {
+    await ensureUserToursTable();
+    const rows = await prisma.$queryRawUnsafe<{ tour: string; completedAt: Date }[]>(
+      `SELECT tour, "completedAt" FROM user_tours WHERE "userId" = $1`, userId);
+    const at = (t: string) => { const r = rows.find(x => x.tour === t); return r ? new Date(r.completedAt).toISOString() : null; };
+    return { plannerTourCompletedAt: at('planner'), friendsTourCompletedAt: at('friends') };
+  } catch {
+    return {}; // unknown: never starts these tours by itself
+  }
+}
 
 async function readTourFlags(userId: string): Promise<TourFlags> {
   const iso = (v: any) => (v ? new Date(v).toISOString() : null);
+  const extra = await readTableTours(userId);
   try {
     const rows = await prisma.$queryRaw<any[]>`SELECT "tourCompletedAt", "noticesTourCompletedAt", "testsTourCompletedAt", "typingTourCompletedAt", "lockerTourCompletedAt", "profileTourCompletedAt" FROM "users" WHERE "id" = ${userId}`;
     if (!rows.length) return {};
@@ -5181,12 +5363,13 @@ async function readTourFlags(userId: string): Promise<TourFlags> {
       typingTourCompletedAt: iso(rows[0].typingTourCompletedAt),
       lockerTourCompletedAt: iso(rows[0].lockerTourCompletedAt),
       profileTourCompletedAt: iso(rows[0].profileTourCompletedAt),
+      ...extra,
     };
   } catch {
     // Older databases may lack the notices column: fall back to the welcome-tour column only
     try {
       const rows = await prisma.$queryRaw<any[]>`SELECT "tourCompletedAt" FROM "users" WHERE "id" = ${userId}`;
-      return rows.length ? { tourCompletedAt: iso(rows[0].tourCompletedAt) } : {};
+      return rows.length ? { tourCompletedAt: iso(rows[0].tourCompletedAt), ...extra } : {};
     } catch {
       return {};
     }
@@ -5197,6 +5380,17 @@ async function handleCompleteTour(data: any, requesterUserId: string | null) {
   const userId = data?.userId;
   if (!userId || userId !== requesterUserId) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+  }
+  if ((TABLE_TOURS as readonly string[]).includes(data?.tour)) {
+    try {
+      await ensureUserToursTable();
+      const rows = await prisma.$queryRawUnsafe<{ completedAt: Date }[]>(
+        `INSERT INTO user_tours ("userId", tour) VALUES ($1, $2)
+         ON CONFLICT ("userId", tour) DO UPDATE SET tour = EXCLUDED.tour RETURNING "completedAt"`, userId, data.tour);
+      return NextResponse.json({ success: true, tour: data.tour, completedAt: new Date(rows[0]?.completedAt || Date.now()).toISOString() });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err.message || 'Failed to save tour status' }, { status: 500 });
+    }
   }
   const tour = data?.tour === 'notices' ? 'notices' : data?.tour === 'tests' ? 'tests' : data?.tour === 'typing' ? 'typing' : data?.tour === 'locker' ? 'locker' : data?.tour === 'profile' ? 'profile' : 'welcome';
   try {
@@ -5218,6 +5412,15 @@ async function handleCompleteTour(data: any, requesterUserId: string | null) {
   }
 }
 
+/** EGRESS-OPT: the session fields the result lists use (no progress snapshot or other heavy columns). */
+const SESSION_LIST_SELECT = {
+  id: true, userId: true, mockTestId: true, status: true, startedAt: true, completedAt: true, createdAt: true,
+  remainingSeconds: true, violationsCount: true, finalScore: true, maxScore: true, accuracyPercentage: true,
+  timeSpentSeconds: true, currentSectionIndex: true, currentQuestionIndex: true,
+  testbookRank: true, testbookPercentile: true,
+  mockTest: { select: { title: true, maxMarks: true, durationMinutes: true, positiveMarks: true, negativeMarks: true } },
+} as const;
+
 async function handleGetUserDetails(data: any, requesterUserId: string | null = null) {
   // Saved exam-portal passwords in tracked jobs are shown only to the account owner
   const viewingOwnAccount = data?.userId === requesterUserId;
@@ -5235,19 +5438,8 @@ async function handleGetUserDetails(data: any, requesterUserId: string | null = 
     where: { id: userId },
     include: {
       testSessions: {
-        take: 30, // EGRESS-OPT: Only most recent 30 sessions for list/history view
-        include: {
-          mockTest: {
-            select: {
-              title: true,
-              maxMarks: true,
-              durationMinutes: true,
-              positiveMarks: true,
-              negativeMarks: true,
-            }
-          },
-          // EGRESS-OPT: responses: true REMOVED — was fetching 100s of rows per session on every tab switch
-        },
+        take: 30, // EGRESS-OPT: recent sessions only; answers load when an analysis opens
+        select: SESSION_LIST_SELECT,
         orderBy: { startedAt: 'desc' },
       },
     },
@@ -5362,10 +5554,20 @@ async function handleGetSessionResponses(data: any) {
 async function handleAdminData(requesterRole: string | null) {
   const isAdmin = requesterRole === 'ADMIN';
 
-  // Fetch all users list WITHOUT sessions (sessions loaded lazily per user to avoid timeout)
+  // Fetch all users list WITHOUT sessions (sessions loaded lazily per user to avoid timeout).
+  // EGRESS-OPT: only the columns the admin screens use (no password, bookmarks, saved jobs…);
+  // reading every column of every user was ~280 KB per admin page load.
   const users = await prisma.user.findMany({
     orderBy: {
       createdAt: 'desc',
+    },
+    select: {
+      id: true, candidateCode: true, fullName: true, email: true, mobile: true, role: true,
+      isBlocked: true, lastSeen: true, lastPlatform: true, createdAt: true,
+      ...(isAdmin ? {
+        referralCode: true, referredBy: true, referralsCount: true, subscriptionTier: true,
+        subscriptionPurchasedAt: true, subscriptionExpiresAt: true, coins: true, referralCoinsCredited: true,
+      } : {}),
     },
   });
 
@@ -5406,7 +5608,7 @@ async function handleAdminData(requesterRole: string | null) {
     isBlocked: u.isBlocked,
     coins: u.coins,
     referralCoinsCredited: u.referralCoinsCredited,
-    bookmarkedQuestions: u.bookmarkedQuestions ? (u.bookmarkedQuestions as any) : [],
+    bookmarkedQuestions: [], // not used by the admin screens; not read (egress)
     lastSeen: u.lastSeen ? u.lastSeen.toISOString() : null,
     lastPlatform: u.lastPlatform || 'web',
     testSessions: [], // Loaded lazily via get-user-details action
@@ -5444,32 +5646,61 @@ async function handleAdminData(requesterRole: string | null) {
 // Email OTP Password Reset Handlers
 // -----------------------------------------------------------------------------
 
-async function handleRequestPasswordReset(data: { email: string }) {
-  const { email } = data;
-  if (!email || !email.trim()) {
+// Password reset codes live in the database (hashed), so every server instance sees them
+let passwordResetTableReady: Promise<void> | null = null;
+function ensurePasswordResetTable(): Promise<void> {
+  if (!passwordResetTableReady) {
+    passwordResetTableReady = (async () => {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS password_resets (
+          email TEXT PRIMARY KEY,
+          "codeHash" TEXT NOT NULL,
+          "expiresAt" TIMESTAMP(3) NOT NULL,
+          tries INT NOT NULL DEFAULT 0,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT NOW()
+        )`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE password_resets ENABLE ROW LEVEL SECURITY`);
+    })().catch((err) => { passwordResetTableReady = null; throw err; });
+  }
+  return passwordResetTableReady;
+}
+
+const sha256Hex = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
+const RESET_CODE_TTL_MS = 10 * 60 * 1000;
+const RESET_MAX_TRIES = 5;
+
+async function handleRequestPasswordReset(data: { email: string }, request: Request) {
+  const email = typeof data?.email === 'string' ? data.email : '';
+  if (!email.trim()) {
     return NextResponse.json({ success: false, error: 'Email is required' }, { status: 400 });
   }
+  const trimmedEmail = email.trim().toLowerCase().slice(0, 254);
+  // The same answer whether or not the account exists, so this form cannot be used to
+  // find out who has an account
+  const sent = NextResponse.json({ success: true, message: 'If an account exists for this email, a code has been sent.' });
 
-  const trimmedEmail = email.trim().toLowerCase();
-
-  // Verify that the user exists in our DB first
-  const user = await prisma.user.findUnique({
-    where: { email: trimmedEmail }
-  });
-  if (!user) {
-    return NextResponse.json({ success: false, error: 'No account found with this email address.' }, { status: 404 });
+  // At most 3 codes per email per 15 minutes and 10 per IP per hour (no flooding someone's inbox)
+  const ip = getClientIp(request);
+  const [byEmail, byIp] = await Promise.all([
+    hitLimit(`pwreset_email:${trimmedEmail}`, 3, 15 * 60 * 1000),
+    hitLimit(`pwreset_ip:${ip}`, 10, 60 * 60 * 1000),
+  ]);
+  if (!byEmail.allowed || !byIp.allowed) {
+    const wait = Math.max(byEmail.retryAfterMinutes, byIp.retryAfterMinutes);
+    return NextResponse.json({ success: false, error: `Too many requests. Please try again in ${wait} minute${wait === 1 ? '' : 's'}.` }, { status: 429 });
   }
 
-  // Generate a random 6-digit OTP code
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Set expiry to 10 minutes from now
-  const expiresAt = Date.now() + 10 * 60 * 1000;
+  const user = await prisma.user.findUnique({ where: { email: trimmedEmail }, select: { id: true } });
+  if (!user) return sent;
 
-  // Store in cache
-  otpCache.set(trimmedEmail, { code: otpCode, expiresAt });
+  const otpCode = crypto.randomInt(100000, 1000000).toString();
+  const expiresAt = new Date(Date.now() + RESET_CODE_TTL_MS);
+  await ensurePasswordResetTable();
+  await prisma.$executeRaw`
+    INSERT INTO password_resets (email, "codeHash", "expiresAt", tries, "createdAt")
+    VALUES (${trimmedEmail}, ${sha256Hex(`${trimmedEmail}:${otpCode}`)}, ${expiresAt}, 0, NOW())
+    ON CONFLICT (email) DO UPDATE SET "codeHash" = EXCLUDED."codeHash", "expiresAt" = EXCLUDED."expiresAt", tries = 0, "createdAt" = NOW()`;
 
-  // Send the email
   try {
     await transporter.sendMail({
       from: process.env.SMTP_FROM || 'MockTest Support <mocktesthubsupport@gmail.com>',
@@ -5488,8 +5719,7 @@ async function handleRequestPasswordReset(data: { email: string }) {
         </div>
       `,
     });
-
-    return NextResponse.json({ success: true, message: 'OTP sent successfully.' });
+    return sent;
   } catch (error: any) {
     console.error('Email sending error:', error);
     return NextResponse.json({ success: false, error: 'Failed to send OTP email.' }, { status: 500 });
@@ -5497,35 +5727,38 @@ async function handleRequestPasswordReset(data: { email: string }) {
 }
 
 async function handleConfirmPasswordReset(data: any) {
-  const { email, otp, newPassword } = data;
+  const { email, otp, newPassword } = data || {};
 
-  if (!email || !otp || !newPassword) {
+  if (!email || !otp || !newPassword || typeof email !== 'string') {
     return NextResponse.json({ success: false, error: 'Email, OTP, and new password are required' }, { status: 400 });
-  }
-
-  const trimmedEmail = email.trim().toLowerCase();
-
-  // Retrieve cached OTP details
-  const cachedOtp = otpCache.get(trimmedEmail);
-
-  if (!cachedOtp) {
-    return NextResponse.json({ success: false, error: 'OTP expired or not found. Please request a new one.' }, { status: 400 });
-  }
-
-  if (Date.now() > cachedOtp.expiresAt) {
-    otpCache.delete(trimmedEmail);
-    return NextResponse.json({ success: false, error: 'OTP has expired. Please request a new one.' }, { status: 400 });
-  }
-
-  if (cachedOtp.code !== String(otp).trim()) {
-    // At most 5 wrong codes, then a new code has to be requested
-    const tries = ((cachedOtp as any).failedTries || 0) + 1;
-    if (tries >= 5) otpCache.delete(trimmedEmail);
-    else (cachedOtp as any).failedTries = tries;
-    return NextResponse.json({ success: false, error: tries >= 5 ? 'Too many wrong codes. Please request a new OTP.' : 'Invalid OTP code.' }, { status: 400 });
   }
   if (typeof newPassword !== 'string' || newPassword.trim().length < 6) {
     return NextResponse.json({ success: false, error: 'New password must be at least 6 characters.' }, { status: 400 });
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+  await ensurePasswordResetTable();
+  const rows = await prisma.$queryRaw<{ codeHash: string; expiresAt: Date; tries: number }[]>`
+    SELECT "codeHash", "expiresAt", tries FROM password_resets WHERE email = ${trimmedEmail} LIMIT 1`;
+  const pending = rows[0];
+
+  if (!pending) {
+    return NextResponse.json({ success: false, error: 'OTP expired or not found. Please request a new one.' }, { status: 400 });
+  }
+  if (Date.now() > new Date(pending.expiresAt).getTime()) {
+    await prisma.$executeRaw`DELETE FROM password_resets WHERE email = ${trimmedEmail}`;
+    return NextResponse.json({ success: false, error: 'OTP has expired. Please request a new one.' }, { status: 400 });
+  }
+
+  const given = sha256Hex(`${trimmedEmail}:${String(otp).trim()}`);
+  const matches = given.length === pending.codeHash.length
+    && crypto.timingSafeEqual(Buffer.from(given), Buffer.from(pending.codeHash));
+  if (!matches) {
+    // At most 5 wrong codes, then a new code has to be requested
+    const tries = pending.tries + 1;
+    if (tries >= RESET_MAX_TRIES) await prisma.$executeRaw`DELETE FROM password_resets WHERE email = ${trimmedEmail}`;
+    else await prisma.$executeRaw`UPDATE password_resets SET tries = ${tries} WHERE email = ${trimmedEmail}`;
+    return NextResponse.json({ success: false, error: tries >= RESET_MAX_TRIES ? 'Too many wrong codes. Please request a new OTP.' : 'Invalid OTP code.' }, { status: 400 });
   }
 
   try {
@@ -5536,9 +5769,7 @@ async function handleConfirmPasswordReset(data: any) {
       select: { id: true },
     });
     await revokeAllWebSessions(updatedUser.id).catch(() => {});
-
-    // Clear OTP from cache after successful verification
-    otpCache.delete(trimmedEmail);
+    await prisma.$executeRaw`DELETE FROM password_resets WHERE email = ${trimmedEmail}`;
 
     return NextResponse.json({ success: true, message: 'Password updated successfully.' });
   } catch (error: any) {
@@ -6005,7 +6236,7 @@ async function handleGetAdminTypingAttempts(params?: any) {
 
     // Enrich with Test details safely from prismaTyping
     const testIds = Array.from(new Set(attempts.map(a => a.testId).filter(Boolean)));
-    let testMap = new Map<string, any>();
+    const testMap = new Map<string, any>();
     if (testIds.length > 0) {
       try {
         const tests = await prismaTyping.typingTest.findMany({
@@ -6029,7 +6260,7 @@ async function handleGetAdminTypingAttempts(params?: any) {
 
     // Enrich with User details (email, candidateCode, mobile) from primary DB
     const userIds = Array.from(new Set(attempts.map(a => a.userId).filter(uid => uid && uid !== 'guest')));
-    let userMap = new Map<string, any>();
+    const userMap = new Map<string, any>();
     if (userIds.length > 0) {
       try {
         const users = await prisma.user.findMany({
@@ -6310,6 +6541,90 @@ async function handleDeleteSuggestion(data: any) {
 // Document Locker Handlers (Google Drive Sync Metadata)
 // -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+// Locker PIN: stored hashed (scrypt), never sent to the browser. A correct PIN gives a
+// short-lived unlock token; the document list and deleting need it. Wrong PINs and wrong
+// reset codes are limited per account (kept in the database, so all servers agree).
+// -----------------------------------------------------------------------------
+const LOCKER_UNLOCK_TTL_MS = 12 * 60 * 60 * 1000;
+const LOCKER_PIN_MAX_WRONG = 5;
+const LOCKER_PIN_LOCK_MS = 15 * 60 * 1000;
+
+let lockerUnlockTableReady: Promise<void> | null = null;
+function ensureLockerUnlockTable(): Promise<void> {
+  if (!lockerUnlockTableReady) {
+    lockerUnlockTableReady = (async () => {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS locker_unlocks (
+          "tokenHash" TEXT PRIMARY KEY,
+          "userId" TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          "expiresAt" TIMESTAMP(3) NOT NULL
+        )`);
+      await prisma.$executeRawUnsafe(`ALTER TABLE locker_unlocks ENABLE ROW LEVEL SECURITY`);
+    })().catch((err) => { lockerUnlockTableReady = null; throw err; });
+  }
+  return lockerUnlockTableReady;
+}
+
+async function issueLockerUnlock(userId: string): Promise<string> {
+  await ensureLockerUnlockTable();
+  const token = crypto.randomBytes(32).toString('base64url');
+  const expiresAt = new Date(Date.now() + LOCKER_UNLOCK_TTL_MS);
+  await prisma.$executeRaw`INSERT INTO locker_unlocks ("tokenHash", "userId", "expiresAt") VALUES (${sha256Hex(token)}, ${userId}, ${expiresAt})`;
+  prisma.$executeRaw`DELETE FROM locker_unlocks WHERE "expiresAt" < NOW()`.catch(() => {});
+  return token;
+}
+
+async function lockerUnlockValid(userId: string, token: unknown): Promise<boolean> {
+  if (typeof token !== 'string' || token.length < 32) return false;
+  await ensureLockerUnlockTable();
+  const rows = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n FROM locker_unlocks WHERE "tokenHash" = ${sha256Hex(token)} AND "userId" = ${userId} AND "expiresAt" > NOW()`;
+  return (rows[0]?.n || 0) > 0;
+}
+
+async function revokeLockerUnlocks(userId: string) {
+  await ensureLockerUnlockTable();
+  await prisma.$executeRaw`DELETE FROM locker_unlocks WHERE "userId" = ${userId}`;
+}
+
+async function readLockerPin(userId: string): Promise<string | null> {
+  const rows: any[] = await prisma.$queryRaw`SELECT "lockerPin" FROM "users" WHERE "id" = ${userId} LIMIT 1`;
+  return rows[0]?.lockerPin || null;
+}
+
+/** Checks a PIN; old plain-text PINs are upgraded to a hash on the first correct entry. */
+async function lockerPinMatches(userId: string, stored: string, pin: string): Promise<boolean> {
+  if (isPasswordHash(stored)) return verifyPassword(pin, stored);
+  const ok = stored.length === pin.length && crypto.timingSafeEqual(Buffer.from(stored), Buffer.from(pin));
+  if (ok) await saveLockerPin(userId, pin);
+  return ok;
+}
+
+async function saveLockerPin(userId: string, pin: string) {
+  const hashed = await hashPassword(pin);
+  const now = new Date();
+  await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${hashed}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
+  return now;
+}
+
+/** null when the PIN may be tried; otherwise the "locked" response. */
+async function lockerPinLocked(userId: string) {
+  const wrong = await countHits(`locker_pin:${userId}`, LOCKER_PIN_LOCK_MS);
+  if (wrong < LOCKER_PIN_MAX_WRONG) return null;
+  return NextResponse.json({
+    success: false, locked: true,
+    error: 'Too many wrong PINs. The locker is locked for 15 minutes, or use "Forgot PIN".',
+  }, { status: 429 });
+}
+
+async function lockerWrongPin(userId: string) {
+  await hitLimit(`locker_pin:${userId}`, 1000, LOCKER_PIN_LOCK_MS);
+  const wrong = await countHits(`locker_pin:${userId}`, LOCKER_PIN_LOCK_MS);
+  const left = Math.max(0, LOCKER_PIN_MAX_WRONG - wrong);
+  return { left, locked: left === 0 };
+}
+
 async function handleLockerGetDocs(data: any, requesterUserId: string | null) {
   const userId = data?.userId || requesterUserId;
   if (!userId) {
@@ -6335,14 +6650,16 @@ async function handleLockerGetDocs(data: any, requesterUserId: string | null) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    const documents = await (prisma as any).lockerDocument.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
+    // With a PIN set, the documents are sent only to a browser that entered the PIN
+    const unlocked = !user.lockerPin || await lockerUnlockValid(userId, data?.unlockToken);
+    const documents = unlocked
+      ? await (prisma as any).lockerDocument.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } })
+      : [];
 
     return NextResponse.json({
       success: true,
-      user,
+      locked: !unlocked,
+      user: { ...user, lockerPin: user.lockerPin ? 'set' : null },
       documents: documents || [],
     });
   } catch (error: any) {
@@ -6412,8 +6729,12 @@ async function handleLockerSaveMeta(data: any, requesterUserId: string | null) {
 }
 
 async function handleLockerDeleteDoc(data: any, requesterUserId: string | null) {
-  const { docId, userId: explicitUserId } = data || {};
+  const { userId: explicitUserId } = data || {};
+  const docId = data?.docId || data?.id; // the page sends "id"
   const userId = explicitUserId || requesterUserId;
+  if (userId && (await readLockerPin(userId)) && !(await lockerUnlockValid(userId, data?.unlockToken))) {
+    return NextResponse.json({ success: false, locked: true, error: 'Enter your locker PIN first.' }, { status: 403 });
+  }
 
   if (!docId) {
     return NextResponse.json({ success: false, error: 'Document ID is required' }, { status: 400 });
@@ -6520,34 +6841,20 @@ async function handleLockerSetPin(data: any, requesterUserId: string | null) {
   }
 
   try {
-    try {
-      const updatedUser = await (prisma.user as any).update({
-        where: { id: userId },
-        data: {
-          lockerPin: pin,
-          lockerPinSetAt: new Date(),
-        },
-        select: {
-          id: true,
-          lockerPin: true,
-          lockerPinSetAt: true,
-        },
-      });
-
-      return NextResponse.json({ success: true, message: 'Locker PIN set successfully', user: updatedUser });
-    } catch (prismaErr: any) {
-      // Fallback in case in-memory Prisma client has stale schema cache
-      const now = new Date();
-      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${pin}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
-      return NextResponse.json({
-        success: true,
-        message: 'Locker PIN set successfully',
-        user: { id: userId, lockerPin: pin, lockerPinSetAt: now },
-      });
+    // Only the first PIN is set here; changing one needs the current PIN or a reset code
+    if (await readLockerPin(userId)) {
+      return NextResponse.json({ success: false, error: 'A PIN is already set. Use "Change PIN" or "Forgot PIN".' }, { status: 409 });
     }
+    const now = await saveLockerPin(userId, pin);
+    return NextResponse.json({
+      success: true,
+      message: 'Locker PIN set successfully',
+      unlockToken: await issueLockerUnlock(userId),
+      user: { id: userId, lockerPin: 'set', lockerPinSetAt: now },
+    });
   } catch (error: any) {
     console.error('Error setting locker PIN:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to set locker PIN' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to set locker PIN' }, { status: 500 });
   }
 }
 
@@ -6560,27 +6867,22 @@ async function handleLockerVerifyPin(data: any, requesterUserId: string | null) 
   }
 
   try {
-    let userLockerPin: string | null = null;
-    try {
-      const user = await (prisma.user as any).findUnique({
-        where: { id: userId },
-        select: { id: true, lockerPin: true },
-      });
-      userLockerPin = user?.lockerPin || null;
-    } catch {
-      const rawRows: any[] = await prisma.$queryRaw`SELECT "lockerPin" FROM "users" WHERE "id" = ${userId} LIMIT 1`;
-      userLockerPin = rawRows[0]?.lockerPin || null;
-    }
-
-    if (!userLockerPin) {
+    const stored = await readLockerPin(userId);
+    if (!stored) {
       return NextResponse.json({ success: false, error: 'No PIN is set for this account.' }, { status: 404 });
     }
+    const locked = await lockerPinLocked(userId);
+    if (locked) return locked;
 
-    const isMatch = userLockerPin === pin;
-    return NextResponse.json({ success: true, isCorrect: isMatch });
+    if (!/^\d{4}$/.test(pin) || !(await lockerPinMatches(userId, stored, pin))) {
+      const { left, locked: nowLocked } = await lockerWrongPin(userId);
+      return NextResponse.json({ success: true, isCorrect: false, attemptsLeft: left, locked: nowLocked });
+    }
+    await clearLimit(`locker_pin:${userId}`);
+    return NextResponse.json({ success: true, isCorrect: true, unlockToken: await issueLockerUnlock(userId) });
   } catch (error: any) {
     console.error('Error verifying locker PIN:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to verify PIN' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to verify PIN' }, { status: 500 });
   }
 }
 
@@ -6600,52 +6902,28 @@ async function handleLockerChangePin(data: any, requesterUserId: string | null) 
   }
 
   try {
-    let userLockerPin: string | null = null;
-    try {
-      const user = await (prisma.user as any).findUnique({
-        where: { id: userId },
-        select: { id: true, lockerPin: true },
-      });
-      userLockerPin = user?.lockerPin || null;
-    } catch {
-      const rawRows: any[] = await prisma.$queryRaw`SELECT "lockerPin" FROM "users" WHERE "id" = ${userId} LIMIT 1`;
-      userLockerPin = rawRows[0]?.lockerPin || null;
-    }
-
-    if (!userLockerPin) {
+    const stored = await readLockerPin(userId);
+    if (!stored) {
       return NextResponse.json({ success: false, error: 'No PIN is set for this account.' }, { status: 404 });
     }
-
-    if (userLockerPin !== oldPin) {
-      return NextResponse.json({ success: false, error: 'Current PIN is incorrect. Please verify and try again.' }, { status: 400 });
+    const locked = await lockerPinLocked(userId);
+    if (locked) return locked;
+    if (!(await lockerPinMatches(userId, stored, oldPin))) {
+      const { left } = await lockerWrongPin(userId);
+      return NextResponse.json({ success: false, error: `Current PIN is incorrect. ${left} attempt${left === 1 ? '' : 's'} left.` }, { status: 400 });
     }
-
-    const now = new Date();
-    try {
-      const updatedUser = await (prisma.user as any).update({
-        where: { id: userId },
-        data: {
-          lockerPin: newPin,
-          lockerPinSetAt: now,
-        },
-        select: {
-          id: true,
-          lockerPin: true,
-          lockerPinSetAt: true,
-        },
-      });
-      return NextResponse.json({ success: true, message: 'Security PIN updated successfully', user: updatedUser });
-    } catch {
-      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${newPin}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
-      return NextResponse.json({
-        success: true,
-        message: 'Security PIN updated successfully',
-        user: { id: userId, lockerPin: newPin, lockerPinSetAt: now },
-      });
-    }
+    await clearLimit(`locker_pin:${userId}`);
+    const now = await saveLockerPin(userId, newPin);
+    await revokeLockerUnlocks(userId);
+    return NextResponse.json({
+      success: true,
+      message: 'Security PIN updated successfully',
+      unlockToken: await issueLockerUnlock(userId),
+      user: { id: userId, lockerPin: 'set', lockerPinSetAt: now },
+    });
   } catch (error: any) {
     console.error('Error changing locker PIN:', error);
-    return NextResponse.json({ success: false, error: error.message || 'Failed to change locker PIN' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to change locker PIN' }, { status: 500 });
   }
 }
 
@@ -6676,34 +6954,24 @@ async function handleLockerResetPinWithPassword(data: any, requesterUserId: stri
       return NextResponse.json({ success: false, error: 'User not found.' }, { status: 404 });
     }
 
+    const tries = await hitLimit(`locker_pw:${userId}`, 5, 15 * 60 * 1000);
+    if (!tries.allowed) {
+      return NextResponse.json({ success: false, error: `Too many attempts. Please try again in ${tries.retryAfterMinutes} minutes.` }, { status: 429 });
+    }
     if (!(await verifyPassword(accountPassword, user.passwordHash))) {
       return NextResponse.json({ success: false, error: 'Incorrect account password. Verification failed.' }, { status: 401 });
     }
+    await clearLimit(`locker_pw:${userId}`);
+    await clearLimit(`locker_pin:${userId}`);
+    const now = await saveLockerPin(userId, newPin);
+    await revokeLockerUnlocks(userId);
+    return NextResponse.json({
+      success: true,
+      message: 'Locker PIN reset successfully',
+      unlockToken: await issueLockerUnlock(userId),
+      user: { id: userId, lockerPin: 'set', lockerPinSetAt: now },
+    });
 
-    try {
-      const updatedUser = await (prisma.user as any).update({
-        where: { id: userId },
-        data: {
-          lockerPin: newPin,
-          lockerPinSetAt: new Date(),
-        },
-        select: {
-          id: true,
-          lockerPin: true,
-          lockerPinSetAt: true,
-        },
-      });
-
-      return NextResponse.json({ success: true, message: 'Locker PIN reset successfully', user: updatedUser });
-    } catch {
-      const now = new Date();
-      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${newPin}, "lockerPinSetAt" = ${now} WHERE "id" = ${userId}`;
-      return NextResponse.json({
-        success: true,
-        message: 'Locker PIN reset successfully',
-        user: { id: userId, lockerPin: newPin, lockerPinSetAt: now },
-      });
-    }
   } catch (error: any) {
     console.error('Error resetting locker PIN with password:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to reset PIN' }, { status: 500 });
@@ -6738,18 +7006,24 @@ async function handleLockerSendResetOtp(data: any, requesterUserId: string | nul
       return NextResponse.json({ success: false, error: 'No valid email address found for sending OTP.' }, { status: 400 });
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // At most 3 codes per 15 minutes
+    const sends = await hitLimit(`locker_otp_send:${userId}`, 3, 15 * 60 * 1000);
+    if (!sends.allowed) {
+      return NextResponse.json({ success: false, error: `Too many codes requested. Please try again in ${sends.retryAfterMinutes} minutes.` }, { status: 429 });
+    }
+
+    // Generate 6-digit OTP (stored hashed; a new code starts a new set of 5 tries)
+    const otp = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Save to user record in DB
     await prisma.user.update({
       where: { id: userId },
       data: {
-        otpCode: otp,
+        otpCode: `sha256$${sha256Hex(`${userId}:${otp}`)}`,
         otpExpiresAt: expiresAt,
       },
     });
+    await clearLimit(`locker_otp_try:${userId}`);
 
     // Send email via nodemailer
     const mailOptions = {
@@ -6790,7 +7064,7 @@ async function handleLockerSendResetOtp(data: any, requesterUserId: string | nul
       if (process.env.SMTP_USER && process.env.SMTP_PASS) {
         await transporter.sendMail(mailOptions);
       } else {
-        console.log(`[DEV OTP NOTIFICATION] Locker Reset OTP for ${targetEmail}: ${otp}`);
+        console.log(`[DEV OTP NOTIFICATION] Locker reset code sent to ${targetEmail} (SMTP not configured)`);
       }
     } catch (mailErr: any) {
       console.warn('Mail send failed, logged in console for testing:', mailErr?.message);
@@ -6850,45 +7124,35 @@ async function handleLockerVerifyOtpAndResetPin(data: any, requesterUserId: stri
       return NextResponse.json({ success: false, error: 'No active OTP found. Please request a new OTP.' }, { status: 400 });
     }
 
-    if (user.otpCode !== otp) {
-      return NextResponse.json({ success: false, error: 'Incorrect OTP. Please check your email and try again.' }, { status: 401 });
-    }
-
     if (user.otpExpiresAt && new Date() > new Date(user.otpExpiresAt)) {
       return NextResponse.json({ success: false, error: 'OTP has expired. Please request a new OTP.' }, { status: 400 });
     }
 
-    // OTP Verified! Update user PIN and clear OTP
-    try {
-      const updatedUser = await (prisma.user as any).update({
-        where: { id: userId },
-        data: {
-          lockerPin: newPin,
-          lockerPinSetAt: new Date(),
-          otpCode: null,
-          otpExpiresAt: null,
-        },
-        select: {
-          id: true,
-          lockerPin: true,
-          lockerPinSetAt: true,
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: 'PIN reset successfully! Your new 4-digit PIN is now active.',
-        user: updatedUser,
-      });
-    } catch {
-      const now = new Date();
-      await prisma.$executeRaw`UPDATE "users" SET "lockerPin" = ${newPin}, "lockerPinSetAt" = ${now}, "otpCode" = NULL, "otpExpiresAt" = NULL WHERE "id" = ${userId}`;
-      return NextResponse.json({
-        success: true,
-        message: 'PIN reset successfully! Your new 4-digit PIN is now active.',
-        user: { id: userId, lockerPin: newPin, lockerPinSetAt: now },
-      });
+    // 5 wrong codes and the code is cancelled
+    const tries = await countHits(`locker_otp_try:${userId}`, 10 * 60 * 1000);
+    if (tries >= 5) {
+      await prisma.user.update({ where: { id: userId }, data: { otpCode: null, otpExpiresAt: null } });
+      return NextResponse.json({ success: false, error: 'Too many wrong codes. Please request a new OTP.' }, { status: 429 });
     }
+    const expected = user.otpCode.startsWith('sha256$') ? user.otpCode.slice(7) : sha256Hex(`${userId}:${user.otpCode}`);
+    const given = sha256Hex(`${userId}:${otp}`);
+    if (!crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected.padEnd(given.length).slice(0, given.length)))) {
+      await hitLimit(`locker_otp_try:${userId}`, 1000, 10 * 60 * 1000);
+      return NextResponse.json({ success: false, error: 'Incorrect OTP. Please check your email and try again.' }, { status: 401 });
+    }
+
+    await clearLimit(`locker_otp_try:${userId}`);
+    await clearLimit(`locker_pin:${userId}`);
+    const now = await saveLockerPin(userId, newPin);
+    await prisma.user.update({ where: { id: userId }, data: { otpCode: null, otpExpiresAt: null } });
+    await revokeLockerUnlocks(userId);
+    return NextResponse.json({
+      success: true,
+      message: 'PIN reset successfully! Your new 4-digit PIN is now active.',
+      unlockToken: await issueLockerUnlock(userId),
+      user: { id: userId, lockerPin: 'set', lockerPinSetAt: now },
+    });
+
   } catch (error: any) {
     console.error('Error verifying OTP and resetting PIN:', error);
     return NextResponse.json({ success: false, error: error.message || 'Failed to reset PIN' }, { status: 500 });

@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import Constants from 'expo-constants';
-import { request, friendlyError, getServer, setServer, DEFAULT_SERVER } from '../api';
+import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
+import { ApiError, request, friendlyError, getServer, setServer, DEFAULT_SERVER } from '../api';
 import { useI18n } from '../i18n';
 import { useSession } from '../session';
 import { useTheme } from '../theme';
-import { Button, Field } from '../ui';
-
-WebBrowser.maybeCompleteAuthSession();
+import { Button, Field, StatusBarCover } from '../ui';
 
 type Mode = 'signin' | 'signup' | 'forgot';
 
@@ -29,21 +26,37 @@ export default function AuthScreen() {
   const [server, setServerText] = useState(getServer());
   const set = (k: keyof typeof f) => (v: string) => setF(s => ({ ...s, [k]: v }));
 
+  // Google: the phone's own account chooser (Google Play services), no browser round trip.
+  // Needs the app's package name + signing key (SHA-1) on the Android OAuth client in Google Cloud.
   const extra = (Constants.expoConfig?.extra || {}) as any;
-  const [, googleResponse, promptGoogle] = Google.useAuthRequest({ androidClientId: extra.googleAndroidClientId, webClientId: extra.googleWebClientId });
-
   useEffect(() => {
-    if (googleResponse?.type !== 'success') return;
-    const accessToken = googleResponse.authentication?.accessToken;
-    if (!accessToken) return;
-    (async () => {
-      setBusy('google'); setError('');
-      try {
-        const profile = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${accessToken}` } }).then(r => r.json()).catch(() => ({}));
-        await googleSignIn(accessToken, profile?.name, profile?.picture);
-      } catch (e: any) { setError(friendlyError(e)); } finally { setBusy(''); }
-    })();
-  }, [googleResponse, googleSignIn]);
+    if (Platform.OS === 'android') GoogleSignin.configure({ webClientId: extra.googleWebClientId, scopes: ['profile', 'email'] });
+  }, [extra.googleWebClientId]);
+
+  const signInWithGoogle = async () => {
+    setBusy('google'); setError(''); setInfo('');
+    try {
+      if (Platform.OS !== 'android') throw new Error('Google sign-in works in the Android app.');
+      await setServer(server.trim() || DEFAULT_SERVER);
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      try { await GoogleSignin.signOut(); } catch { /* not signed in: fine */ } // always show the account chooser
+      const res = await GoogleSignin.signIn();
+      if (!isSuccessResponse(res)) return; // closed the chooser
+      const { accessToken } = await GoogleSignin.getTokens();
+      await googleSignIn(accessToken, res.data.user.name || undefined, res.data.user.photo || undefined, mode === 'signup' ? f.referral : undefined);
+    } catch (e: any) {
+      // Google's own errors carry a code; our server's errors (ApiError) are shown as they are
+      if (isErrorWithCode(e) && !(e instanceof ApiError)) {
+        if (e.code === statusCodes.SIGN_IN_CANCELLED) return;
+        if (e.code === statusCodes.IN_PROGRESS) return;
+        if (e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) { setError('Google Play services are needed for Google sign-in. Please sign in with email and password.'); return; }
+        // DEVELOPER_ERROR (10): this app build's signing key is not registered with Google
+        setError(`Google sign-in failed (${e.code}). Please sign in with email and password, or try again later.`);
+        return;
+      }
+      setError(friendlyError(e));
+    } finally { setBusy(''); }
+  };
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key); setError(''); setInfo('');
@@ -76,7 +89,7 @@ export default function AuthScreen() {
   const switchMode = (m: Mode) => { setMode(m); setError(''); setInfo(''); setOtpSent(false); };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.header }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.hero }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 22, paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }} keyboardShouldPersistTaps="handled">
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
           <Pressable onPress={() => setLang(lang === 'hi' ? 'en' : 'hi')} style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' }}>
@@ -125,7 +138,7 @@ export default function AuthScreen() {
                 <Text style={{ color: t.textMuted }}>{tr('or')}</Text>
                 <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
               </View>
-              <Button outline title={tr('Continue with Google')} loading={busy === 'google'} onPress={() => { setError(''); promptGoogle(); }}
+              <Button outline title={tr('Continue with Google')} loading={busy === 'google'} onPress={signInWithGoogle}
                 icon={<Text style={{ fontSize: 18, fontWeight: '800', color: '#4285F4' }}>G</Text>} />
             </>
           ) : null}
@@ -147,6 +160,7 @@ export default function AuthScreen() {
           </View>
         </View>
       </ScrollView>
+      <StatusBarCover color={t.hero} />
     </KeyboardAvoidingView>
   );
 }

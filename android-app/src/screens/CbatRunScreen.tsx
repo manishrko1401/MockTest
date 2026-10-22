@@ -11,7 +11,7 @@ import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { useTheme } from '../theme';
-import { Button, Card } from '../ui';
+import { Button, Card, StatusBarFor } from '../ui';
 import { buildCbatBatteriesFromCustomQuestions, CbatBattery, CbatQuestion } from '../shared/cbatData';
 import { newLocalId, openOffline, saveOfflineAttempt, syncOutbox } from '../offline';
 
@@ -195,12 +195,13 @@ export default function CbatRunScreen({ testId, offline }: { testId: string; off
   const bName = label(stage.battery + 1, hi ? b.hindiName : b.name);
 
   const TopBar = (
-    <View style={{ backgroundColor: t.header, paddingTop: insets.top, paddingHorizontal: 10 }}>
+    <View style={{ backgroundColor: t.hero, paddingTop: insets.top, paddingHorizontal: 10 }}>
+      <StatusBarFor color={t.hero} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 50 }}>
-        <Pressable onPress={() => setLeaving(true)} style={{ padding: 6 }} accessibilityLabel="Leave test"><X size={22} color={t.headerText} /></Pressable>
+        <Pressable onPress={() => setLeaving(true)} style={{ padding: 6 }} accessibilityLabel="Leave test"><X size={22} color={t.heroText} /></Pressable>
         <View style={{ flex: 1 }}>
-          <Text numberOfLines={1} style={{ color: t.headerText, fontWeight: '800' }}>{bName}</Text>
-          <Text numberOfLines={1} style={{ color: t.headerText, opacity: 0.7, fontSize: 11 }}>{b.batteryKey}</Text>
+          <Text numberOfLines={1} style={{ color: t.heroText, fontWeight: '800' }}>{bName}</Text>
+          <Text numberOfLines={1} style={{ color: t.heroText, opacity: 0.7, fontSize: 11 }}>{b.batteryKey}</Text>
         </View>
         {stage.kind !== 'intro' ? (
           <View style={{ backgroundColor: timeLeft <= 60 && stage.kind === 'run' ? '#dc2626' : 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
@@ -212,7 +213,7 @@ export default function CbatRunScreen({ testId, offline }: { testId: string; off
         {batteries.map((x, i) => (
           <View key={x.id} style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: i === stage.battery ? '#fff' : 'rgba(255,255,255,0.12)', flexDirection: 'row', gap: 4, alignItems: 'center' }}>
             {i < stage.battery ? <Lock size={11} color="#fff" /> : null}
-            <Text style={{ color: i === stage.battery ? t.header : '#fff', fontSize: 11, fontWeight: '700' }}>Test-{i + 1}</Text>
+            <Text style={{ color: i === stage.battery ? t.hero : '#fff', fontSize: 11, fontWeight: '700' }}>Test-{i + 1}</Text>
           </View>
         ))}
       </ScrollView>

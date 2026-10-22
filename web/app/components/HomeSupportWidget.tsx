@@ -123,7 +123,8 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
     if (!currentUser?.id) return;
     if (chatOpen) return; // the chatOpen effect below handles fetching while open
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
+    // once a minute, and only while the tab is open on screen
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') fetchUnreadCount(); }, 60000);
     return () => clearInterval(interval);
   }, [currentUser?.id, chatOpen]);
 
@@ -137,7 +138,7 @@ export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWid
   useEffect(() => {
     if (!chatOpen || !currentUser?.id) return;
     fetchMessages(true);
-    const interval = setInterval(() => fetchMessages(true), 8000);
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') fetchMessages(true); }, 8000);
     return () => clearInterval(interval);
   }, [chatOpen, currentUser?.id]);
 

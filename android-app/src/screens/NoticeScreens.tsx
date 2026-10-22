@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, RefreshControl, ScrollView, Share, Text, View } from 'react-native';
-import { BookmarkPlus, BookmarkCheck, ExternalLink, Share2 } from 'lucide-react-native';
+import { Award, BookmarkPlus, BookmarkCheck, BriefcaseBusiness, CalendarClock, ExternalLink, FileKey2, Megaphone, Share2, Ticket } from 'lucide-react-native';
 import { request, friendlyError } from '../api';
 import { useData } from '../data';
 import HtmlView from '../HtmlView';
@@ -8,7 +8,7 @@ import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { useTheme } from '../theme';
-import { Button, Card, Empty, ErrorBox, Field, Header, HeaderButton, ListRow, Loading, Pill, Segmented } from '../ui';
+import { Button, Card, Empty, ErrorBox, Header, HeaderButton, IconTile, ListRow, Loading, Pill, SearchBar, Segmented, Skeleton } from '../ui';
 import type { Notice, TrackedJob } from '../shared/webTypes';
 
 const CATS = [
@@ -19,40 +19,48 @@ const CATS = [
   { key: 'answer_key', en: 'Answer keys', hi: 'उत्तर कुंजी' },
   { key: 'announcement', en: 'News', hi: 'समाचार' },
 ] as const;
-const TONE: Record<string, any> = { notice: 'primary', result: 'success', admit_card: 'warning', answer_key: 'neutral', announcement: 'danger' };
+const TONE: Record<string, any> = { notice: 'primary', result: 'success', admit_card: 'warning', answer_key: 'violet', announcement: 'danger' };
+const ICON: Record<string, any> = { notice: BriefcaseBusiness, result: Award, admit_card: Ticket, answer_key: FileKey2, announcement: Megaphone };
 
-export function NoticesScreen() {
+export function NoticesScreen({ initialCategory }: { initialCategory?: string }) {
   const t = useTheme();
   const { hi, t: tr } = useI18n();
   const nav = useNav();
   const { notices, refresh, refreshing } = useData();
-  const [cat, setCat] = useState<string>('all');
+  const [cat, setCat] = useState<string>(initialCategory || 'all');
   const [search, setSearch] = useState('');
   const list = useMemo(() => {
     const q = search.trim().toLowerCase();
     return notices.filter(n => (cat === 'all' || n.category === cat) && (!q || n.title.toLowerCase().includes(q) || (n.titleHi || '').includes(search.trim())));
   }, [notices, cat, search]);
+  const color = (c: string) => ({ primary: t.primary, success: t.success, warning: t.accent, violet: t.violet, danger: t.danger } as any)[TONE[c] || 'primary'] || t.primary;
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={tr('Notices')} subtitle={`${list.length}`} />
-      <View style={{ paddingHorizontal: 12, paddingTop: 12 }}>
-        <Field value={search} onChangeText={setSearch} placeholder={tr('Search')} />
+      <Header title={tr('Notices')} subtitle={hi ? `${list.length} सूचनाएं` : `${list.length} notices`} onBack={nav.pop} />
+      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+        <SearchBar value={search} onChangeText={setSearch} placeholder={hi ? 'नौकरी, परिणाम, एडमिट कार्ड खोजें' : 'Search jobs, results, admit cards'} />
       </View>
       <Segmented options={CATS.map(c => ({ key: c.key, label: hi ? c.hi : c.en }))} value={cat} onChange={setCat} />
       <FlatList
         data={list}
         keyExtractor={n => n.id}
-        initialNumToRender={15}
+        initialNumToRender={12}
+        contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={refresh} />}
-        ListEmptyComponent={notices.length ? <Empty title={hi ? 'कोई सूचना नहीं मिली' : 'No notices found'} /> : <Loading />}
+        ListEmptyComponent={notices.length ? <Empty title={hi ? 'कोई सूचना नहीं मिली' : 'No notices found'} /> : <View style={{ padding: 16 }}><Skeleton rows={5} height={76} /></View>}
         renderItem={({ item: n }) => (
-          <ListRow
-            onPress={() => nav.push({ name: 'notice', notice: n })}
-            title={hi && n.titleHi ? n.titleHi : n.title}
-            subtitle={`${n.date}${n.lastDate ? ` · ${tr('Last date')}: ${n.lastDate}` : ''}`}
-            right={<Pill text={n.type} tone={TONE[n.category] || 'neutral'} />}
-          />
+          <Card onPress={() => nav.push({ name: 'notice', notice: n })} style={{ marginHorizontal: 16, marginTop: 10, flexDirection: 'row', gap: 12, padding: 14 }}>
+            <IconTile icon={ICON[n.category] || BriefcaseBusiness} color={color(n.category)} size={42} />
+            <View style={{ flex: 1 }}>
+              <Text numberOfLines={3} style={{ color: t.text, fontWeight: '800', lineHeight: 20 }}>{hi && n.titleHi ? n.titleHi : n.title}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                <Pill text={n.type} tone={TONE[n.category] || 'neutral'} />
+                <Text style={{ color: t.textSoft, fontSize: 12 }}>{n.date}</Text>
+                {n.lastDate ? <Text style={{ color: t.danger, fontSize: 12, fontWeight: '700' }}>{tr('Last date')}: {n.lastDate}</Text> : null}
+              </View>
+            </View>
+          </Card>
         )}
       />
     </View>
@@ -93,12 +101,19 @@ export function NoticeScreen({ notice }: { notice: Notice }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={n.type} onBack={nav.pop}
+      <Header title={hi ? 'सूचना' : 'Notice'} onBack={nav.pop}
         right={<HeaderButton label="Share" icon={<Share2 color={t.headerText} size={20} />} onPress={() => Share.share({ message: `${n.title}\nhttps://mocktesthub.vercel.app/updates/${n.id}` })} />} />
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 30 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
         <Card>
-          <Text selectable style={{ color: t.text, fontSize: 18, fontWeight: '800', lineHeight: 25 }}>{hi && n.titleHi ? n.titleHi : n.title}</Text>
-          <Text style={{ color: t.textSoft, marginTop: 6 }}>{n.date}{n.lastDate ? ` · ${tr('Last date')}: ${n.lastDate}` : ''}</Text>
+          <Pill text={n.type} tone={TONE[n.category] || 'neutral'} />
+          <Text selectable style={{ color: t.text, fontSize: 19, fontWeight: '900', lineHeight: 26, marginTop: 10 }}>{hi && n.titleHi ? n.titleHi : n.title}</Text>
+          <Text style={{ color: t.textSoft, marginTop: 6 }}>{hi ? 'प्रकाशित' : 'Published'} {n.date}</Text>
+          {n.lastDate ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: t.dangerSoft, borderRadius: 10, padding: 10 }}>
+              <CalendarClock size={18} color={t.danger} />
+              <Text style={{ color: t.danger, fontWeight: '800' }}>{tr('Last date')}: {n.lastDate}</Text>
+            </View>
+          ) : null}
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
             {n.url ? <Button style={{ flex: 1 }} small title={tr('Open official link')} icon={<ExternalLink size={16} color={t.primaryText} />} onPress={() => Linking.openURL(n.url!)} /> : null}
             {n.category === 'notice' ? (
@@ -109,7 +124,7 @@ export function NoticeScreen({ notice }: { notice: Notice }) {
         </Card>
         {error ? <ErrorBox message={error} /> : null}
         <View style={{ marginTop: 12 }}>
-          {!full && !error ? <Loading /> : html ? <Card><HtmlView html={html} /></Card> : full ? <Text style={{ color: t.textMuted, textAlign: 'center', marginTop: 20 }}>{hi ? 'पूरी जानकारी के लिए आधिकारिक लिंक देखें।' : 'See the official link for full details.'}</Text> : null}
+          {!full && !error ? <Skeleton rows={3} height={120} /> : html ? <Card><HtmlView html={html} /></Card> : full ? <Text style={{ color: t.textMuted, textAlign: 'center', marginTop: 20 }}>{hi ? 'पूरी जानकारी के लिए आधिकारिक लिंक देखें।' : 'See the official link for full details.'}</Text> : null}
         </View>
       </ScrollView>
     </View>

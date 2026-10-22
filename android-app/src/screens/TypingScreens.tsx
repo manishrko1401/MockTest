@@ -9,7 +9,7 @@ import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useUser } from '../session';
 import { useTheme } from '../theme';
-import { Button, Card, Empty, ErrorBox, Field, Header, KeyValue, ListRow, Loading, Pill, SectionTitle, Segmented } from '../ui';
+import { Button, Card, Empty, ErrorBox, Field, Header, IconTile, KeyValue, ListRow, Loading, Pill, SearchBar, SectionTitle, Segmented, StatusBarFor } from '../ui';
 import { newLocalId, openOffline, saveOfflineAttempt, syncOutbox } from '../offline';
 import { DownloadButton } from './OfflineScreen';
 import { detectExamCategory, evaluateTyping, isRrbNtpcExam, isSscCglExam, isSscChslExam, TypingCategory, TypingTest } from '../shared/typingTypes';
@@ -29,7 +29,7 @@ function useMyTypingAttempts() {
 
 // ---- Tab: typing exams --------------------------------------------------------------------------
 
-export function TypingHubScreen() {
+export function TypingHubScreen({ embedded }: { embedded?: boolean } = {}) {
   const t = useTheme();
   const { hi, t: tr } = useI18n();
   const nav = useNav();
@@ -45,27 +45,34 @@ export function TypingHubScreen() {
   const list = (cats || []).filter(c => !search.trim() || c.name.toLowerCase().includes(search.trim().toLowerCase()));
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={tr('Typing Tests')} subtitle={cats ? (hi ? `${cats.length} परीक्षाएं` : `${cats.length} exams`) : undefined} />
-      <View style={{ paddingHorizontal: 12, paddingTop: 12 }}>
-        <Field value={search} onChangeText={setSearch} placeholder={hi ? 'परीक्षा खोजें (SSC, DSSSB, हाई कोर्ट…)' : 'Search exams (SSC, DSSSB, High Court…)'} />
+      {embedded ? null : <Header title={tr('Typing Tests')} subtitle={cats ? (hi ? `${cats.length} परीक्षाएं` : `${cats.length} exams`) : undefined} />}
+      <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
+        <SearchBar value={search} onChangeText={setSearch} placeholder={hi ? 'परीक्षा खोजें (SSC, DSSSB, हाई कोर्ट…)' : 'Search exams (SSC, DSSSB, High Court…)'} />
+        {cats ? <Text style={{ color: t.textSoft, fontSize: 13, fontWeight: '700', marginTop: 16 }}>{hi ? `${cats.length} टाइपिंग परीक्षाएं` : `${cats.length} typing exams`}</Text> : null}
       </View>
       {error ? <ErrorBox message={error} onRetry={load} /> : null}
       {!cats ? (!error ? <Loading /> : null) : (
         <FlatList
           data={list}
           keyExtractor={c => c.id}
+          contentContainerStyle={{ paddingBottom: 24 }}
           refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}
           ListEmptyComponent={<Empty title={hi ? 'कुछ नहीं मिला' : 'Nothing found'} />}
           renderItem={({ item: c }) => {
             const cfg = detectExamCategory(c);
             return (
-              <ListRow
-                onPress={() => nav.push({ name: 'typingCategory', categoryId: c.id })}
-                left={<View style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: t.primarySoft, alignItems: 'center', justifyContent: 'center' }}><Keyboard size={20} color={t.primary} /></View>}
-                title={hi && c.nameHi ? c.nameHi : c.name}
-                subtitle={`${cfg.standardDurationMinutes} ${hi ? 'मिनट' : 'min'} · ${hi ? 'अंग्रेज़ी' : 'English'} ${cfg.qualifyingSpeed.en} / ${hi ? 'हिंदी' : 'Hindi'} ${cfg.qualifyingSpeed.hi} WPM`}
-                right={<ChevronRight size={18} color={t.textMuted} />}
-              />
+              <Card onPress={() => nav.push({ name: 'typingCategory', categoryId: c.id })} style={{ marginHorizontal: 16, marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 }}>
+                <IconTile icon={Keyboard} color={t.teal} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: t.text, fontWeight: '800', fontSize: 15 }}>{hi && c.nameHi ? c.nameHi : c.name}</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                    <Pill text={`${cfg.standardDurationMinutes} ${hi ? 'मिनट' : 'min'}`} />
+                    <Pill tone="teal" text={`EN ${cfg.qualifyingSpeed.en} WPM`} />
+                    <Pill tone="violet" text={`HI ${cfg.qualifyingSpeed.hi} WPM`} />
+                  </View>
+                </View>
+                <ChevronRight size={18} color={t.textMuted} />
+              </Card>
             );
           }}
         />
@@ -329,9 +336,10 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
   const highlight = test.highlightAllowed !== false;
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <View style={{ backgroundColor: t.header, paddingTop: insets.top, paddingHorizontal: 12 }}>
+      <View style={{ backgroundColor: t.hero, paddingTop: insets.top, paddingHorizontal: 12 }}>
+        <StatusBarFor color={t.hero} />
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, gap: 10 }}>
-          <Text style={{ flex: 1, color: t.headerText, fontWeight: '800' }} numberOfLines={1}>{phase === 'demo' ? (hi ? 'डेमो' : 'Demo') : test.title}</Text>
+          <Text style={{ flex: 1, color: t.heroText, fontWeight: '800' }} numberOfLines={1}>{phase === 'demo' ? (hi ? 'डेमो' : 'Demo') : test.title}</Text>
           <View style={{ backgroundColor: timeLeft <= 30 ? '#dc2626' : 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
             <Text style={{ color: '#fff', fontWeight: '800', fontVariant: ['tabular-nums'] }}>{mmss(timeLeft)}</Text>
           </View>

@@ -8,6 +8,7 @@ const KEY = 'mth_lang';
 
 const HI: Record<string, string> = {
   'Home': 'होम', 'Tests': 'टेस्ट', 'Typing': 'टाइपिंग', 'Notices': 'सूचनाएं', 'Profile': 'प्रोफ़ाइल',
+  'Planner': 'प्लानर', 'Friends': 'दोस्त', 'Me': 'मैं', 'With Friends': 'दोस्तों के साथ', 'Appearance': 'थीम',
   'Sign in': 'लॉग इन करें', 'Create account': 'खाता बनाएं', 'Email': 'ईमेल', 'Password': 'पासवर्ड',
   'Full name': 'पूरा नाम', 'Mobile number': 'मोबाइल नंबर', 'Referral code (optional)': 'रेफ़रल कोड (वैकल्पिक)',
   'Forgot password?': 'पासवर्ड भूल गए?', 'Continue with Google': 'Google से जारी रखें', 'or': 'या',

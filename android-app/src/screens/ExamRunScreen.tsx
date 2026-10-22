@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { ActivityIndicator, AppState, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ScreenCapture from 'expo-screen-capture';
 import { useKeepAwake } from 'expo-keep-awake';
-import { ChevronLeft, Grid3x3, Languages, TriangleAlert, X } from 'lucide-react-native';
+import { AArrowDown, AArrowUp, ChevronLeft, Clock, LayoutGrid, Lock, Send, TriangleAlert, X } from 'lucide-react-native';
 import { request, friendlyError } from '../api';
 import { useData } from '../data';
 import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { useTheme } from '../theme';
-import { Button, Card } from '../ui';
+import { Button, Card, Dialog, ProgressBar, Sheet, StatusBarFor } from '../ui';
 import QuestionView from '../QuestionView';
 import { engineReducer, getSectionQuestions, EngineResumeData, EngineState } from '../shared/examEngine';
 import { generateExamSession } from '../shared/examUtils';
@@ -46,7 +46,22 @@ const PALETTE: Record<number, { bg: string; fg: string; radius: any }> = {
   5: { bg: '#7c3aed', fg: '#fff', radius: 20 },
 };
 
-export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }: { testId: string; resume?: boolean; lang?: 'en' | 'hi'; l1?: string; l2?: string; offline?: boolean }) {
+const FONT_KEY = 'mth_exam_font';
+export const FONT_STEPS = [0.9, 1, 1.12, 1.25, 1.4];
+
+/** The exam text size the student picked (kept on the phone, used by solutions too). */
+export function useExamFont() {
+  const [scale, setScale] = useState(1);
+  useEffect(() => { AsyncStorage.getItem(FONT_KEY).then(v => { const n = Number(v); if (FONT_STEPS.includes(n)) setScale(n); }).catch(() => {}); }, []);
+  const step = (d: 1 | -1) => setScale(cur => {
+    const i = Math.max(0, Math.min(FONT_STEPS.length - 1, FONT_STEPS.indexOf(cur) + d));
+    AsyncStorage.setItem(FONT_KEY, String(FONT_STEPS[i])).catch(() => {});
+    return FONT_STEPS[i];
+  });
+  return { scale, bigger: () => step(1), smaller: () => step(-1) };
+}
+
+export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, roomCode }: { testId: string; resume?: boolean; lang?: 'en' | 'hi'; l1?: string; l2?: string; offline?: boolean; roomCode?: string }) {
   useKeepAwake();
   const t = useTheme();
   const { hi } = useI18n();
@@ -66,6 +81,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }:
   const stateRef = useRef(state);
   stateRef.current = state;
   const title = useRef('');
+  const font = useExamFont();
 
   // ---- Load the test (and any saved progress) ----
   const load = useCallback(async () => {
@@ -180,10 +196,11 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }:
     const s = stateRef.current;
     if (!s.session || !s.score) return;
     setPhase('submitting');
-    const responses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
+    const responses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number }> = {};
     let total = 0;
     Object.keys(s.responses).forEach(id => {
-      responses[id] = { selectedOptionIndex: s.responses[id].selectedOptionIndex, elapsedSeconds: s.responses[id].elapsedSeconds };
+      const r: any = s.responses[id];
+      responses[id] = { selectedOptionIndex: r.selectedOptionIndex, elapsedSeconds: r.elapsedSeconds, ...(r.answeredAt ? { answeredAt: r.answeredAt } : {}) };
       total += s.responses[id].elapsedSeconds || 0;
     });
     if (offline) {
@@ -219,21 +236,24 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }:
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <ActivityIndicator color={t.primary} size="large" />
-        <Text style={{ color: t.textSoft, marginTop: 12 }}>{phase === 'submitting' ? (hi ? 'आपका टेस्ट सबमिट हो रहा है…' : 'Submitting your test…') : (hi ? 'टेस्ट लोड हो रहा है…' : 'Loading test…')}</Text>
+        <Text style={{ color: t.text, marginTop: 14, fontWeight: '800', fontSize: 16 }}>{phase === 'submitting' ? (hi ? 'आपका टेस्ट सबमिट हो रहा है…' : 'Submitting your test…') : (hi ? 'टेस्ट तैयार हो रहा है…' : 'Getting your test ready…')}</Text>
+        <Text style={{ color: t.textSoft, marginTop: 4 }}>{phase === 'submitting' ? (hi ? 'कृपया ऐप बंद न करें' : "Please don't close the app") : (hi ? 'प्रश्न लोड हो रहे हैं' : 'Loading questions')}</Text>
       </View>
     );
   }
   if (phase === 'error' || phase === 'failed') {
     return (
       <View style={{ flex: 1, backgroundColor: t.bg, justifyContent: 'center', padding: 20, paddingTop: insets.top + 20 }}>
+        <StatusBarFor color={t.bg} />
         <Card>
-          <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>
+          {locked ? <Lock size={30} color={t.accent} /> : <TriangleAlert size={30} color={t.danger} />}
+          <Text style={{ color: t.text, fontSize: 19, fontWeight: '900', marginTop: 12 }}>
             {locked ? (hi ? 'यह एक PRO टेस्ट है' : 'This is a PRO test') : phase === 'failed' ? (hi ? 'टेस्ट सबमिट नहीं हो सका' : "Couldn't submit the test") : (hi ? 'टेस्ट नहीं खुल सका' : "Couldn't open the test")}
           </Text>
-          <Text style={{ color: t.textSoft, marginTop: 8 }}>
+          <Text style={{ color: t.textSoft, marginTop: 8, lineHeight: 21 }}>
             {locked ? (hi ? 'शुरू करने के लिए PRO पास अनलॉक करें।' : 'Unlock the PRO pass to start it.') : phase === 'failed' ? (hi ? 'आपके उत्तर इस फ़ोन पर सुरक्षित हैं। इंटरनेट जांचें और फिर से कोशिश करें।' : 'Your answers are safe on this phone. Check the internet and try again.') : error}
           </Text>
-          <View style={{ gap: 10, marginTop: 16 }}>
+          <View style={{ gap: 10, marginTop: 18 }}>
             {locked ? <Button title={hi ? 'PRO पास देखें' : 'See PRO pass'} tone="warning" onPress={() => nav.replace({ name: 'pass' })} />
               : phase === 'failed' ? <Button title={hi ? 'फिर से सबमिट करें' : 'Submit again'} onPress={sendAttempt} />
                 : <Button title={hi ? 'फिर से कोशिश करें' : 'Try again'} onPress={load} />}
@@ -264,6 +284,10 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }:
   const isLastQuestion = state.currentQuestionIndex === secQs.length - 1;
   const lastSection = state.currentSectionIndex === session.sections.length - 1;
   const perSectionSubmit = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !lastSection;
+  const answeredInTest = (counts[3] || 0) + (counts[5] || 0);
+  const lowTime = time <= 300;
+  const summary = perSectionSubmit ? sectionCounts : counts;
+  const notVisited = perSectionSubmit ? (sectionCounts[1] || 0) : session.questions.length - Object.keys(state.responses).length + (counts[1] || 0);
 
   const select = (i: number) => {
     if (state.isExtraTimeMode) {
@@ -276,46 +300,59 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }:
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       {/* Top bar */}
-      <View style={{ backgroundColor: t.header, paddingTop: insets.top, paddingHorizontal: 10, paddingBottom: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 48 }}>
-          <Pressable onPress={leave} hitSlop={10} style={{ padding: 6 }} accessibilityLabel="Leave test"><X size={22} color={t.headerText} /></Pressable>
-          <Text numberOfLines={1} style={{ flex: 1, color: t.headerText, fontWeight: '700' }}>{session.testTitle}</Text>
-          <View style={{ backgroundColor: time <= 300 ? '#dc2626' : 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-            <Text style={{ color: '#fff', fontWeight: '800', fontVariant: ['tabular-nums'] }}>{state.isExtraTimeMode ? '+' : ''}{fmt(time)}</Text>
+      <View style={{ backgroundColor: t.hero, paddingTop: insets.top, paddingHorizontal: 8, paddingBottom: session.sections.length > 1 ? 10 : 6 }}>
+        <StatusBarFor color={t.hero} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 52 }}>
+          <Pressable onPress={leave} hitSlop={8} style={{ width: 42, height: 42, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={hi ? 'टेस्ट छोड़ें' : 'Leave test'}><X size={22} color={t.heroText} /></Pressable>
+          <View style={{ flex: 1 }}>
+            <Text numberOfLines={1} style={{ color: t.heroText, fontWeight: '800', fontSize: 14.5 }}>{session.testTitle}</Text>
+            <Text numberOfLines={1} style={{ color: t.heroText, opacity: 0.7, fontSize: 12 }}>{answeredInTest}/{session.questions.length} {hi ? 'उत्तर दिए' : 'answered'}{roomCode ? ` · ${hi ? 'रूम' : 'Room'} ${roomCode}` : ''}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: lowTime ? '#dc2626' : 'rgba(255,255,255,0.16)', borderRadius: 10, paddingHorizontal: 10, height: 34 }}>
+            <Clock size={15} color="#fff" />
+            <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15, fontVariant: ['tabular-nums'] }}>{state.isExtraTimeMode ? '+' : ''}{fmt(time)}</Text>
           </View>
           {hasHindi ? (
-            <Pressable onPress={() => dispatch({ type: 'SET_LANGUAGE', payload: examLang === 'hi' ? 'en' : 'hi' })} style={{ padding: 6 }} accessibilityLabel="Language">
-              <Languages size={22} color={t.headerText} />
+            <Pressable onPress={() => dispatch({ type: 'SET_LANGUAGE', payload: examLang === 'hi' ? 'en' : 'hi' })} style={{ width: 42, height: 42, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={hi ? 'भाषा बदलें' : 'Change language'}>
+              <View style={{ borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 7, paddingHorizontal: 5, paddingVertical: 1 }}>
+                <Text style={{ color: '#fff', fontWeight: '900', fontSize: 12 }}>{examLang === 'hi' ? 'हि' : 'EN'}</Text>
+              </View>
             </Pressable>
           ) : null}
-          <Pressable onPress={() => setPalette(true)} style={{ padding: 6 }} accessibilityLabel="Question palette"><Grid3x3 size={22} color={t.headerText} /></Pressable>
+          <Pressable onPress={() => setPalette(true)} style={{ width: 42, height: 42, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={hi ? 'प्रश्न सूची' : 'Question palette'}><LayoutGrid size={22} color={t.heroText} /></Pressable>
         </View>
         {session.sections.length > 1 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 6 }}>
             {session.sections.map((s, i) => {
               const on = i === state.currentSectionIndex;
               const done = (state.submittedSectionIndices || []).includes(i);
+              const lockedSec = sectionLocked(i);
               return (
-                <Pressable key={s.id} disabled={sectionLocked(i)} onPress={() => dispatch({ type: 'SWITCH_SECTION', payload: { sectionIndex: i } })}
-                  style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: on ? '#fff' : 'rgba(255,255,255,0.12)', opacity: sectionLocked(i) && !on ? 0.5 : 1 }}>
-                  <Text style={{ color: on ? t.header : '#fff', fontWeight: '700', fontSize: 12 }}>{done ? '🔒 ' : ''}{s.name}</Text>
+                <Pressable key={s.id} disabled={lockedSec} onPress={() => dispatch({ type: 'SWITCH_SECTION', payload: { sectionIndex: i } })}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 13, height: 32, borderRadius: 16, backgroundColor: on ? '#fff' : 'rgba(255,255,255,0.13)', opacity: lockedSec && !on ? 0.5 : 1 }}>
+                  {done || (lockedSec && !on) ? <Lock size={12} color={on ? '#1e4e79' : '#fff'} /> : null}
+                  <Text style={{ color: on ? '#1e4e79' : '#fff', fontWeight: '800', fontSize: 12.5 }}>{s.name}</Text>
                 </Pressable>
               );
             })}
           </ScrollView>
         ) : null}
       </View>
+      <ProgressBar value={answeredInTest / Math.max(1, session.questions.length)} height={3} color={t.success} track={t.border} />
 
       {/* Question info */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border, gap: 10 }}>
-        <Text style={{ color: t.text, fontWeight: '800' }}>{hi ? 'प्रश्न' : 'Q'} {state.currentQuestionIndex + 1}/{secQs.length}</Text>
-        <Text style={{ color: t.success, fontWeight: '700', fontSize: 12 }}>+{q?.positiveMark ?? section?.positiveMark ?? 1}</Text>
-        <Text style={{ color: t.danger, fontWeight: '700', fontSize: 12 }}>−{q?.negativeMark ?? section?.negativeMark ?? 0}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, height: 46, backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border, gap: 8 }}>
+        <Text style={{ color: t.text, fontWeight: '900', fontSize: 15 }}>{hi ? 'प्रश्न' : 'Q'} {state.currentQuestionIndex + 1}<Text style={{ color: t.textMuted, fontWeight: '700' }}>/{secQs.length}</Text></Text>
+        <View style={{ backgroundColor: t.successSoft, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: t.success, fontWeight: '800', fontSize: 12 }}>+{q?.positiveMark ?? section?.positiveMark ?? 1}</Text></View>
+        <View style={{ backgroundColor: t.dangerSoft, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: t.danger, fontWeight: '800', fontSize: 12 }}>−{q?.negativeMark ?? section?.negativeMark ?? 0}</Text></View>
+        {resp?.state === 4 || resp?.state === 5 ? <View style={{ backgroundColor: t.violetSoft, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: t.violet, fontWeight: '800', fontSize: 12 }}>{hi ? 'रिव्यू' : 'Review'}</Text></View> : null}
         <View style={{ flex: 1 }} />
-        <Text style={{ color: t.textMuted, fontSize: 12 }}>⏱ {fmt(resp?.elapsedSeconds || 0)}</Text>
+        <Text style={{ color: t.textMuted, fontSize: 12.5, fontVariant: ['tabular-nums'], marginRight: 4 }}>{fmt(resp?.elapsedSeconds || 0)}</Text>
+        <Pressable onPress={font.smaller} hitSlop={6} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: t.cardAlt }} accessibilityLabel={hi ? 'छोटा अक्षर' : 'Smaller text'}><AArrowDown size={17} color={t.text} /></Pressable>
+        <Pressable onPress={font.bigger} hitSlop={6} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: t.cardAlt }} accessibilityLabel={hi ? 'बड़ा अक्षर' : 'Larger text'}><AArrowUp size={17} color={t.text} /></Pressable>
       </View>
       {notice ? (
-        <Pressable onPress={() => setNotice('')} style={{ backgroundColor: t.warningSoft, padding: 10 }}><Text style={{ color: t.warning, fontWeight: '600' }}>{notice}</Text></Pressable>
+        <Pressable onPress={() => setNotice('')} style={{ backgroundColor: t.warningSoft, paddingHorizontal: 14, paddingVertical: 10 }}><Text style={{ color: t.warning, fontWeight: '700' }}>{notice}</Text></Pressable>
       ) : null}
 
       {q && content ? (
@@ -327,129 +364,108 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline }:
           options={options}
           selected={resp?.tempOptionIndex ?? null}
           onSelect={select}
+          fontScale={font.scale}
           watermark={`${user.name} · ${user.candidateCode}`}
           labels={{ passage: hi ? 'अनुच्छेद' : 'Passage', explanation: '', yourAnswer: '', correct: '' }}
         />
       ) : <View style={{ flex: 1 }} />}
 
       {/* Actions */}
-      <View style={{ flexDirection: 'row', gap: 8, padding: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
         <Pressable disabled={state.currentQuestionIndex === 0} onPress={() => dispatch({ type: 'JUMP_TO_QUESTION', payload: { sectionIndex: state.currentSectionIndex, questionIndex: state.currentQuestionIndex - 1 } })}
-          style={{ width: 44, height: 46, borderRadius: 10, borderWidth: 1, borderColor: t.border, alignItems: 'center', justifyContent: 'center', opacity: state.currentQuestionIndex === 0 ? 0.4 : 1 }} accessibilityLabel="Previous question">
+          style={{ width: 46, height: 48, borderRadius: 12, borderWidth: 1.5, borderColor: t.border, alignItems: 'center', justifyContent: 'center', opacity: state.currentQuestionIndex === 0 ? 0.35 : 1 }} accessibilityLabel={hi ? 'पिछला प्रश्न' : 'Previous question'}>
           <ChevronLeft size={22} color={t.text} />
         </Pressable>
-        <Button small outline tone="neutral" title={hi ? 'साफ़ करें' : 'Clear'} onPress={() => dispatch({ type: 'CLEAR_RESPONSE' })} style={{ height: 46 }} disabled={state.isExtraTimeMode && answeredBefore} />
-        <Button small outline title={hi ? 'मार्क व आगे' : 'Mark & Next'} onPress={() => dispatch({ type: 'MARK_FOR_REVIEW_AND_NEXT' })} style={{ flex: 1, height: 46, borderColor: '#7c3aed' }} />
-        <Button small title={isLastQuestion ? (hi ? 'सेव करें' : 'Save') : (hi ? 'सेव व आगे' : 'Save & Next')} onPress={() => dispatch({ type: 'SAVE_AND_NEXT' })} style={{ flex: 1, height: 46 }} tone="success" />
+        <Button small outline tone="neutral" title={hi ? 'साफ़' : 'Clear'} onPress={() => dispatch({ type: 'CLEAR_RESPONSE' })} style={{ height: 48, paddingHorizontal: 12 }} disabled={state.isExtraTimeMode && answeredBefore} />
+        <Button small outline tone="violet" title={hi ? 'मार्क व आगे' : 'Mark & Next'} onPress={() => dispatch({ type: 'MARK_FOR_REVIEW_AND_NEXT' })} style={{ flex: 1, height: 48, paddingHorizontal: 8 }} />
+        <Button small title={isLastQuestion ? (hi ? 'सेव करें' : 'Save') : (hi ? 'सेव व आगे' : 'Save & Next')} onPress={() => dispatch({ type: 'SAVE_AND_NEXT' })} style={{ flex: 1.15, height: 48, paddingHorizontal: 8 }} tone="success" />
       </View>
 
       {/* Palette */}
-      <Modal visible={palette} animationType="slide" transparent onRequestClose={() => setPalette(false)}>
-        <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: t.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '85%', paddingBottom: insets.bottom + 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-              <Text style={{ color: t.text, fontWeight: '800', fontSize: 16, flex: 1 }}>{section?.name}</Text>
-              <Pressable onPress={() => setPalette(false)} hitSlop={10}><X size={22} color={t.text} /></Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingBottom: 10 }}>
-              {[[3, hi ? 'उत्तर दिया' : 'Answered'], [2, hi ? 'उत्तर नहीं दिया' : 'Not answered'], [1, hi ? 'देखा नहीं' : 'Not visited'], [4, hi ? 'रिव्यू' : 'Marked'], [5, hi ? 'उत्तर+रिव्यू' : 'Answered & marked']].map(([s, l]) => (
-                <View key={String(s)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={[{ width: 18, height: 18, backgroundColor: PALETTE[s as number].bg }, typeof PALETTE[s as number].radius === 'number' ? { borderRadius: Math.min(9, PALETTE[s as number].radius) } : PALETTE[s as number].radius]} />
-                  <Text style={{ color: t.textSoft, fontSize: 12 }}>{l} ({sectionCounts[s as number] || 0})</Text>
+      {palette ? (
+        <Sheet title={section?.name || (hi ? 'प्रश्न' : 'Questions')} onClose={() => setPalette(false)}
+          footer={perSectionSubmit
+            ? <Button title={hi ? 'यह सेक्शन सबमिट करें' : 'Submit this section'} tone="warning" onPress={() => { setPalette(false); setConfirmSubmit(true); }} />
+            : <Button title={hi ? 'टेस्ट सबमिट करें' : 'Submit test'} tone="danger" icon={<Send size={18} color="#fff" />} onPress={() => { setPalette(false); setConfirmSubmit(true); }} />}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+            {[[3, hi ? 'उत्तर दिया' : 'Answered'], [2, hi ? 'उत्तर नहीं' : 'Not answered'], [1, hi ? 'देखा नहीं' : 'Not visited'], [4, hi ? 'रिव्यू' : 'Marked'], [5, hi ? 'उत्तर + रिव्यू' : 'Answered & marked']].map(([s, l]) => {
+              const p = PALETTE[s as number];
+              return (
+                <View key={String(s)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: t.card, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: t.border }}>
+                  <View style={[{ width: 16, height: 16, backgroundColor: p.bg }, typeof p.radius === 'number' ? { borderRadius: Math.min(8, p.radius) } : p.radius]} />
+                  <Text style={{ color: t.textSoft, fontSize: 12.5, fontWeight: '600' }}>{l}</Text>
+                  <Text style={{ color: t.text, fontSize: 12.5, fontWeight: '900' }}>{sectionCounts[s as number] || 0}</Text>
                 </View>
-              ))}
-            </View>
-            <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16 }}>
-              {secQs.map((sq, i) => {
-                const st = state.responses[sq.id]?.state || 1;
-                const p = PALETTE[st];
-                const cur = i === state.currentQuestionIndex;
-                return (
-                  <Pressable key={sq.id} onPress={() => { dispatch({ type: 'JUMP_TO_QUESTION', payload: { sectionIndex: state.currentSectionIndex, questionIndex: i } }); setPalette(false); }}
-                    style={[{ width: 46, height: 42, backgroundColor: p.bg, alignItems: 'center', justifyContent: 'center', borderWidth: cur ? 2.5 : 0, borderColor: t.primary },
-                      typeof p.radius === 'number' ? { borderRadius: p.radius } : p.radius]}>
-                    <Text style={{ color: p.fg, fontWeight: '800' }}>{i + 1}</Text>
-                    {st === 5 ? <View style={{ position: 'absolute', right: -3, bottom: -3, width: 14, height: 14, borderRadius: 7, backgroundColor: '#16a34a', borderWidth: 2, borderColor: t.card }} /> : null}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-            <View style={{ paddingHorizontal: 16, gap: 8 }}>
-              {perSectionSubmit
-                ? <Button title={hi ? 'यह सेक्शन सबमिट करें' : 'Submit this section'} tone="warning" onPress={() => { setPalette(false); setConfirmSubmit(true); }} />
-                : <Button title={hi ? 'टेस्ट सबमिट करें' : 'Submit test'} tone="danger" onPress={() => { setPalette(false); setConfirmSubmit(true); }} />}
-            </View>
+              );
+            })}
           </View>
-        </View>
-      </Modal>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingBottom: 8 }}>
+            {secQs.map((sq, i) => {
+              const st = state.responses[sq.id]?.state || 1;
+              const p = PALETTE[st];
+              const cur = i === state.currentQuestionIndex;
+              return (
+                <Pressable key={sq.id} onPress={() => { dispatch({ type: 'JUMP_TO_QUESTION', payload: { sectionIndex: state.currentSectionIndex, questionIndex: i } }); setPalette(false); }}
+                  style={[{ width: 48, height: 44, backgroundColor: st === 1 ? t.cardAlt : p.bg, alignItems: 'center', justifyContent: 'center', borderWidth: cur ? 2.5 : st === 1 ? 1 : 0, borderColor: cur ? t.primary : t.border },
+                    typeof p.radius === 'number' ? { borderRadius: Math.max(8, p.radius) } : p.radius]}
+                  accessibilityLabel={`${hi ? 'प्रश्न' : 'Question'} ${i + 1}`}>
+                  <Text style={{ color: st === 1 ? t.text : p.fg, fontWeight: '900' }}>{i + 1}</Text>
+                  {st === 5 ? <View style={{ position: 'absolute', right: -3, bottom: -3, width: 14, height: 14, borderRadius: 7, backgroundColor: '#16a34a', borderWidth: 2, borderColor: t.bg }} /> : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        </Sheet>
+      ) : null}
 
       {/* Submit confirmation */}
-      <Modal visible={confirmSubmit} transparent animationType="fade" onRequestClose={() => setConfirmSubmit(false)}>
-        <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
-          <Card>
-            <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>{perSectionSubmit ? (hi ? 'सेक्शन सबमिट करें?' : 'Submit this section?') : (hi ? 'टेस्ट सबमिट करें?' : 'Submit the test?')}</Text>
-            <View style={{ marginTop: 12, gap: 4 }}>
-              <Text style={{ color: t.textSoft }}>{hi ? 'उत्तर दिए' : 'Answered'}: <Text style={{ color: t.text, fontWeight: '800' }}>{((perSectionSubmit ? sectionCounts : counts)[3] || 0) + ((perSectionSubmit ? sectionCounts : counts)[5] || 0)}</Text></Text>
-              <Text style={{ color: t.textSoft }}>{hi ? 'उत्तर नहीं दिए' : 'Not answered'}: <Text style={{ color: t.text, fontWeight: '800' }}>{(perSectionSubmit ? sectionCounts : counts)[2] || 0}</Text></Text>
-              <Text style={{ color: t.textSoft }}>{hi ? 'रिव्यू के लिए' : 'Marked for review'}: <Text style={{ color: t.text, fontWeight: '800' }}>{(perSectionSubmit ? sectionCounts : counts)[4] || 0}</Text></Text>
-              <Text style={{ color: t.textSoft }}>{hi ? 'देखे नहीं' : 'Not visited'}: <Text style={{ color: t.text, fontWeight: '800' }}>{(perSectionSubmit ? sectionCounts : counts)[1] || 0}</Text></Text>
+      <Dialog visible={confirmSubmit} onClose={() => setConfirmSubmit(false)} title={perSectionSubmit ? (hi ? 'सेक्शन सबमिट करें?' : 'Submit this section?') : (hi ? 'टेस्ट सबमिट करें?' : 'Submit the test?')}>
+        <View style={{ marginTop: 14, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {[
+            [(summary[3] || 0) + (summary[5] || 0), hi ? 'उत्तर दिए' : 'Answered', t.success],
+            [summary[2] || 0, hi ? 'उत्तर नहीं' : 'Not answered', t.danger],
+            [summary[4] || 0, hi ? 'रिव्यू' : 'Marked', t.violet],
+            [notVisited, hi ? 'देखे नहीं' : 'Not visited', t.textMuted],
+          ].map(([n, l, c]) => (
+            <View key={String(l)} style={{ width: '47%', backgroundColor: t.cardAlt, borderRadius: 12, padding: 12 }}>
+              <Text style={{ color: c as string, fontSize: 22, fontWeight: '900' }}>{n as number}</Text>
+              <Text style={{ color: t.textSoft, fontSize: 12.5, fontWeight: '600' }}>{l as string}</Text>
             </View>
-            {perSectionSubmit ? <Text style={{ color: t.warning, marginTop: 10 }}>{hi ? 'सबमिट करने के बाद आप इस सेक्शन पर वापस नहीं आ सकते।' : "After submitting you can't come back to this section."}</Text> : null}
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <Button style={{ flex: 1 }} outline title={hi ? 'वापस' : 'Back'} onPress={() => setConfirmSubmit(false)} />
-              <Button style={{ flex: 1 }} tone="danger" title={hi ? 'सबमिट' : 'Submit'} onPress={() => { setConfirmSubmit(false); dispatch({ type: perSectionSubmit ? 'SUBMIT_SECTION' : 'SUBMIT_EXAM' }); }} />
-            </View>
-          </Card>
+          ))}
         </View>
-      </Modal>
+        {perSectionSubmit ? <Text style={{ color: t.warning, marginTop: 12, fontWeight: '600' }}>{hi ? 'सबमिट करने के बाद आप इस सेक्शन पर वापस नहीं आ सकते।' : "After submitting you can't come back to this section."}</Text> : null}
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+          <Button style={{ flex: 1 }} outline title={hi ? 'वापस' : 'Back'} onPress={() => setConfirmSubmit(false)} />
+          <Button style={{ flex: 1 }} tone="danger" title={hi ? 'सबमिट' : 'Submit'} onPress={() => { setConfirmSubmit(false); dispatch({ type: perSectionSubmit ? 'SUBMIT_SECTION' : 'SUBMIT_EXAM' }); }} />
+        </View>
+      </Dialog>
 
       {/* Leave (progress kept) */}
-      <Modal visible={leaving} transparent animationType="fade" onRequestClose={() => setLeaving(false)}>
-        <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
-          <Card>
-            <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>{hi ? 'टेस्ट छोड़ें?' : 'Leave the test?'}</Text>
-            <Text style={{ color: t.textSoft, marginTop: 8 }}>{hi ? 'आपकी प्रगति सेव है, आप बाद में जारी रख सकते हैं। टाइमर रुक जाएगा।' : 'Your progress is saved and you can continue later. The timer pauses.'}</Text>
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <Button style={{ flex: 1 }} outline title={hi ? 'जारी रखें' : 'Stay'} onPress={() => setLeaving(false)} />
-              <Button style={{ flex: 1 }} title={hi ? 'छोड़ें' : 'Leave'} onPress={() => {
-                const p = snapshot();
-                if (p) request('save-exam-progress', { userId: user.id, snapshot: p }).catch(() => {});
-                setLeaving(false); refreshUser(); nav.pop();
-              }} />
-            </View>
-          </Card>
+      <Dialog visible={leaving} onClose={() => setLeaving(false)} title={hi ? 'टेस्ट छोड़ें?' : 'Leave the test?'}
+        text={hi ? 'आपकी प्रगति सेव है, आप बाद में जारी रख सकते हैं। टाइमर रुक जाएगा।' : 'Your progress is saved and you can continue later. The timer pauses.'}>
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+          <Button style={{ flex: 1 }} outline title={hi ? 'जारी रखें' : 'Stay'} onPress={() => setLeaving(false)} />
+          <Button style={{ flex: 1 }} title={hi ? 'छोड़ें' : 'Leave'} onPress={() => {
+            const p = snapshot();
+            if (p && !offline) request('save-exam-progress', { userId: user.id, snapshot: p }).catch(() => {});
+            setLeaving(false); refreshUser(); nav.pop();
+          }} />
         </View>
-      </Modal>
+      </Dialog>
 
       {/* Violation warning */}
-      <Modal visible={violationNote && !state.isExamSubmitted} transparent animationType="fade" onRequestClose={() => setViolationNote(false)}>
-        <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
-          <Card>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><TriangleAlert size={22} color={t.danger} /><Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>{hi ? 'चेतावनी' : 'Warning'}</Text></View>
-            <Text style={{ color: t.textSoft, marginTop: 8 }}>
-              {hi ? `आपने टेस्ट के दौरान ऐप छोड़ा (${state.violationsCount}/${state.maxViolationsAllowed})। ${state.maxViolationsAllowed} बार होने पर टेस्ट अपने आप सबमिट हो जाएगा।`
-                : `You left the app during the test (${state.violationsCount}/${state.maxViolationsAllowed}). At ${state.maxViolationsAllowed} the test is submitted automatically.`}
-            </Text>
-            <Button style={{ marginTop: 16 }} title={hi ? 'समझ गया' : 'OK'} onPress={() => setViolationNote(false)} />
-          </Card>
-        </View>
-      </Modal>
+      <Dialog visible={violationNote && !state.isExamSubmitted} onClose={() => setViolationNote(false)} icon={<TriangleAlert size={30} color={t.danger} />} title={hi ? 'चेतावनी' : 'Warning'}
+        text={hi ? `आपने टेस्ट के दौरान ऐप छोड़ा (${state.violationsCount}/${state.maxViolationsAllowed})। ${state.maxViolationsAllowed} बार होने पर टेस्ट अपने आप सबमिट हो जाएगा।`
+          : `You left the app during the test (${state.violationsCount}/${state.maxViolationsAllowed}). At ${state.maxViolationsAllowed} the test is submitted automatically.`}>
+        <Button style={{ marginTop: 18 }} title={hi ? 'समझ गया' : 'OK'} onPress={() => setViolationNote(false)} />
+      </Dialog>
 
       {/* RPSC extra time rules */}
-      <Modal visible={state.isExtraTimeRulesShown} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
-          <Card>
-            <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>{hi ? 'अतिरिक्त 10 मिनट' : 'Extra 10 minutes'}</Text>
-            <Text style={{ color: t.textSoft, marginTop: 8 }}>
-              {hi ? 'समय समाप्त। बिना उत्तर वाले प्रश्नों के लिए केवल विकल्प (E) "प्रश्न अनुत्तरित छोड़ें" चुना जा सकता है। उत्तर दिए गए प्रश्न बदले नहीं जा सकते।'
-                : 'Time is up. For unanswered questions you can only choose option (E) "Leave question unattempted". Answered questions can\'t be changed.'}
-            </Text>
-            <Button style={{ marginTop: 16 }} title={hi ? 'शुरू करें' : 'Start extra time'} onPress={() => dispatch({ type: 'DISMISS_EXTRA_TIME_RULES' })} />
-          </Card>
-        </View>
-      </Modal>
+      <Dialog visible={!!state.isExtraTimeRulesShown} onClose={() => {}} title={hi ? 'अतिरिक्त 10 मिनट' : 'Extra 10 minutes'}
+        text={hi ? 'समय समाप्त। बिना उत्तर वाले प्रश्नों के लिए केवल विकल्प (E) "प्रश्न अनुत्तरित छोड़ें" चुना जा सकता है। उत्तर दिए गए प्रश्न बदले नहीं जा सकते।'
+          : 'Time is up. For unanswered questions you can only choose option (E) "Leave question unattempted". Answered questions can\'t be changed.'}>
+        <Button style={{ marginTop: 18 }} title={hi ? 'शुरू करें' : 'Start extra time'} onPress={() => dispatch({ type: 'DISMISS_EXTRA_TIME_RULES' })} />
+      </Dialog>
     </View>
   );
 }
-
-

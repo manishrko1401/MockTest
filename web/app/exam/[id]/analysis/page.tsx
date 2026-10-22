@@ -38,6 +38,8 @@ import MathJaxText from '../../../lib/MathJaxText';
 import MathJaxLoader from '../../../components/MathJaxLoader';
 import { useOfflineMock } from '../../../lib/offlineExam';
 import OfflineBookmarkBadge from '../../../components/OfflineBookmarkBadge';
+import ShareScorecardButton from '../../../components/ShareScorecard';
+import FriendsRoomsForTest from '../../../friends/FriendsRoomsForTest';
 
 // -----------------------------------------------------------------------------
 // RRB NTPC CBAT (Psycho Test) — T-Score result display
@@ -255,7 +257,7 @@ export default function ExamSolutionAnalysisPage() {
 
   // Load completed sessions for this testId
   const attempts: MockTestRecord[] = offline ? (offline.attempts as MockTestRecord[]) : currentUser
-    ? currentUser.testSessions.filter(
+    ? (currentUser.testSessions || []).filter(
         s => (s.testId === testId || s.title.toLowerCase().includes(testId.replace(/_/g, ' '))) &&
              (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
       )
@@ -704,7 +706,7 @@ export default function ExamSolutionAnalysisPage() {
     } else {
       // INDIVIDUAL SECTIONAL BATTERY TEST: Only show that specific section's T-Score!
       let targetBatteryKey: string | null = null;
-      let matchedSection = sectionalAnalysis.find(s => {
+      const matchedSection = sectionalAnalysis.find(s => {
         const bat = matchCbatBattery(s.name);
         if (bat) {
           targetBatteryKey = bat;
@@ -994,6 +996,30 @@ export default function ExamSolutionAnalysisPage() {
                       <ArrowLeft className="h-4 w-4" />
                       {isHi ? 'टेस्ट सीरीज' : 'Back to Test Series'}
                     </button>
+                    {!cbatTScoreResult && (
+                      <ShareScorecardButton
+                        lang={isHi ? 'hi' : 'en'}
+                        data={{
+                          testTitle: examSession.testTitle,
+                          examName: examSession.testSubcategory || examSession.testCategory || undefined,
+                          attemptLabel: getAttemptLabel(selectedAttemptIdx, attempts.length, language),
+                          date: sessionRecord.date || undefined,
+                          studentName: currentUser?.name || (isHi ? 'विद्यार्थी' : 'Student'),
+                          candidateCode: (currentUser as any)?.candidateCode || undefined,
+                          score: sessionRecord.score,
+                          maxScore: sessionRecord.maxScore,
+                          accuracy: sessionRecord.accuracy,
+                          correct: totals.correct,
+                          wrong: totals.incorrect,
+                          skipped: totals.unattempted,
+                          timeTakenSeconds: computedTimeTakenSeconds,
+                          rank: sessionRecord.testbookRank || null,
+                          totalCandidates: sessionRecord.mockTest?.testbookTotalUsers || null,
+                          percentile: sessionRecord.testbookPercentile ?? null,
+                          sections: sectionalAnalysis.map(sec => ({ name: sec.name, score: sec.score, maxScore: sec.total * sec.positiveMark })),
+                        }}
+                      />
+                    )}
                     <label className="inline-flex items-center gap-2 h-9 pl-3 pr-1 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300">
                       <Globe className="h-4 w-4 text-slate-400" />
                       <span className="sr-only">{isHi ? 'प्रश्नों की भाषा' : 'Question language'}</span>
@@ -1081,6 +1107,9 @@ export default function ExamSolutionAnalysisPage() {
           </aside>
 
           <main className="min-w-0 space-y-6">
+
+            {/* Rooms with friends for this test / challenge friends */}
+            {!offline && !cbatTScoreResult && <FriendsRoomsForTest testId={testId} hi={isHi} />}
 
             {/* Score summary */}
             <SectionCard title={isHi ? 'परिणाम सारांश' : 'Result summary'} bodyClass="p-0">

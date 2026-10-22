@@ -14,7 +14,7 @@ import BackgroundArts from './components/BackgroundArts';
 import LiveUpdatesBar from './components/LiveUpdatesBar';
 import LeftSideMenu from './components/LeftSideMenu';
 import HomeLeftSidebar from './components/HomeLeftSidebar';
-import { WindowsAppCard } from './components/WindowsAppDownload';
+import { AppDownloadCard } from './components/AppDownload';
 import HomeHeroBannerCarousel from './components/HomeHeroBannerCarousel';
 import HomeShortcutsSection from './components/HomeShortcutsSection';
 import HomeChatSection from './components/HomeChatSection';
@@ -558,6 +558,8 @@ const formatSubCategoryName = (name: string) => {
       <>
         <div className="flex-1 flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans min-h-screen text-slate-800 dark:text-slate-100 overflow-x-hidden relative transition-colors duration-200 mobile-fade-in">
         <SiteHeader />
+        {/* the page's main heading, for search engines and screen readers (the design has none) */}
+        <h1 className="sr-only">{language === 'hi' ? 'मॉक टेस्ट हब: सरकारी परीक्षाओं के लिए मॉक टेस्ट, टाइपिंग टेस्ट और सूचनाएं' : 'Mock Test Hub: mock tests, typing tests and notices for Govt exams'}</h1>
 
         {/* Live Notices & Announcements Marquee */}
         <LiveUpdatesBar notices={noticesList} language={language} isMobile={true} />
@@ -650,6 +652,9 @@ const formatSubCategoryName = (name: string) => {
               </div>
             </Link>
           </div>
+
+          {/* Get the app: Windows & Android in one section */}
+          <AppDownloadCard hi={language === 'hi'} />
 
           {/* POPULAR CATEGORIES */}
           <section className="space-y-6 pt-2 border-t border-slate-200 dark:border-slate-900 relative z-10">
@@ -930,6 +935,8 @@ const formatSubCategoryName = (name: string) => {
     <div className="h-screen max-h-screen h-[100dvh] w-full flex flex-col bg-[#f5f7fa] dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 select-none transition-colors duration-200 overflow-hidden relative">
       
       <SiteHeader fluid />
+      {/* the page's main heading, for search engines and screen readers (the design has none) */}
+      <h1 className="sr-only">{language === 'hi' ? 'मॉक टेस्ट हब: सरकारी परीक्षाओं के लिए मॉक टेस्ट, टाइपिंग टेस्ट और सूचनाएं' : 'Mock Test Hub: mock tests, typing tests and notices for Govt exams'}</h1>
 
       {/* Main split-pane content: Left Side Menu Section (identical to category page) + Right Main Content */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden relative">
@@ -1064,8 +1071,8 @@ const formatSubCategoryName = (name: string) => {
             </Link>
           </div>
 
-          {/* Windows app (website on a Windows PC only) */}
-          <WindowsAppCard hi={language === 'hi'} />
+          {/* Get the app: Windows & Android in one section */}
+          <AppDownloadCard hi={language === 'hi'} />
 
       {/* POPULAR EXAM CATEGORIES MARQUEE SECTION (Full width, 0 padding from left & right edges) */}
       <div className="-mx-3 md:-mx-6 w-[calc(100%+1.5rem)] md:w-[calc(100%+3rem)]">

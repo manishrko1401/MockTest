@@ -1,4 +1,4 @@
-# MockTest Hub (Android, v2)
+# MockTest Hub (Android, v2.1)
 
 The new, fully native student app. It replaces the old app on Google Play: same app id
 `com.mocktesthub`, same signing key, version 2.0.0 (versionCode 100; the old app was 1).
@@ -9,7 +9,12 @@ Features: sign in / sign up / Google / forgot password, home, job notices and sa
 series with the exam screen (TCS-style palette, sections, resume, violation guard, screenshot
 block), result analysis and solutions, bookmarks, CBAT, typing tests, Study Planner, Document
 Locker (Google Drive), offline downloads (encrypted for the phone, results upload later),
-referrals, Pass Pro, support chat, Hindi.
+referrals, Pass Pro, support chat, Hindi, light / dark / system theme (Me → Appearance), and With
+Friends: test rooms (live or anytime), comparison of marks and time per question, a discussion on
+every question, the friend list with requests and chat.
+
+Tabs: Home · Tests (mock + typing) · Planner · Friends · Me. The look is defined in `src/theme.ts`
+(colours) and `src/ui.tsx` (building blocks); questions are drawn by `src/questionHtml.ts`.
 
 ## Sign-in sessions
 

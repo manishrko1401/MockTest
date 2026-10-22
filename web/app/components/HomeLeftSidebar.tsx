@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
 import { useIsDesktopApp, exitDesktopApp } from '../lib/desktopApp';
-import { WindowsAppMenuItem } from './WindowsAppDownload';
+import { AppDownloadMenuItem } from './AppDownload';
 import {
   HardDriveDownload,
   CalendarCheck,
@@ -93,7 +93,8 @@ export default function HomeLeftSidebar({
     };
 
     checkUnread();
-    const interval = setInterval(checkUnread, 30000);
+    // once a minute, and only while the tab is open on screen
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') checkUnread(); }, 60000);
     return () => clearInterval(interval);
   }, [currentUser?.id, activeView]);
 
@@ -502,8 +503,8 @@ export default function HomeLeftSidebar({
               </Link>
             )}
 
-            {/* Download the Windows app: website only (the right installer for this PC) */}
-            {!inDesktopApp && <WindowsAppMenuItem hi={isHindi} />}
+            {/* Download the apps (Windows & Android) */}
+            <AppDownloadMenuItem hi={isHindi} />
 
             {/* Exit App: only inside the Windows app */}
             {inDesktopApp && (

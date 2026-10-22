@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
+
+const useBeforePaint = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export function useIsMobile(breakpoint: number = 768) {
   // Initialize synchronously from window.innerWidth so the FIRST render
@@ -12,7 +14,8 @@ export function useIsMobile(breakpoint: number = 768) {
   // isMounted stays false until after hydration so SSR HTML still matches.
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
-  useEffect(() => {
+  // Before the first paint, so the mobile layout replaces the desktop one without a visible flash
+  useBeforePaint(() => {
     setIsMounted(true);
 
     const checkMobile = () => {

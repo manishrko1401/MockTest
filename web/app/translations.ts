@@ -116,7 +116,7 @@ export const TRANSLATIONS = {
     referralsCount: "Successful Referrals",
     coinsBalance: "Coins Balance",
     coinsCount: "Coins",
-    referralShareDesc: "Share your code to earn premium passes when friends register!",
+    referralShareDesc: "Share your code: you get 20 coins and your friend gets 10 when they finish their first mock test.",
     referralPlaceholder: "Enter referrer code (optional)",
 
     // Auth Page
@@ -213,9 +213,9 @@ export const TRANSLATIONS = {
     referralRule2Title: "2. Friend Registers",
     referralRule2Desc: "Your friend signs up on Mock Test and enters your referral code on the signup screen.",
     referralRule3Title: "3. Complete First Mock Test",
-    referralRule3Desc: "Once they complete any full-length or practice mock test sitting on the CBT interface.",
+    referralRule3Desc: "They finish their first mock test, using at least 3/4 of the test time (a quick submit does not count).",
     referralRule4Title: "4. Both Receive Coins",
-    referralRule4Desc: "You get 20 Coins and your friend gets 10 Coins instantly credited!",
+    referralRule4Desc: "You get 20 coins and your friend gets 10 coins, added as soon as the test is submitted. Once per friend.",
     myReferredFriends: "Referred Candidates Progress",
     noReferredFriends: "You haven't referred any candidates yet.",
     referralStep1: "Account Registered",
@@ -361,7 +361,7 @@ export const TRANSLATIONS = {
     referralsCount: "सफल रेफरल",
     coinsBalance: "सिक्कों का बैलेंस",
     coinsCount: "सिक्के",
-    referralShareDesc: "जब आपके दोस्त पंजीकरण करेंगे तो प्रीमियम पास प्राप्त करने के लिए अपना कोड साझा करें!",
+    referralShareDesc: "अपना कोड शेयर करें: दोस्त का पहला मॉक टेस्ट पूरा होने पर आपको 20 और दोस्त को 10 कॉइन्स मिलेंगे।",
     referralPlaceholder: "रेफरर कोड दर्ज करें (वैकल्पिक)",
 
     // Auth Page
@@ -458,9 +458,9 @@ export const TRANSLATIONS = {
     referralRule2Title: "2. मित्र का पंजीकरण",
     referralRule2Desc: "आपका मित्र मॉक टेस्ट पर पंजीकरण करता है और साइनअप स्क्रीन पर आपका रेफरल कोड दर्ज करता है।",
     referralRule3Title: "3. पहला मॉक टेस्ट पूरा करें",
-    referralRule3Desc: "जैसे ही वे सीबीटी इंटरफ़ेस पर कोई भी पूर्ण-लंबाई या अभ्यास मॉक टेस्ट पूरा करते हैं।",
+    referralRule3Desc: "वे अपना पहला मॉक टेस्ट पूरा करें, टेस्ट के समय का कम से कम 3/4 हिस्सा लगाकर (जल्दी सबमिट करना नहीं गिना जाता)।",
     referralRule4Title: "4. दोनों को कॉइन्स मिलेंगे",
-    referralRule4Desc: "आपको 20 कॉइन्स और आपके मित्र को 10 कॉइन्स तुरंत क्रेडिट कर दिए जाते हैं!",
+    referralRule4Desc: "आपको 20 कॉइन्स और आपके मित्र को 10 कॉइन्स, टेस्ट सबमिट होते ही मिलते हैं। हर मित्र पर एक बार।",
     myReferredFriends: "संदर्भित उम्मीदवारों की प्रगति",
     noReferredFriends: "आपने अभी तक किसी भी उम्मीदवार को संदर्भित नहीं किया है।",
     referralStep1: "खाता पंजीकृत",

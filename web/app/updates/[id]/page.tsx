@@ -17,6 +17,7 @@ import { SiteHeader, SiteFooter, SectionCard, Field, StatusBadge, btnPrimary, bt
 import { NoticeDetailTour } from '../../components/NoticesTour';
 
 import { processQuestionHtml } from '../../lib/mathUtils';
+import { sanitizeDomHtml } from '../../lib/domSanitize';
 
 interface NoticeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -285,7 +286,8 @@ function sanitizeNoticeHtml(html: string): string {
   // 9. Remove any leftover empty paragraphs or &nbsp; at top
   clean = clean.replace(/^(?:\s*<p>\s*(?:&nbsp;|\s*)*<\/p>)*/gi, '');
 
-  return clean.trim();
+  // last step: nothing active survives the reshaping above
+  return sanitizeDomHtml(clean.trim());
 }
 
 export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
@@ -396,7 +398,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   ) => {
     if (!notice || !currentUser) return;
     try {
-      let list = currentUser.trackedJobs || [];
+      const list = currentUser.trackedJobs || [];
       const index = list.findIndex((j: any) => j.noticeId === notice.id);
 
       const updatedObj = {

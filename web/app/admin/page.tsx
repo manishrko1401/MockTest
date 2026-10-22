@@ -18,7 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'recharts';
-import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud, Keyboard, RotateCcw } from 'lucide-react';
+import { Upload, Database, Users, TrendingUp, BarChart2, BookOpen, AlertCircle, CheckCircle2, CheckCheck, Search, Trash2, Edit, Calendar, UserCheck, RefreshCw, X, Award, ChevronRight, FileText, Sun, Moon, Bell, PlusCircle, FolderPlus, Layers, Globe, ArrowLeft, Menu, Coins, Megaphone, MessageSquare, MessageCircle, ArrowUp, ArrowDown, Gift, Lightbulb, Key, ShieldAlert, Zap, Sparkles, Inbox, Share2, FolderLock, Cloud, Keyboard, RotateCcw, MonitorSmartphone } from 'lucide-react';
 import { useIsMobile } from '../useIsMobile';
 import { BulkQuestionImporter } from './components/BulkQuestionImporter';
 import { MockTestManager } from './components/MockTestManager';
@@ -26,6 +26,9 @@ import { DatabaseMonitor } from './components/DatabaseMonitor';
 import { VocabManager } from './components/VocabManager';
 import NoticeInnerDetailsManager from './components/NoticeInnerDetailsManager';
 import { InquiryManager } from './components/InquiryManager';
+import { IntegrityManager } from './components/IntegrityManager';
+import { PlatformManager } from './components/PlatformManager';
+import { platformLabel } from '../lib/platformLabels';
 import { ContactLinksManager } from './components/ContactLinksManager';
 import { DocumentLockerManager } from './components/DocumentLockerManager';
 import { TypingTestManager } from './components/TypingTestManager';
@@ -118,9 +121,9 @@ export default function AdminAnalytics() {
   const { isMobile, isMounted } = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const tabInitializedRef = React.useRef(false);
-  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'typing_attempts' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links'>('analytics');
+  const [activeTab, setActiveTab] = useState<'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'typing_attempts' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links' | 'integrity' | 'platforms'>('analytics');
 
-  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'typing_attempts' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links') => {
+  const selectTab = (tab: 'upload' | 'analytics' | 'users' | 'locker' | 'typing' | 'typing_attempts' | 'notices' | 'notice_details' | 'testimonials' | 'categories' | 'subcategories' | 'subsubcategories' | 'mocks' | 'reports' | 'announcements' | 'support' | 'dbmonitor' | 'feedback' | 'attempts' | 'suggestions' | 'vocab' | 'practice_series' | 'app_practice_series' | 'inquiries' | 'contact_links' | 'integrity' | 'platforms') => {
     setActiveTab(tab);
     setMobileSidebarOpen(false);
   };
@@ -1463,6 +1466,8 @@ export default function AdminAnalytics() {
       items: [
         { id: 'analytics', label: language === 'hi' ? 'छात्र प्रदर्शन' : 'Student performance', icon: BarChart2, show: hasTabAccess('analytics') },
         { id: 'attempts', label: language === 'hi' ? 'टेस्ट प्रयास लॉग' : 'Test attempt logs', icon: TrendingUp, show: hasTabAccess('attempts') },
+        { id: 'integrity', label: language === 'hi' ? 'परीक्षा ईमानदारी जांच' : 'Integrity review', icon: ShieldAlert, show: hasTabAccess('integrity') },
+        { id: 'platforms', label: language === 'hi' ? 'प्लेटफ़ॉर्म (वेबसाइट / ऐप)' : 'Platforms', icon: MonitorSmartphone, show: hasTabAccess('platforms') },
         { id: 'typing_attempts', label: language === 'hi' ? 'टाइपिंग प्रयास लॉग' : 'Typing attempt logs', icon: BarChart2, show: hasTabAccess('typing_attempts') },
         { id: 'dbmonitor', label: language === 'hi' ? 'डेटाबेस मॉनिटर' : 'Database monitor', icon: Database, show: hasTabAccess('dbmonitor') },
       ],
@@ -1880,8 +1885,8 @@ export default function AdminAnalytics() {
               {/* Live Presence Summary Cards */}
               {(() => {
                 const onlineUsers = usersList.filter(u => isUserOnline(u.lastSeen));
-                const onlineApp = onlineUsers.filter(u => u.lastPlatform === 'app').length;
-                const onlineWeb = onlineUsers.filter(u => u.lastPlatform !== 'app').length;
+                const onlineApp = onlineUsers.filter(u => ['app', 'android', 'windows'].includes(u.lastPlatform || '')).length;
+                const onlineWeb = onlineUsers.length - onlineApp;
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3 shadow-xs">
@@ -1899,7 +1904,7 @@ export default function AdminAnalytics() {
                       <h4 className="text-xl font-semibold text-emerald-700 dark:text-emerald-300 mt-0.5">{onlineUsers.length} online</h4>
                     </div>
                     <div className="bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-900/40 rounded-md p-3 shadow-xs">
-                      <p className="text-xs font-semibold text-violet-600 dark:text-violet-400">Mobile App</p>
+                      <p className="text-xs font-semibold text-violet-600 dark:text-violet-400">Apps (Android &amp; Windows)</p>
                       <h4 className="text-xl font-semibold text-violet-700 dark:text-violet-300 mt-0.5">{onlineApp} active</h4>
                     </div>
                     <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded-md p-3 shadow-xs">
@@ -2259,7 +2264,7 @@ export default function AdminAnalytics() {
                                   {isUserOnline(user.lastSeen) ? (
                                     <span className="inline-flex items-center gap-1 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold px-1.5 py-0.5 rounded-full">
                                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                      Online ({user.lastPlatform === 'app' ? 'App' : user.lastPlatform === 'mobile_web' ? 'Web Mobile' : 'Web'})
+                                      Online ({platformLabel(user.lastPlatform)})
                                     </span>
                                   ) : (
                                     <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1.5 py-0.5 rounded">
@@ -6180,6 +6185,15 @@ export default function AdminAnalytics() {
           {/* TAB: CONTACT INQUIRIES */}
           {activeTab === 'inquiries' && hasTabAccess('inquiries') && (
             <InquiryManager showToast={showToast} />
+          )}
+
+          {/* TAB: EXAM INTEGRITY REVIEW (suspicious attempts) */}
+          {activeTab === 'platforms' && hasTabAccess('platforms') && (
+            <PlatformManager showToast={showToast} />
+          )}
+
+          {activeTab === 'integrity' && hasTabAccess('integrity') && (
+            <IntegrityManager showToast={showToast} />
           )}
 
           {/* TAB: MANAGE CONTACT & SOCIAL LINKS */}

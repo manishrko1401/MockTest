@@ -38,7 +38,7 @@ import {
   Flame,
   ShieldCheck
 } from 'lucide-react';
-import { SiteHeader, SiteFooter } from '../../../components/SiteUI';
+import { SiteHeader, SiteFooter, BackButton } from '../../../components/SiteUI';
 import { TypingExamTour } from '../../../components/TypingTour';
 import { resetStaleTypingLocalData } from '../../../lib/typingLocalReset';
 import OfflineDownloadButton from '../../../components/OfflineDownloadButton';
@@ -943,7 +943,8 @@ export default function TypingCategoryDetailPage({
             <span>/</span>
             <span className="text-slate-700 dark:text-slate-300">{currentCategory?.name || '…'}</span>
           </nav>
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <BackButton href="/typing-test" label={isHindi ? 'टाइपिंग टेस्ट पर वापस जाएं' : 'Back to Typing Tests'} className="mt-3.5" />
             <div className="w-16 h-16 border border-slate-200 dark:border-slate-800 bg-white flex items-center justify-center p-1.5 shrink-0">
               {currentCategory?.logoUrl ? (
                 <img

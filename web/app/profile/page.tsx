@@ -49,7 +49,7 @@ import {
 } from 'lucide-react';
 import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
-import { SiteHeader, SiteFooter, SectionCard, Field, PasswordInput, StatusBadge, btnPrimary, btnSecondary, inputCls } from '../components/SiteUI';
+import { SiteHeader, SiteFooter, SectionCard, Field, PasswordInput, StatusBadge, BackButton, btnPrimary, btnSecondary, inputCls } from '../components/SiteUI';
 import ProfileTour, { requestProfileTourStart } from '../components/ProfileTour';
 
 type ProfileTab = 'overview' | 'details' | 'security' | 'tracked-jobs' | 'subscription' | 'referrals' | 'preferences';
@@ -316,7 +316,8 @@ function ProfileContent() {
             <span className="text-slate-700 dark:text-slate-300">{hi ? 'मेरा खाता' : 'My Account'}</span>
           </nav>
           <div data-tour="pf-header" className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <BackButton href="/" label={hi ? 'होम पर वापस जाएं' : 'Back to Home'} />
               <div className="h-14 w-14 rounded-full bg-[#1e4e79] text-white flex items-center justify-center text-lg font-semibold shrink-0">
                 {initials}
               </div>

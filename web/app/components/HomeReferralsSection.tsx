@@ -124,7 +124,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
               <span>{isHindi ? 'रेफर और कमाएं' : 'Refer & Earn Rewards'}</span>
             </h2>
             <p className="text-xs sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-              {isHindi ? 'दोस्तों को आमंत्रित करें और मुफ्त टेस्ट सीरीज़ अनलॉक करने के लिए कॉइन्स पाएं' : 'Invite your friends and earn reward coins to unlock test series'}
+              {isHindi ? 'दोस्तों को आमंत्रित करें और दोनों कॉइन्स पाएं' : 'Invite your friends and both of you earn coins'}
             </p>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
             <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-8 rounded-lg text-center text-slate-500 dark:text-slate-400">
               <Gift className="h-9 w-9 text-slate-400 dark:text-slate-600 mx-auto mb-2 opacity-50" />
               <p className="text-xs font-bold">{t.noReferredFriends}</p>
-              <p className="text-xs text-slate-400 mt-1">Share your code with study buddies to start earning!</p>
+              <p className="text-xs text-slate-400 mt-1">{isHindi ? 'कमाना शुरू करने के लिए अपना कोड दोस्तों से शेयर करें!' : 'Share your code with study buddies to start earning!'}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -295,10 +295,16 @@ export default function HomeReferralsSection({ onBack }: HomeReferralsSectionPro
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/40">
-                      <Coins className="h-3 w-3" />
-                      <span>+100 Coins</span>
-                    </span>
+                    {user.hasCompletedTest ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-900/40">
+                        <Coins className="h-3 w-3" />
+                        <span>+{user.coinsEarned || 20} {isHindi ? 'कॉइन्स' : 'Coins'}</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/40">
+                        {isHindi ? 'पहले टेस्ट की प्रतीक्षा' : 'Waiting for first test'}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

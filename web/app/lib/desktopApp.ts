@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 
 type TauriGlobal = {
   core?: { invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown> };
+  app?: { getVersion?: () => Promise<string> };
   notification?: {
     isPermissionGranted: () => Promise<boolean>;
     requestPermission: () => Promise<string>;
@@ -18,6 +19,11 @@ const tauri = (): TauriGlobal | undefined =>
   typeof window !== 'undefined' ? (window as unknown as { __TAURI__?: TauriGlobal }).__TAURI__ : undefined;
 
 export const isDesktopApp = () => !!tauri()?.core;
+
+/** The Windows app's version (from 1.0.3; older versions may not tell it), or null. */
+export async function desktopAppVersion(): Promise<string | null> {
+  try { return (await tauri()?.app?.getVersion?.()) || null; } catch { return null; }
+}
 
 /** For showing app-only buttons: false on the server and first render, then the real answer. */
 export function useIsDesktopApp() {

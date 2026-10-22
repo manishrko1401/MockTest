@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { requireStaff } from "../../lib/serverAuth";
+import crypto from "crypto";
 
 // S3 Client configuration for Tigris
 const s3Client = new S3Client({
@@ -31,13 +32,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Images and PDFs only (an uploaded HTML or SVG file could run code on the site)
+    const ALLOWED: Record<string, string> = {
+      "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp", "image/avif": "avif", "application/pdf": "pdf",
+    };
+    const fileExtension = ALLOWED[file.type];
+    if (!fileExtension) {
+      return NextResponse.json({ error: "Only PNG, JPG, GIF, WEBP, AVIF images or PDF files can be uploaded." }, { status: 400 });
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "The file is larger than 10 MB." }, { status: 400 });
+    }
+
     // Read the file content
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     // Create a unique filename to prevent overwrites
-    const fileExtension = file.name.split(".").pop() || "bin";
-    const uniqueFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
+    const uniqueFileName = `uploads/${Date.now()}_${crypto.randomBytes(6).toString("hex")}.${fileExtension}`;
 
     // Upload to Tigris
     await s3Client.send(
@@ -49,8 +61,8 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    // Construct public URL
-    const fileUrl = `${process.env.TIGRIS_ENDPOINT || "https://fly.storage.tigris.dev"}/${bucketName}/${uniqueFileName}`;
+    // The bucket is private: the file is served through /api/files (see that route)
+    const fileUrl = `${new URL(req.url).origin}/api/files/${uniqueFileName}`;
 
     return NextResponse.json({ success: true, url: fileUrl });
   } catch (error: any) {

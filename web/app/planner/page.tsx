@@ -5,7 +5,9 @@ import Link from 'next/link';
 import {
   Plus, Check, Trash2, Pencil, Clock, Repeat, Flag, ChevronLeft, ChevronRight, Target, Flame, GraduationCap,
   ListChecks, X, ExternalLink, BookOpen, Award, Keyboard, RotateCcw, Newspaper, StickyNote, CalendarDays, AlertCircle, BookOpenCheck,
+  HelpCircle,
 } from 'lucide-react';
+import PlannerTour, { requestPlannerTourStart } from '../components/PlannerTour';
 import SyllabusTracker from './SyllabusTracker';
 import { useAuth } from '../AuthContext';
 import { SiteHeader, SiteFooter, PageTitle, SectionCard, StatusBadge, Field, btnPrimary, btnSecondary, inputCls, pageBg, container } from '../components/SiteUI';
@@ -87,6 +89,9 @@ export default function PlannerPage() {
     setView(v);
     try { window.history.replaceState(null, '', v === 'syllabus' ? '#syllabus' : window.location.pathname); } catch { /* ignore */ }
   };
+  // the quick tour shows the Tasks & targets view
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const showTasksForTour = useCallback(() => switchView('tasks'), []);
 
   const load = useCallback(async () => {
     try {
@@ -429,11 +434,20 @@ export default function PlannerPage() {
   return (
     <div className={`min-h-screen flex flex-col ${pageBg}`}>
       <SiteHeader />
+      <PlannerTour ready={!!currentUser && !!data} showTasks={showTasksForTour} />
       <PageTitle
         crumbs={[{ label: L('Home', 'होम'), href: '/' }, { label: L('Study Planner', 'स्टडी प्लानर') }]}
+        back={{ href: '/', label: L('Back to Home', 'होम पर वापस जाएं') }}
         title={L('Study Planner', 'स्टडी प्लानर')}
         subtitle={L('Plan your daily study, hit your daily test targets and count down to your exams.', 'रोज़ की पढ़ाई की योजना बनाएं, दैनिक टेस्ट लक्ष्य पूरे करें और परीक्षा की उलटी गिनती देखें।')}
-        actions={currentUser && view === 'tasks' ? <button type="button" className={btnPrimary} onClick={() => setEditor(newDraft(selectedDay || today))}><Plus className="h-4 w-4" />{L('New task', 'नया कार्य')}</button> : undefined}
+        actions={currentUser ? (
+          <>
+            <button type="button" onClick={requestPlannerTourStart} className={btnSecondary} title={L('How it works', 'यह कैसे काम करता है')}>
+              <HelpCircle className="h-4 w-4" /><span className="sr-only sm:not-sr-only">{L('How it works', 'यह कैसे काम करता है')}</span>
+            </button>
+            {view === 'tasks' && <button type="button" data-tour="pl-new" className={btnPrimary} onClick={() => setEditor(newDraft(selectedDay || today))}><Plus className="h-4 w-4" />{L('New task', 'नया कार्य')}</button>}
+          </>
+        ) : undefined}
       />
 
       <main className={`${container} w-full py-6 flex-1 space-y-5`}>
@@ -454,7 +468,7 @@ export default function PlannerPage() {
         ) : (
           <>
             {/* ───── Tasks / Syllabus ───── */}
-            <div role="tablist" aria-label={L('Planner sections', 'प्लानर अनुभाग')} className="inline-flex p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div role="tablist" data-tour="pl-views" aria-label={L('Planner sections', 'प्लानर अनुभाग')} className="inline-flex p-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               {([['tasks', L('Tasks & targets', 'कार्य व लक्ष्य'), ListChecks], ['syllabus', L('Syllabus tracker', 'सिलेबस ट्रैकर'), BookOpenCheck]] as const).map(([id, label, Icon]) => (
                 <button key={id} role="tab" type="button" aria-selected={view === id} onClick={() => switchView(id)}
                   className={`h-9 px-3 sm:px-4 rounded-md inline-flex items-center gap-2 text-sm font-medium cursor-pointer transition-colors ${view === id ? 'bg-[#1e4e79] text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] dark:hover:bg-slate-800'}`}>
@@ -478,7 +492,7 @@ export default function PlannerPage() {
             ) : (<>
             {/* ───── Summary cards ───── */}
             <div className="grid gap-4 md:grid-cols-3">
-              <SectionCard title={L("Today's tasks", 'आज के कार्य')} bodyClass="px-5 py-4 space-y-3">
+              <div data-tour="pl-today"><SectionCard className="h-full" title={L("Today's tasks", 'आज के कार्य')} bodyClass="px-5 py-4 space-y-3">
                 <div className="flex items-end justify-between">
                   <span className="text-3xl font-semibold tabular-nums text-slate-900 dark:text-white">{todayDone}<span className="text-lg text-slate-400">/{todayList.length}</span></span>
                   <span className="text-xs text-slate-500 dark:text-slate-400">{fmtDay(today, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
@@ -488,9 +502,10 @@ export default function PlannerPage() {
                   {overdue.length > 0 && <StatusBadge tone="red">{L(`${overdue.length} overdue`, `${overdue.length} बकाया`)}</StatusBadge>}
                   <StatusBadge tone="slate">{L(`${weekDone} done this week`, `इस सप्ताह ${weekDone} पूरे`)}</StatusBadge>
                 </div>
-              </SectionCard>
+              </SectionCard></div>
 
-              <SectionCard
+              <div data-tour="pl-targets"><SectionCard
+                className="h-full"
                 title={L('Daily test targets', 'दैनिक टेस्ट लक्ष्य')}
                 action={<button type="button" onClick={() => setTargetsDraft({ ...targets })} className="text-xs font-medium text-[#1e4e79] dark:text-blue-300 hover:underline cursor-pointer">{L('Edit', 'बदलें')}</button>}
                 bodyClass="px-5 py-4 space-y-3"
@@ -520,9 +535,10 @@ export default function PlannerPage() {
                     </div>
                   </>
                 )}
-              </SectionCard>
+              </SectionCard></div>
 
-              <SectionCard
+              <div data-tour="pl-exams"><SectionCard
+                className="h-full"
                 title={L('Exam countdown', 'परीक्षा उलटी गिनती')}
                 action={<button type="button" onClick={() => setExamEditor({ name: '', examDate: '', notes: '' })} className="text-xs font-medium text-[#1e4e79] dark:text-blue-300 hover:underline cursor-pointer">{L('+ Add exam', '+ परीक्षा जोड़ें')}</button>}
                 bodyClass="px-5 py-3"
@@ -564,12 +580,12 @@ export default function PlannerPage() {
                     )}
                   </ul>
                 )}
-              </SectionCard>
+              </SectionCard></div>
             </div>
 
             {/* ───── Tasks + calendar ───── */}
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+              <section data-tour="pl-tasks" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                 {selectedDay ? (
                   <div className="px-4 sm:px-5 pt-4 pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
                     <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">{relativeDay(selectedDay)} · {fmtDay(selectedDay, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
@@ -593,7 +609,7 @@ export default function PlannerPage() {
                 )}
 
                 {(tab !== 'history' || selectedDay) && (
-                  <form onSubmit={quickAdd} className="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex gap-2">
+                  <form onSubmit={quickAdd} data-tour="pl-quick" className="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex gap-2">
                     <input
                       value={quick}
                       onChange={(e) => setQuick(e.target.value)}
@@ -685,7 +701,7 @@ export default function PlannerPage() {
               </section>
 
               {/* Calendar */}
-              <SectionCard bodyClass="p-4">
+              <div data-tour="pl-calendar"><SectionCard bodyClass="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <button type="button" onClick={() => shiftMonth(-1)} aria-label={L('Previous month', 'पिछला महीना')} className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-[#eef3f8] dark:hover:bg-slate-800 cursor-pointer"><ChevronLeft className="h-4 w-4" /></button>
                   <span className="text-sm font-semibold text-slate-900 dark:text-white">{fmtDay(`${calMonth}-01`, { month: 'long', year: 'numeric' })}</span>
@@ -724,7 +740,7 @@ export default function PlannerPage() {
                   <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />{L('Exam', 'परीक्षा')}</span>
                   <span className="ml-auto">{L('Tap a day to plan it', 'योजना के लिए दिन चुनें')}</span>
                 </div>
-              </SectionCard>
+              </SectionCard></div>
             </div>
             </>)}
           </>

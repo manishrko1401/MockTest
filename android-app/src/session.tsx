@@ -1,4 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { clearToken, loadToken, onSignedOut, request, saveToken } from './api';
 import { readJson, removeJson, writeJson } from './storage';
 import type { MockUser } from './shared/webTypes';
@@ -19,7 +21,7 @@ type SessionValue = {
   patchUser: (patch: Partial<User>) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (f: { name: string; email: string; mobile: string; password: string; referralCode?: string }) => Promise<void>;
-  googleSignIn: (accessToken: string, name?: string, photo?: string) => Promise<void>;
+  googleSignIn: (accessToken: string, name?: string, photo?: string, referralCode?: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -56,11 +58,24 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (saved) {
         userRef.current = saved;
         refreshUser();
-        request('ping', { platform: 'app' }).catch(() => {});
       }
     })();
     return onSignedOut(() => keep(null));
   }, [keep, refreshUser]);
+
+  // "I'm here": online status for friends, and which app / version for the admin Platforms page.
+  // On opening, on coming back to the screen and every 4 minutes while open.
+  const signedInId = user?.id;
+  useEffect(() => {
+    if (!signedInId) return;
+    const release = (Platform.constants as { Release?: string | number } | undefined)?.Release;
+    const info = { platform: 'android', version: Constants.expoConfig?.version || null, os: release ? `Android ${release}` : `Android API ${Platform.Version}` };
+    const ping = () => { if (AppState.currentState === 'active') request('ping', info).catch(() => {}); };
+    ping();
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') ping(); });
+    const timer = setInterval(ping, 4 * 60 * 1000);
+    return () => { sub.remove(); clearInterval(timer); };
+  }, [signedInId]);
 
   const finishSignIn = useCallback(async (res: { user: User; authToken?: string }) => {
     if (!res.authToken) throw new Error('Sign-in failed. Please update the app.');
@@ -81,8 +96,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [finishSignIn]);
 
-  const googleSignIn = useCallback(async (accessToken: string, name?: string, photo?: string) => {
-    await finishSignIn(await request('google-auth', { accessToken, name, profilePhoto: photo, client: 'android-app' }));
+  const googleSignIn = useCallback(async (accessToken: string, name?: string, photo?: string, referralCode?: string) => {
+    await finishSignIn(await request('google-auth', { accessToken, name, profilePhoto: photo, referralCodeInput: referralCode?.trim() || undefined, client: 'android-app' }));
   }, [finishSignIn]);
 
   const signOut = useCallback(async () => {

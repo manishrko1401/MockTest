@@ -170,8 +170,10 @@ export function checkRateLimit(
  * Helper to extract client IP from Next.js request headers
  */
 export function getClientIp(request: Request): string {
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  if (cfConnectingIp) return cfConnectingIp.trim();
+  // Vercel sets these itself (a client cannot fake them). cf-connecting-ip is NOT trusted:
+  // the site is not behind Cloudflare, so anyone could send it to dodge the IP limits.
+  const vercelIp = request.headers.get('x-vercel-forwarded-for') || request.headers.get('x-real-ip');
+  if (vercelIp) return vercelIp.split(',')[0].trim();
 
   const xForwardedFor = request.headers.get('x-forwarded-for');
   if (xForwardedFor) {

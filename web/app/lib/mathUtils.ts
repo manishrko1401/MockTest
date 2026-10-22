@@ -515,7 +515,7 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
 
       // Case C: Bare image filename fragment
       if (bareFile) {
-        let file = bareFile.trim();
+        const file = bareFile.trim();
         let src = file;
         if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//') && !src.startsWith('data:') && !src.startsWith('/')) {
           src = `https://storage.googleapis.com/tb-img/production/21/03/${file}`;
@@ -632,6 +632,11 @@ export function renderPowersAndSubscripts(text: string): string {
 
   // 5. Underscore at start of string before capital letter in series: "^_ P", "^_P"
   s = s.replace(/^_\s*([A-Z]\b)/g, `${blankToken} $1`);
+
+  // 6. Letter puzzles with two or more blanks in one word: "m_u_mg_p_gu_", "a_bc_d" (text only,
+  //    not inside tags). Without this, "m_u" was shown as m with a subscript u.
+  s = s.replace(/(^|>)([^<]*)/g, (_m, lead: string, text: string) =>
+    lead + text.replace(/[A-Za-z]*_[A-Za-z]*_[A-Za-z_]*/g, (word) => word.replace(/_/g, blankToken)));
 
   // 3. Subscripts (ONLY apply if preceded by a valid variable/identifier character e.g. x_1, a_n, H_2O, a_{n})
   // _{inner} -> <sub>inner</sub>

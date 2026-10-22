@@ -9,9 +9,8 @@ import { useAuth } from '../AuthContext';
  * whose account it came from (discourages leaking questions, traces leaks). Used on the
  * mock test screens, online and offline.
  */
-export default function ExamWatermark({ hideForStaff = false }: { hideForStaff?: boolean }) {
+export default function ExamWatermark() {
   const { currentUser } = useAuth();
-  if (hideForStaff && currentUser && currentUser.role && currentUser.role !== 'STUDENT') return null;
   const code = (currentUser as any)?.candidateCode;
   const mark = currentUser ? `${currentUser.name}${code ? ` · ${code}` : ''}` : 'Mock Test Hub';
   return (

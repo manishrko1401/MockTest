@@ -90,7 +90,8 @@ export default function UpdatesCenterPage() {
   const firstLiveNoticeId: string | null = isMounted ? (listFor('notice')[0]?.id ?? null) : null;
 
   // Single notification row
-  const renderTileCard = (notice: any) => (
+  // clamp: overview cards keep titles to two lines so the four sections line up
+  const renderTileCard = (notice: any, clamp = false) => (
     <button
       type="button"
       key={notice.id}
@@ -99,7 +100,7 @@ export default function UpdatesCenterPage() {
       className="group w-full text-left px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer flex flex-col gap-1"
       suppressHydrationWarning
     >
-      <span className="text-sm text-slate-800 dark:text-slate-200 leading-snug group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 group-hover:underline underline-offset-2">
+      <span title={clamp ? notice.title : undefined} className={`text-sm text-slate-800 dark:text-slate-200 leading-snug ${clamp ? 'line-clamp-2' : ''} group-hover:text-[#1e4e79] dark:group-hover:text-blue-300 group-hover:underline underline-offset-2`}>
         {notice.title}
       </span>
       <span className="flex items-center gap-x-2 gap-y-1 flex-wrap text-xs text-slate-500 dark:text-slate-400">
@@ -161,6 +162,9 @@ export default function UpdatesCenterPage() {
         crumbs={activeMeta
           ? [{ label: isHindi ? 'होम' : 'Home', href: '/' }, { label: isHindi ? 'सूचनाएं' : 'Notices', href: '/updates' }, { label: activeMeta.short }]
           : [{ label: isHindi ? 'होम' : 'Home', href: '/' }, { label: isHindi ? 'सूचनाएं' : 'Notices' }]}
+        back={activeMeta
+          ? { onClick: clearCategorySection, label: isHindi ? 'सभी अनुभाग' : 'All sections' }
+          : { href: '/', label: isHindi ? 'होम पर वापस जाएं' : 'Back to Home' }}
         title={activeMeta ? activeMeta.title : (isHindi ? 'सूचनाएं एवं अपडेट' : 'Notices & Updates')}
         subtitle={activeMeta
           ? activeMeta.desc
@@ -215,7 +219,6 @@ export default function UpdatesCenterPage() {
                   suppressHydrationWarning
                 >
                   {categoryMeta[cat].short}
-                  {isMounted && <span className="ml-1.5 text-xs text-slate-400">{listFor(cat).length}</span>}
                 </button>
               ))}
             </div>
@@ -230,31 +233,31 @@ export default function UpdatesCenterPage() {
             return (
               <SectionCard
                 title={<span className="flex items-center gap-2">{React.createElement(activeMeta.icon, { className: 'h-4 w-4 text-[#1e4e79] dark:text-blue-400' })}{activeMeta.short}</span>}
-                description={isMounted ? (isHindi ? `${items.length} सूचनाएं` : `${items.length} ${items.length === 1 ? 'entry' : 'entries'}`) : undefined}
                 bodyClass="divide-y divide-slate-100 dark:divide-slate-800"
               >
-                {items.length > 0 ? items.map(renderTileCard) : emptyState}
+                {items.length > 0 ? items.map(n => renderTileCard(n)) : emptyState}
               </SectionCard>
             );
           })()
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
             {ORDER.map(cat => {
               const meta = categoryMeta[cat];
               const items = listFor(cat);
               return (
                 <SectionCard
                   key={cat}
+                  className="h-full flex flex-col"
                   title={<span className="flex items-center gap-2">{React.createElement(meta.icon, { className: 'h-4 w-4 text-[#1e4e79] dark:text-blue-400' })}{meta.short}</span>}
-                  bodyClass="divide-y divide-slate-100 dark:divide-slate-800"
+                  bodyClass="flex-1 divide-y divide-slate-100 dark:divide-slate-800"
                   footer={
                     <button type="button" onClick={() => openCategorySection(cat)} className={`${linkCls} text-sm font-medium inline-flex items-center gap-1 cursor-pointer`} suppressHydrationWarning>
-                      {isHindi ? 'सभी देखें' : 'View all'}{isMounted && items.length > 0 ? ` (${items.length})` : ''}
+                      {isHindi ? 'सभी देखें' : 'View all'}
                       <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   }
                 >
-                  {items.length > 0 ? items.slice(0, PREVIEW_LIMIT).map(renderTileCard) : emptyState}
+                  {items.length > 0 ? items.slice(0, PREVIEW_LIMIT).map(n => renderTileCard(n, true)) : emptyState}
                 </SectionCard>
               );
             })}

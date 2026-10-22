@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Linking, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Google from 'expo-auth-session/providers/google';
+import { GoogleSignin, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import { Camera, FileText, FolderUp, ImageIcon, Lock, LogOut, Plus, ShieldCheck, X } from 'lucide-react-native';
-import { request, friendlyError } from '../api';
+import { ApiError, request, friendlyError } from '../api';
 import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
@@ -32,6 +32,8 @@ const TYPES = [
 ] as const;
 
 let unlockedUntil = 0; // stays unlocked for a few minutes after the PIN
+// The server's unlock token (sent with the document list); it is only kept in memory
+let unlockToken: string | null = null;
 
 export default function LockerScreen() {
   const t = useTheme();
@@ -54,36 +56,42 @@ export default function LockerScreen() {
   const [upload, setUpload] = useState<{ uri: string; name: string; mime: string; size: number } | null>(null);
 
   const extra = (Constants.expoConfig?.extra || {}) as any;
-  const [, googleRes, promptGoogle] = Google.useAuthRequest({
-    androidClientId: extra.googleAndroidClientId, webClientId: extra.googleWebClientId,
-    scopes: ['openid', 'email', 'profile', GOOGLE_DRIVE_SCOPE],
-  });
 
   const loadDocs = useCallback(async () => {
-    try { const r = await request('locker-get-docs', { userId: user.id }); setDocs(r.documents || []); setError(''); }
+    try {
+      const r = await request('locker-get-docs', { userId: user.id, unlockToken });
+      // the server only sends the documents after the PIN; a stale unlock asks for it again
+      if (r.locked) { unlockedUntil = 0; unlockToken = null; setUnlocked(false); return; }
+      setDocs(r.documents || []); setError('');
+    }
     catch (e) { setError(friendlyError(e)); }
   }, [user.id]);
 
   useEffect(() => { getSavedGoogleDriveSession().then(setDrive); }, []);
   useEffect(() => { if (unlocked) loadDocs(); }, [unlocked, loadDocs]);
 
-  // Google Drive connected
-  useEffect(() => {
-    if (googleRes?.type !== 'success') return;
-    const token = googleRes.authentication?.accessToken;
-    if (!token) return;
-    (async () => {
-      setBusy('drive');
-      try {
-        const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json());
-        const folderId = await getOrCreateLockerRootFolder(token);
-        await saveGoogleDriveSession(token, info.email);
-        await request('locker-update-drive-status', { userId: user.id, isConnected: true, googleDriveEmail: info.email, googleDriveFolderId: folderId });
-        setDrive({ accessToken: token, email: info.email });
-        refreshUser();
-      } catch (e) { setError(friendlyError(e)); } finally { setBusy(''); }
-    })();
-  }, [googleRes]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Connect Google Drive: the phone's Google account chooser (Google Play services) with Drive access
+  const connectDrive = async () => {
+    setBusy('drive'); setError('');
+    try {
+      GoogleSignin.configure({ webClientId: extra.googleWebClientId, scopes: ['email', 'profile', GOOGLE_DRIVE_SCOPE] });
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      try { await GoogleSignin.signOut(); } catch { /* not signed in: fine */ } // choose the account each time
+      const res = await GoogleSignin.signIn();
+      if (!isSuccessResponse(res)) return;
+      const { accessToken: token } = await GoogleSignin.getTokens();
+      const email = res.data.user.email;
+      const folderId = await getOrCreateLockerRootFolder(token);
+      await saveGoogleDriveSession(token, email);
+      await request('locker-update-drive-status', { userId: user.id, isConnected: true, googleDriveEmail: email, googleDriveFolderId: folderId });
+      setDrive({ accessToken: token, email });
+      refreshUser();
+    } catch (e: any) {
+      const fromGoogle = isErrorWithCode(e) && !(e instanceof ApiError);
+      if (fromGoogle && (e.code === statusCodes.SIGN_IN_CANCELLED || e.code === statusCodes.IN_PROGRESS)) return;
+      setError(fromGoogle ? L(`Could not connect Google Drive (${e.code}).`, `Google Drive नहीं जुड़ सका (${e.code})।`) : friendlyError(e));
+    } finally { setBusy(''); }
+  };
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key); setError('');
@@ -107,15 +115,23 @@ export default function LockerScreen() {
           {error ? <ErrorBox message={error} /> : null}
           <View style={{ marginTop: 14 }}>
             {reset === 'sent' ? <Field label={L('Code from email', 'ईमेल वाला कोड')} value={otp} onChangeText={setOtp} keyboardType="number-pad" maxLength={6} /> : null}
-            <Field label={!hasPin || reset === 'sent' ? L('New PIN (4–6 digits)', 'नया PIN (4–6 अंक)') : 'PIN'} value={pin} onChangeText={setPin} keyboardType="number-pad" secureTextEntry maxLength={6} />
-            {!hasPin || reset === 'sent' ? <Field label={L('Confirm PIN', 'PIN दोबारा')} value={pin2} onChangeText={setPin2} keyboardType="number-pad" secureTextEntry maxLength={6} /> : null}
+            <Field label={!hasPin || reset === 'sent' ? L('New PIN (4 digits)', 'नया PIN (4 अंक)') : L('PIN (4 digits)', 'PIN (4 अंक)')} value={pin} onChangeText={v => setPin(v.replace(/\D/g, ''))} keyboardType="number-pad" secureTextEntry maxLength={4} />
+            {!hasPin || reset === 'sent' ? <Field label={L('Confirm PIN', 'PIN दोबारा')} value={pin2} onChangeText={v => setPin2(v.replace(/\D/g, ''))} keyboardType="number-pad" secureTextEntry maxLength={4} /> : null}
             <Button title={!hasPin ? L('Set PIN', 'PIN बनाएं') : reset === 'sent' ? L('Reset PIN', 'PIN रीसेट करें') : L('Unlock', 'खोलें')} loading={busy === 'pin'}
-              disabled={pin.length < 4}
+              disabled={pin.length !== 4}
               onPress={() => run('pin', async () => {
                 if ((!hasPin || reset === 'sent') && pin !== pin2) throw new Error(L("PINs don't match.", 'PIN मेल नहीं खाते।'));
-                if (!hasPin) { await request('locker-set-pin', { userId: user.id, pin }); await refreshUser(); unlock(); return; }
-                if (reset === 'sent') { await request('locker-verify-otp-and-reset-pin', { userId: user.id, otp, newPin: pin }); setReset('off'); unlock(); return; }
-                await request('locker-verify-pin', { userId: user.id, pin }); unlock();
+                if (!/^\d{4}$/.test(pin)) throw new Error(L('The PIN has 4 digits.', 'PIN में 4 अंक होते हैं।'));
+                if (!hasPin) { const r = await request('locker-set-pin', { userId: user.id, pin }); unlockToken = r.unlockToken || null; await refreshUser(); unlock(); return; }
+                if (reset === 'sent') { const r = await request('locker-verify-otp-and-reset-pin', { userId: user.id, otp, newPin: pin }); unlockToken = r.unlockToken || null; setReset('off'); unlock(); return; }
+                const r = await request('locker-verify-pin', { userId: user.id, pin });
+                if (!r.isCorrect) {
+                  setPin('');
+                  throw new Error(r.locked
+                    ? L('Too many wrong PINs. The locker is locked for 15 minutes, or use "Forgot PIN?".', 'बहुत अधिक गलत PIN। लॉकर 15 मिनट के लिए बंद है, या "PIN भूल गए?" का उपयोग करें।')
+                    : L(`Wrong PIN. ${r.attemptsLeft ?? ''} tries left.`, `गलत PIN। ${r.attemptsLeft ?? ''} प्रयास बाकी।`));
+                }
+                unlockToken = r.unlockToken || null; unlock();
               })} />
             {hasPin && reset === 'off' ? (
               <Pressable onPress={() => run('otp', async () => { await request('locker-send-reset-otp', { userId: user.id }); setReset('sent'); })} style={{ alignSelf: 'center', marginTop: 14 }}>
@@ -156,7 +172,7 @@ export default function LockerScreen() {
             <ShieldCheck size={34} color={t.primary} />
             <Text style={{ color: t.text, fontSize: 17, fontWeight: '800', marginTop: 8, textAlign: 'center' }}>{L('Connect Google Drive', 'Google Drive जोड़ें')}</Text>
             <Text style={{ color: t.textSoft, textAlign: 'center', marginTop: 4 }}>{L('Documents are saved in a "MockTest Hub Locker" folder in your own Drive. The app can only see files it saved.', 'दस्तावेज़ आपके अपने Drive के "MockTest Hub Locker" फ़ोल्डर में सेव होते हैं। ऐप केवल अपनी सेव की गई फ़ाइलें देख सकता है।')}</Text>
-            <Button style={{ marginTop: 14, alignSelf: 'stretch' }} title={L('Connect Google Drive', 'Google Drive जोड़ें')} loading={busy === 'drive'} onPress={() => promptGoogle()} />
+            <Button style={{ marginTop: 14, alignSelf: 'stretch' }} title={L('Connect Google Drive', 'Google Drive जोड़ें')} loading={busy === 'drive'} onPress={connectDrive} />
           </Card>
         </View>
       ) : (
@@ -182,7 +198,7 @@ export default function LockerScreen() {
               renderItem={({ item: d }) => (
                 <Pressable onLongPress={() => confirm(L('Delete document?', 'दस्तावेज़ हटाएं?'), d.title, L('Delete', 'हटाएं'), async () => {
                   if (drive.accessToken && d.driveFileId) await deleteFileFromGoogleDrive(drive.accessToken, d.driveFileId).catch(() => false);
-                  await request('locker-delete-doc', { docId: d.id, userId: user.id }).catch(() => {});
+                  await request('locker-delete-doc', { docId: d.id, userId: user.id, unlockToken }).catch(() => {});
                   loadDocs();
                 })}>
                   <ListRow

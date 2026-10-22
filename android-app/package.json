@@ -1,11 +1,12 @@
 {
   "name": "mocktesthub-android",
-  "version": "2.0.0",
+  "version": "2.1.3",
   "main": "index.ts",
   "private": true,
   "scripts": {
     "start": "expo start",
     "sync-shared": "node scripts/sync-shared.mjs",
+    "publish:apk": "node scripts/publish-apk.mjs",
     "prebuild": "expo prebuild -p android",
     "typecheck": "tsc --noEmit"
   },
@@ -16,6 +17,7 @@
     "@noble/hashes": "1.8.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
+    "@react-native-google-signin/google-signin": "16.1.5",
     "expo": "56.0.15",
     "expo-auth-session": "56.0.17",
     "expo-constants": "56.0.20",

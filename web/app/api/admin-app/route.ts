@@ -3,9 +3,11 @@ import { prisma } from '../../lib/prisma';
 import {
   getRequester, verifyPassword, createWebSession, revokeWebSession, revokeAllWebSessions, STAFF_ROLES, Requester,
 } from '../../lib/serverAuth';
-import { checkRateLimit } from '../../lib/botProtection';
+import { getClientIp } from '../../lib/botProtection';
+import { hitLimit } from '../../lib/dbRateLimit';
 import { registerDevice, unregisterDevice, sendTestAlert, pushConfigured, ALERT_TYPES } from '../../lib/adminPush';
 import { getTypingCategories, saveTypingCategory } from '../../lib/typingStore';
+import { platformLabel } from '../../lib/platformLabels';
 
 // -----------------------------------------------------------------------------
 // API for the Mock Test Hub Admin app (Android, admin-app/). Staff only. The app signs in
@@ -125,9 +127,11 @@ async function login(request: Request, data: any) {
   const email = str(data.email, 200).toLowerCase();
   const password = typeof data.password === 'string' ? data.password : '';
   if (!email || !password) return fail('Enter your email and password.');
-  const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
-  const byIp = checkRateLimit(`admin-app-login-ip:${ip}`, 20, 15 * 60 * 1000);
-  const byEmail = checkRateLimit(`admin-app-login:${email}`, 8, 15 * 60 * 1000);
+  const ip = getClientIp(request);
+  const [byIp, byEmail] = await Promise.all([
+    hitLimit(`admin-app-login-ip:${ip}`, 20, 15 * 60 * 1000),
+    hitLimit(`admin-app-login:${email}`, 8, 15 * 60 * 1000),
+  ]);
   if (!byIp.allowed || !byEmail.allowed) return fail('Too many attempts. Try again in a few minutes.', 429);
 
   const user = await prisma.user.findUnique({
@@ -229,7 +233,10 @@ async function dashboard() {
   const platforms = await prisma.$queryRaw<any[]>`
     SELECT COALESCE("lastPlatform", 'web') AS platform, COUNT(*)::int AS users
     FROM users WHERE "lastSeen" >= NOW() - INTERVAL '7 days' GROUP BY 1 ORDER BY 2 DESC`;
-  return ok({ totals, days, topTests, platforms });
+  // Old and new names merged (web / mobile_web / app are the names used before the Platforms page)
+  const byLabel = new Map<string, number>();
+  for (const p of platforms) byLabel.set(platformLabel(p.platform), (byLabel.get(platformLabel(p.platform)) || 0) + p.users);
+  return ok({ totals, days, topTests, platforms: [...byLabel].map(([platform, users]) => ({ platform, users })).sort((a, b) => b.users - a.users) });
 }
 
 // ---- Support chat ---------------------------------------------------------------------
@@ -435,7 +442,7 @@ async function userDetail(data: any) {
     user: {
       id: u.id, name: u.fullName, email: u.email, mobile: u.mobile, candidateCode: u.candidateCode, role: u.role, tier: u.subscriptionTier,
       tierPurchasedAt: u.subscriptionPurchasedAt, tierExpiresAt: u.subscriptionExpiresAt, isBlocked: u.isBlocked, joined: iso(u.createdAt),
-      lastSeen: iso(u.lastSeen), platform: u.lastPlatform, coins: u.coins, referralCode: u.referralCode, referrals: u.referralsCount,
+      lastSeen: iso(u.lastSeen), platform: u.lastPlatform ? platformLabel(u.lastPlatform) : null, coins: u.coins, referralCode: u.referralCode, referrals: u.referralsCount,
       lockerConnected: u.isLockerConnected, supportMessages: messages,
     },
     stats: stats[0],

@@ -543,12 +543,13 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       clearLocalProgress(testId, currentUser.id);
       const progressFlushed = progressSyncRef.current ? progressSyncRef.current.stopAndFlush() : Promise.resolve();
 
-      const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> = {};
+      const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number }> = {};
       let totalElapsedSeconds = 0;
       Object.keys(state.responses).forEach(qId => {
         savedResponses[qId] = {
           selectedOptionIndex: state.responses[qId].selectedOptionIndex,
-          elapsedSeconds: state.responses[qId].elapsedSeconds
+          elapsedSeconds: state.responses[qId].elapsedSeconds,
+          ...(state.responses[qId].answeredAt ? { answeredAt: state.responses[qId].answeredAt } : {}),
         };
         totalElapsedSeconds += state.responses[qId].elapsedSeconds || 0;
       });
@@ -868,7 +869,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
               {session.sections.map((sec, idx) => {
                 const isActive = idx === currentSectionIndex;
                 const isLocked = (session.hasSectionalTiming || session.lockSectionOnSubmit) && !isActive;
-                let partLabel = `PART-${String.fromCharCode(65 + idx)}`; // PART-A, PART-B, etc.
+                const partLabel = `PART-${String.fromCharCode(65 + idx)}`; // PART-A, PART-B, etc.
                 return (
                   <button
                     key={sec.id}
@@ -3223,8 +3224,8 @@ export default function DynamicExamPage() {
   return (
     <ExamAccessGate testId={testId} isCbat={isCbatTest(testId, examCatalog)}>
       <ExamPage />
-      {/* Same watermark as the offline test screen (not shown to staff) */}
-      <ExamWatermark hideForStaff />
+      {/* Same watermark as the offline test screen in the desktop app */}
+      <ExamWatermark />
     </ExamAccessGate>
   );
 }

@@ -10,9 +10,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Trophy, Moon, Sun, Menu, X, ChevronDown, ChevronRight, LayoutDashboard, LogOut, User, Eye, EyeOff, Compass, Power, HardDriveDownload } from 'lucide-react';
+import { Trophy, Moon, Sun, Menu, X, ChevronDown, ChevronRight, ArrowLeft, LayoutDashboard, LogOut, User, Eye, EyeOff, Compass, Power, HardDriveDownload } from 'lucide-react';
 import { useIsDesktopApp, exitDesktopApp } from '../lib/desktopApp';
-import { WindowsAppDropdownItem, WindowsAppFooterLink } from './WindowsAppDownload';
+import { AppDownloadDropdownItem, AppDownloadFooterLink } from './AppDownload';
 import { requestTourStart } from './WelcomeTour';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
@@ -33,6 +33,7 @@ const NAV = [
   { href: '/updates', en: 'Notices', hi: 'सूचनाएं' },
   { href: '/locker', en: 'Document Locker', hi: 'दस्तावेज़ लॉकर' },
   { href: '/planner', en: 'Study Planner', hi: 'स्टडी प्लानर' },
+  { href: '/friends', en: 'With Friends', hi: 'दोस्तों के साथ' },
 ];
 
 const TOUR_ANCHORS: Record<string, string> = {
@@ -40,6 +41,8 @@ const TOUR_ANCHORS: Record<string, string> = {
   '/typing-test': 'nav-typing',
   '/updates': 'nav-notices',
   '/locker': 'nav-locker',
+  '/planner': 'nav-planner',
+  '/friends': 'nav-friends',
 };
 
 export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
@@ -64,6 +67,24 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
   }, [menuOpen]);
 
   const user = mounted ? currentUser : null;
+
+  // Friend requests + unread friend messages, shown on "With Friends"
+  const [friendsBadge, setFriendsBadge] = useState(0);
+  useEffect(() => {
+    if (!user?.id) { setFriendsBadge(0); return; }
+    let stop = false;
+    const check = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch('/api/db', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'friends-badge', data: {} }) })
+        .then(r => r.json()).then(j => { if (!stop && j?.success) setFriendsBadge((j.requests || 0) + (j.unread || 0)); }).catch(() => {});
+    };
+    check();
+    const t = setInterval(check, 90 * 1000);
+    return () => { stop = true; clearInterval(t); };
+  }, [user?.id, pathname]);
+  const navBadge = (href: string) => href === '/friends' && friendsBadge > 0
+    ? <span className="ml-1.5 inline-flex h-4.5 min-w-4.5 px-1 rounded-full bg-[#b02a37] text-white text-[10px] font-semibold items-center justify-center align-middle">{friendsBadge > 99 ? '99+' : friendsBadge}</span>
+    : null;
   const isStaff = !!user && ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'].includes(user.role);
   const initials = (user?.name || '').split(' ').filter(Boolean).map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/') || (href === '/typing-test' && pathname.startsWith('/typing-test'));
@@ -107,7 +128,7 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
                     : 'text-slate-600 dark:text-slate-400 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white'
                 }`}
               >
-                {hi ? item.hi : item.en}
+                {hi ? item.hi : item.en}{navBadge(item.href)}
               </Link>
             ))}
           </nav>
@@ -167,7 +188,7 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
                       <HardDriveDownload className="h-4 w-4 text-slate-400" />{hi ? 'ऑफ़लाइन टेस्ट' : 'Offline tests'}
                     </Link>
                   )}
-                  {!inDesktopApp && <WindowsAppDropdownItem hi={hi} onDone={() => setMenuOpen(false)} />}
+                  <AppDownloadDropdownItem hi={hi} onDone={() => setMenuOpen(false)} />
                   <button type="button" role="menuitem" onClick={startTour} className="w-[calc(100%-0.5rem)] flex items-center gap-2 mx-1 px-2 py-2 rounded-md text-left text-slate-700 dark:text-slate-200 transition-colors hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer">
                     <Compass className="h-4 w-4 text-slate-400" />{hi ? 'टूर देखें' : 'Take the tour'}
                   </button>
@@ -190,11 +211,12 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
             type="button"
             onClick={() => setMobileOpen(v => !v)}
             data-tour="mobile-menu"
-            className={`lg:hidden h-8 w-8 flex items-center justify-center rounded-md border transition-colors cursor-pointer ${mobileOpen ? 'bg-[#eef3f8] border-[#1e4e79]/40 text-[#1e4e79] dark:bg-slate-800 dark:border-slate-600 dark:text-white' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white hover:border-[#1e4e79]/40'}`}
+            className={`relative lg:hidden h-8 w-8 flex items-center justify-center rounded-md border transition-colors cursor-pointer ${mobileOpen ? 'bg-[#eef3f8] border-[#1e4e79]/40 text-[#1e4e79] dark:bg-slate-800 dark:border-slate-600 dark:text-white' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white hover:border-[#1e4e79]/40'}`}
             aria-label="Menu"
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {friendsBadge > 0 && !mobileOpen && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#b02a37] border-2 border-white dark:border-slate-900" />}
           </button>
         </div>
       </div>
@@ -204,7 +226,7 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
           <nav className={`${fluid ? 'px-4 sm:px-6' : container} py-2 flex flex-col text-sm`}>
             {NAV.map(item => (
               <Link key={item.href} href={item.href} className={`px-3 py-2.5 rounded-md transition-colors ${isActive(item.href) ? 'text-[#1e4e79] dark:text-blue-300 font-medium bg-[#e3ecf5] dark:bg-blue-400/15' : 'text-slate-700 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white'}`}>
-                {hi ? item.hi : item.en}
+                {hi ? item.hi : item.en}{navBadge(item.href)}
               </Link>
             ))}
             {user && (
@@ -242,11 +264,24 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
 }
 
 // ───── Page title band (breadcrumb + title + optional actions) ─────
+// ───── Back arrow (square icon button next to a page heading) ─────
+export type BackTarget = { label: string; href?: string; onClick?: () => void };
+export function BackButton({ label, href, onClick, className = '' }: BackTarget & { className?: string }) {
+  const cls = `h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 hover:text-[#1e4e79] dark:hover:bg-slate-800 cursor-pointer ${className}`;
+  if (href && !onClick) {
+    return <Link href={href} aria-label={label} title={label} className={cls}><ArrowLeft className="h-4 w-4" /></Link>;
+  }
+  return <button type="button" onClick={onClick} aria-label={label} title={label} className={cls}><ArrowLeft className="h-4 w-4" /></button>;
+}
+
 export function PageTitle({
-  crumbs, title, subtitle, actions, children,
+  crumbs, title, subtitle, actions, back, children,
 }: {
   crumbs?: Array<{ label: string; href?: string }>;
-  title: React.ReactNode; subtitle?: React.ReactNode; actions?: React.ReactNode; children?: React.ReactNode;
+  title: React.ReactNode; subtitle?: React.ReactNode; actions?: React.ReactNode;
+  /** shows a back arrow left of the heading */
+  back?: BackTarget;
+  children?: React.ReactNode;
 }) {
   return (
     <div className="bg-transparent">
@@ -262,9 +297,12 @@ export function PageTitle({
           </nav>
         )}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">{title}</h1>
-            {subtitle && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-3xl">{subtitle}</p>}
+          <div className="min-w-0 flex items-start gap-3">
+            {back && <BackButton {...back} />}
+            <div className="min-w-0">
+              <h1 className={`text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white ${back ? 'leading-9' : ''}`}>{title}</h1>
+              {subtitle && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-3xl">{subtitle}</p>}
+            </div>
           </div>
           {actions && <div className="shrink-0 flex items-center gap-2">{actions}</div>}
         </div>
@@ -363,7 +401,7 @@ export function SiteFooter() {
           <Link href="/contact" className="hover:text-slate-800 dark:hover:text-slate-200">{hi ? 'संपर्क करें' : 'Contact'}</Link>
           <Link href="/terms" className="hover:text-slate-800 dark:hover:text-slate-200">{hi ? 'नियम और शर्तें' : 'Terms'}</Link>
           <Link href="/privacy" className="hover:text-slate-800 dark:hover:text-slate-200">{hi ? 'गोपनीयता नीति' : 'Privacy'}</Link>
-          <WindowsAppFooterLink hi={hi} />
+          <AppDownloadFooterLink hi={hi} />
         </div>
       </div>
     </footer>

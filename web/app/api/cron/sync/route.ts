@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { requireCronOrAdmin } from '../../../lib/serverAuth';
+import { invalidateShared, NOTICES_TAG } from '../../../lib/sharedCache';
 import { uploadNoticeHtmlToTigris } from '../../../lib/tigrisNoticeStorage';
 import { extractDirectLink, extractLastDate, extractNoticeContent } from '../../../lib/noticeExtractor';
 import crypto from 'crypto';
@@ -388,6 +389,7 @@ export async function GET(request: Request) {
     }
 
     if (newNoticesCount > 0 || updatedNoticesCount > 0) {
+      invalidateShared(NOTICES_TAG);
       if ((global as any).catalogCache) {
         (global as any).catalogCache.noticesList = null;
         (global as any).catalogCache.noticesLastFetched = null;

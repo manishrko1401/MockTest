@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { clearLocalProgress } from './lib/examProgress';
-import { isDesktopApp } from './lib/desktopApp';
+import { isDesktopApp, desktopAppVersion } from './lib/desktopApp';
 import { bookmarkChanged, bookmarkNotSaved, ACCOUNT_BOOKMARKS } from './lib/offlineBookmarks';
 
 export interface MockTestItem {
@@ -73,7 +73,7 @@ export interface MockTestRecord {
   createdAt?: string;
   positiveMarks?: number | null;
   negativeMarks?: number | null;
-  responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>;
+  responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>;
   timeRemaining?: number;
   currentSectionIndex?: number;
   currentQuestionIndex?: number;
@@ -111,6 +111,8 @@ export interface MockUser {
   lockerTourCompletedAt?: string | null;
   /** Account/profile page tour: null = not finished yet; undefined = unknown */
   profileTourCompletedAt?: string | null;
+  plannerTourCompletedAt?: string | null;
+  friendsTourCompletedAt?: string | null;
   currentSessionId?: string;
   candidateCode: string;
   name: string;
@@ -181,12 +183,12 @@ interface AuthContextType {
   toggleTheme: () => void;
   login: (email: string, password?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   signup: (name: string, email: string, mobile: string, password?: string, referralCodeInput?: string, honeypot?: string, turnstileToken?: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: (email: string, name: string, profilePhoto?: string, accessToken?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
+  loginWithGoogle: (email: string, name: string, profilePhoto?: string, accessToken?: string, referralCodeInput?: string) => Promise<{ success: boolean; user?: MockUser; error?: string }>;
   logout: () => void;
   updateProfile: (name: string, email: string, mobile: string) => void;
   updatePassword: (oldPass: string, newPass: string) => Promise<{ success: boolean; error?: string }>;
   updateTrackedJobs: (trackedJobs: TrackedJob[]) => void;
-  completeTour: (tour?: 'welcome' | 'notices' | 'tests' | 'typing' | 'locker' | 'profile') => void;
+  completeTour: (tour?: 'welcome' | 'notices' | 'tests' | 'typing' | 'locker' | 'profile' | 'planner' | 'friends') => void;
   reportedQuestionsList: ReportedQuestion[];
   reportQuestion: (
     questionId: string,
@@ -206,7 +208,7 @@ interface AuthContextType {
     accuracy: number,
     durationSeconds: number,
     violations: number,
-    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>,
+    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>,
     extra?: { lang1?: string; lang2?: string }
   ) => void;
   /** Resolves when the last submitted attempt has been saved and scored by the server (max 10s). */
@@ -800,8 +802,18 @@ const DEFAULT_NOTICES: Notice[] = [
 ];
 
 const CACHE_KEY_CATALOG = 'mth_catalog_v2';
+
+/** The server sends an exam's tests only inside its series; the pages also read them as `sub.tests`. */
+function expandCatalog(catalog: TestCategory[] | null | undefined): TestCategory[] {
+  return (catalog || []).map((cat: any) => ({
+    ...cat,
+    subCategories: (cat.subCategories || []).map((sub: any) =>
+      Array.isArray(sub.tests) ? sub : { ...sub, tests: (sub.subSubCategories || []).flatMap((ss: any) => ss.tests || []) }),
+  }));
+}
 const CACHE_KEY_NOTICES = 'mth_notices_v2';
 const CACHE_KEY_USER = 'mth_user_v1';
+const STAFF_ROLE_NAMES: string[] = ['ADMIN', 'TEST_CREATOR', 'SUPPORT_TEAM', 'NOTICES_MANAGER'];
 const CACHE_KEY_ETAG = 'mth_catalog_etag';
 
 // PERF: Per-type TTLs — catalog rarely changes (admin-driven), notices change daily,
@@ -842,7 +854,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     if (typeof window === 'undefined') return;
     if (user) {
       try {
-        localStorage.setItem(CACHE_KEY_USER, JSON.stringify(user));
+        // the old-app session id is a login secret: never kept in the browser
+        const { currentSessionId: _appSession, ...cacheable } = user;
+        void _appSession;
+        localStorage.setItem(CACHE_KEY_USER, JSON.stringify(cacheable));
         const simplifiedUser = {
           id: user.id,
           candidateCode: user.candidateCode,
@@ -871,13 +886,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         const raw = localStorage.getItem(CACHE_KEY_USER);
         if (raw) {
           const parsed = JSON.parse(raw) as MockUser;
-          if (parsed && parsed.id) return parsed;
+          if (parsed && parsed.id) return { ...parsed, testSessions: Array.isArray(parsed.testSessions) ? parsed.testSessions : [] };
         }
       } catch {}
     }
     if (initialUserProfile) {
+      // The cookie profile is only name/email/role; the full account (test history etc.)
+      // arrives from the server a moment later, so start with an empty history
       try {
-        return JSON.parse(decodeURIComponent(initialUserProfile)) as MockUser;
+        const profile = JSON.parse(decodeURIComponent(initialUserProfile)) as MockUser;
+        return { ...profile, testSessions: Array.isArray(profile.testSessions) ? profile.testSessions : [] };
       } catch (e) {}
     }
     return null;
@@ -891,7 +909,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   const [language, setLanguageState] = useState<'en' | 'hi'>('en');
   const [examCatalog, setExamCatalog] = useState<TestCategory[]>(() => {
     if (typeof window === 'undefined') return [];
-    return readCache<TestCategory[]>(CACHE_KEY_CATALOG, CATALOG_CACHE_TTL_MS) || [];
+    return expandCatalog(readCache<TestCategory[]>(CACHE_KEY_CATALOG, CATALOG_CACHE_TTL_MS));
   });
   const [reportedQuestionsList, setReportedQuestionsList] = useState<ReportedQuestion[]>([]);
 
@@ -974,7 +992,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       // PERF: 304 = catalog/notices haven't changed — use cached data, save 100% egress
       if (bootstrapRaw.status === 304 && hasUsableCache) {
         setNoticesList(prev => (prev.length ? prev : sortNotices(cachedNotices!)));
-        setExamCatalog(prev => (prev.length ? prev : cachedCatalog!));
+        setExamCatalog(prev => (prev.length ? prev : expandCatalog(cachedCatalog)));
       } else {
         if (bootstrapRaw.status === 304) {
           // Defensive: never accept a 304 without a usable local copy
@@ -990,7 +1008,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           const freshNotices = sortNotices(data.noticesList || []);
           const freshCatalog = data.examCatalog || [];
           setNoticesList(freshNotices);
-          setExamCatalog(freshCatalog);
+          setExamCatalog(expandCatalog(freshCatalog));
           // 💾 Persist to localStorage so the NEXT page load is instant. The ETag is kept
           // only when both copies were actually saved, so a later 304 is always backed by data.
           const savedNotices = writeCache(CACHE_KEY_NOTICES, freshNotices);
@@ -1065,7 +1083,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
       });
       const data = await res.json();
       if (data.success && data.examCatalog) {
-        setExamCatalog(data.examCatalog);
+        setExamCatalog(expandCatalog(data.examCatalog));
       }
     } catch (err) {
       console.error('Refresh catalog error:', err);
@@ -1075,7 +1093,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   const fetchAdminData = async (adminId?: string) => {
     const uid = adminId || currentUser?.id;
     if (!uid) return;
-    if (currentUser && currentUser.role === 'STUDENT') return;
+    // staff only (the role may be missing while the saved profile is still loading)
+    if (!currentUser || !STAFF_ROLE_NAMES.includes(currentUser.role)) return;
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
@@ -1104,6 +1123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     // Re-fetch fresh user sessions from DB when user returns to the tab.
     // This ensures test attempts from other platforms (mobile app) immediately
     // appear on the website without requiring a full page reload.
+    let lastFocusRefreshAt = Date.now(); // the page load itself just fetched the account
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // 🛡️ Do NOT trigger background session reload while student is taking an active exam or on any typing test page
@@ -1122,7 +1142,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
           return null;
         };
         const uid = getCookieInner('tb_user_id');
-        if (uid) refreshUserSessions(uid);
+        // EGRESS-OPT: switching tabs fires both "visibilitychange" and "focus", and students
+        // switch often; refresh the account at most once a minute
+        const now = Date.now();
+        if (uid && now - lastFocusRefreshAt >= 60_000) {
+          lastFocusRefreshAt = now;
+          refreshUserSessions(uid);
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -1158,13 +1184,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   }, []);
 
-  // Presence Ping: update lastSeen when user returns to the tab or logs in
-  // This is lazy — fires only on real user interaction (tab switch / login), NOT a timer
+  // Presence Ping: update lastSeen on login, when the user returns to the tab, and every
+  // few minutes while the tab is visible (online / offline in the friend list)
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    const isMobileView = typeof window !== 'undefined' && window.innerWidth <= 768;
-    const platform = isMobileView ? 'mobile_web' : 'web';
+    // The server tells computer from phone by the browser; the Windows app says so itself
+    const inWindowsApp = isDesktopApp();
+    let appVersion: string | null = null;
+    if (inWindowsApp) desktopAppVersion().then(v => { appVersion = v; });
 
     // Immediate ping on login or page mount
     const sendPing = () => {
@@ -1174,7 +1202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'ping',
-          data: { userId: currentUser.id, platform }
+          data: inWindowsApp ? { userId: currentUser.id, platform: 'windows', version: appVersion } : { userId: currentUser.id, platform: 'web' }
         })
       }).catch(() => {}); // Silent fail
     };
@@ -1184,15 +1212,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
 
     // Fire when user returns to the tab (switches back from another app/tab)
     document.addEventListener('visibilitychange', sendPing);
+    // ...and every few minutes while the tab is open, so friends see you as online
+    // (the server writes it at most once per 2 minutes)
+    const heartbeat = setInterval(sendPing, 4 * 60 * 1000);
 
     return () => {
       document.removeEventListener('visibilitychange', sendPing);
+      clearInterval(heartbeat);
     };
   }, [currentUser?.id]);
 
   // Load admin data only if the logged-in user is an administrator/staff
   useEffect(() => {
-    if (currentUser && currentUser.role !== 'STUDENT') {
+    if (currentUser && STAFF_ROLE_NAMES.includes(currentUser.role)) {
       fetchAdminData();
     } else {
       setUsersList([]);
@@ -1936,14 +1968,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   };
 
   // accessToken: the Google token, which the server verifies with Google (the email alone is not trusted)
-  const loginWithGoogle = async (email: string, name: string, profilePhoto?: string, accessToken?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
+  const loginWithGoogle = async (email: string, name: string, profilePhoto?: string, accessToken?: string, referralCodeInput?: string): Promise<{ success: boolean; user?: MockUser; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'google-auth',
-          data: { email, name, profilePhoto, accessToken }
+          data: { email, name, profilePhoto, accessToken, referralCodeInput }
         })
       });
       const data = await res.json();
@@ -2012,9 +2044,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
   };
 
   // Marks the welcome tour as finished (or skipped) for the logged-in user, locally and in the DB
-  const completeTour = (tour: 'welcome' | 'notices' | 'tests' | 'typing' | 'locker' | 'profile' = 'welcome') => {
+  const completeTour = (tour: 'welcome' | 'notices' | 'tests' | 'typing' | 'locker' | 'profile' | 'planner' | 'friends' = 'welcome') => {
     if (!currentUser) return;
-    const field = tour === 'notices' ? 'noticesTourCompletedAt' : tour === 'tests' ? 'testsTourCompletedAt' : tour === 'typing' ? 'typingTourCompletedAt' : tour === 'locker' ? 'lockerTourCompletedAt' : tour === 'profile' ? 'profileTourCompletedAt' : 'tourCompletedAt';
+    const field = tour === 'notices' ? 'noticesTourCompletedAt' : tour === 'tests' ? 'testsTourCompletedAt' : tour === 'typing' ? 'typingTourCompletedAt' : tour === 'locker' ? 'lockerTourCompletedAt' : tour === 'profile' ? 'profileTourCompletedAt'
+      : tour === 'planner' ? 'plannerTourCompletedAt' : tour === 'friends' ? 'friendsTourCompletedAt' : 'tourCompletedAt';
     if (currentUser[field]) return;
     const updatedUser = { ...currentUser, [field]: new Date().toISOString() };
     setCurrentUser(updatedUser);
@@ -2075,7 +2108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     accuracy: number,
     durationSeconds: number,
     violations: number,
-    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; }>,
+    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>,
     extra?: { lang1?: string; lang2?: string }
   ) => {
     if (!currentUser) return;

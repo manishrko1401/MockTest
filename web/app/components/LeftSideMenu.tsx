@@ -11,6 +11,7 @@ import {
   Zap,
   Bell,
   Lock,
+  Smartphone,
   User,
   Crown,
   Gift,
@@ -333,6 +334,28 @@ export default function LeftSideMenu({ isOpen, onClose, onOpenPassClaim }: LeftS
                   </h4>
                   <p className="text-xs text-slate-400 dark:text-slate-500">
                     {isHindi ? 'प्रमाणपत्र व एडमिट कार्ड वॉल्ट' : 'Secure Certificate Vault'}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform shrink-0" />
+            </Link>
+
+            {/* 4.4 DOWNLOAD APP (Windows & Android) */}
+            <Link
+              href="/download"
+              onClick={onClose}
+              className="flex items-center justify-between p-2.5 rounded-md hover:bg-blue-50 dark:hover:bg-slate-800/70 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-md bg-blue-100 dark:bg-blue-950/40 text-[#1e4e79] dark:text-blue-400 transition-transform">
+                  <Smartphone className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-[#1e4e79] dark:group-hover:text-blue-400 transition-colors">
+                    {isHindi ? 'ऐप डाउनलोड करें' : 'Download App'}
+                  </h4>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    {isHindi ? 'विंडोज़ व एंड्रॉइड' : 'Windows & Android'}
                   </p>
                 </div>
               </div>

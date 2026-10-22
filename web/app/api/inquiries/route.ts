@@ -2,14 +2,29 @@ import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
 import { randomUUID } from 'crypto';
 import { requireStaff } from '../../lib/serverAuth';
+import { hitLimit } from '../../lib/dbRateLimit';
+import { getClientIp } from '../../lib/botProtection';
 import { notifyStaff, shorten } from '../../lib/adminPush';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, phone, subject, message, source } = body;
+    // Plain strings only, with sensible lengths
+    const text = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '');
+    const name = text(body?.name, 100);
+    const email = text(body?.email, 254);
+    const phone = text(body?.phone, 20);
+    const subject = text(body?.subject, 60);
+    const message = text(body?.message, 5000);
+    const source = text(body?.source, 20);
 
-    if (!name || !email || !message) {
+    // At most 5 messages per hour from one address (each one notifies staff)
+    const limit = await hitLimit(`inquiry_ip:${getClientIp(req)}`, 5, 60 * 60 * 1000);
+    if (!limit.allowed) {
+      return NextResponse.json({ success: false, error: `Too many messages. Please try again in ${limit.retryAfterMinutes} minutes.` }, { status: 429 });
+    }
+
+    if (!name.trim() || !email.trim() || !message.trim()) {
       return NextResponse.json(
         { success: false, error: 'Name, email, and message are required fields.' },
         { status: 400 }

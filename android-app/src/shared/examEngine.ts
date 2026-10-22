@@ -20,6 +20,14 @@ import { scoreSession } from './examScoring';
  * 5: ANSWERED_AND_MARKED_FOR_REVIEW - Purple background, circle with green check badge (counted for evaluation).
  */
 
+/** The moment the saved answer was chosen: kept when the answer did not change, the last tap otherwise. */
+function answeredAtFor(r: QuestionResponse): number | undefined {
+  const picked = r.tempOptionIndex;
+  if (picked === null || picked === undefined) return undefined;
+  if (picked === r.selectedOptionIndex && r.answeredAt) return r.answeredAt;
+  return r.pickedAt ?? Date.now();
+}
+
 
 // Saved progress of an ongoing test, used to continue it after a refresh, closed tab or power cut
 export interface EngineResumeData {
@@ -123,7 +131,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       let initialViolationsCount = 0;
       let initialSectionIndex = 0;
       let initialQuestionIndex = 0;
-      let initialSubmittedSections: number[] = resumeData?.submittedSectionIndices ? [...resumeData.submittedSectionIndices] : [];
+      const initialSubmittedSections: number[] = resumeData?.submittedSectionIndices ? [...resumeData.submittedSectionIndices] : [];
 
       if (resumeData) {
         initialResponses = { ...resumeData.responses };
@@ -297,6 +305,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
         tempOptionIndex: action.payload.optionIndex,
+        pickedAt: Date.now(),
       };
 
       return {
@@ -325,6 +334,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...currentResp,
         selectedOptionIndex: currentResp.tempOptionIndex ?? null,
         state: hasSelection ? 3 : 2,
+        answeredAt: answeredAtFor(currentResp),
       };
 
       // Navigate forward
@@ -419,6 +429,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...currentResp,
         selectedOptionIndex: currentResp.tempOptionIndex ?? null,
         state: hasSelection ? 5 : 4,
+        answeredAt: answeredAtFor(currentResp),
       };
 
       // Navigate forward

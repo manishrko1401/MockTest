@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth, MockUser } from '../../../AuthContext';
 import { ArrowLeft, User, Mail, Phone, Calendar, Coins, Award, Trash2, ShieldAlert, CheckCircle, Save, Key, UserCheck } from 'lucide-react';
+import { PlatformDetails } from '../../components/PlatformManager';
 
 const formatTime = (secs: number) => {
   const h = Math.floor(secs / 3600);
@@ -97,6 +98,16 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     if (userId) {
       fetchUserDetails();
     }
+  }, [userId]);
+
+  // Website / Windows app / Android app use (admin Platforms page)
+  const [platforms, setPlatforms] = useState<{ uses: any[]; latest: { windows: string; android: string } | null } | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+    fetch('/api/db', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'platform-user', data: { targetUserId: userId } }) })
+      .then(r => r.json())
+      .then(j => setPlatforms(j.success ? { uses: j.platforms || [], latest: j.latestVersion || null } : { uses: [], latest: null }))
+      .catch(() => setPlatforms({ uses: [], latest: null }));
   }, [userId]);
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -522,6 +533,15 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Platforms used */}
+        <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-6 rounded-lg shadow-sm">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Platforms used</h3>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Website, Windows app, Android app</span>
+          </div>
+          {platforms ? <PlatformDetails uses={platforms.uses} latest={platforms.latest} /> : <p className="text-xs text-slate-500">Loading…</p>}
         </div>
 
         {/* Full Width Bottom Panel: Exam Sitting History */}
