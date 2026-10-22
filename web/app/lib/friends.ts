@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
 import { checkRateLimit } from './botProtection';
+import { markNotificationsRead, nameOf, notifyUser } from './userNotify';
 
 // -----------------------------------------------------------------------------
 // Friends: friend requests (accept / reject), the friend list with online / offline, and
@@ -150,6 +151,14 @@ async function friendCount(me: string) {
   return rows[0]?.n || 0;
 }
 
+/** Tells the one who sent the request that it was accepted. */
+function notifyAccepted(me: string, requester: string) {
+  notifyUser(requester, async () => {
+    const name = await nameOf(me, 'A student');
+    return { type: 'friend_accepted', title: 'Friend request accepted', body: `${name} accepted your friend request.`, data: { screen: 'chat', friendId: me, friendName: name } };
+  });
+}
+
 export async function handleFriendAction(action: string, data: any, requester: Requester): Promise<NextResponse> {
   await ensureFriendTables();
   const me = requester.id;
@@ -246,13 +255,20 @@ export async function handleFriendAction(action: string, data: any, requester: R
       // They had already asked you: this accepts it
       if (rel === 'incoming') {
         await prisma.$executeRawUnsafe(`UPDATE friend_links SET status = 'accepted', "acceptedAt" = NOW() WHERE "userA" = $1 AND "userB" = $2`, a, b);
+        notifyAccepted(me, other);
         return ok({ relation: 'friends' });
       }
       const out = await prisma.$queryRawUnsafe<{ n: number }[]>(
         `SELECT COUNT(*)::int AS n FROM friend_links WHERE ("userA" = $1 OR "userB" = $1) AND status = 'pending' AND "requestedBy" = $1`, me);
       if ((out[0]?.n || 0) >= MAX_PENDING_OUT) return fail(`You have ${MAX_PENDING_OUT} requests waiting. Cancel some first.`);
-      await prisma.$executeRawUnsafe(
+      const added = await prisma.$executeRawUnsafe(
         `INSERT INTO friend_links ("userA", "userB", "requestedBy") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, a, b, me);
+      if (added) {
+        notifyUser(other, async () => ({
+          type: 'friend_request', title: 'New friend request', body: `${await nameOf(me, 'A student')} wants to be your friend.`,
+          tag: `request-${me}`, data: { screen: 'friends', section: 'requests' },
+        }));
+      }
       return ok({ relation: 'outgoing' });
     }
 
@@ -264,6 +280,7 @@ export async function handleFriendAction(action: string, data: any, requester: R
         const n = await prisma.$executeRawUnsafe(
           `UPDATE friend_links SET status = 'accepted', "acceptedAt" = NOW()
            WHERE "userA" = $1 AND "userB" = $2 AND status = 'pending' AND "requestedBy" = $3`, a, b, other);
+        if (n) notifyAccepted(me, other);
         return n ? ok({ relation: 'friends' }) : fail('This request is no longer there.', 404);
       }
       await prisma.$executeRawUnsafe(
@@ -309,6 +326,8 @@ export async function handleFriendAction(action: string, data: any, requester: R
       // Opening the chat reads their messages
       await prisma.$executeRawUnsafe(
         `UPDATE friend_messages SET "readAt" = NOW() WHERE "toId" = $1 AND "fromId" = $2 AND "readAt" IS NULL`, me, other);
+      // also their notifications (on opening, and when new messages arrive in the open chat)
+      if (!since || rows.some(r => r.fromId === other && !r.readAt)) await markNotificationsRead(me, `chat-${other}`).catch(() => {});
       return ok({
         friend: person ? personView(person, codes.get(other)) : null,
         partial: !!since,
@@ -325,7 +344,13 @@ export async function handleFriendAction(action: string, data: any, requester: R
       const limit = checkRateLimit(`friends_send:${me}`, 40, 60 * 1000);
       if (!limit.allowed) return fail('You are sending messages too fast. Please wait a moment.', 429);
       if (!(await areFriends(me, other))) return fail('You can chat only with friends.', 403, 'NOT_FRIENDS');
-      return ok({ id: await sendFriendMessage(me, other, text) });
+      const id = await sendFriendMessage(me, other, text);
+      // one notification per chat, showing the latest message
+      notifyUser(other, async () => {
+        const name = await nameOf(me);
+        return { type: 'friend_message', title: name, body: text, tag: `chat-${me}`, data: { screen: 'chat', friendId: me, friendName: name } };
+      });
+      return ok({ id });
     }
 
     case 'friends-delete-message': {

@@ -3,7 +3,7 @@ import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Bell, Bookmark, BriefcaseBusiness, CalendarCheck, ChevronRight, Crown, Download, FileText, GraduationCap, Headphones, Keyboard, Lock,
-  PlayCircle, Swords, Users, WifiOff,
+  Newspaper, PlayCircle, Swords, Users, WifiOff,
 } from 'lucide-react-native';
 import { request } from '../api';
 import { useData, flattenTests } from '../data';
@@ -84,7 +84,14 @@ export default function HomeScreen() {
           </View>
           <Pressable onPress={() => nav.push({ name: 'notices' })} accessibilityLabel={tr('Notices')}
             style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
+            <Newspaper size={20} color="#fff" />
+          </Pressable>
+          {/* friend requests, messages, rooms, support replies */}
+          <Pressable onPress={() => nav.push({ name: 'notifications' })}
+            accessibilityLabel={hi ? `सूचनाएं${friendsBadge.notifications ? ` (${friendsBadge.notifications} नई)` : ''}` : `Notifications${friendsBadge.notifications ? ` (${friendsBadge.notifications} new)` : ''}`}
+            style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
             <Bell size={21} color="#fff" />
+            {friendsBadge.notifications ? <Badge count={friendsBadge.notifications} inverted style={{ position: 'absolute', top: -2, right: -2 }} /> : null}
           </Pressable>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>

@@ -5,6 +5,7 @@ import {
   Check, ChevronLeft, ChevronRight, Clock, Crown, DoorOpen, Hourglass, LogOut, MessageCircle, Play, Radio, Send, Share2, Trophy, UserPlus, X,
 } from 'lucide-react-native';
 import { friendlyError } from '../api';
+import { setOnScreen } from '../push';
 import { useData } from '../data';
 import { useI18n } from '../i18n';
 import { useNav } from '../nav';
@@ -18,6 +19,8 @@ import type { ActiveSession, Question } from '../shared/webTypes';
 
 export default function RoomScreen({ code }: { code: string }) {
   const t = useTheme();
+  // no phone banner for this room while it's open
+  useEffect(() => { setOnScreen(`room-${code}`); return () => setOnScreen(null); }, [code]);
   const { hi, lang } = useI18n();
   const nav = useNav();
   const user = useUser();

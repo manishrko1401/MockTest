@@ -1,7 +1,7 @@
 {
   "name": "mocktesthub-desktop",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Mock Test Hub for Windows (x64 and ARM64) — a Tauri window around https://mocktesthub.vercel.app",
   "scripts": {
     "tauri": "tauri",

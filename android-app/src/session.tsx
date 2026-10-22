@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { AppState, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { clearToken, loadToken, onSignedOut, request, saveToken } from './api';
+import { unregisterPushDevice } from './push';
 import { readJson, removeJson, writeJson } from './storage';
 import type { MockUser } from './shared/webTypes';
 
@@ -101,6 +102,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [finishSignIn]);
 
   const signOut = useCallback(async () => {
+    await unregisterPushDevice(); // this phone stops getting the account's notifications
     await request('logout').catch(() => {});
     await clearToken();
     keep(null);

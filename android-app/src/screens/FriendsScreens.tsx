@@ -5,8 +5,9 @@ import {
   ArrowLeft, Check, CheckCheck, ChevronRight, DoorOpen, GraduationCap, Hash, MessageCircle, Radio, Search, Send, Share2, Swords, Trash2, UserMinus, UserPlus, Users, X,
 } from 'lucide-react-native';
 import { friendlyError } from '../api';
+import { setOnScreen } from '../push';
 import { useI18n } from '../i18n';
-import { useNav } from '../nav';
+import { useNav, useTabSection } from '../nav';
 import { useTheme } from '../theme';
 import { Avatar, Badge, Button, Card, confirm, Empty, ErrorBox, Header, IconButton, IconTile, Pill, SectionTitle, Skeleton, Tabs, StatusBarFor } from '../ui';
 import {
@@ -20,6 +21,8 @@ export function FriendsScreen() {
   const { hi } = useI18n();
   const badge = useFriendsBadge();
   const [tab, setTab] = useState<'rooms' | 'friends'>('rooms');
+  // a friend-request notification opens 'friends'
+  useTabSection('friends', useCallback((v: string) => { if (v === 'rooms' || v === 'friends') setTab(v); }, []));
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header large title={hi ? 'दोस्तों के साथ' : 'With Friends'} border={false} />
@@ -352,6 +355,8 @@ export function FriendChatScreen({ friend }: { friend: { userId: string; name: s
       setError(friendlyError(e));
     }
   }, [friend.userId, nav]);
+  // no phone banner for this chat while it's open
+  useEffect(() => { setOnScreen(`chat-${friend.userId}`); return () => setOnScreen(null); }, [friend.userId]);
   useEffect(() => {
     load().then(() => badge.refresh());
     const timer = setInterval(() => { if (AppState.currentState === 'active') load(); }, 3500);

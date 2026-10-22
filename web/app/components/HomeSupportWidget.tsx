@@ -10,6 +10,12 @@ interface HomeSupportWidgetProps {
 export default function HomeSupportWidget({ variant = 'normal' }: HomeSupportWidgetProps) {
   const { currentUser, language } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
+  // a support-reply notification opens the chat (see the home page)
+  useEffect(() => {
+    const open = () => setChatOpen(true);
+    window.addEventListener('mth-open-support', open);
+    return () => window.removeEventListener('mth-open-support', open);
+  }, []);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);

@@ -51,6 +51,7 @@ import { TRANSLATIONS } from '../translations';
 import { useIsMobile } from '../useIsMobile';
 import { SiteHeader, SiteFooter, SectionCard, Field, PasswordInput, StatusBadge, BackButton, btnPrimary, btnSecondary, inputCls } from '../components/SiteUI';
 import ProfileTour, { requestProfileTourStart } from '../components/ProfileTour';
+import { NotificationSettings } from '../components/NotificationSettings';
 
 type ProfileTab = 'overview' | 'details' | 'security' | 'tracked-jobs' | 'subscription' | 'referrals' | 'preferences';
 
@@ -283,7 +284,7 @@ function ProfileContent() {
     },
     {
       id: 'preferences' as ProfileTab,
-      label: language === 'hi' ? 'थीम और भाषा' : 'Theme & language',
+      label: language === 'hi' ? 'थीम, भाषा और सूचनाएं' : 'Theme, language & notifications',
       icon: Settings,
       badge: null,
       color: 'text-slate-600 dark:text-slate-400',
@@ -819,6 +820,7 @@ function ProfileContent() {
               </div>
             </SectionCard>
           )}
+          {activeTab === 'preferences' && <div className="mt-5"><NotificationSettings hi={hi} /></div>}
         </main>
       </div>
 

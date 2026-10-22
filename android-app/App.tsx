@@ -25,7 +25,10 @@ import { FriendChatScreen, FriendsScreen } from './src/screens/FriendsScreens';
 import RoomScreen from './src/screens/RoomScreen';
 import NetInfo from '@react-native-community/netinfo';
 import { syncOutbox } from './src/offline';
-import { notifyLocal, setupNotifications } from './src/push';
+import * as Notifications from 'expo-notifications';
+import { notifyLocal, registerPushDevice } from './src/push';
+import { request } from './src/api';
+import { NotificationsScreen, useOpenNotification } from './src/screens/NotificationsScreen';
 import { AnalysisScreen, BookmarksScreen } from './src/screens/AnalysisScreens';
 import { FriendsBadgeProvider, useFriendsBadge } from './src/friendsApi';
 
@@ -80,12 +83,32 @@ function Shell() {
       refreshUser();
       notifyLocal('results', 'Offline results uploaded', `${r.uploaded} result${r.uploaded > 1 ? 's' : ''} saved to your account.`);
     }).catch(() => {});
-    setupNotifications().catch(() => {});
+    registerPushDevice().catch(() => {});
     sync();
     const timer = setInterval(sync, 120000);
     const unsub = NetInfo.addEventListener(s => { if (s.isConnected) sync(); });
     return () => { clearInterval(timer); unsub(); };
   }, [refreshUser]);
+  // A tapped phone notification opens its chat / room / requests / support (also when it
+  // started the app); one arriving while the app is open refreshes the badges.
+  const badge = useFriendsBadge();
+  const openNotification = useOpenNotification();
+  React.useEffect(() => {
+    const open = (data: any) => {
+      if (data?.id) request('notif-read', { ids: [data.id] }).catch(() => {});
+      openNotification(data);
+      badge.refresh();
+    };
+    Notifications.getLastNotificationResponseAsync().then(r => {
+      if (!r) return;
+      open(r.notification.request.content.data);
+      Notifications.clearLastNotificationResponseAsync().catch(() => {});
+    }).catch(() => {});
+    const tapped = Notifications.addNotificationResponseReceivedListener(r => open(r.notification.request.content.data));
+    const arrived = Notifications.addNotificationReceivedListener(() => badge.refresh());
+    return () => { tapped.remove(); arrived.remove(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const top = nav.stack[nav.stack.length - 1];
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -132,6 +155,7 @@ function RouteScreen({ route }: { route: Route }) {
     case 'offline': return <OfflineScreen />;
     case 'room': return <RoomScreen key={route.code} code={route.code} />;
     case 'friendChat': return <FriendChatScreen key={route.friend.userId} friend={route.friend} />;
+    case 'notifications': return <NotificationsScreen />;
     default: return null;
   }
 }

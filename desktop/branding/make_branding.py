@@ -3,16 +3,16 @@
     python branding/make_branding.py   (run from desktop/, then: npm run icons)
 
 Inputs:  branding/logo.png (2048x2048, blue trophy + "MockTest Hub" on white)
-Outputs: app-icon.png                 1024x1024 trophy on transparent (source for `tauri icon`)
+         ../android-app/assets/icon.png (the Android app's icon: white trophy on brand blue)
+Outputs: app-icon.png                 1024x1024 the Android app's icon cut to a circle (source for `tauri icon`)
          branding/nsis-sidebar.bmp    164x314  welcome / finish page panel (full logo)
          branding/nsis-header.bmp     150x57   header of the other installer pages
 """
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-BLUE = (60, 96, 206)                      # trophy colour in the logo
 TROPHY_BOX = (642, 514, 1461, 1331)        # trophy, without the text
 LOGO_BOX = (564, 514, 1549, 1747)          # trophy + "MockTest Hub"
 TEXT_BOX = (564, 1350, 1549, 1747)         # "MockTest Hub" only
@@ -22,32 +22,23 @@ flat = Image.new('RGB', logo.size, 'white')
 flat.paste(logo, mask=logo.split()[3])     # logo on solid white
 
 
-def trophy_transparent(size: int, fill: float = 0.86) -> Image.Image:
-    """The trophy in the logo blue on a transparent background (alpha from how far each
-    pixel is from white, so the anti-aliased edges stay smooth)."""
-    crop = flat.crop(TROPHY_BOX)
-    out = Image.new('RGBA', crop.size)
-    src, dst = crop.load(), out.load()
-    for y in range(crop.height):
-        for x in range(crop.width):
-            g = src[x, y][1]
-            a = max(0.0, min(1.0, (255 - g) / (255 - BLUE[1])))
-            dst[x, y] = (*BLUE, round(a * 255))
-    inner = round(size * fill)
-    scale = inner / max(out.size)
-    out = out.resize((round(out.width * scale), round(out.height * scale)), Image.LANCZOS)
-    canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    canvas.paste(out, ((size - out.width) // 2, (size - out.height) // 2), out)
-    return canvas
-
-
 def fit(img: Image.Image, max_w: int, max_h: int) -> Image.Image:
     scale = min(max_w / img.width, max_h / img.height)
     return img.resize((max(1, round(img.width * scale)), max(1, round(img.height * scale))), Image.LANCZOS)
 
 
-# App / installer icon source
-trophy_transparent(1024).save(ROOT / 'app-icon.png')
+# App / installer icon source: the Android app's icon (white trophy on brand blue) as a circle,
+# transparent outside. The circle is drawn 4x larger and scaled down for a smooth edge.
+def circle_icon(size: int = 1024) -> Image.Image:
+    art = Image.open(ROOT.parent / 'android-app' / 'assets' / 'icon.png').convert('RGBA').resize((size, size), Image.LANCZOS)
+    mask = Image.new('L', (size * 4, size * 4), 0)
+    ImageDraw.Draw(mask).ellipse((0, 0, size * 4 - 1, size * 4 - 1), fill=255)
+    out = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    out.paste(art, (0, 0), mask.resize((size, size), Image.LANCZOS))
+    return out
+
+
+circle_icon().save(ROOT / 'app-icon.png')
 
 # Welcome / finish page panel: full logo on white
 sidebar = Image.new('RGB', (164, 314), 'white')

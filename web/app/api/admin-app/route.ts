@@ -8,6 +8,7 @@ import { hitLimit } from '../../lib/dbRateLimit';
 import { registerDevice, unregisterDevice, sendTestAlert, pushConfigured, ALERT_TYPES } from '../../lib/adminPush';
 import { getTypingCategories, saveTypingCategory } from '../../lib/typingStore';
 import { platformLabel } from '../../lib/platformLabels';
+import { notifyUser } from '../../lib/userNotify';
 
 // -----------------------------------------------------------------------------
 // API for the Mock Test Hub Admin app (Android, admin-app/). Staff only. The app signs in
@@ -292,6 +293,7 @@ async function supportSend(data: any) {
   if (!userId || !message) return fail('Message is empty');
   if (!(await prisma.user.findUnique({ where: { id: userId }, select: { id: true } }))) return fail('Student not found', 404);
   const m = await prisma.supportMessage.create({ data: { userId, sender: 'ADMIN', message, isRead: false } });
+  notifyUser(userId, () => ({ type: 'support_reply', title: 'Mock Test Hub support', body: message, tag: 'support', data: { screen: 'support' } }));
   // Replying means the student's messages have been read
   await prisma.supportMessage.updateMany({ where: { userId, sender: { in: ['STUDENT', 'USER'] }, isRead: false }, data: { isRead: true } });
   return ok({ message: { id: m.id, fromAdmin: true, message: m.message, isRead: false, createdAt: iso(m.createdAt) } });
@@ -324,6 +326,7 @@ async function reportReply(data: any) {
   if (!report.userId) return fail('This report was sent without an account, so there is no one to reply to.');
   const quote = report.mockTestTitle ? `About your report on "${report.mockTestTitle}": ` : 'About the question you reported: ';
   await prisma.supportMessage.create({ data: { userId: report.userId, sender: 'ADMIN', message: quote + message, isRead: false } });
+  notifyUser(report.userId, () => ({ type: 'support_reply', title: 'Mock Test Hub support', body: quote + message, tag: 'support', data: { screen: 'support' } }));
   if (data.resolve !== false) await prisma.reportedQuestion.delete({ where: { id: report.id } });
   return ok();
 }
@@ -370,6 +373,7 @@ async function suggestionUpdate(data: any) {
   // A reply also reaches the student in their support chat (when they were signed in)
   if (reply && data.sendToStudent && s.userId) {
     await prisma.supportMessage.create({ data: { userId: s.userId, sender: 'ADMIN', message: `About your suggestion: ${reply}`, isRead: false } });
+    notifyUser(s.userId, () => ({ type: 'support_reply', title: 'Mock Test Hub support', body: `About your suggestion: ${reply}`, tag: 'support', data: { screen: 'support' } }));
   }
   return ok();
 }

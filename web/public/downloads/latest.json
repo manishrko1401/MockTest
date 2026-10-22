@@ -1,14 +1,14 @@
 {
-  "version": "1.0.2",
-  "releasedAt": "2026-10-20",
+  "version": "1.0.3",
+  "releasedAt": "2026-10-22",
   "files": {
     "x64": {
-      "file": "MockTestHub_1.0.2_x64-setup.exe",
-      "size": 2045343
+      "file": "MockTestHub_1.0.3_x64-setup.exe",
+      "size": 2008483
     },
     "arm64": {
-      "file": "MockTestHub_1.0.2_arm64-setup.exe",
-      "size": 1814987
+      "file": "MockTestHub_1.0.3_arm64-setup.exe",
+      "size": 1778809
     }
   }
 }

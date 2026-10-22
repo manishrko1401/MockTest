@@ -14,6 +14,7 @@ import { Trophy, Moon, Sun, Menu, X, ChevronDown, ChevronRight, ArrowLeft, Layou
 import { useIsDesktopApp, exitDesktopApp } from '../lib/desktopApp';
 import { AppDownloadDropdownItem, AppDownloadFooterLink } from './AppDownload';
 import { requestTourStart } from './WelcomeTour';
+import { NotificationBell } from './NotificationBell';
 import { useAuth } from '../AuthContext';
 import { TRANSLATIONS } from '../translations';
 
@@ -145,6 +146,7 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
             <option value="en">English</option>
             <option value="hi">हिन्दी</option>
           </select>
+          {user && <NotificationBell hi={hi} />}
           <button
             suppressHydrationWarning
             onClick={toggleTheme}

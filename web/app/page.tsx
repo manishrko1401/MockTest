@@ -494,6 +494,14 @@ const formatSubCategoryName = (name: string) => {
   }, [currentUser?.id, currentUser?.subscriptionTier]);
 
   const { isMobile, isMounted } = useIsMobile();
+
+  // /?support=1 (from a support-reply notification): open the support chat
+  useEffect(() => {
+    if (!isMounted || new URLSearchParams(window.location.search).get('support') !== '1') return;
+    if (isMobile) window.dispatchEvent(new Event('mth-open-support'));
+    else setRightView('chat');
+    window.history.replaceState(null, '', '/');
+  }, [isMounted, isMobile]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const [mobileUpdateTab, setMobileUpdateTab] = useState<'admit_card' | 'result' | 'notice'>('admit_card');

@@ -107,9 +107,16 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
 
 type Alert = { type: AlertType | 'test'; title: string; body: string; data?: Record<string, string>; tag?: string };
 
-async function sendToTokens(tokens: string[], alert: Alert) {
+/** One push for Android phones (used by the admin alerts and the students' notifications). */
+export type PushMessage = { title: string; body: string; data: Record<string, string>; channel: string; tag?: string };
+
+/**
+ * Sends the message to each phone token. Returns the tokens Firebase says no longer work
+ * (app removed or signed out), for the caller to forget.
+ */
+export async function sendPush(tokens: string[], m: PushMessage): Promise<{ sent: number; failed: number; dead: string[] }> {
   const sa = serviceAccount();
-  if (!sa || tokens.length === 0) return { sent: 0, failed: 0 };
+  if (!sa || tokens.length === 0) return { sent: 0, failed: 0, dead: [] };
   const bearer = await getAccessToken(sa);
   let sent = 0, failed = 0;
   const dead: string[] = [];
@@ -120,18 +127,18 @@ async function sendToTokens(tokens: string[], alert: Alert) {
       body: JSON.stringify({
         message: {
           token,
-          notification: { title: alert.title.slice(0, 120), body: alert.body.slice(0, 400) },
-          data: { type: alert.type, ...(alert.data || {}) },
+          notification: { title: m.title.slice(0, 120), body: m.body.slice(0, 400) },
+          data: m.data,
           android: {
             priority: 'HIGH',
             ttl: '86400s',
             notification: {
-              channel_id: CHANNEL[alert.type],
+              channel_id: m.channel,
               sound: 'default',
               default_vibrate_timings: true,
               notification_priority: 'PRIORITY_MAX',
               visibility: 'PRIVATE',
-              ...(alert.tag ? { tag: alert.tag } : {}),
+              ...(m.tag ? { tag: m.tag } : {}),
             },
           },
         },
@@ -143,8 +150,13 @@ async function sendToTokens(tokens: string[], alert: Alert) {
     const code = err?.error?.details?.find?.((d: any) => d.errorCode)?.errorCode || err?.error?.status;
     if (res && (res.status === 404 || code === 'UNREGISTERED' || code === 'INVALID_ARGUMENT')) dead.push(token);
   }));
-  if (dead.length) await prisma.$executeRaw`DELETE FROM admin_push_devices WHERE token = ANY(${dead})`.catch(() => {});
-  return { sent, failed };
+  return { sent, failed, dead };
+}
+
+async function sendToTokens(tokens: string[], alert: Alert) {
+  const r = await sendPush(tokens, { title: alert.title, body: alert.body, data: { type: alert.type, ...(alert.data || {}) }, channel: CHANNEL[alert.type], tag: alert.tag });
+  if (r.dead.length) await prisma.$executeRaw`DELETE FROM admin_push_devices WHERE token = ANY(${r.dead})`.catch(() => {});
+  return { sent: r.sent, failed: r.failed };
 }
 
 /** Sends an alert to every staff device that handles this type (and hasn't muted it). */

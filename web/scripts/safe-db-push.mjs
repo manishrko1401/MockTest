@@ -10,7 +10,7 @@ import { execSync } from 'node:child_process';
 
 // Tables the app creates and manages itself (CREATE TABLE IF NOT EXISTS in app/lib, app/api)
 const APP_TABLES = [
-  'auth_sessions', 'admin_push_devices', 'user_tours', 'rate_events', 'password_resets', 'locker_unlocks', 'attempt_integrity', 'user_platforms',
+  'auth_sessions', 'admin_push_devices', 'user_tours', 'rate_events', 'password_resets', 'locker_unlocks', 'attempt_integrity', 'user_platforms', 'user_notifications', 'user_push_devices', 'user_notify_prefs',
   'study_tasks', 'study_task_checkins', 'study_targets', 'study_exams', 'study_syllabi',
   'friend_rooms', 'friend_room_members', 'friend_room_messages', 'friend_links', 'friend_messages', 'friend_codes',
 ];

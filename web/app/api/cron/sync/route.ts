@@ -83,6 +83,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
     const forceResync = searchParams.get('force') === 'true' || searchParams.get('resync') === 'true';
+    // ?dry=1: only report what would be imported / updated (nothing is saved)
+    const dryRun = searchParams.get('dry') === '1';
     // Scheduled run (CRON_SECRET) or an admin; ?secret= kept for manual runs
     const secretMatches = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET;
     if (!secretMatches) {
@@ -110,9 +112,12 @@ export async function GET(request: Request) {
       prefix: string;
     };
 
+    // One entry per page AND stage (the same exam page is listed under Jobs and under Results)
     const parsedItemsMap = new Map<string, ScrapedNotice>();
+    const seenPages = new Set<string>();
 
-    function addNoticeItem(rawHref: string, rawTitle: string, targetCat: TargetCategory) {
+    /** onlyNewPage: for links whose stage is only guessed from the title (don't add a second, guessed stage) */
+    function addNoticeItem(rawHref: string, rawTitle: string, targetCat: TargetCategory, onlyNewPage = false) {
       const cleanHref = rawHref.trim();
       const cleanTitle = rawTitle
         .replace(/<[^>]*>/g, '')
@@ -138,8 +143,11 @@ export async function GET(request: Request) {
         cleanHref !== 'https://rojgarresult.com' &&
         cleanTitle.length > 5
       ) {
-        if (!parsedItemsMap.has(cleanHref)) {
-          parsedItemsMap.set(cleanHref, {
+        const key = `${targetCat.category}|${cleanHref}`;
+        if (onlyNewPage && seenPages.has(cleanHref)) return;
+        seenPages.add(cleanHref);
+        if (!parsedItemsMap.has(key)) {
+          parsedItemsMap.set(key, {
             title: cleanTitle,
             url: cleanHref,
             category: targetCat.category,
@@ -150,37 +158,12 @@ export async function GET(request: Request) {
       }
     }
 
-    // 1. Fetch RojgarResult Homepage (https://rojgarresult.com/) for freshest notices & trending banners
+    // 1. RojgarResult's home page: only for its highlight links (read last, see 3). Its
+    //    sections can't be told apart reliably (each is on the page twice and their names
+    //    also appear in the page's styles), so the stages come from the category pages.
+    let homeHtml = '';
     try {
-      const homeHtml = await fetchUrl('https://rojgarresult.com/');
-      
-      const homeSections = [
-        { marker: 'result-box', cat: { name: 'Result', category: 'result', type: 'RESULT', prefix: 'res_' } },
-        { marker: 'admitcard-box', cat: { name: 'Admit Card', category: 'admit_card', type: 'ADMIT CARD', prefix: 'ac_' } },
-        { marker: 'answerkey-box', cat: { name: 'Answer Key', category: 'answer_key', type: 'ANSWER KEY', prefix: 'ak_' } },
-        { marker: 'latest-jobs-section', cat: { name: 'Latest Jobs', category: 'notice', type: 'JOB', prefix: 'job_' } }
-      ];
-
-      for (const hs of homeSections) {
-        const sIdx = homeHtml.indexOf(hs.marker);
-        if (sIdx !== -1) {
-          const chunk = homeHtml.substring(sIdx, sIdx + 25000);
-          const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-          let m;
-          while ((m = h2Regex.exec(chunk)) !== null) {
-            addNoticeItem(m[1], m[2], hs.cat);
-          }
-        }
-      }
-
-      // Top pulse / marquee / highlights on home
-      const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-      let m;
-      while ((m = h2Regex.exec(homeHtml)) !== null) {
-        const cat = detectCategoryFromTitle(m[2]);
-        addNoticeItem(m[1], m[2], cat);
-      }
-      console.log(`Cron: Scraped ${parsedItemsMap.size} notices from RojgarResult Homepage`);
+      homeHtml = await fetchUrl('https://rojgarresult.com/');
     } catch (e: any) {
       console.error('Cron: Failed to fetch RojgarResult homepage:', e.message);
     }
@@ -209,11 +192,21 @@ export async function GET(request: Request) {
       }
     }
 
+    // 3. Other links on the home page (top pulse / marquee / highlights): their stage is only
+    //    guessed from the title, so they're added last and only for pages not listed above
+    if (homeHtml) {
+      const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+      let m;
+      while ((m = h2Regex.exec(homeHtml)) !== null) {
+        addNoticeItem(m[1], m[2], detectCategoryFromTitle(m[2]), true);
+      }
+    }
+
     console.log(`Cron: Total unique notices parsed from RojgarResult: ${parsedItemsMap.size}`);
 
     const allScraped = Array.from(parsedItemsMap.values());
 
-    // 3. Match against existing DB records
+    // 4. Match against existing DB records
     const idsByUrl = new Map<string, string>();
     for (const item of allScraped) {
       const hash = crypto.createHash('md5').update(item.url).digest('hex').substring(0, 10);
@@ -228,14 +221,22 @@ export async function GET(request: Request) {
           { url: { in: allScraped.map(i => i.url) } }
         ]
       },
-      select: { id: true, title: true, contentHtml: true, lastDate: true, rawUrl: true, url: true }
+      select: { id: true, title: true, contentHtml: true, lastDate: true, rawUrl: true, url: true, category: true }
     });
 
+    // RojgarResult keeps ONE page per exam and adds each stage to it (form → admit card →
+    // answer key → result). We keep one notice per page AND stage (id = stage prefix + page
+    // hash), so a page that's already here as a job notice must still bring in its new admit
+    // card or result. Matching by page address alone used to swallow every later stage.
     const existingById = new Map(existingRecords.map(r => [r.id, r]));
     const existingByUrl = new Map<string, typeof existingRecords[0]>();
+    // By its RojgarResult page; the official link only for old rows that don't have the page
+    // (an official link can itself be another RojgarResult page, which mixed two notices up)
     for (const r of existingRecords) {
-      if (r.rawUrl) existingByUrl.set(r.rawUrl.toLowerCase(), r);
-      if (r.url) existingByUrl.set(r.url.toLowerCase(), r);
+      if (!r.rawUrl && r.url) existingByUrl.set(`${r.category}|${r.url.toLowerCase()}`, r);
+    }
+    for (const r of existingRecords) {
+      if (r.rawUrl) existingByUrl.set(`${r.category}|${r.rawUrl.toLowerCase()}`, r);
     }
 
     type WorkItem = {
@@ -245,6 +246,8 @@ export async function GET(request: Request) {
       category: string;
       type: string;
       isUpdate: boolean;
+      /** The stage got a new title (e.g. "Exam Schedule" → "Result"): new news, shown at the top again */
+      isNewStage?: boolean;
       existingLastDate?: string | null;
     };
 
@@ -252,8 +255,15 @@ export async function GET(request: Request) {
     const updateItemsQueue: WorkItem[] = [];
 
     for (const item of allScraped) {
-      const computedId = idsByUrl.get(item.url)!;
-      const existing = existingById.get(computedId) || existingByUrl.get(item.url.toLowerCase());
+      let computedId = idsByUrl.get(item.url)!;
+      // A row with this id is only this notice if it's for the same page (older syncs sometimes
+      // stored another page under it); otherwise this page gets a longer id of its own.
+      const byId = existingById.get(computedId);
+      const idIsThisPage = !!byId && (!byId.rawUrl || byId.rawUrl.toLowerCase() === item.url.toLowerCase());
+      const existing = (idIsThisPage ? byId : null) || existingByUrl.get(`${item.category}|${item.url.toLowerCase()}`);
+      if (!existing && byId && !idIsThisPage) {
+        computedId = `${item.prefix}${crypto.createHash('md5').update(item.url).digest('hex').substring(0, 20)}`;
+      }
 
       if (existing) {
         const hasContent = existing.contentHtml && existing.contentHtml.length > 5;
@@ -266,6 +276,7 @@ export async function GET(request: Request) {
             category: item.category,
             type: item.type,
             isUpdate: true,
+            isNewStage: titleChanged,
             existingLastDate: existing.lastDate
           });
         }
@@ -283,8 +294,17 @@ export async function GET(request: Request) {
 
     console.log(`Cron: ${newItemsQueue.length} NEW notice(s) to insert, ${updateItemsQueue.length} notice(s) to update`);
 
-    // Process NEW NOTICES FIRST with high priority
-    const combinedWork = [...newItemsQueue, ...updateItemsQueue];
+    if (dryRun) {
+      return NextResponse.json({
+        success: true, dryRun: true,
+        new: newItemsQueue.map(w => `${w.category}: ${w.title}`),
+        newStages: updateItemsQueue.filter(w => w.isNewStage).map(w => `${w.category}: ${w.title}`),
+        refreshOnly: updateItemsQueue.filter(w => !w.isNewStage).length,
+      });
+    }
+
+    // New notices first, then new stages of known pages, then plain content refreshes
+    const combinedWork = [...newItemsQueue, ...updateItemsQueue.filter(w => w.isNewStage), ...updateItemsQueue.filter(w => !w.isNewStage)];
 
     // Concurrently process items within deadline
     let workIndex = 0;
@@ -342,7 +362,9 @@ export async function GET(request: Request) {
                 url: directUrl,
                 rawUrl: work.url,
                 lastDate,
-                ...(contentLink ? { contentHtml: contentLink } : {})
+                ...(contentLink ? { contentHtml: contentLink } : {}),
+                // a new stage is shown as new (the site lists the newest first)
+                ...(work.isNewStage ? { createdAt: createdAtTimestamp } : {}),
               }
             });
             updatedNoticesCount++;

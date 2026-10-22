@@ -1,9 +1,9 @@
 {
-  "version": "2.1.3",
-  "versionCode": 104,
+  "version": "2.1.6",
+  "versionCode": 107,
   "releasedAt": "2026-10-22",
-  "key": "apps/android/MockTestHub_2.1.3.apk",
-  "file": "MockTestHub_2.1.3.apk",
-  "size": 45029702,
+  "key": "apps/android/MockTestHub_2.1.6.apk",
+  "file": "MockTestHub_2.1.6.apk",
+  "size": 45058098,
   "minAndroid": "7.0"
 }

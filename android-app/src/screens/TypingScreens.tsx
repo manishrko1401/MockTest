@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ScreenCapture from 'expo-screen-capture';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useKeepAwake } from 'expo-keep-awake';
 import { CheckCircle2, ChevronRight, Clock, Keyboard, RotateCcw, XCircle } from 'lucide-react-native';
 import { request, friendlyError } from '../api';
@@ -168,7 +169,6 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
   const { hi } = useI18n();
   const nav = useNav();
   const user = useUser();
-  const insets = useSafeAreaInsets();
   const [test, setTest] = useState<TypingTest | null>(null);
   const [error, setError] = useState('');
   const [phase, setPhase] = useState<Phase>('intro');
@@ -192,6 +192,13 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
     ScreenCapture.preventScreenCaptureAsync('typing').catch(() => {});
     return () => { ScreenCapture.allowScreenCaptureAsync('typing').catch(() => {}); };
   }, []);
+
+  // Landscape while the test is on screen (easier with a USB / Bluetooth keyboard, longer lines
+  // to read); the scorecard and the rest of the app stay portrait.
+  useEffect(() => {
+    ScreenOrientation.lockAsync(phase === 'result' ? ScreenOrientation.OrientationLock.PORTRAIT_UP : ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => {});
+  }, [phase]);
+  useEffect(() => () => { ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {}); }, []);
 
   const cfg = detectExamCategory(test || undefined);
   const backspaceAllowed = test ? !(test.backspaceRule === 'DISABLED' || test.enableBackspace === false || cfg.backspaceAllowed === false) : true;
@@ -330,51 +337,15 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
   if (phase === 'result' && result) return <TypingResult test={test} result={result} saveState={saveState} onRetake={() => { setResult(null); setSaveState('idle'); setPhase('intro'); }} />;
 
   // demo / main typing screen
-  const typedWords = typed.trim().split(/\s+/).filter(Boolean).length;
-  const words = passage.split(/(\s+)/);
-  let wordIdx = 0;
-  const highlight = test.highlightAllowed !== false;
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <View style={{ backgroundColor: t.hero, paddingTop: insets.top, paddingHorizontal: 12 }}>
-        <StatusBarFor color={t.hero} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, gap: 10 }}>
-          <Text style={{ flex: 1, color: t.heroText, fontWeight: '800' }} numberOfLines={1}>{phase === 'demo' ? (hi ? 'डेमो' : 'Demo') : test.title}</Text>
-          <View style={{ backgroundColor: timeLeft <= 30 ? '#dc2626' : 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-            <Text style={{ color: '#fff', fontWeight: '800', fontVariant: ['tabular-nums'] }}>{mmss(timeLeft)}</Text>
-          </View>
-        </View>
-      </View>
-      <ScrollView style={{ maxHeight: '42%', backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border }} contentContainerStyle={{ padding: 14 }}>
-        <Text selectable={false} style={{ color: t.text, fontSize: 17, lineHeight: 28 }}>
-          {words.map((w, i) => {
-            if (/^\s+$/.test(w)) return w;
-            const idx = wordIdx++;
-            const current = highlight && idx === typedWords - (typed.endsWith(' ') || typed.endsWith('\n') ? 0 : 1);
-            return <Text key={i} style={current ? { backgroundColor: t.primarySoft, color: t.primary, fontWeight: '700' } : undefined}>{w}</Text>;
-          })}
-        </Text>
-      </ScrollView>
-      <TextInput
-        value={typed}
-        onChangeText={onType}
-        multiline
-        autoFocus
-        autoCorrect={false}
-        autoCapitalize="none"
-        spellCheck={false}
-        autoComplete="off"
-        contextMenuHidden
-        importantForAutofill="no"
-        keyboardType={test.language === 'en' ? 'visible-password' : 'default'}
-        placeholder={hi ? 'यहां टाइप करें…' : 'Start typing here…'}
-        placeholderTextColor={t.textMuted}
-        style={{ flex: 1, padding: 14, fontSize: 17, lineHeight: 26, color: t.text, textAlignVertical: 'top', backgroundColor: t.bg }}
+      <TypingDesk
+        title={phase === 'demo' ? (hi ? 'डेमो' : 'Demo') : test.title}
+        passage={passage} typed={typed} onType={onType} timeLeft={timeLeft}
+        highlight={test.highlightAllowed !== false} english={test.language === 'en'}
+        note={phase === 'main' && !backspaceAllowed ? (hi ? 'बैकस्पेस बंद' : 'No backspace') : ''}
+        action={<Button small tone={phase === 'demo' ? 'neutral' : 'success'} title={phase === 'demo' ? (hi ? 'डेमो समाप्त' : 'End demo') : (hi ? 'सबमिट' : 'Submit')} onPress={() => (phase === 'demo' ? startPhase('break') : setConfirmSubmit(true))} />}
       />
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
-        <Text style={{ color: t.textSoft, flex: 1 }}>{hi ? 'शब्द' : 'Words'}: {typedWords}{phase === 'main' && !backspaceAllowed ? ` · ${hi ? 'बैकस्पेस बंद' : 'No backspace'}` : ''}</Text>
-        <Button small tone={phase === 'demo' ? 'neutral' : 'success'} title={phase === 'demo' ? (hi ? 'डेमो समाप्त' : 'End demo') : (hi ? 'सबमिट' : 'Submit')} onPress={() => (phase === 'demo' ? startPhase('break') : setConfirmSubmit(true))} />
-      </View>
       <Modal visible={confirmSubmit} transparent animationType="fade" onRequestClose={() => setConfirmSubmit(false)}>
         <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
           <Card>
@@ -387,6 +358,119 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
           </Card>
         </View>
       </Modal>
+    </View>
+  );
+}
+
+/**
+ * The passage and the typing box. Landscape (the usual case, see TypingRunScreen): side by side,
+ * both full height, with the timer, word count and submit in one slim bar, so a USB / Bluetooth
+ * keyboard user sees everything and the phone's own keyboard never covers the passage. Portrait
+ * (a tablet or phone that keeps portrait): passage above, typing box below.
+ * The passage scrolls along with the typing so the current word stays in view.
+ */
+function TypingDesk({ title, passage, typed, onType, timeLeft, highlight, english, note, action }: {
+  title: string; passage: string; typed: string; onType: (v: string) => void; timeLeft: number;
+  highlight: boolean; english: boolean; note: string; action: React.ReactNode;
+}) {
+  const t = useTheme();
+  const { hi } = useI18n();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const landscape = width > height;
+  const scroller = useRef<ScrollView>(null);
+  const [box, setBox] = useState({ view: 0, content: 0 });
+
+  const typedWords = typed.trim().split(/\s+/).filter(Boolean).length;
+  const words = passage.split(/(\s+)/);
+  let wordIdx = 0;
+
+  // Keep the current place about a third of the way down the passage panel
+  const progress = passage.length ? Math.min(1, typed.length / passage.length) : 0;
+  useEffect(() => {
+    if (!box.view || box.content <= box.view) return;
+    const y = Math.max(0, Math.min(box.content - box.view, progress * box.content - box.view / 3));
+    scroller.current?.scrollTo({ y, animated: true });
+  }, [Math.round(progress * 200), box.view, box.content]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fontSize = landscape ? 18 : 17;
+  const timer = (
+    <View style={{ backgroundColor: timeLeft <= 30 ? '#dc2626' : 'rgba(255,255,255,0.18)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+      <Text style={{ color: '#fff', fontWeight: '800', fontVariant: ['tabular-nums'] }}>{mmss(timeLeft)}</Text>
+    </View>
+  );
+  const count = <Text style={{ color: landscape ? t.heroText : t.textSoft, opacity: landscape ? 0.85 : 1 }}>{hi ? 'शब्द' : 'Words'}: {typedWords}{note ? ` · ${note}` : ''}</Text>;
+
+  const passagePanel = (
+    <ScrollView ref={scroller} onLayout={e => { const v = e.nativeEvent.layout.height; setBox(b => (b.view === v ? b : { ...b, view: v })); }}
+      onContentSizeChange={(_, h) => setBox(b => (b.content === h ? b : { ...b, content: h }))}
+      style={landscape ? { flex: 1, backgroundColor: t.card, borderRightWidth: 1, borderRightColor: t.border } : { maxHeight: '42%', backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border }}
+      contentContainerStyle={{ padding: 14 }}>
+      <Text selectable={false} style={{ color: t.text, fontSize, lineHeight: fontSize * 1.6 }}>
+        {words.map((w, i) => {
+          if (/^\s+$/.test(w)) return w;
+          const idx = wordIdx++;
+          const current = highlight && idx === typedWords - (typed.endsWith(' ') || typed.endsWith('\n') ? 0 : 1);
+          return <Text key={i} style={current ? { backgroundColor: t.primarySoft, color: t.primary, fontWeight: '700' } : undefined}>{w}</Text>;
+        })}
+      </Text>
+    </ScrollView>
+  );
+  const input = (
+    <TextInput
+      value={typed}
+      onChangeText={onType}
+      multiline
+      autoFocus
+      autoCorrect={false}
+      autoCapitalize="none"
+      spellCheck={false}
+      autoComplete="off"
+      contextMenuHidden
+      importantForAutofill="no"
+      // Android's full-screen typing box in landscape would hide the passage
+      disableFullscreenUI
+      keyboardType={english ? 'visible-password' : 'default'}
+      placeholder={hi ? 'यहां टाइप करें…' : 'Start typing here…'}
+      placeholderTextColor={t.textMuted}
+      style={{ flex: 1, padding: 14, fontSize, lineHeight: fontSize * 1.5, color: t.text, textAlignVertical: 'top', backgroundColor: t.bg }}
+    />
+  );
+
+  if (landscape) {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={{ backgroundColor: t.hero, paddingTop: insets.top, paddingLeft: 12 + insets.left, paddingRight: 12 + insets.right }}>
+          <StatusBarFor color={t.hero} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', height: 46, gap: 12 }}>
+            <Text style={{ flex: 1, color: t.heroText, fontWeight: '800' }} numberOfLines={1}>{title}</Text>
+            {count}
+            {timer}
+            {action}
+          </View>
+        </View>
+        <View style={{ flex: 1, flexDirection: 'row', paddingLeft: insets.left, paddingRight: insets.right, paddingBottom: insets.bottom }}>
+          {passagePanel}
+          {input}
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ backgroundColor: t.hero, paddingTop: insets.top, paddingHorizontal: 12 }}>
+        <StatusBarFor color={t.hero} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', height: 50, gap: 10 }}>
+          <Text style={{ flex: 1, color: t.heroText, fontWeight: '800' }} numberOfLines={1}>{title}</Text>
+          {timer}
+        </View>
+      </View>
+      {passagePanel}
+      {input}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
+        <View style={{ flex: 1 }}>{count}</View>
+        {action}
+      </View>
     </View>
   );
 }

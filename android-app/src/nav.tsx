@@ -29,6 +29,7 @@ export type Route =
   | { name: 'offline' }
   | { name: 'pass' }
   | { name: 'room'; code: string }
+  | { name: 'notifications' }
   | { name: 'friendChat'; friend: { userId: string; name: string; code?: string; online?: boolean; lastSeen?: string | null } };
 
 type BackBlocker = () => boolean;

@@ -14,6 +14,9 @@ import { PlannerData, localDay, tasksForDay, isDone, isRepeating, checkinKey, da
 //   - saved jobs whose last date is within 3 days → a reminder, once a day per job
 //   - Study Planner: task reminders at their time, a morning exam countdown, and an evening
 //     nudge if the daily test target isn't done (all once per day)
+//   - the student's notifications (friend requests and messages, rooms, support replies) →
+//     a Windows notification, checked every minute (not while the window is in front: the
+//     bell shows them there)
 // -----------------------------------------------------------------------------
 
 const SEEN_KEY = 'desktop_seen_notice_ids';
@@ -69,6 +72,33 @@ function remindLastDates(jobs: { noticeId: string; title: string; lastDate?: str
     );
   }
   writeJson(REMINDED_KEY, reminded);
+}
+
+const NOTIF_CURSOR_KEY = 'desktop_notif_cursor';
+
+/**
+ * New notifications since the last check → Windows notifications; the bell is told to refresh.
+ * The last check is kept per account, so what came while the PC was off is shown on start.
+ */
+async function checkMyNotifications(userId: string) {
+  const key = `:`;
+  const since = readJson<string | null>(key, null);
+  const res = await fetch('/api/db', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+    body: JSON.stringify({ action: 'notif-since', data: { since } }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!json?.success) return;
+  writeJson(key, json.cursor);
+  if (!since || !json.items?.length) return; // first run on this PC: start from now
+  window.dispatchEvent(new CustomEvent('mth-notifications', { detail: { unread: json.unread } }));
+  if (document.visibilityState === 'visible' && document.hasFocus()) return; // the student is looking at the app
+  const items: { title: string; body: string }[] = json.items;
+  if (items.length <= 3) {
+    for (const n of items) await desktopNotify(n.title, n.body);
+  } else {
+    await desktopNotify(` new notifications`, items.slice(0, 3).map(n => n.title).join(' · '));
+  }
 }
 
 const PLANNER_SENT_KEY = 'desktop_planner_reminders';
@@ -227,6 +257,16 @@ export default function DesktopBridge() {
     const timer = setInterval(sync, 10 * 60 * 1000);
     window.addEventListener('online', sync);
     return () => { clearTimeout(first); clearInterval(timer); window.removeEventListener('online', sync); };
+  }, [userId]);
+
+  // Friend requests, messages, rooms and support replies (every minute, and when the internet is back)
+  useEffect(() => {
+    if (!isDesktopApp() || !userId) return;
+    const run = () => { if (navigator.onLine) checkMyNotifications(userId).catch(() => {}); };
+    run();
+    const timer = setInterval(run, 60 * 1000);
+    window.addEventListener('online', run);
+    return () => { clearInterval(timer); window.removeEventListener('online', run); };
   }, [userId]);
 
   useEffect(() => {

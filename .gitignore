@@ -59,3 +59,8 @@ restore_database.js
 web/*.html
 web/*.txt
 
+
+# Firebase private keys (never commit)
+*service-account*.json
+*firebase-adminsdk*.json
+google-services*.json*

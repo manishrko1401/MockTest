@@ -100,15 +100,18 @@ export function timeLeft(iso: string | null, hi: boolean) {
 
 export const showCode = (c: string) => (c && c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c);
 
-// ---- Badge: new friend requests + unread messages (Friends tab) ----
+// ---- Badges: new friend requests + unread messages (Friends tab), unread notifications (bell) ----
 
-type BadgeValue = { requests: number; unread: number; total: number; refresh: () => void };
-const BadgeCtx = createContext<BadgeValue>({ requests: 0, unread: 0, total: 0, refresh: () => {} });
+type BadgeValue = { requests: number; unread: number; total: number; notifications: number; refresh: () => void };
+const BadgeCtx = createContext<BadgeValue>({ requests: 0, unread: 0, total: 0, notifications: 0, refresh: () => {} });
 
 export function FriendsBadgeProvider({ children }: { children: React.ReactNode }) {
   const [counts, setCounts] = useState({ requests: 0, unread: 0 });
+  const [notifications, setNotifications] = useState(0);
   const refresh = useCallback(() => {
     api<{ requests: number; unread: number }>('friends-badge').then(r => setCounts({ requests: r.requests || 0, unread: r.unread || 0 }), () => {});
+    // only the count (no list) for the bell
+    api<{ unread: number }>('notif-since').then(r => setNotifications(r.unread || 0), () => {});
   }, []);
   useEffect(() => {
     refresh();
@@ -116,7 +119,7 @@ export function FriendsBadgeProvider({ children }: { children: React.ReactNode }
     const sub = AppState.addEventListener('change', s => { if (s === 'active') refresh(); });
     return () => { clearInterval(timer); sub.remove(); };
   }, [refresh]);
-  const value = useMemo(() => ({ ...counts, total: counts.requests + counts.unread, refresh }), [counts, refresh]);
+  const value = useMemo(() => ({ ...counts, total: counts.requests + counts.unread, notifications, refresh }), [counts, notifications, refresh]);
   return React.createElement(BadgeCtx.Provider, { value }, children);
 }
 

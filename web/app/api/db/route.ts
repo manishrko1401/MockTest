@@ -52,6 +52,7 @@ import { hitLimit, clearLimit, countHits } from '../../lib/dbRateLimit';
 import { sanitizeNoticeHtml } from '../../lib/sanitizeNotice';
 import { INTEGRITY_ACTIONS, handleIntegrityAction, recordIntegrity, TimelineRow } from '../../lib/integrity';
 import { PLATFORM_ACTIONS, handlePlatformAction, classifyPlatform, recordPlatform, isAndroidAppRequest } from '../../lib/platformUsage';
+import { NOTIFY_ACTIONS, handleNotifyAction, notifyUser } from '../../lib/userNotify';
 import { analyzeAttempt, countWords } from '../../lib/integrityRules';
 import { unstable_cache } from 'next/cache';
 import { CATALOG_TAG, NOTICES_TAG, CATALOG_REVALIDATE_S, NOTICES_REVALIDATE_S, invalidateShared } from '../../lib/sharedCache';
@@ -139,6 +140,8 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   // Exam integrity review (app/lib/integrity.ts): admins only
   ...Object.fromEntries(INTEGRITY_ACTIONS.map(a => [a, { level: 'staff', roles: [] } as ActionAccess])),
   ...Object.fromEntries(PLATFORM_ACTIONS.map(a => [a, { level: 'staff', roles: [] } as ActionAccess])),
+  // A student's own notifications (bell, phone registration, settings)
+  ...Object.fromEntries(NOTIFY_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
   'save-profile-admin': { level: 'staff', roles: [] },
   'reset-attempt': { level: 'staff', roles: [] },
   'reset-referrals': { level: 'staff', roles: [] },
@@ -453,6 +456,10 @@ export async function POST(request: Request) {
       return await handlePlannerAction(action, data);
     }
 
+    if ((NOTIFY_ACTIONS as readonly string[]).includes(action)) {
+      // always the caller's own (an admin's user id in the request doesn't change that)
+      return await handleNotifyAction(action, data, requester!.id);
+    }
     if ((PLATFORM_ACTIONS as readonly string[]).includes(action)) {
       return await handlePlatformAction(action, data);
     }
@@ -5186,6 +5193,9 @@ async function handleSendSupportMessage(data: any) {
     }
   });
 
+  if (actualSender === 'ADMIN') {
+    notifyUser(userId, () => ({ type: 'support_reply', title: 'Mock Test Hub support', body: String(message), tag: 'support', data: { screen: 'support' } }));
+  }
   if (actualSender === 'STUDENT') {
     notifyStaff('support', async () => ({
       title: await studentLabel(userId),

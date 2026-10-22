@@ -5,6 +5,7 @@ import { generateExamSession } from './examUtils';
 import { isCbatTest, isRpscRasTest } from './examScoring';
 import { checkRateLimit } from './botProtection';
 import { areFriends, ensureFriendTables, relationsWith, sendFriendMessage } from './friends';
+import { markNotificationsRead, nameOf, notifyUser } from './userNotify';
 import { heldSessions } from './integrity';
 
 // -----------------------------------------------------------------------------
@@ -352,7 +353,13 @@ export async function handleRoomAction(action: string, data: any, requester: Req
       const test = await testInfo(room.testId);
       if (!test) return fail('Test not found.', 404);
       if (!(await mayTakeTest(requester, test, deps))) return fail('This is a PRO test. Unlock it to join this room.', 403, 'PRO_REQUIRED');
-      await prisma.$executeRawUnsafe(`INSERT INTO friend_room_members (code, "userId") VALUES ($1, $2) ON CONFLICT DO NOTHING`, code, me);
+      const joined = await prisma.$executeRawUnsafe(`INSERT INTO friend_room_members (code, "userId") VALUES ($1, $2) ON CONFLICT DO NOTHING`, code, me);
+      if (joined && room.hostId !== me) {
+        notifyUser(room.hostId, async () => ({
+          type: 'room_joined', title: `${await nameOf(me)} joined your room`, body: test.title,
+          tag: `room-${code}`, data: { screen: 'room', code },
+        }));
+      }
       return ok({ code });
     }
 
@@ -372,9 +379,19 @@ export async function handleRoomAction(action: string, data: any, requester: Req
       if (room.hostId !== me) return fail('Only the host can start the test.', 403);
       if (room.mode !== 'live' || room.startedAt) return ok();
       const test = await testInfo(room.testId);
-      await prisma.$executeRawUnsafe(
+      const started = await prisma.$executeRawUnsafe(
         `UPDATE friend_rooms SET "startedAt" = NOW(), "closesAt" = NOW() + make_interval(mins => $2::int)
          WHERE code = $1 AND "startedAt" IS NULL`, code, (test?.durationMinutes || 60) + LIVE_GRACE_MINUTES);
+      if (started) {
+        const others = (await getMembers(code)).filter(m => m.userId !== me);
+        const host = await nameOf(me, 'The host');
+        for (const m of others) {
+          notifyUser(m.userId, () => ({
+            type: 'room_started', title: `${host} started the test`, body: `${test?.title || 'Room test'}: start now, the room is live.`,
+            tag: `room-${code}`, data: { screen: 'room', code },
+          }));
+        }
+      }
       return ok();
     }
 
@@ -409,6 +426,11 @@ export async function handleRoomAction(action: string, data: any, requester: Req
       }
       await prisma.$executeRawUnsafe(`INSERT INTO friend_room_members (code, "userId") VALUES ($1, $2) ON CONFLICT DO NOTHING`, code, friendId);
       await sendFriendMessage(me, friendId, `I added you to a test room: ${test.title}`, 'room', { code, testTitle: test.title, mode: room.mode });
+      notifyUser(friendId, async () => ({
+        type: 'room_invite', title: `${await nameOf(me)} added you to a test room`,
+        body: `${test.title}${room.mode === 'live' ? ' · live room, join before it starts' : ''}`,
+        tag: `room-${code}`, data: { screen: 'room', code },
+      }));
       return ok();
     }
 
@@ -441,6 +463,7 @@ export async function handleRoomAction(action: string, data: any, requester: Req
       const test = await testInfo(room.testId);
       let members = await getMembers(code);
       const mine = members.find(m => m.userId === me);
+      if (mine) await markNotificationsRead(me, `room-${code}`).catch(() => {});
       const status = statusOf(room);
       const base = {
         room: {
