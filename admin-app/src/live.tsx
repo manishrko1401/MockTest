@@ -5,7 +5,7 @@ import { api } from './api';
 import { AlertType, showLocalAlert } from './push';
 
 // -----------------------------------------------------------------------------
-// Live inbox while the app is open: checks the server every few seconds (and at once when a
+// Live inbox while the app is open: checks the server every 15 seconds (and at once when a
 // push arrives or the app comes back to the front), keeps the unread counts, alerts for each
 // new message, and tells open screens to reload. Stops in the background, where Firebase
 // pushes take over.
@@ -24,7 +24,8 @@ type LiveValue = {
   setActiveChat: (userId: string | null) => void;
 };
 
-const POLL_MS = 4000;
+// Pushes bring new messages at once; this check is the fallback (and keeps the counts right)
+const POLL_MS = 15000;
 const LiveContext = createContext<LiveValue | null>(null);
 
 export function LiveProvider({ children }: { children: React.ReactNode }) {
@@ -45,10 +46,11 @@ export function LiveProvider({ children }: { children: React.ReactNode }) {
     busy.current = true;
     try {
       const res = await api<{ serverTime: string; counts: Counts; events: LiveEvent[] }>('summary', { since: since.current }, 10000);
-      setOnline(true);
-      const changed = !!countsRef.current && JSON.stringify(countsRef.current) !== JSON.stringify(res.counts);
-      countsRef.current = res.counts;
-      setCounts(res.counts);
+      setOnline(o => (o ? o : true));
+      const same = !!countsRef.current && JSON.stringify(countsRef.current) === JSON.stringify(res.counts);
+      const changed = !!countsRef.current && !same;
+      // only a real change redraws the screens that show the counts
+      if (!same) { countsRef.current = res.counts; setCounts(res.counts); }
       if (changed) setVersion(v => v + 1);
       const first = since.current === null;
       since.current = res.serverTime;

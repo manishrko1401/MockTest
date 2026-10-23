@@ -344,16 +344,19 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
         passage={passage} typed={typed} onType={onType} timeLeft={timeLeft}
         highlight={test.highlightAllowed !== false} english={test.language === 'en'}
         note={phase === 'main' && !backspaceAllowed ? (hi ? 'बैकस्पेस बंद' : 'No backspace') : ''}
-        action={<Button small tone={phase === 'demo' ? 'neutral' : 'success'} title={phase === 'demo' ? (hi ? 'डेमो समाप्त' : 'End demo') : (hi ? 'सबमिट' : 'Submit')} onPress={() => (phase === 'demo' ? startPhase('break') : setConfirmSubmit(true))} />}
       />
       <Modal visible={confirmSubmit} transparent animationType="fade" onRequestClose={() => setConfirmSubmit(false)}>
         <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 24 }}>
           <Card>
-            <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>{phase === 'demo' ? (hi ? 'टेस्ट छोड़ें?' : 'Leave the test?') : (hi ? 'टेस्ट सबमिट करें?' : 'Submit the test?')}</Text>
-            <Text style={{ color: t.textSoft, marginTop: 8 }}>{phase === 'demo' ? '' : (hi ? 'अभी सबमिट करने पर आपका परिणाम अब तक टाइप किए गए टेक्स्ट से बनेगा।' : 'Your result is worked out from what you have typed so far.')}</Text>
+            <Text style={{ color: t.text, fontSize: 18, fontWeight: '800' }}>{hi ? 'टेस्ट छोड़ें?' : 'Leave the test?'}</Text>
+            <Text style={{ color: t.textSoft, marginTop: 8, lineHeight: 20 }}>
+              {phase === 'main'
+                ? (hi ? 'टेस्ट समय पूरा होने पर अपने आप सबमिट होता है। अभी छोड़ने पर यह प्रयास सेव नहीं होगा।' : 'The test is submitted by itself when the time is up. If you leave now, this attempt is not saved.')
+                : (hi ? 'डेमो समय पूरा होने पर अपने आप खत्म होता है।' : 'The demo ends by itself when its time is up.')}
+            </Text>
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <Button style={{ flex: 1 }} outline title={hi ? 'जारी रखें' : 'Continue'} onPress={() => setConfirmSubmit(false)} />
-              <Button style={{ flex: 1 }} title={phase === 'demo' ? (hi ? 'छोड़ें' : 'Leave') : (hi ? 'सबमिट' : 'Submit')} onPress={() => { setConfirmSubmit(false); if (phase === 'demo') nav.pop(); else finishMain(); }} />
+              <Button style={{ flex: 1 }} title={hi ? 'जारी रखें' : 'Continue'} onPress={() => setConfirmSubmit(false)} />
+              <Button style={{ flex: 1 }} outline tone="danger" title={hi ? 'टेस्ट छोड़ें' : 'Leave test'} onPress={() => { setConfirmSubmit(false); nav.pop(); }} />
             </View>
           </Card>
         </View>
@@ -369,9 +372,9 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
  * (a tablet or phone that keeps portrait): passage above, typing box below.
  * The passage scrolls along with the typing so the current word stays in view.
  */
-function TypingDesk({ title, passage, typed, onType, timeLeft, highlight, english, note, action }: {
+function TypingDesk({ title, passage, typed, onType, timeLeft, highlight, english, note }: {
   title: string; passage: string; typed: string; onType: (v: string) => void; timeLeft: number;
-  highlight: boolean; english: boolean; note: string; action: React.ReactNode;
+  highlight: boolean; english: boolean; note: string;
 }) {
   const t = useTheme();
   const { hi } = useI18n();
@@ -446,7 +449,6 @@ function TypingDesk({ title, passage, typed, onType, timeLeft, highlight, englis
             <Text style={{ flex: 1, color: t.heroText, fontWeight: '800' }} numberOfLines={1}>{title}</Text>
             {count}
             {timer}
-            {action}
           </View>
         </View>
         <View style={{ flex: 1, flexDirection: 'row', paddingLeft: insets.left, paddingRight: insets.right, paddingBottom: insets.bottom }}>
@@ -469,7 +471,6 @@ function TypingDesk({ title, passage, typed, onType, timeLeft, highlight, englis
       {input}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
         <View style={{ flex: 1 }}>{count}</View>
-        {action}
       </View>
     </View>
   );

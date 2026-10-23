@@ -12,7 +12,7 @@ const CATEGORIES = [
   { key: 'result', label: 'Result', type: 'RESULT' },
   { key: 'admit_card', label: 'Admit card', type: 'ADMIT CARD' },
   { key: 'answer_key', label: 'Answer key', type: 'ANSWER KEY' },
-  { key: 'announcement', label: 'News', type: 'NEWS' },
+  { key: 'announcement', label: 'Announcement', type: 'NEWS' },
 ] as const;
 const LABEL: Record<string, string> = Object.fromEntries(CATEGORIES.map(c => [c.key, c.label]));
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -56,7 +56,7 @@ export function NoticesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title="Notices" right={<HeaderButton label="New notice" icon={<Plus color={t.headerText} size={24} />} onPress={() => nav.push({ name: 'notice' })} />} />
+      <Header large title="Notices" right={<HeaderButton label="New notice" icon={<Plus color={t.headerText} size={24} />} onPress={() => nav.push({ name: 'notice' })} />} />
       {!online ? <OfflineBar /> : null}
       <View style={{ paddingHorizontal: 12, paddingTop: 12 }}>
         <Field value={search} onChangeText={setSearch} placeholder="Search notices" />

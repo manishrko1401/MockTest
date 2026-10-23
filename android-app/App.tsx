@@ -30,6 +30,7 @@ import { notifyLocal, registerPushDevice } from './src/push';
 import { request } from './src/api';
 import { NotificationsScreen, useOpenNotification } from './src/screens/NotificationsScreen';
 import { PassGift } from './src/screens/PassGift';
+import { UpdatePrompt } from './src/updater';
 import { AnalysisScreen, BookmarksScreen } from './src/screens/AnalysisScreens';
 import { FriendsBadgeProvider, useFriendsBadge } from './src/friendsApi';
 
@@ -41,6 +42,8 @@ export default function App() {
         <LanguageProvider>
           <SessionProvider>
             <Root />
+            {/* a newer version on the website: offer it (also before signing in) */}
+            <UpdatePrompt />
           </SessionProvider>
         </LanguageProvider>
       </ThemeProvider>

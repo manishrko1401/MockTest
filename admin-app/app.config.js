@@ -9,14 +9,14 @@ module.exports = {
   expo: {
     name: 'MTH Admin',
     slug: 'mth-admin',
-    version: '1.0.0',
+    version: '2.1.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
     splash: { image: './assets/splash-icon.png', resizeMode: 'contain', backgroundColor: '#1e4e79' },
     android: {
       package: 'com.mocktesthub.adminhub',
-      versionCode: 1,
+      versionCode: 3,
       adaptiveIcon: {
         foregroundImage: './assets/android-icon-foreground.png',
         backgroundImage: './assets/android-icon-background.png',

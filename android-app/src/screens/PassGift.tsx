@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
-import { CheckCircle2, Crown, Gift, X } from 'lucide-react-native';
+import { Modal, ScrollView, Text, View } from 'react-native';
+import { CheckCircle2, Crown, Gift } from 'lucide-react-native';
 import { request, friendlyError } from '../api';
 import { useI18n } from '../i18n';
 import { useSession, useUser } from '../session';
@@ -56,10 +56,6 @@ export function PassGift() {
     <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={close}>
       <View style={{ flex: 1, backgroundColor: t.overlay, justifyContent: 'center', padding: 20 }}>
         <View style={{ backgroundColor: t.card, borderRadius: 20, maxHeight: '92%', overflow: 'hidden' }}>
-          <Pressable onPress={close} hitSlop={10} accessibilityRole="button" accessibilityLabel={hi ? 'बंद करें' : 'Close'}
-            style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, width: 36, height: 36, borderRadius: 18, backgroundColor: t.cardAlt, alignItems: 'center', justifyContent: 'center' }}>
-            <X size={18} color={t.textSoft} />
-          </Pressable>
           <ScrollView contentContainerStyle={{ padding: 22, alignItems: 'center' }}>
             {claimed ? (
               <>

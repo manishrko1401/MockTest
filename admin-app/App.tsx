@@ -10,7 +10,7 @@ import { LiveProvider, useLive } from './src/live';
 import { NavProvider, Route, Tab, useNav } from './src/nav';
 import { forgetPushToken, getSavedPushToken, registerForPush, setupChannels } from './src/push';
 import { Can, SessionProvider, useSession } from './src/session';
-import { useTheme } from './src/theme';
+import { ThemeProvider, useTheme } from './src/theme';
 import { Badge, Button } from './src/ui';
 import LoginScreen from './src/screens/LoginScreen';
 import InboxScreen from './src/screens/InboxScreen';
@@ -19,7 +19,8 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import { FeedbackItemScreen, InquiryScreen, ReportScreen, SuggestionScreen } from './src/screens/DetailScreens';
 import { UserScreen, UsersScreen } from './src/screens/UsersScreens';
 import { NoticeEditScreen, NoticesScreen } from './src/screens/NoticesScreens';
-import { MoreScreen, SettingsScreen, TestScreen } from './src/screens/MoreScreens';
+import { IntegrityScreen, MockAttemptsScreen, PlatformsScreen, TypingAttemptScreen, TypingAttemptsScreen } from './src/screens/ActivityScreens';
+import { MoreScreen, SettingsScreen, TestScreen, TestsScreen, TypingCategoriesScreen } from './src/screens/MoreScreens';
 
 // Pushes that arrive while the app is open are not shown as banners: the live sync shows the
 // same message as its own alert a moment later (and skips the chat already on screen).
@@ -36,10 +37,18 @@ type Me = { can: Can; pushConfigured: boolean };
 export default function App() {
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      <Root />
+      <ThemeProvider>
+        <ThemedStatusBar />
+        <Root />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
+}
+
+/** Status-bar icons for the header colour (white headers in light mode, dark in dark mode). */
+function ThemedStatusBar() {
+  const t = useTheme();
+  return <StatusBar style={t.dark ? 'light' : 'dark'} />;
 }
 
 function Root() {
@@ -167,6 +176,13 @@ function RouteScreen({ route }: { route: Route }) {
     case 'notice': return <NoticeEditScreen notice={route.notice} />;
     case 'test': return <TestScreen test={route.test} />;
     case 'settings': return <SettingsScreen />;
+    case 'mockAttempts': return <MockAttemptsScreen />;
+    case 'typingAttempts': return <TypingAttemptsScreen />;
+    case 'typingAttempt': return <TypingAttemptScreen key={route.id} id={route.id} />;
+    case 'integrity': return <IntegrityScreen />;
+    case 'platforms': return <PlatformsScreen />;
+    case 'tests': return <TestsScreen />;
+    case 'typingCategories': return <TypingCategoriesScreen />;
   }
 }
 
@@ -191,10 +207,10 @@ function TabBar({ tabs }: { tabs: Tab[] }) {
         const Icon = TAB_META[tab].icon;
         return (
           <Pressable key={tab} onPress={() => nav.setTab(tab)} accessibilityRole="tab" accessibilityState={{ selected: on }}
-            style={{ flex: 1, alignItems: 'center', paddingTop: 8, paddingBottom: 8 }}>
-            <View>
-              <Icon size={22} color={on ? t.primary : t.textMuted} />
-              {tab === 'inbox' && inboxCount ? <Badge count={inboxCount} style={{ position: 'absolute', top: -6, right: -14 }} /> : null}
+            style={{ flex: 1, alignItems: 'center', paddingTop: 7, paddingBottom: 7 }}>
+            <View style={{ width: 56, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? t.primarySoft : 'transparent' }}>
+              <Icon size={21} color={on ? t.primary : t.textMuted} />
+              {tab === 'inbox' && inboxCount ? <Badge count={inboxCount} style={{ position: 'absolute', top: -4, right: 2 }} /> : null}
             </View>
             <Text style={{ fontSize: 11, marginTop: 3, color: on ? t.primary : t.textMuted, fontWeight: on ? '800' : '600' }}>{TAB_META[tab].label}</Text>
           </Pressable>

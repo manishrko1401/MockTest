@@ -5,6 +5,7 @@ import { Lock, Mail } from 'lucide-react-native';
 import { login, getServer, setServer, DEFAULT_SERVER, StaffUser } from '../api';
 import { useTheme } from '../theme';
 import { Button, Field } from '../ui';
+import { StatusBar } from 'expo-status-bar';
 
 export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: StaffUser) => void }) {
   const t = useTheme();
@@ -30,7 +31,8 @@ export default function LoginScreen({ onSignedIn }: { onSignedIn: (u: StaffUser)
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.header }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: t.hero }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <StatusBar style="light" />
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, paddingTop: insets.top + 24 }} keyboardShouldPersistTaps="handled">
         {/* Long-press the logo to point the app at another server (testing) */}
         <Pressable onLongPress={() => setShowServer(s => !s)} style={{ alignItems: 'center', marginBottom: 24 }}>

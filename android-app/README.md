@@ -51,6 +51,17 @@ gradlew.bat assembleRelease bundleRelease -PreactNativeArchitectures=arm64-v8a,a
 Signing uses `keystore/my-release-key.keystore` and `keystore/keystore.properties` (not in git;
 back them up). Without that key Google Play will not accept the update.
 
+## Releasing a new version (website download + in-app update)
+
+1. Raise `version` and `versionCode` in `app.config.js` **and** `android/app/build.gradle`
+   (and `version` in `package.json`), then build the APK (above).
+2. `npm run publish:apk -- --notes "First change\nSecond change"` uploads the APK and writes
+   `web/public/downloads/android.json`. Add `--required` if older versions must update
+   (no "Later"), or `--min <versionCode>` to require it only below that version.
+3. Deploy the website ("push to git"). From then on every installed app (2.1.9 or newer) shows
+   the update pop-up on its next start: it downloads the APK, Android's installer opens and the
+   student taps Install. Login and data stay, as long as the same signing key is used.
+
 ## Publishing on Google Play
 
 1. Play Console → the existing MockTest Hub app → **Production → Create new release**.

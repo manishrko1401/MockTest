@@ -18,7 +18,14 @@ export type Route =
   | { name: 'user'; id: string }
   | { name: 'notice'; notice?: any }
   | { name: 'test'; test: any }
-  | { name: 'settings' };
+  | { name: 'settings' }
+  | { name: 'mockAttempts' }
+  | { name: 'typingAttempts' }
+  | { name: 'typingAttempt'; id: string }
+  | { name: 'integrity' }
+  | { name: 'platforms' }
+  | { name: 'tests' }
+  | { name: 'typingCategories' };
 
 type NavValue = {
   tab: Tab;

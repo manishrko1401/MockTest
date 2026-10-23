@@ -60,7 +60,7 @@ export default function InboxScreen({ can }: { can: Can }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title="Inbox" subtitle={counts ? `${counts.supportUnread} unread chat messages` : undefined}
+      <Header large title="Inbox" subtitle={counts ? `${counts.supportUnread} unread chat messages` : undefined}
         right={<HeaderButton label="Settings" icon={<Bell color={t.headerText} size={20} />} onPress={() => nav.push({ name: 'settings' })} />} />
       {!online ? <OfflineBar /> : null}
       <Segmented options={sections} value={section as InboxSection} onChange={nav.setInboxSection} />

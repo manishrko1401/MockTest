@@ -1,9 +1,11 @@
 {
-  "version": "2.1.7",
-  "versionCode": 108,
+  "version": "2.2.0",
+  "versionCode": 111,
   "releasedAt": "2026-10-23",
-  "key": "apps/android/MockTestHub_2.1.7.apk",
-  "file": "MockTestHub_2.1.7.apk",
-  "size": 45063474,
-  "minAndroid": "7.0"
+  "key": "apps/android/MockTestHub_2.2.0.apk",
+  "file": "MockTestHub_2.2.0.apk",
+  "size": 45111078,
+  "minAndroid": "7.0",
+  "notes": "Pass Pro gift: claim your free 1-year pass in one tap\nSmall fixes and improvements",
+  "minVersionCode": 0
 }

@@ -9,6 +9,8 @@ import { registerDevice, unregisterDevice, sendTestAlert, pushConfigured, ALERT_
 import { getTypingCategories, saveTypingCategory } from '../../lib/typingStore';
 import { platformLabel } from '../../lib/platformLabels';
 import { notifyUser } from '../../lib/userNotify';
+import { prismaTyping } from '../../lib/prismaTyping';
+import { ensureIntegrityTable } from '../../lib/integrity';
 
 // -----------------------------------------------------------------------------
 // API for the Mock Test Hub Admin app (Android, admin-app/). Staff only. The app signs in
@@ -34,6 +36,8 @@ const ACCESS: Record<string, string[]> = {
   users: SUPPORT, user: SUPPORT, 'user-update': [], 'user-reset-attempt': [],
   notices: ['NOTICES_MANAGER'],
   'content-tests': CONTENT, 'test-analysis': CONTENT, 'typing-categories': CONTENT, 'typing-category-toggle': CONTENT,
+  // Attempt logs: mock tests for admins (as on the website), typing tests also for test creators
+  'mock-attempts': [], 'typing-attempts': CONTENT, 'typing-attempt': CONTENT,
 };
 
 const ok = (body: object = {}) => NextResponse.json({ success: true, ...body });
@@ -102,6 +106,9 @@ export async function POST(request: Request) {
         return ok();
       }
       case 'notices': return await notices(data);
+      case 'mock-attempts': return await mockAttempts(data);
+      case 'typing-attempts': return await typingAttempts(data);
+      case 'typing-attempt': return await typingAttempt(data);
       case 'content-tests': return await contentTests(data);
       case 'test-analysis': return await testAnalysis(data);
       case 'typing-categories': {
@@ -431,7 +438,7 @@ async function userDetail(data: any) {
     },
   });
   if (!u) return fail('User not found', 404);
-  const [attempts, stats, messages] = await Promise.all([
+  const [attempts, stats, messages, typing] = await Promise.all([
     prisma.userTestSession.findMany({
       where: { userId: id }, orderBy: { startedAt: 'desc' }, take: 30,
       select: { id: true, status: true, startedAt: true, completedAt: true, finalScore: true, maxScore: true, accuracyPercentage: true, timeSpentSeconds: true, source: true, mockTest: { select: { id: true, title: true, maxMarks: true } } },
@@ -441,6 +448,15 @@ async function userDetail(data: any) {
              ROUND(AVG("accuracyPercentage") FILTER (WHERE status IN ('COMPLETED', 'AUTO_SUBMITTED'))::numeric, 1)::float AS "avgAccuracy"
       FROM user_test_sessions WHERE "userId" = ${id}`,
     prisma.supportMessage.count({ where: { userId: id } }),
+    // typing tests (their own database): the latest 20 and a summary
+    Promise.all([
+      prismaTyping.typingAttempt.findMany({
+        where: { userId: id }, orderBy: { completedAt: 'desc' }, take: 20,
+        select: { id: true, testTitle: true, netWpm: true, accuracyPercentage: true, totalMistakes: true, isQualified: true, language: true, timeSpentSeconds: true, completedAt: true },
+      }),
+      prismaTyping.typingAttempt.aggregate({ where: { userId: id }, _count: { _all: true }, _max: { netWpm: true }, _avg: { netWpm: true, accuracyPercentage: true } }),
+      prismaTyping.typingAttempt.count({ where: { userId: id, isQualified: true } }),
+    ]).catch(() => null),
   ]);
   return ok({
     user: {
@@ -450,6 +466,11 @@ async function userDetail(data: any) {
       lockerConnected: u.isLockerConnected, supportMessages: messages,
     },
     stats: stats[0],
+    typingAttempts: (typing?.[0] || []).map(a => ({ ...a, completedAt: iso(a.completedAt) })),
+    typingStats: typing ? {
+      total: typing[1]._count._all, qualified: typing[2],
+      bestWpm: typing[1]._max.netWpm, avgWpm: typing[1]._avg.netWpm, avgAccuracy: typing[1]._avg.accuracyPercentage,
+    } : null,
     attempts: attempts.map(a => ({
       id: a.id, testId: a.mockTest?.id, testTitle: a.mockTest?.title || 'Test', status: a.status, startedAt: iso(a.startedAt), completedAt: iso(a.completedAt),
       score: a.finalScore, maxScore: a.maxScore ?? a.mockTest?.maxMarks ?? null, accuracy: a.accuracyPercentage, timeSpentSeconds: a.timeSpentSeconds, source: a.source,
@@ -488,6 +509,66 @@ async function userUpdate(me: Requester, data: any) {
     await prisma.user.update({ where: { id }, data: { currentSessionId: null } }).catch(() => {});
   }
   return ok();
+}
+
+// ---- Attempt logs (newest first, 30 at a time, search by student or test) --------------------
+
+async function mockAttempts(data: any) {
+  await ensureIntegrityTable().catch(() => {});
+  const search = str(data.search, 100);
+  const limit = int(data.limit, 30, 100), offset = int(data.offset, 0, 100000);
+  const like = `%${search}%`;
+  const rows = await prisma.$queryRaw<any[]>`
+    SELECT s.id, s."userId", s."mockTestId" AS "testId", s.status, s."completedAt", s."startedAt", s."finalScore" AS score,
+           COALESCE(s."maxScore", t."maxMarks") AS "maxScore", s."accuracyPercentage" AS accuracy, s."timeSpentSeconds", s.source,
+           s."violationsCount" AS violations, t.title AS "testTitle", u."fullName" AS name, u.email, u."candidateCode",
+           i.level AS flag, i.status AS "flagStatus"
+    FROM user_test_sessions s
+    JOIN users u ON u.id = s."userId"
+    LEFT JOIN mock_tests t ON t.id = s."mockTestId"
+    LEFT JOIN attempt_integrity i ON i."sessionId" = s.id
+    WHERE s.status IN ('COMPLETED', 'AUTO_SUBMITTED')
+      AND (${search} = '' OR u."fullName" ILIKE ${like} OR u.email ILIKE ${like} OR u."candidateCode" ILIKE ${like} OR t.title ILIKE ${like})
+    ORDER BY COALESCE(s."completedAt", s."startedAt") DESC
+    LIMIT ${limit} OFFSET ${offset}`;
+  return ok({
+    attempts: rows.map(r => ({
+      ...r, completedAt: iso(r.completedAt), startedAt: iso(r.startedAt),
+      // flagged / watch from the integrity checks, unless an admin already cleared it
+      flag: r.flag && r.flagStatus !== 'cleared' ? r.flag : null, flagStatus: undefined,
+    })),
+    hasMore: rows.length === limit,
+  });
+}
+
+async function typingAttempts(data: any) {
+  const search = str(data.search, 100);
+  const limit = int(data.limit, 30, 100), offset = int(data.offset, 0, 100000);
+  const where = search ? { OR: [{ userName: { contains: search, mode: 'insensitive' as const } }, { testTitle: { contains: search, mode: 'insensitive' as const } }] } : {};
+  const rows = await prismaTyping.typingAttempt.findMany({
+    where, orderBy: { completedAt: 'desc' }, skip: offset, take: limit,
+    select: { id: true, userId: true, userName: true, testId: true, testTitle: true, netWpm: true, grossWpm: true, accuracyPercentage: true,
+      totalMistakes: true, errorPercentage: true, timeSpentSeconds: true, isQualified: true, language: true, completedAt: true },
+  });
+  const ids = [...new Set(rows.map(r => r.userId).filter(id => id && id !== 'guest'))];
+  const people = ids.length ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true, email: true, candidateCode: true } }) : [];
+  const byId = new Map(people.map(p => [p.id, p]));
+  return ok({
+    attempts: rows.map(r => ({ ...r, name: byId.get(r.userId)?.fullName || r.userName, email: byId.get(r.userId)?.email || null, candidateCode: byId.get(r.userId)?.candidateCode || null, completedAt: iso(r.completedAt) })),
+    hasMore: rows.length === limit,
+  });
+}
+
+async function typingAttempt(data: any) {
+  const a = await prismaTyping.typingAttempt.findUnique({ where: { id: str(data.id, 100) } });
+  if (!a) return fail('Attempt not found', 404);
+  const mistakes = Array.isArray(a.detailedMistakes) ? (a.detailedMistakes as any[]).filter(m => m?.type && m.type !== 'CORRECT').slice(0, 150) : [];
+  return ok({
+    attempt: {
+      ...a, completedAt: iso(a.completedAt), createdAt: iso(a.createdAt), detailedMistakes: mistakes,
+      typedText: a.typedText.slice(0, 20000), targetText: a.targetText.slice(0, 20000),
+    },
+  });
 }
 
 // ---- Notices (list; add / edit / delete go through /api/db, which refreshes the site cache) ----

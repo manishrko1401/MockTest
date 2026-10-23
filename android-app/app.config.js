@@ -11,7 +11,7 @@ module.exports = {
     name: 'MockTest Hub',
     slug: 'mocktesthub',
     scheme: 'mocktesthub',
-    version: '2.1.7',
+    version: '2.2.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -19,13 +19,14 @@ module.exports = {
     android: {
       package: 'com.mocktesthub',
       // Higher than any version of the old app on Google Play
-      versionCode: 108,
+      versionCode: 111,
       adaptiveIcon: {
         foregroundImage: './assets/android-icon-foreground.png',
         backgroundImage: './assets/android-icon-background.png',
         monochromeImage: './assets/android-icon-monochrome.png',
       },
-      permissions: ['POST_NOTIFICATIONS', 'VIBRATE'],
+      // REQUEST_INSTALL_PACKAGES: the update pop-up opens Android's installer for a new version
+      permissions: ['POST_NOTIFICATIONS', 'VIBRATE', 'REQUEST_INSTALL_PACKAGES'],
       softwareKeyboardLayoutMode: 'resize',
       ...(hasFirebase ? { googleServicesFile: './google-services.json' } : {}),
     },

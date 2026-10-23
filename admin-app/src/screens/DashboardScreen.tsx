@@ -6,7 +6,7 @@ import { useLive, useLiveReload } from '../live';
 import { useNav } from '../nav';
 import { useSession } from '../session';
 import { useTheme } from '../theme';
-import { Card, ErrorBox, Header, Loading, OfflineBar, SectionTitle } from '../ui';
+import { Card, ErrorBox, Header, Loading, OfflineBar, SectionTitle, ThemeButton } from '../ui';
 
 export default function DashboardScreen() {
   const t = useTheme();
@@ -29,7 +29,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title="Dashboard" subtitle={`Hi, ${user.name.split(' ')[0]}`} />
+      <Header large title="Dashboard" subtitle={`Hi, ${user.name.split(' ')[0]}`} right={<ThemeButton />} />
       {!online ? <OfflineBar /> : null}
       <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 28 }}
         refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}>

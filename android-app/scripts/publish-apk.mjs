@@ -1,6 +1,8 @@
 // Puts the newly built Android app (APK) on the website's download page as the latest version.
 //   cd android/ && gradlew.bat assembleRelease ...   (see README)
-//   npm run publish:apk
+//   npm run publish:apk -- --notes "What's new, one point per line"   (shown in the update pop-up)
+//   npm run publish:apk -- --required                            (older versions must update)
+//   npm run publish:apk -- --min 109                             (versions below 109 must update)
 // The APK (~45 MB) is kept in Tigris storage, not in the website's files: downloads cost no
 // Vercel bandwidth and the git repo doesn't grow by 45 MB per release. The website's button
 // (/api/download/android) always serves what web/public/downloads/android.json lists, so the
@@ -49,8 +51,17 @@ await s3.send(new PutObjectCommand({
 const head = await s3.send(new HeadObjectCommand({ Bucket: env.TIGRIS_BUCKET_NAME, Key: key }));
 if (Number(head.ContentLength) !== body.length) { console.error('Upload size does not match.'); process.exit(1); }
 
+// The app's update pop-up reads these: notes (what's new) and minVersionCode (older versions
+// can't skip the update). Without --notes the earlier notes are kept only if this is the same version.
+const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
 const out = path.join(web, 'public', 'downloads');
 fs.mkdirSync(out, { recursive: true });
-const latest = { version, versionCode, releasedAt: new Date().toISOString().slice(0, 10), key, file: `MockTestHub_${version}.apk`, size: body.length, minAndroid: '7.0' };
+let previous = {};
+try { previous = JSON.parse(fs.readFileSync(path.join(out, 'android.json'), 'utf8')); } catch { /* first release */ }
+// A typed "\n" in --notes starts a new line
+const notes = (arg('--notes') ?? (previous.versionCode === versionCode ? previous.notes : '') ?? '').split('\\n').join('\n').trim();
+const minVersionCode = process.argv.includes('--required') ? versionCode
+  : arg('--min') ? Number(arg('--min')) : Math.min(previous.minVersionCode || 0, versionCode);
+const latest = { version, versionCode, releasedAt: new Date().toISOString().slice(0, 10), key, file: `MockTestHub_${version}.apk`, size: body.length, minAndroid: '7.0', notes, minVersionCode };
 fs.writeFileSync(path.join(out, 'android.json'), JSON.stringify(latest, null, 2) + '\n');
-console.log(`Done: Android ${version} (${versionCode}). Deploy the website to offer it.`);
+console.log(`Done: Android ${version} (${versionCode})${minVersionCode >= versionCode ? ', required update' : ''}. Deploy the website to offer it.`);

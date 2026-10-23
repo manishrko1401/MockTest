@@ -1,47 +1,125 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { BellRing, ChevronRight, Keyboard, LogOut, Pencil, Settings as Cog, Trash2 } from 'lucide-react-native';
+import { FlatList, Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import Constants from 'expo-constants';
+import {
+  BellRing, BookOpen, ClipboardList, Keyboard, LogOut, Moon, MonitorSmartphone, Pencil, Settings2, ShieldAlert, Smartphone, Sun, Trash2,
+} from 'lucide-react-native';
 import { api, db, getServer, DEFAULT_SERVER } from '../api';
 import { useNav } from '../nav';
 import { ALERT_LABELS, AlertType, firebaseBuilt, getMuted, registerForPush, setMuted } from '../push';
 import { ROLE_LABEL, useSession } from '../session';
-import { useTheme } from '../theme';
-import { Button, Card, confirm, Empty, ErrorBox, Field, Header, KeyValue, ListRow, Loading, Pill, SectionTitle, Segmented, dateTime } from '../ui';
+import { lift, ThemeMode, useTheme, useThemeMode } from '../theme';
+import {
+  Avatar, Button, Card, confirm, Empty, ErrorBox, Field, Header, KeyValue, ListRow, listPerf, Loading, MenuCard, MenuRow, Pill, SearchBar, SectionTitle,
+  ThemeButton, dateTime,
+} from '../ui';
 
-// ---- More tab: content tools + settings ------------------------------------------------------
+// -----------------------------------------------------------------------------
+// More: who is signed in, appearance (light / dark), activity logs, content tools, alerts and
+// signing out. Each item shows only for the roles that may open it.
+// -----------------------------------------------------------------------------
 
 export function MoreScreen() {
   const t = useTheme();
   const nav = useNav();
-  const { can, user } = useSession();
-  const [section, setSection] = useState<'tests' | 'typing'>('tests');
+  const { user, can, signOut } = useSession();
+  const { mode, setMode } = useThemeMode();
+  const admin = user.role === 'ADMIN';
+  const typingLogs = admin || can.content;
+
+  const modes: { key: ThemeMode; label: string; icon: any }[] = [
+    { key: 'system', label: 'Phone', icon: Smartphone },
+    { key: 'light', label: 'Light', icon: Sun },
+    { key: 'dark', label: 'Dark', icon: Moon },
+  ];
+
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title="More" subtitle={`${user.name} · ${ROLE_LABEL[user.role] || user.role}`} />
-      <Pressable onPress={() => nav.push({ name: 'settings' })} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, margin: 12, padding: 14, backgroundColor: t.card, borderRadius: 12, borderWidth: 1, borderColor: t.border }}>
-        <Cog size={20} color={t.primary} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ color: t.text, fontWeight: '700' }}>Settings & alerts</Text>
-          <Text style={{ color: t.textSoft, fontSize: 12 }}>Instant alerts, what to be alerted about, sign out</Text>
+      <Header large title="More" right={<ThemeButton />} />
+      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 36 }}>
+        {/* Who is signed in */}
+        <View style={{ backgroundColor: t.hero, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, ...lift(t, 2) }}>
+          <View style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.35)', borderRadius: 32 }}><Avatar name={user.name} size={56} /></View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={{ color: t.heroText, fontSize: 19, fontWeight: '900' }} numberOfLines={1}>{user.name}</Text>
+            <Text style={{ color: t.heroText, opacity: 0.8, fontSize: 13, marginTop: 1 }} numberOfLines={1}>{user.email}</Text>
+            <View style={{ marginTop: 8, alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
+              <Text style={{ color: t.heroText, fontSize: 12, fontWeight: '800' }}>{ROLE_LABEL[user.role] || user.role}</Text>
+            </View>
+          </View>
         </View>
-        <ChevronRight size={18} color={t.textMuted} />
-      </Pressable>
-      {can.content ? (
-        <>
-          <Segmented options={[{ key: 'tests', label: 'Mock tests' }, { key: 'typing', label: 'Typing categories' }]} value={section} onChange={setSection} />
-          {section === 'tests' ? <TestsList /> : <TypingCategories />}
-        </>
-      ) : <Empty title="Content tools are for test creators" text="Ask an admin if you need access." />}
+
+        {/* Appearance */}
+        <SectionTitle>Appearance</SectionTitle>
+        <MenuCard style={{ flexDirection: 'row', padding: 6, gap: 6 }}>
+          {modes.map(m => {
+            const on = mode === m.key;
+            return (
+              <Pressable key={m.key} onPress={() => setMode(m.key)} accessibilityRole="radio" accessibilityState={{ selected: on }}
+                style={{ flex: 1, alignItems: 'center', gap: 5, paddingVertical: 12, borderRadius: 12, backgroundColor: on ? t.primary : 'transparent' }}>
+                <m.icon size={20} color={on ? t.primaryText : t.textSoft} />
+                <Text style={{ color: on ? t.primaryText : t.text, fontWeight: '800', fontSize: 13 }}>{m.label}</Text>
+              </Pressable>
+            );
+          })}
+        </MenuCard>
+        <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 6, paddingHorizontal: 2 }}>"Phone" follows the light / dark setting of this phone.</Text>
+
+        {/* Activity */}
+        {admin || typingLogs ? (
+          <>
+            <SectionTitle>Activity</SectionTitle>
+            <MenuCard>
+              {admin ? <MenuRow icon={ClipboardList} title="Mock test attempts" subtitle="Every student, newest first" onPress={() => nav.push({ name: 'mockAttempts' })} /> : null}
+              {typingLogs ? <MenuRow icon={Keyboard} color={t.violet} title="Typing test attempts" subtitle="Speed, accuracy and mistakes" onPress={() => nav.push({ name: 'typingAttempts' })} last={!admin} /> : null}
+              {admin ? <MenuRow icon={ShieldAlert} color={t.danger} title="Integrity review" subtitle="Suspicious attempts to check" onPress={() => nav.push({ name: 'integrity' })} /> : null}
+              {admin ? <MenuRow icon={MonitorSmartphone} color={t.success} title="Platforms" subtitle="Website, Windows app and Android app" onPress={() => nav.push({ name: 'platforms' })} last /> : null}
+            </MenuCard>
+          </>
+        ) : null}
+
+        {/* Content */}
+        {can.content ? (
+          <>
+            <SectionTitle>Content</SectionTitle>
+            <MenuCard>
+              <MenuRow icon={BookOpen} title="Mock tests" subtitle="Attempts, analysis, rename or delete" onPress={() => nav.push({ name: 'tests' })} />
+              <MenuRow icon={Keyboard} color={t.violet} title="Typing categories" subtitle="Show or hide categories for students" onPress={() => nav.push({ name: 'typingCategories' })} last />
+            </MenuCard>
+          </>
+        ) : null}
+
+        {/* Alerts */}
+        <SectionTitle>Alerts</SectionTitle>
+        <MenuCard>
+          <MenuRow icon={BellRing} color={t.warning} title="Instant alerts" subtitle="Test alert and what to be alerted about" onPress={() => nav.push({ name: 'settings' })} />
+          <MenuRow icon={Settings2} color={t.textSoft} title="Android notification settings" subtitle="Sound, vibration and battery" onPress={() => Linking.openSettings()} last />
+        </MenuCard>
+
+        {/* Account */}
+        <SectionTitle>Account</SectionTitle>
+        <MenuCard>
+          <MenuRow icon={LogOut} danger title="Sign out" subtitle="Alerts stop on this phone until you sign in again"
+            onPress={() => confirm('Sign out?', 'Alerts stop on this phone until you sign in again.', 'Sign out', signOut)} last />
+        </MenuCard>
+
+        <Text style={{ color: t.textMuted, fontSize: 12, textAlign: 'center', marginTop: 22 }}>
+          MTH Admin {Constants.expoConfig?.version || ''}{getServer() !== DEFAULT_SERVER ? ` · ${getServer()}` : ''}
+        </Text>
+      </ScrollView>
     </View>
   );
 }
 
-function TestsList() {
+// ---- Mock tests --------------------------------------------------------------------------------
+
+export function TestsScreen() {
   const t = useTheme();
   const nav = useNav();
   const [search, setSearch] = useState('');
   const [tests, setTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const load = useCallback(async (more = false) => {
@@ -49,35 +127,43 @@ function TestsList() {
     try {
       const res = await api('content-tests', { search, offset: more ? tests.length : 0, limit: 30 });
       setTests(p => (more ? [...p, ...res.tests] : res.tests)); setDone(res.tests.length < 30); setError('');
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
+    } catch (e: any) { setError(e.message); } finally { setLoading(false); setRefreshing(false); }
   }, [search, tests.length]);
   useEffect(() => { const h = setTimeout(() => load(), 300); return () => clearTimeout(h); }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (nav.stack.length === 0 && !loading) load(); }, [nav.stack.length]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <FlatList
-      data={tests}
-      keyExtractor={x => x.id}
-      ListHeaderComponent={<View style={{ paddingHorizontal: 12 }}><Field value={search} onChangeText={setSearch} placeholder="Search test, series or exam" />{error ? <ErrorBox message={error} /> : null}</View>}
-      ListEmptyComponent={loading ? <Loading /> : <Empty title="No tests found" />}
-      onEndReached={() => { if (!done && !loading) load(true); }}
-      onEndReachedThreshold={0.4}
-      renderItem={({ item: x }) => (
-        <ListRow
-          onPress={() => nav.push({ name: 'test', test: x })}
-          title={x.title}
-          subtitle={`${x.exam} › ${x.series} · ${x.attempts} attempts`}
-          right={<View style={{ alignItems: 'flex-end', gap: 4 }}>
-            {x.tier !== 'None' ? <Pill text="PRO" tone="warning" /> : <Pill text="FREE" tone="success" />}
-            {!x.hasQuestions ? <Pill text="No questions" tone="danger" /> : null}
-          </View>}
-        />
-      )}
-    />
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <Header title="Mock tests" onBack={nav.pop} />
+      <View style={{ padding: 12, paddingBottom: 6 }}><SearchBar value={search} onChangeText={setSearch} placeholder="Search test, series or exam" /></View>
+      {error ? <ErrorBox message={error} onRetry={() => load()} /> : null}
+      <FlatList
+        {...listPerf}
+        data={tests}
+        keyExtractor={x => x.id}
+        refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}
+        ListEmptyComponent={loading ? <Loading /> : <Empty title="No tests found" />}
+        onEndReached={() => { if (!done && !loading) load(true); }}
+        onEndReachedThreshold={0.4}
+        renderItem={({ item: x }) => (
+          <ListRow
+            onPress={() => nav.push({ name: 'test', test: x })}
+            title={x.title}
+            subtitle={`${x.exam} › ${x.series} · ${x.attempts} attempts`}
+            right={<View style={{ alignItems: 'flex-end', gap: 4 }}>
+              {x.tier !== 'None' ? <Pill text="PRO" tone="warning" /> : <Pill text="FREE" tone="success" />}
+              {!x.hasQuestions ? <Pill text="No questions" tone="danger" /> : null}
+            </View>}
+          />
+        )}
+      />
+    </View>
   );
 }
 
-function TypingCategories() {
+// ---- Typing categories --------------------------------------------------------------------------
+
+export function TypingCategoriesScreen() {
   const t = useTheme();
+  const nav = useNav();
   const [cats, setCats] = useState<any[] | null>(null);
   const [error, setError] = useState('');
   useEffect(() => { api('typing-categories').then(r => setCats(r.categories), e => setError(e.message)); }, []);
@@ -86,21 +172,21 @@ function TypingCategories() {
     try { await api('typing-category-toggle', { id: c.id, isActive }); }
     catch (e: any) { setError(e.message); setCats(list => list!.map(x => (x.id === c.id ? { ...x, isActive: !isActive } : x))); }
   };
-  if (!cats) return error ? <ErrorBox message={error} /> : <Loading />;
   return (
-    <FlatList
-      data={cats}
-      keyExtractor={c => c.id}
-      ListHeaderComponent={<Text style={{ color: t.textSoft, fontSize: 12, paddingHorizontal: 14, paddingBottom: 6 }}>Inactive categories are hidden from students.</Text>}
-      renderItem={({ item: c }) => (
-        <ListRow
-          left={<Keyboard size={20} color={c.isActive ? t.primary : t.textMuted} />}
-          title={c.name}
-          subtitle={c.isActive ? 'Active' : 'Hidden from students'}
-          right={<Switch value={c.isActive} onValueChange={v => toggle(c, v)} />}
-        />
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <Header title="Typing categories" subtitle="Hidden categories don't show to students" onBack={nav.pop} />
+      {error ? <ErrorBox message={error} /> : null}
+      {!cats ? (!error ? <Loading /> : null) : (
+        <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 30 }}>
+          <MenuCard>
+            {cats.map((c, i) => (
+              <MenuRow key={c.id} icon={Keyboard} color={c.isActive ? t.violet : t.textMuted} title={c.name}
+                subtitle={c.isActive ? 'Shown to students' : 'Hidden from students'} switchValue={c.isActive} onSwitch={v => toggle(c, v)} last={i === cats.length - 1} />
+            ))}
+          </MenuCard>
+        </ScrollView>
       )}
-    />
+    </View>
   );
 }
 
@@ -135,15 +221,12 @@ export function TestScreen({ test }: { test: any }) {
             {data.recent?.length ? (
               <>
                 <SectionTitle>Latest attempts</SectionTitle>
-                <Card style={{ paddingVertical: 4 }}>
-                  {data.recent.map((r: any, i: number) => (
-                    <Pressable key={r.id} onPress={() => nav.push({ name: 'user', id: r.userId })} style={{ flexDirection: 'row', paddingVertical: 9, borderTopWidth: i ? 1 : 0, borderTopColor: t.border, gap: 8 }}>
-                      <Text numberOfLines={1} style={{ color: t.text, flex: 1, fontWeight: '600' }}>{r.name}</Text>
-                      <Text style={{ color: t.textSoft }}>{r.score ?? 0}/{r.maxScore ?? '—'}</Text>
-                      <Text style={{ color: t.textMuted, fontSize: 12, width: 72, textAlign: 'right' }}>{dateTime(r.completedAt).split(',')[0]}</Text>
-                    </Pressable>
+                <MenuCard>
+                  {data.recent.map((r: any) => (
+                    <ListRow key={r.id} onPress={() => nav.push({ name: 'user', id: r.userId })} left={<Avatar name={r.name} size={34} />}
+                      title={r.name} subtitle={`${r.score ?? 0} / ${r.maxScore ?? '—'} marks`} meta={dateTime(r.completedAt).split(',')[0]} />
                   ))}
-                </Card>
+                </MenuCard>
               </>
             ) : null}
           </>
@@ -167,12 +250,12 @@ export function TestScreen({ test }: { test: any }) {
   );
 }
 
-// ---- Settings ------------------------------------------------------------------------------------
+// ---- Instant alerts -------------------------------------------------------------------------------
 
 export function SettingsScreen() {
   const t = useTheme();
   const nav = useNav();
-  const { user, pushConfigured, signOut } = useSession();
+  const { pushConfigured } = useSession();
   const [muted, setMutedState] = useState<AlertType[]>([]);
   const [status, setStatus] = useState<string>('Checking…');
   const [testing, setTesting] = useState(false);
@@ -184,7 +267,7 @@ export function SettingsScreen() {
     setStatus(
       r.status === 'ok' ? (r.serverConfigured ? 'On: alerts arrive even when the app is closed' : 'This phone is ready; the server still needs the Firebase key')
         : r.status === 'no-permission' ? 'Notifications are turned off for this app'
-          : r.status === 'no-firebase' ? 'This build has no Firebase yet: alerts only while the app is open'
+          : r.status === 'no-firebase' ? 'This build has no Firebase: alerts only while the app is open'
             : `Could not register: ${r.error}`,
     );
   }, []);
@@ -195,30 +278,25 @@ export function SettingsScreen() {
     setMutedState(next);
     await setMuted(next);
   };
+  const good = status.startsWith('On');
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title="Settings" onBack={nav.pop} />
+      <Header title="Instant alerts" onBack={nav.pop} />
       <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
         <Card>
-          <KeyValue label="Signed in as" value={user.name} />
-          <KeyValue label="Email" value={user.email} />
-          <KeyValue label="Role" value={ROLE_LABEL[user.role] || user.role} />
-          {getServer() !== DEFAULT_SERVER ? <KeyValue label="Server" value={getServer()} /> : null}
-        </Card>
-
-        <SectionTitle>Instant alerts</SectionTitle>
-        <Card>
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
-            <BellRing size={20} color={status.startsWith('On') ? t.success : t.warning} />
-            <Text style={{ color: t.text, flex: 1, fontWeight: '600' }}>{status}</Text>
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+            <View style={{ width: 42, height: 42, borderRadius: 12, backgroundColor: good ? t.successSoft : t.warningSoft, alignItems: 'center', justifyContent: 'center' }}>
+              <BellRing size={21} color={good ? t.success : t.warning} />
+            </View>
+            <Text style={{ color: t.text, flex: 1, fontWeight: '700', lineHeight: 20 }}>{status}</Text>
           </View>
           {!pushConfigured || !firebaseBuilt ? (
-            <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 8 }}>
-              While the app is open, new messages pop up within seconds. For alerts when the app is closed, Firebase must be set up (see the setup steps).
+            <Text style={{ color: t.textSoft, fontSize: 12.5, marginTop: 10, lineHeight: 18 }}>
+              While the app is open, new messages pop up within seconds. Alerts when the app is closed need Firebase on the server (FCM_SERVICE_ACCOUNT in Vercel).
             </Text>
           ) : null}
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
             <Button style={{ flex: 1 }} small title="Send test alert" loading={testing}
               onPress={async () => {
                 setTesting(true); setNote('');
@@ -227,27 +305,21 @@ export function SettingsScreen() {
                   setNote(!r.configured ? 'The server has no Firebase key yet, so nothing was sent.' : r.sent ? 'Sent. Lock the phone to see how it arrives.' : 'This phone is not registered for alerts yet.');
                 } catch (e: any) { setNote(e.message); } finally { setTesting(false); }
               }} />
-            <Button style={{ flex: 1 }} small outline title="Android settings" onPress={() => Linking.openSettings()} />
+            <Button style={{ flex: 1 }} small outline title="Check again" onPress={check} />
           </View>
-          {note ? <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 8 }}>{note}</Text> : null}
+          {note ? <Text style={{ color: t.textSoft, fontSize: 12.5, marginTop: 10 }}>{note}</Text> : null}
         </Card>
 
         <SectionTitle>Alert me about</SectionTitle>
-        <Card style={{ paddingVertical: 4 }}>
-          {(Object.keys(ALERT_LABELS) as AlertType[]).map((type, i) => (
-            <View key={type} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderTopWidth: i ? 1 : 0, borderTopColor: t.border }}>
-              <Text style={{ color: t.text, flex: 1 }}>{ALERT_LABELS[type]}</Text>
-              <Switch value={!muted.includes(type)} onValueChange={v => toggle(type, v)} />
-            </View>
+        <MenuCard>
+          {(Object.keys(ALERT_LABELS) as AlertType[]).map((type, i, all) => (
+            <MenuRow key={type} icon={BellRing} color={muted.includes(type) ? t.textMuted : t.primary} title={ALERT_LABELS[type]}
+              switchValue={!muted.includes(type)} onSwitch={v => toggle(type, v)} last={i === all.length - 1} />
           ))}
-        </Card>
-        <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 8 }}>
-          Tip: for alerts that never get delayed, set Battery for MTH Admin to "Unrestricted" in Android settings (Apps › MTH Admin › Battery). Sound and vibration for each kind can be changed in Android settings › Notifications.
+        </MenuCard>
+        <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 10, lineHeight: 18 }}>
+          For alerts that are never delayed, set Battery for MTH Admin to "Unrestricted" (Android settings › Apps › MTH Admin › Battery). Sound and vibration for each kind can be changed in Android settings › Notifications.
         </Text>
-
-        <SectionTitle>Account</SectionTitle>
-        <Button outline tone="danger" title="Sign out" icon={<LogOut size={18} color={t.danger} />}
-          onPress={() => confirm('Sign out?', 'Alerts stop on this phone until you sign in again.', 'Sign out', signOut)} />
       </ScrollView>
     </View>
   );
