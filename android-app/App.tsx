@@ -29,6 +29,7 @@ import * as Notifications from 'expo-notifications';
 import { notifyLocal, registerPushDevice } from './src/push';
 import { request } from './src/api';
 import { NotificationsScreen, useOpenNotification } from './src/screens/NotificationsScreen';
+import { PassGift } from './src/screens/PassGift';
 import { AnalysisScreen, BookmarksScreen } from './src/screens/AnalysisScreens';
 import { FriendsBadgeProvider, useFriendsBadge } from './src/friendsApi';
 
@@ -118,6 +119,8 @@ function Shell() {
       </View>
       {top ? <View style={{ flex: 1 }}><RouteScreen route={top} /></View> : null}
       {!top ? <TabBar /> : null}
+      {/* launch offer: free 1-year Pass Pro until it's claimed */}
+      <PassGift />
     </View>
   );
 }
