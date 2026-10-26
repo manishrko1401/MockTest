@@ -84,7 +84,17 @@ export function questionPage(q: QuestionPageInput, t: Theme): string {
   const wm = q.watermark ? `<div class="wm" aria-hidden="true">${Array.from({ length: 36 }, () => `<span>${esc(q.watermark || '')}</span>`).join('')}</div>` : '';
 
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<script>window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)'],['$','$']],displayMath:[['\\\\[','\\\\]'],['$$','$$']],processEscapes:true,packages:{'[+]':['ams','boldsymbol','color']},macros:{rupee:'{\\\\text{₹}}',Rs:'{\\\\text{₹}}',inr:'{\\\\text{₹}}',degree:'{^{\\\\circ}}',celsius:'{\\\\text{°C}}'}},svg:{fontCache:'global'},options:{skipHtmlTags:['script','noscript','style','textarea','pre'],ignoreHtmlClass:'no-math'},startup:{typeset:true}};</script>
+<script>
+// Maths pieces carry their LaTeX in data-tex (see mathUtils): MathJax draws that; a piece it
+// can't parse keeps its HTML fallback. "$" is not a delimiter, so money in text stays text.
+window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']],processEscapes:true,packages:{'[+]':['ams','boldsymbol','color']},macros:{rupee:'{\\\\text{₹}}',Rs:'{\\\\text{₹}}',inr:'{\\\\text{₹}}',degree:'{^{\\\\circ}}',celsius:'{\\\\text{°C}}'}},svg:{fontCache:'global'},options:{skipHtmlTags:['script','noscript','style','textarea','pre'],ignoreHtmlClass:'no-math'},
+startup:{typeset:true,pageReady:function(){
+  var pieces=Array.prototype.slice.call(document.querySelectorAll('[data-tex]')),fb=[];
+  pieces.forEach(function(el){ fb.push(el.innerHTML); var t; try{t=decodeURIComponent(el.getAttribute('data-tex')||'');}catch(e){t='';} el.textContent=el.getAttribute('data-display')?'\\\\['+t+'\\\\]':'\\\\('+t+'\\\\)'; });
+  var restore=function(){ pieces.forEach(function(el,i){ if(!el.querySelector('mjx-container')||el.querySelector('mjx-merror,[data-mjx-error]')) el.innerHTML=fb[i]; }); };
+  return MathJax.startup.defaultPageReady().then(restore,restore);
+}}};
+</script>
 <script src="${q.mathJaxSrc}" async></script>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}

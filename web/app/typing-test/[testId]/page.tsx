@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { setPresenceActivity } from '../../components/PresenceReporter';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../AuthContext';
@@ -84,6 +85,7 @@ const cleanDisplayTitle = (title: string) => {
 };
 
 export default function TCSiONTypingTerminalPage() {
+
   const params = useParams();
   // Offline (Windows app): the test comes from the downloaded package, results go to the app's outbox
   const offline = useOfflineTyping();
@@ -283,6 +285,12 @@ export default function TCSiONTypingTerminalPage() {
 
   // Windows app: exam mode (full screen, no screenshots, refresh/back keys off) while the test runs
   const typingInProgress = !isAnalysisMode && !!currentUser && !!test && phase !== 'RESULT';
+  // Admin → Live now
+  useEffect(() => {
+    if (!test) return;
+    setPresenceActivity(isAnalysisMode ? `Viewing typing result: ${test.title}` : phase === 'RESULT' ? `Finished typing test: ${test.title}` : `${phase === 'DEMO' ? 'Typing demo' : 'Typing test'}: ${test.title}`);
+  }, [test, phase, isAnalysisMode]);
+  useEffect(() => () => setPresenceActivity(null), []);
   useEffect(() => { setDesktopExamMode(typingInProgress); }, [typingInProgress]);
   useEffect(() => () => setDesktopExamMode(false), []);
 

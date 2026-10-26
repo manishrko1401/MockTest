@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { isLiveTestId } from './liveTestShared';
 import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
 import { generateExamSession } from './examUtils';
@@ -320,6 +321,7 @@ export async function handleRoomAction(action: string, data: any, requester: Req
       if (!test) return fail('Test not found.', 404);
       if (!test.hasQuestions) return fail("This test doesn't have questions yet.");
       if (isCbatTest(test.id, await deps.getCatalog())) return fail('CBAT tests cannot be taken in a friends room.');
+      if (isLiveTestId(test.id)) return fail('Live tests give everyone a different paper, so they cannot be taken in a friends room.');
       if (!(await mayTakeTest(requester, test, deps))) return fail('This is a PRO test. Unlock it to create a room.', 403, 'PRO_REQUIRED');
       const hosted = await prisma.$queryRawUnsafe<{ n: number }[]>(
         `SELECT COUNT(*)::int AS n FROM friend_rooms WHERE "hostId" = $1 AND "closedAt" IS NULL AND ("closesAt" IS NULL OR "closesAt" > NOW())`, me);

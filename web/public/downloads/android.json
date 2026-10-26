@@ -1,11 +1,11 @@
 {
-  "version": "2.2.0",
-  "versionCode": 111,
-  "releasedAt": "2026-10-23",
-  "key": "apps/android/MockTestHub_2.2.0.apk",
-  "file": "MockTestHub_2.2.0.apk",
-  "size": 45111078,
+  "version": "2.2.1",
+  "versionCode": 112,
+  "releasedAt": "2026-10-25",
+  "key": "apps/android/MockTestHub_2.2.1.apk",
+  "file": "MockTestHub_2.2.1.apk",
+  "size": 45026522,
   "minAndroid": "7.0",
-  "notes": "Pass Pro gift: claim your free 1-year pass in one tap\nSmall fixes and improvements",
+  "notes": "App tour: a quick welcome and tips on the main screens (replay it from Me)\nNew start screen with the MockTest Hub logo\nTest series now shown as tiles: open one to see its tests\nMaths questions show properly: fractions, roots, powers, matrices and symbols\nNew Report question screen with exam, test, question number, date and ID",
   "minVersionCode": 0
 }

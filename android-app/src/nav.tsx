@@ -18,10 +18,12 @@ export type Route =
   | { name: 'referrals' }
   | { name: 'category'; categoryId: string }
   | { name: 'exam'; categoryId: string; examId: string }
+  | { name: 'series'; categoryId: string; examId: string; seriesId: string }
   | { name: 'testInfo'; testId: string }
   | { name: 'examRun'; testId: string; resume?: boolean; lang?: 'en' | 'hi'; l1?: string; l2?: string; offline?: boolean; roomCode?: string }
   | { name: 'cbatRun'; testId: string; offline?: boolean }
   | { name: 'analysis'; testId: string; attemptId?: string; offline?: boolean }
+  | { name: 'liveResult'; result: import('./shared/liveTestShared').LiveResult }
   | { name: 'bookmarks' }
   | { name: 'typingCategory'; categoryId: string }
   | { name: 'typingRun'; testId: string; offline?: boolean }

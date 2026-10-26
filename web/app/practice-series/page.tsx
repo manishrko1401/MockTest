@@ -47,6 +47,7 @@ import MathJaxLoader from '../components/MathJaxLoader';
 
 import { processQuestionHtml, decodeHtml } from '../lib/mathUtils';
 import MathJaxText from '../lib/MathJaxText';
+import { ReportQuestionDialog } from '../components/ReportQuestionDialog';
 
 
 function renderFormattedExplanation(rawExp: any, lang: 'en' | 'hi', qId?: string, asPoints: boolean = false) {
@@ -385,7 +386,7 @@ const DEFAULT_PRACTICE_CATALOG: TestCategory[] = [
 ];
 
 export default function PracticeSeriesPage() {
-  const { currentUser, examCatalog, theme, toggleTheme, language, setLanguage, logout, toggleBookmark } = useAuth();
+  const { currentUser, examCatalog, theme, toggleTheme, language, setLanguage, logout, toggleBookmark, reportQuestion } = useAuth();
   const router = useRouter();
   const t = TRANSLATIONS[language];
   const { isMobile, isMounted } = useIsMobile();
@@ -416,9 +417,8 @@ export default function PracticeSeriesPage() {
   const [showFinishSummaryModal, setShowFinishSummaryModal] = useState<boolean>(false);
   const [isReviewMode, setIsReviewMode] = useState<boolean>(false);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
-  const [reportReason, setReportReason] = useState<string>('incorrect_answer');
-  const [reportDetails, setReportDetails] = useState<string>('');
-  const [reportSuccessToast, setReportSuccessToast] = useState<boolean>(false);
+  // The question being reported (saved when "Report" is pressed)
+  const [reportTarget, setReportTarget] = useState<{ id: string; number: number; section: string; preview: string } | null>(null);
   const [showMobilePaletteModal, setShowMobilePaletteModal] = useState<boolean>(false);
   const [sectionResultsMap, setSectionResultsMap] = useState<Record<string, any>>({});
 
@@ -1813,7 +1813,14 @@ export default function PracticeSeriesPage() {
                                 </button>
 
                                 <button
-                                  onClick={() => setShowReportModal(true)}
+                                  onClick={() => {
+                                    const text = viewerLang === 'hi' ? (activeQ.questionText?.hi || activeQ.questionText?.en) : activeQ.questionText?.en;
+                                    setReportTarget({
+                                      id: String(activeQ.id), number: globalQIndex + 1, section: `Section ${selectedSectionIndex + 1}`,
+                                      preview: String(text || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 2000),
+                                    });
+                                    setShowReportModal(true);
+                                  }}
                                   className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 hover:text-rose-500 hover:border-rose-300 dark:hover:border-rose-800 transition cursor-pointer flex items-center gap-1.5 text-xs font-extrabold"
                                   title="Report Question Issue"
                                 >
@@ -2342,93 +2349,19 @@ export default function PracticeSeriesPage() {
           </div>
         );
       })()}
-      {/* REPORT QUESTION MODAL */}
-      {showReportModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-base">
-                <Flag className="h-5 w-5 text-rose-500" />
-                <span>{viewerLang === 'hi' ? 'प्रश्न की रिपोर्ट करें' : 'Report Question Issue'}</span>
-              </div>
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3.5 text-xs">
-              <div>
-                <label className="font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                  {viewerLang === 'hi' ? 'समस्या का प्रकार चुनिए:' : 'Select Issue Category:'}
-                </label>
-                <select
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
-                >
-                  <option value="incorrect_answer">{viewerLang === 'hi' ? 'गलत उत्तर / विकल्प त्रुटि' : 'Incorrect Answer / Option Error'}</option>
-                  <option value="typo_error">{viewerLang === 'hi' ? 'टाइपिंग या वर्तनी त्रुटि' : 'Typo or Spelling Mistake'}</option>
-                  <option value="translation_issue">{viewerLang === 'hi' ? 'अनुवाद में समस्या (हिन्दी/अंग्रेजी)' : 'Translation Discrepancy'}</option>
-                  <option value="other">{viewerLang === 'hi' ? 'अन्य कारण' : 'Other Reason'}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                  {viewerLang === 'hi' ? 'अतिरिक्त टिप्पणी (ऐच्छिक):' : 'Additional Remarks (Optional):'}
-                </label>
-                <textarea
-                  value={reportDetails}
-                  onChange={(e) => setReportDetails(e.target.value)}
-                  rows={3}
-                  placeholder={viewerLang === 'hi' ? 'कृपया समस्या का विवरण दें...' : 'Describe what looks incorrect...'}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                onClick={() => setShowReportModal(false)}
-                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs transition cursor-pointer"
-              >
-                {viewerLang === 'hi' ? 'रद्द करें' : 'Cancel'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowReportModal(false);
-                  setReportDetails('');
-                  setReportSuccessToast(true);
-                  setTimeout(() => setReportSuccessToast(false), 3500);
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer"
-              >
-                {viewerLang === 'hi' ? 'रिपोर्ट जमा करें' : 'Submit Report'}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* REPORT SUCCESS TOAST */}
-      {reportSuccessToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-3 animate-in slide-in-from-bottom-5 duration-300">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <div>
-            <h5 className="font-extrabold text-xs">
-              {viewerLang === 'hi' ? 'रिपोर्ट जमा की गई!' : 'Report Submitted!'}
-            </h5>
-            <p className="text-[10px] text-slate-400">
-              {viewerLang === 'hi' ? 'हमारी टीम जल्द ही इसकी समीक्षा करेगी।' : 'Our content team will review this question.'}
-            </p>
-          </div>
-        </div>
-      )}
+      {/* REPORT QUESTION POPUP (sent to the admin panel's Reported questions) */}
+      <ReportQuestionDialog
+        open={showReportModal && !!reportTarget}
+        hi={viewerLang === 'hi'}
+        onClose={() => setShowReportModal(false)}
+        info={{
+          questionId: reportTarget?.id || '', examName: activeCategoryObj?.name || 'Practice series', testTitle: `${activeCategoryObj?.name || 'Practice'} · Practice questions`,
+          sectionName: reportTarget?.section, questionNumber: reportTarget?.number, preview: reportTarget?.preview,
+        }}
+        onSubmit={(reason, message) => reportQuestion(reportTarget!.id, message, reportTarget!.preview, `${selectedCategory}_default`, `${activeCategoryObj?.name || 'Practice'} · Practice questions`, {
+          reason, examName: activeCategoryObj?.name || 'Practice series', sectionName: reportTarget!.section, questionNumber: reportTarget!.number, language: viewerLang === 'hi' ? 'hi' : 'en',
+        })}
+      />
 
       {/* FOOTER */}
       <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-6 px-4 text-center text-xs text-slate-500">

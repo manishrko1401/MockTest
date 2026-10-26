@@ -6,6 +6,7 @@ import { useI18n } from '../i18n';
 import { useSession, useUser } from '../session';
 import { useTheme } from '../theme';
 import { Button, ErrorBox } from '../ui';
+import { useTour } from '../tour';
 
 // -----------------------------------------------------------------------------
 // Launch offer: every student gets a free 1-year Pass Pro. Same as the website's home page:
@@ -22,6 +23,7 @@ export function PassGift() {
   const user = useUser();
   const { refreshUser } = useSession();
   const hasPro = user.subscriptionTier === PRO;
+  const tourBusy = useTour().busy; // after the welcome slides
   const [open, setOpen] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -29,10 +31,10 @@ export function PassGift() {
 
   // A moment after the app opens (the home screen draws first)
   useEffect(() => {
-    if (hasPro || closedThisRun) return;
+    if (hasPro || closedThisRun || tourBusy) return;
     const timer = setTimeout(() => setOpen(true), 1500);
     return () => clearTimeout(timer);
-  }, [hasPro, user.id]);
+  }, [hasPro, user.id, tourBusy]);
 
   const close = () => { closedThisRun = true; setOpen(false); };
   const claim = async () => {

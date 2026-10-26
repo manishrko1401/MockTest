@@ -15,7 +15,9 @@ import { Button, Card, Dialog, ProgressBar, Sheet, StatusBarFor } from '../ui';
 import QuestionView from '../QuestionView';
 import { engineReducer, getSectionQuestions, EngineResumeData, EngineState } from '../shared/examEngine';
 import { generateExamSession } from '../shared/examUtils';
+import { canShuffleTest, newShuffleSeed, responsesToDisplay, responsesToOriginal, shuffleSession } from '../shared/examShuffle';
 import { isRpscRasTest } from '../shared/examScoring';
+import { LIVE_TESTS, LivePaper, isLiveTestId, liveQuestionCount, livePaperKey } from '../shared/liveTestShared';
 import { newLocalId, openOffline, saveOfflineAttempt, syncOutbox } from '../offline';
 
 // -----------------------------------------------------------------------------
@@ -82,6 +84,9 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
   stateRef.current = state;
   const title = useRef('');
   const font = useExamFont();
+  // Live test: a new paper from the bank each time, kept only on this phone; nothing is saved on the server
+  const live = !offline && isLiveTestId(testId);
+  const livePaper = useRef<LivePaper | null>(null);
 
   // ---- Load the test (and any saved progress) ----
   const load = useCallback(async () => {
@@ -93,7 +98,25 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
         const access = await request('test-access', { testId });
         if (access.locked) { setLocked(true); setPhase('error'); return; }
       }
-      const qs = pkg ? { ...pkg.data.customQs } : await request('get-custom-questions', { testId });
+      let qs: any;
+      if (live) {
+        const cfg = LIVE_TESTS[testId];
+        let paper: LivePaper | null = await AsyncStorage.getItem(livePaperKey(user.id, testId)).then(r => (r ? JSON.parse(r) : null)).catch(() => null);
+        if (!paper || !Array.isArray(paper.questions) || !paper.questions.length || paper.expiresAt < Date.now()) {
+          // New paper: progress saved for an older one doesn't belong to it
+          await AsyncStorage.removeItem(progressKey(user.id, testId)).catch(() => {});
+          const res = await request('live-test-start', { testId });
+          paper = res.paper as LivePaper;
+          await AsyncStorage.setItem(livePaperKey(user.id, testId), JSON.stringify(paper)).catch(() => {});
+        }
+        livePaper.current = paper;
+        qs = {
+          questions: paper.questions, positiveMarks: cfg.positiveMarks, negativeMarks: cfg.negativeMarks, durationMinutes: cfg.durationMinutes,
+          questionsCount: liveQuestionCount(cfg), maxMarks: liveQuestionCount(cfg) * cfg.positiveMarks,
+        };
+      } else {
+        qs = pkg ? { ...pkg.data.customQs } : await request('get-custom-questions', { testId });
+      }
       if (qs.locked) { setLocked(true); setPhase('error'); return; }
       const customQs = Array.isArray(qs.questions) && qs.questions.length ? {
         questions: qs.questions, positiveMarks: qs.positiveMarks, negativeMarks: qs.negativeMarks, durationMinutes: qs.durationMinutes,
@@ -101,17 +124,23 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
         lockSectionOnSubmit: qs.lockSectionOnSubmit, sections: qs.sections,
       } : null;
       if (!customQs) { setError(hi ? 'इस टेस्ट के प्रश्न अभी जोड़े नहीं गए हैं।' : "Questions for this test haven't been added yet."); setPhase('error'); return; }
-      const session = generateExamSession(testId, pkg ? pkg.data.catalog : catalog, customQs, l1, l2);
-      title.current = session.testTitle;
+      const baseSession = generateExamSession(testId, pkg ? pkg.data.catalog : catalog, customQs, l1, l2);
+      if (live) baseSession.testTitle = hi ? LIVE_TESTS[testId].titleHi : LIVE_TESTS[testId].title;
+      title.current = baseSession.testTitle;
 
       // Saved progress: the newer of this phone's copy and the server's (e.g. started on the website)
       let resumeData: EngineResumeData | undefined;
       const local = await AsyncStorage.getItem(progressKey(user.id, testId)).then(r => (r ? JSON.parse(r) : null)).catch(() => null);
-      const server = pkg ? null : await request('get-exam-progress', { userId: user.id, testId }).then(r => r.progress, () => null);
+      const server = pkg || live ? null : await request('get-exam-progress', { userId: user.id, testId }).then(r => r.progress, () => null);
       const pick = [local, server].filter(p => p && (p.engine || 'tcs') === 'tcs').sort((a, b) => (Number(b.savedAt) || 0) - (Number(a.savedAt) || 0))[0];
+
+      // Questions and options in a new random order for every attempt, the same order (from the
+      // saved seed) when it continues here or from the website; old progress without a seed stays unshuffled
+      const seed = pick?.data?.responses ? Number(pick.data.shuffleSeed) || 0 : (canShuffleTest(baseSession) ? newShuffleSeed() : 0);
+      const session = seed ? shuffleSession(baseSession, seed) : baseSession;
       if (pick?.data?.responses) {
         resumeData = {
-          responses: pick.data.responses, timeRemaining: pick.timeRemaining, violationsCount: pick.violations || 0,
+          responses: responsesToDisplay(session, pick.data.responses), timeRemaining: pick.timeRemaining, violationsCount: pick.violations || 0,
           currentSectionIndex: pick.currentSectionIndex, currentQuestionIndex: pick.currentQuestionIndex,
           submittedSectionIndices: pick.data.submittedSectionIndices, isExtraTimeMode: pick.data.isExtraTimeMode, extraTimeRemaining: pick.data.extraTimeRemaining,
         };
@@ -122,7 +151,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
       setError(e?.message === 'EXPIRED' ? (hi ? 'यह डाउनलोड समाप्त हो गया है। इंटरनेट से जुड़कर फिर से डाउनलोड करें।' : 'This download has expired. Connect to the internet and download it again.') : friendlyError(e));
       setPhase('error');
     }
-  }, [testId, catalog, l1, l2, lang, user.id, hi, offline]);
+  }, [testId, catalog, l1, l2, lang, user.id, hi, offline, live]);
   useEffect(() => { load(); }, [load]);
 
   // ---- Protection: no screenshots while the test is open ----
@@ -158,7 +187,11 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
     return {
       v: 1, engine: 'tcs', testId, userId: user.id, title: s.session.testTitle, source: 'app', savedAt: Date.now(),
       timeRemaining: s.timeRemaining, violations: s.violationsCount, currentSectionIndex: s.currentSectionIndex, currentQuestionIndex: s.currentQuestionIndex,
-      data: { responses: s.responses, submittedSectionIndices: s.submittedSectionIndices || [], isExtraTimeMode: s.isExtraTimeMode, extraTimeRemaining: s.extraTimeRemaining },
+      data: {
+        // Original option numbers + the seed, the same format the website saves
+        responses: responsesToOriginal(s.session, s.responses), ...(s.session.shuffleSeed ? { shuffleSeed: s.session.shuffleSeed } : {}),
+        submittedSectionIndices: s.submittedSectionIndices || [], isExtraTimeMode: s.isExtraTimeMode, extraTimeRemaining: s.extraTimeRemaining,
+      },
     };
   }, [testId, user.id]);
   useEffect(() => {
@@ -171,7 +204,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
       const p = snapshot();
       if (p) {
         AsyncStorage.setItem(progressKey(user.id, testId), JSON.stringify(p)).catch(() => {});
-        if (!offline) request('save-exam-progress', { userId: user.id, snapshot: p }).catch(() => {});
+        if (!offline && !live) request('save-exam-progress', { userId: user.id, snapshot: p }).catch(() => {});
       }
     }, 10000);
     return () => clearInterval(timer);
@@ -198,11 +231,25 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
     setPhase('submitting');
     const responses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number }> = {};
     let total = 0;
-    Object.keys(s.responses).forEach(id => {
-      const r: any = s.responses[id];
+    // Original option numbers, so the server scores and analyses the real answers
+    const original = responsesToOriginal(s.session, s.responses);
+    Object.keys(original).forEach(id => {
+      const r: any = original[id];
       responses[id] = { selectedOptionIndex: r.selectedOptionIndex, elapsedSeconds: r.elapsedSeconds, ...(r.answeredAt ? { answeredAt: r.answeredAt } : {}) };
-      total += s.responses[id].elapsedSeconds || 0;
+      total += original[id].elapsedSeconds || 0;
     });
+    if (live) {
+      // Scored by the server from its bank; the result is shown once and not saved
+      try {
+        const res = await request('live-test-submit', { testId, token: livePaper.current?.token, responses, timeTakenSeconds: total });
+        await AsyncStorage.multiRemove([progressKey(user.id, testId), livePaperKey(user.id, testId)]).catch(() => {});
+        nav.replace({ name: 'liveResult', result: res.result });
+      } catch (e) {
+        setError(friendlyError(e));
+        setPhase('failed');
+      }
+      return;
+    }
     if (offline) {
       // Scored here with the downloaded answer key; uploaded (and re-scored) when online
       await saveOfflineAttempt('mock', testId, {
@@ -228,7 +275,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
       setError(friendlyError(e));
       setPhase('failed');
     }
-  }, [testId, user.id, l1, l2, refreshUser, nav, offline]);
+  }, [testId, user.id, l1, l2, refreshUser, nav, offline, live]);
   useEffect(() => { if (submitted && phase === 'ready') sendAttempt(); }, [submitted, phase, sendAttempt]);
 
   // ---------------------------------------------------------------------------------------------
@@ -447,7 +494,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
           <Button style={{ flex: 1 }} outline title={hi ? 'जारी रखें' : 'Stay'} onPress={() => setLeaving(false)} />
           <Button style={{ flex: 1 }} title={hi ? 'छोड़ें' : 'Leave'} onPress={() => {
             const p = snapshot();
-            if (p && !offline) request('save-exam-progress', { userId: user.id, snapshot: p }).catch(() => {});
+            if (p && !offline && !live) request('save-exam-progress', { userId: user.id, snapshot: p }).catch(() => {});
             setLeaving(false); refreshUser(); nav.pop();
           }} />
         </View>

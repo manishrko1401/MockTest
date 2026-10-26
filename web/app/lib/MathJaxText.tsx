@@ -23,6 +23,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { decodeTex } from './mathUtils';
 
 type AllowedComponents = 'span' | 'div' | 'p' | 'h3';
 
@@ -52,16 +53,32 @@ const MathJaxText = React.memo(
        */
       const runTypeset = async (mjax: any) => {
         if (!containerRef.current || !active) return;
+        // Maths pieces from processQuestionHtml: the original LaTeX is in data-tex, the HTML
+        // fallback is shown until MathJax has drawn it (and stays if MathJax can't parse it)
+        const root = containerRef.current;
+        const pieces = Array.from(root.querySelectorAll<HTMLElement>('[data-tex]'));
+        const fallbacks = new Map<HTMLElement, string>();
         try {
           // Wait for full MathJax initialization (config applied, packages loaded)
           if (mjax.startup?.promise) {
             await mjax.startup.promise;
           }
           if (!containerRef.current || !active) return;
+          for (const el of pieces) {
+            fallbacks.set(el, el.innerHTML);
+            const tex = decodeTex(el.dataset.tex || '');
+            el.textContent = el.dataset.display ? `\\[${tex}\\]` : `\\(${tex}\\)`;
+          }
           // Clear any previous typesetting on this element before re-running
-          mjax.typesetClear([containerRef.current]);
-          await mjax.typesetPromise([containerRef.current]);
+          mjax.typesetClear([root]);
+          await mjax.typesetPromise([root]);
+          if (!active) return;
+          for (const el of pieces) {
+            if (!el.querySelector('mjx-container') || el.querySelector('mjx-merror, [data-mjx-error]')) el.innerHTML = fallbacks.get(el) || '';
+          }
         } catch (err) {
+          // MathJax failed: keep the HTML fallback everywhere
+          for (const [el, html] of fallbacks) if (el.isConnected && !el.querySelector('mjx-container')) el.innerHTML = html;
           // Suppress abort errors from rapid content switching
           if (active) {
             console.warn('MathJax typeset error:', err);
@@ -75,13 +92,14 @@ const MathJaxText = React.memo(
        *
        * This handles the case where content changes before the CDN has loaded.
        */
+      let tries = 0;
       const waitAndTypeset = () => {
         if (!active) return;
         const mjax = (window as any).MathJax;
         if (mjax?.typesetPromise) {
           runTypeset(mjax);
-        } else {
-          // CDN not yet loaded — retry in 150ms
+        } else if (tries++ < 200) {
+          // CDN not yet loaded — retry in 150ms (for up to 30 s; the HTML fallback shows meanwhile)
           pollTimeoutId = setTimeout(waitAndTypeset, 150);
         }
       };

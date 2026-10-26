@@ -43,7 +43,7 @@ const fixImports = (code) => code
   .replace(/from ['"]\.\.\/useTestEngine['"]/g, "from './webTypes'")
   .replace(/from ['"]\.\.\/AuthContext['"]/g, "from './webTypes'");
 
-const files = ['examUtils.ts', 'examScoring.ts', 'mathUtils.ts', 'markingUtils.ts', 'plannerShared.ts', 'syllabusTemplates.ts', 'typingTypes.ts'];
+const files = ['examUtils.ts', 'examShuffle.ts', 'liveTestShared.ts', 'examScoring.ts','mathUtils.ts', 'markingUtils.ts', 'plannerShared.ts', 'syllabusTemplates.ts', 'typingTypes.ts'];
 for (const f of files) {
   fs.writeFileSync(path.join(out, f), HEADER + fixImports(fs.readFileSync(path.join(web, 'lib', f), 'utf8')));
 }

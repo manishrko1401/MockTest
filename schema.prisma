@@ -286,8 +286,16 @@ model ReportedQuestion {
   message       String
   userId        String?
   candidateCode String?
+  // Where the question is and what the student picked (filled in by the server)
+  examName       String   @default("")
+  sectionName    String   @default("")
+  questionNumber Int?
+  language       String   @default("en")
+  reason         String   @default("")
+  source         String   @default("web")
   createdAt     DateTime @default(now())
 
+  @@index([questionId])
   @@map("reported_questions")
 }
 

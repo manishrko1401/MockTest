@@ -7,6 +7,7 @@ import { useAuth } from '../AuthContext';
 import { generateExamSession, EXPLANATIONS } from '../lib/examUtils';
 import { processQuestionHtml } from '../lib/mathUtils';
 import MathJaxText from '../lib/MathJaxText';
+import MathJaxLoader from './MathJaxLoader';
 
 // -----------------------------------------------------------------------------
 // Bookmarked questions list (Test Series page, desktop and mobile).
@@ -153,6 +154,7 @@ export default function BookmarkedQuestions({ offline }: { offline?: OfflineBook
 
   return (
     <div className="space-y-3">
+      <MathJaxLoader />
       {testIds.length > 1 && (
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor="bm-test-filter" className="text-xs font-medium text-slate-600 dark:text-slate-400">

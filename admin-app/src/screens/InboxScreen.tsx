@@ -7,6 +7,7 @@ import { InboxSection, useNav } from '../nav';
 import { useTheme } from '../theme';
 import { Avatar, Badge, Empty, ErrorBox, Field, Header, HeaderButton, ListRow, Loading, OfflineBar, Pill, Segmented, stripHtml, timeAgo } from '../ui';
 import { Can } from '../session';
+import { reasonLabel } from './DetailScreens';
 
 const PAGE = 30;
 
@@ -142,8 +143,8 @@ function Reports() {
         <ListRow
           onPress={() => nav.push({ name: 'report', report: r })}
           left={<View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.dangerSoft, alignItems: 'center', justifyContent: 'center' }}><AlertTriangle size={20} color={t.danger} /></View>}
-          title={r.testTitle || 'Reported question'}
-          subtitle={`${r.userName || 'Visitor'}: ${r.message}\n${stripHtml(r.questionText).slice(0, 90)}`}
+          title={`${r.testTitle || 'Reported question'}${r.questionNumber ? ` · Q${r.questionNumber}` : ''}`}
+          subtitle={`${[r.examName, reasonLabel(r.reason)].filter(Boolean).join(' · ')}\n${r.userName || 'Visitor'}: ${r.message || '(no message)'}`}
           meta={timeAgo(r.createdAt)}
         />
       )}

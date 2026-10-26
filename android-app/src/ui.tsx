@@ -162,14 +162,16 @@ export function Pill({ text, tone = 'neutral', icon }: { text: string; tone?: To
 
 // ---- Buttons ----------------------------------------------------------------------------------
 
-export function Button({ title, onPress, tone = 'primary', icon, loading, disabled, small, style, outline, soft }: {
+export function Button({ title, onPress, tone = 'primary', icon, loading, disabled, small, style, outline, soft, textColor }: {
   title: string; onPress: () => void; tone?: Tone; icon?: React.ReactNode; loading?: boolean; disabled?: boolean; small?: boolean; style?: ViewStyle; outline?: boolean; soft?: boolean;
+  /** On a coloured background (e.g. the welcome slides) */
+  textColor?: string;
 }) {
   const t = useTheme();
   const solid = ({ primary: t.primary, danger: t.danger, success: t.success, warning: t.accent, neutral: t.textSoft, violet: t.violet, teal: t.teal } as const)[tone];
   const [softBg, softFg] = toneColors(t, tone);
   const bg = outline ? 'transparent' : soft ? softBg : solid;
-  const fg = outline ? solid : soft ? softFg : tone === 'primary' ? t.primaryText : (t.dark && (tone === 'warning' || tone === 'success' || tone === 'teal')) ? '#0b111c' : '#fff';
+  const fg = textColor ? textColor : outline ? solid : soft ? softFg : tone === 'primary' ? t.primaryText : (t.dark && (tone === 'warning' || tone === 'success' || tone === 'teal')) ? '#0b111c' : '#fff';
   return (
     <Pressable
       onPress={onPress}

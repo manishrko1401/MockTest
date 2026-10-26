@@ -156,6 +156,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
             questionType: 'mcq',
             orderIndex: qIdx,
             correctOptionIndex: item.correctIndex ?? 0,
+            ...(item.fixedOrder ? { fixedOrder: true } : {}),
             content: {
               en: {
                 questionText: item.textEn || item.questionText || '',
@@ -252,6 +253,7 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
           correctOptionIndex: item.correctIndex ?? 0,
           positiveMark: qPosMark,
           negativeMark: qNegMark,
+          ...(item.fixedOrder ? { fixedOrder: true } : {}),
           content: {
             en: {
               questionText: item.textEn || item.questionText || item.text || '',

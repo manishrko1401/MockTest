@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Pressable, ScrollView, Share, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bookmark, BriefcaseBusiness, ChevronRight, Coins, Crown, Download, FileText, Gift, Headphones, KeyRound, Lock, LogOut, Moon, Send, Shield, Sun, SunMoon, UserPen } from 'lucide-react-native';
+import Constants from 'expo-constants';
+import { Bookmark, BriefcaseBusiness, ChevronRight, Coins, Compass, Crown, Download, FileText, Gift, Headphones, KeyRound, Lock, LogOut, Moon, Send, Shield, Sun, SunMoon, UserPen } from 'lucide-react-native';
 import { getServer, request, friendlyError } from '../api';
 import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { useTheme, useThemeMode } from '../theme';
+import { useTour } from '../tour';
 import { Avatar, Button, Card, confirm, Empty, ErrorBox, Field, Header, KeyValue, Loading, Pill, SectionTitle, Tabs } from '../ui';
 
 function MenuRow({ icon, color, label, onPress, right, danger, first }: { icon: any; color?: string; label: string; onPress: () => void; right?: React.ReactNode; danger?: boolean; first?: boolean }) {
@@ -29,6 +31,7 @@ export function ProfileScreen() {
   const nav = useNav();
   const user = useUser();
   const { signOut } = useSession();
+  const tour = useTour();
   const isPro = user.subscriptionTier === 'Testbook Pass Pro';
   const plan = isPro ? 'PRO' : user.subscriptionTier === 'None' || !user.subscriptionTier ? (hi ? 'फ्री' : 'Free') : user.subscriptionTier.replace('Testbook ', '');
   return (
@@ -90,12 +93,13 @@ export function ProfileScreen() {
         <SectionTitle>{hi ? 'सहायता' : 'Help'}</SectionTitle>
         <Card style={{ padding: 0, overflow: 'hidden' }}>
           <MenuRow first icon={Headphones} color="#0284c7" label={tr('Help & support')} onPress={() => nav.push({ name: 'support' })} />
+          <MenuRow icon={Compass} color={t.primary} label={hi ? 'ऐप टूर फिर से देखें' : 'Replay app tour'} onPress={() => { tour.replay(); nav.setTab('home'); }} />
           <MenuRow icon={Shield} color={t.textSoft} label={hi ? 'गोपनीयता नीति' : 'Privacy policy'} onPress={() => Linking.openURL(`${getServer()}/privacy`)} />
           <MenuRow icon={FileText} color={t.textSoft} label={hi ? 'नियम और शर्तें' : 'Terms'} onPress={() => Linking.openURL(`${getServer()}/terms`)} />
           <MenuRow icon={LogOut} danger label={tr('Sign out')} right={<View />}
             onPress={() => confirm(tr('Sign out') + '?', hi ? 'आप इस फ़ोन से लॉग आउट हो जाएंगे।' : 'You will be signed out on this phone.', tr('Sign out'), signOut)} />
         </Card>
-        <Text style={{ color: t.textMuted, fontSize: 11.5, textAlign: 'center', marginTop: 18 }}>MockTest Hub · {hi ? 'संस्करण' : 'version'} 2.1.0</Text>
+        <Text style={{ color: t.textMuted, fontSize: 11.5, textAlign: 'center', marginTop: 18 }}>MockTest Hub · {hi ? 'संस्करण' : 'version'} {Constants.expoConfig?.version}</Text>
       </ScrollView>
     </View>
   );

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Linking, ScrollView, Switch, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Linking, ScrollView, Switch, Text, View } from 'react-native';
 import { CheckCircle2, Mail, MessageCircle, Phone, Trash2 } from 'lucide-react-native';
-import { api } from '../api';
+import { api, db } from '../api';
 import { useLive } from '../live';
 import { useNav } from '../nav';
 import { useSession } from '../session';
@@ -20,6 +20,77 @@ function useAction() {
 
 // ---- Reported question ----------------------------------------------------------------------
 
+const REASONS: Record<string, string> = {
+  wrong_answer: 'Wrong answer', wrong_question: 'Wrong question', options: 'Option problem', solution: 'Solution unclear',
+  typo: 'Spelling / typo', translation: 'Translation', image: 'Image missing', other: 'Other',
+};
+export const reasonLabel = (key?: string) => REASONS[key || ''] || 'Other';
+
+/** The question as it is in the test now: text, options (correct one marked), solution; English / Hindi. */
+function QuestionPanel({ report, fallback }: { report: any; fallback: string }) {
+  const t = useTheme();
+  const [data, setData] = useState<any>(null);
+  const [error, setError] = useState('');
+  const [lang, setLang] = useState<'en' | 'hi'>(report.language === 'hi' ? 'hi' : 'en');
+  useEffect(() => {
+    let alive = true;
+    db('reported-question-view', { id: report.id }).then(r => { if (alive) setData(r); }).catch((e: any) => { if (alive) setError(e.message); });
+    return () => { alive = false; };
+  }, [report.id]);
+
+  if (error) return <Card><ErrorBox message={error} /><Text selectable style={{ color: t.text, marginTop: 8 }}>{fallback || '—'}</Text></Card>;
+  if (!data) return <Card><ActivityIndicator color={t.primary} /></Card>;
+  const q = data.question;
+  if (!q) return <Card><Text style={{ color: t.warning, fontWeight: '700' }}>This question is no longer in the test (it may have been changed or removed). What the student saw:</Text><Text selectable style={{ color: t.text, marginTop: 8, lineHeight: 22 }}>{fallback || '—'}</Text></Card>;
+  const c = q.content?.[lang] || q.content?.en || {};
+  const options: string[] = Array.isArray(c.options) ? c.options : [];
+  const solution = stripHtml(q.explanation?.[lang] || q.explanation?.en || '');
+
+  return (
+    <>
+      {q.content?.hi?.questionText ? (
+        <View style={{ marginBottom: 10 }}>
+          <Segmented options={[{ key: 'en', label: 'English' }, { key: 'hi', label: 'हिन्दी' }]} value={lang} onChange={setLang} />
+        </View>
+      ) : null}
+      <Card>
+        {c.comprehension ? <Text selectable style={{ color: t.textSoft, lineHeight: 21, marginBottom: 10 }}>{stripHtml(c.comprehension)}</Text> : null}
+        <Text selectable style={{ color: t.text, fontSize: 15.5, lineHeight: 23 }}>{stripHtml(c.questionText) || '—'}</Text>
+        {c.imageUrl ? <Image source={{ uri: c.imageUrl }} style={{ width: '100%', height: 200, marginTop: 10, borderRadius: 10 }} resizeMode="contain" /> : null}
+        <View style={{ gap: 8, marginTop: 12 }}>
+          {options.map((o, i) => {
+            const right = i === q.correctOptionIndex;
+            return (
+              <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderWidth: 1.5, borderRadius: 12, padding: 10, borderColor: right ? t.success : t.border, backgroundColor: right ? t.successSoft : 'transparent' }}>
+                <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: right ? t.success : t.cardAlt }}>
+                  <Text style={{ color: right ? '#fff' : t.textSoft, fontWeight: '800', fontSize: 12 }}>{String.fromCharCode(65 + i)}</Text>
+                </View>
+                <Text selectable style={{ flex: 1, color: t.text, lineHeight: 21 }}>{stripHtml(o)}</Text>
+                {right ? <CheckCircle2 size={18} color={t.success} /> : null}
+              </View>
+            );
+          })}
+        </View>
+      </Card>
+      <SectionTitle>Solution</SectionTitle>
+      <Card><Text selectable style={{ color: t.text, lineHeight: 22 }}>{solution || 'No solution added.'}</Text></Card>
+      {data.others?.length ? (
+        <>
+          <SectionTitle>{`Other reports of this question (${data.others.length})`}</SectionTitle>
+          <Card style={{ gap: 10 }}>
+            {data.others.map((o: any) => (
+              <View key={o.id}>
+                <Text style={{ color: t.textMuted, fontSize: 12 }}>{o.candidateCode || 'Visitor'} · {o.createdAt} · {reasonLabel(o.reason)}</Text>
+                <Text selectable style={{ color: t.text, marginTop: 2 }}>{o.message || '—'}</Text>
+              </View>
+            ))}
+          </Card>
+        </>
+      ) : null}
+    </>
+  );
+}
+
 export function ReportScreen({ report }: { report: any }) {
   const t = useTheme();
   const nav = useNav();
@@ -36,18 +107,25 @@ export function ReportScreen({ report }: { report: any }) {
       <ScrollView contentContainerStyle={{ padding: 14 }} keyboardShouldPersistTaps="handled">
         {error ? <ErrorBox message={error} /> : null}
         <Card>
-          <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: '700' }}>STUDENT'S REPORT</Text>
-          <Text selectable style={{ color: t.text, fontSize: 16, marginTop: 6, lineHeight: 22 }}>{report.message}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            <Pill text={reasonLabel(report.reason)} tone="danger" />
+            {report.language ? <Pill text={report.language === 'hi' ? 'Hindi' : 'English'} /> : null}
+            {report.source ? <Pill text={report.source === 'android' ? 'Android app' : report.source === 'mobile_web' ? 'Website (phone)' : 'Website'} /> : null}
+          </View>
+          <Text style={{ color: t.textSoft, fontSize: 12, fontWeight: '700', marginTop: 12 }}>STUDENT'S REPORT</Text>
+          <Text selectable style={{ color: t.text, fontSize: 16, marginTop: 6, lineHeight: 22 }}>{report.message || '(no message, issue type only)'}</Text>
           <Text style={{ color: t.textMuted, fontSize: 12, marginTop: 8 }}>{report.userName || 'Visitor (not signed in)'}{report.candidateCode ? ` · ${report.candidateCode}` : ''} · {dateTime(report.createdAt)}</Text>
         </Card>
-        <SectionTitle>Question</SectionTitle>
+        <SectionTitle>Where</SectionTitle>
         <Card>
-          <Text selectable style={{ color: t.text, fontSize: 15, lineHeight: 22 }}>{question || 'Question text was not included in the report.'}</Text>
-          <View style={{ marginTop: 10 }}>
-            <KeyValue label="Test" value={report.testTitle || report.testId} />
-            <KeyValue label="Question id" value={report.questionId} />
-          </View>
+          <KeyValue label="Exam" value={report.examName || '—'} />
+          <KeyValue label="Test" value={report.testTitle || report.testId || '—'} />
+          <KeyValue label="Question" value={`${report.questionNumber ? `Q${report.questionNumber}` : '—'}${report.sectionName ? ` · ${report.sectionName}` : ''}`} />
+          <KeyValue label="Date" value={dateTime(report.createdAt)} />
+          <KeyValue label="Question id" value={report.questionId} />
         </Card>
+        <SectionTitle>Question</SectionTitle>
+        <QuestionPanel report={report} fallback={question} />
 
         {report.userId ? (
           <>

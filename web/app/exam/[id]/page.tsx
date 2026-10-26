@@ -26,6 +26,7 @@ import { isCbatTest, isRpscRasTest } from '../../lib/examScoring';
 import { useOfflineMock, newLocalId } from '../../lib/offlineExam';
 import { ExamProgress, createProgressSyncer, readLocalProgress, writeLocalProgress, clearLocalProgress, fetchServerProgress, newerProgress } from '../../lib/examProgress';
 import { matchCbatBatteryKey } from './cbatData';
+import { setPresenceActivity } from '../../components/PresenceReporter';
 
 
 
@@ -206,6 +207,9 @@ function TestUploadedSoonCard({ testId, testTitle, catalog, router, currentUser 
 // DYNAMIC EXAM GENERATOR IMPORTED FROM UTILS dfdfd
 // ============================================================================
 import { generateExamSession } from '../../lib/examUtils';
+import { canShuffleTest, newShuffleSeed, responsesToDisplay, responsesToOriginal, shuffleSession } from '../../lib/examShuffle';
+import { LIVE_TESTS, LivePaper, LiveResult, isLiveTestId, liveQuestionCount, livePaperKey } from '../../lib/liveTestShared';
+import LiveTestResult from './LiveTestResult';
 
 
 // Everything about an ongoing test that is worth an immediate server backup when it changes
@@ -243,6 +247,16 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
   const offline = useOfflineMock();
   const examCatalog = offline?.catalog || liveCatalog;
   const router = useRouter();
+
+  // Live test: a new paper from the bank each time, kept only on this device; the result is
+  // shown once and never saved (lib/liveTestShared.ts)
+  const isLive = !offline && isLiveTestId(testId);
+  const livePaperRef = useRef<LivePaper | null>(null);
+  const liveSubmitRef = useRef<{ responses: Record<string, any>; seconds: number } | null>(null);
+  const [liveResult, setLiveResult] = useState<LiveResult | null>(null);
+  const [liveError, setLiveError] = useState('');
+  const [liveSubmitting, setLiveSubmitting] = useState(false);
+  const [liveStartError, setLiveStartError] = useState('');
 
   // SSC exam pattern: an answer is chosen only by clicking the radio circle before the option
   // (as on the real SSC exam screen), not by clicking the option text or row.
@@ -318,6 +332,17 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
   useEffect(() => { setDesktopExamMode(examInProgress); }, [examInProgress]);
   useEffect(() => () => setDesktopExamMode(false), []);
 
+  // Admin → Live now: which test and which question
+  const presenceSection = state.session?.sections?.[state.currentSectionIndex];
+  const presenceQ = state.session && presenceSection ? state.session.questions.filter(q => q.sectionId === presenceSection.id)[state.currentQuestionIndex] : undefined;
+  const presenceNumber = presenceQ && state.session ? state.session.questions.indexOf(presenceQ) + 1 : 0;
+  useEffect(() => {
+    if (!state.session) return;
+    const title = state.session.testTitle || 'a test';
+    setPresenceActivity(state.isExamSubmitted ? `Submitted ${title}` : `Taking ${title}${presenceNumber ? ` · Q${presenceNumber} of ${state.session.questions.length}` : ''}`);
+  }, [state.session, state.isExamSubmitted, presenceNumber]);
+  useEffect(() => () => setPresenceActivity(null), []);
+
   const saveOngoingSessionRef = useRef(saveOngoingSession);
   useEffect(() => {
     saveOngoingSessionRef.current = saveOngoingSession;
@@ -351,7 +376,9 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       currentSectionIndex: s.currentSectionIndex,
       currentQuestionIndex: s.currentQuestionIndex,
       data: {
-        responses: s.responses,
+        // Saved with the original option numbers; the seed brings back the same shuffled order
+        responses: responsesToOriginal(s.session, s.responses),
+        ...(s.session.shuffleSeed ? { shuffleSeed: s.session.shuffleSeed } : {}),
         submittedSectionIndices: s.submittedSectionIndices || [],
         isExtraTimeMode: s.isExtraTimeMode,
         extraTimeRemaining: s.extraTimeRemaining,
@@ -363,12 +390,38 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     const p = buildProgress();
     if (!p) return;
     writeLocalProgress(p);
-    if (opts.server && serverWritableRef.current) {
+    if (opts.server && serverWritableRef.current && !isLive) {
       progressSyncRef.current?.push(p, { keepalive: opts.keepalive });
       // Keep "Resume" on the Test Series page in step (no extra request)
-      saveOngoingSessionRef.current(testId, p.title || '', p.timeRemaining, p.violations, stateRef.current.responses, p.currentSectionIndex, p.currentQuestionIndex, { localOnly: true });
+      saveOngoingSessionRef.current(testId, p.title || '', p.timeRemaining, p.violations, p.data.responses, p.currentSectionIndex, p.currentQuestionIndex, { localOnly: true });
     }
-  }, [buildProgress, testId]);
+  }, [buildProgress, testId, isLive]);
+
+  // Live test: the server scores the paper from its bank and returns the result once
+  const submitLive = React.useCallback(async () => {
+    const paper = livePaperRef.current;
+    const sent = liveSubmitRef.current;
+    if (!paper || !sent) { setLiveError('This paper is no longer on this device. Please start a new live test.'); return; }
+    setLiveSubmitting(true);
+    setLiveError('');
+    try {
+      const res = await fetch('/api/db', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'live-test-submit', data: { testId, token: paper.token, responses: sent.responses, timeTakenSeconds: sent.seconds } }),
+      }).then(r => r.json());
+      if (res?.success && res.result) {
+        setLiveResult(res.result);
+        clearLocalProgress(testId, currentUserRef.current?.id);
+        try { localStorage.removeItem(livePaperKey(currentUserRef.current?.id, testId)); } catch { /* ignore */ }
+      } else {
+        setLiveError(res?.error || 'Could not check your answers.');
+      }
+    } catch {
+      setLiveError('No internet connection. Your answers are still here: try again when you are online.');
+    } finally {
+      setLiveSubmitting(false);
+    }
+  }, [testId]);
 
   // Automatically pause exam, save state instantly, and display pause popup when tab is switched, browser minimized, or window focus lost
   useEffect(() => {
@@ -408,9 +461,41 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     const initialize = async () => {
       // Look up saved progress on the server while the questions load
       const user = currentUserRef.current;
-      const serverProgressPromise = user?.id ? fetchServerProgress(user.id, testId, 'tcs') : Promise.resolve(null);
+      const serverProgressPromise = user?.id && !isLive ? fetchServerProgress(user.id, testId, 'tcs') : Promise.resolve(null);
       let customQs = offline ? offline.customQs : null;
-      if (!offline) try {
+      if (isLive) {
+        serverWritableRef.current = false;
+        const cfg = LIVE_TESTS[testId];
+        const key = livePaperKey(user?.id, testId);
+        let paper: LivePaper | null = null;
+        try { paper = JSON.parse(localStorage.getItem(key) || 'null'); } catch { paper = null; }
+        if (!paper || !Array.isArray(paper.questions) || !paper.questions.length || paper.expiresAt < Date.now()) {
+          // New paper: whatever was saved for an older one doesn't belong to it
+          paper = null;
+          clearLocalProgress(testId, user?.id);
+          try {
+            const res = await fetch('/api/db', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'live-test-start', data: { testId } }),
+            }).then(r => r.json());
+            if (res?.success && res.paper) {
+              paper = res.paper;
+              try { localStorage.setItem(key, JSON.stringify(paper)); } catch { /* storage full: the test still runs */ }
+            } else {
+              setLiveStartError(res?.error || 'Could not start the live test.');
+            }
+          } catch {
+            setLiveStartError('Could not start the live test. Check your internet connection and try again.');
+          }
+        }
+        livePaperRef.current = paper;
+        if (paper) {
+          customQs = {
+            questions: paper.questions, positiveMarks: cfg.positiveMarks, negativeMarks: cfg.negativeMarks,
+            durationMinutes: cfg.durationMinutes, questionsCount: liveQuestionCount(cfg), maxMarks: liveQuestionCount(cfg) * cfg.positiveMarks,
+          };
+        }
+      } else if (!offline) try {
         const res = await fetch('/api/db', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -438,7 +523,20 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         console.error("Error fetching custom questions:", err);
       }
 
-      const examSession = generateExamSession(testId, examCatalog, customQs, selectedLang1, selectedLang2);
+      const baseSession = generateExamSession(testId, examCatalog, customQs, selectedLang1, selectedLang2);
+      if (isLive) baseSession.testTitle = LIVE_TESTS[testId].title;
+
+      // Continue from the newer of this browser's copy and the server's copy
+      const localProgress = readLocalProgress(user?.id, testId, 'tcs');
+      const serverProgress = await serverProgressPromise;
+      if (serverProgress === undefined) serverWritableRef.current = false;
+      const resumeSource = newerProgress(localProgress, serverProgress ?? null);
+      const isResume = !!(resumeSource && resumeSource.data?.responses && Object.keys(resumeSource.data.responses).length > 0);
+
+      // Questions and options in a new random order for every attempt; a resumed attempt keeps
+      // its order (progress saved before shuffling existed has no seed and stays unshuffled)
+      const shuffleSeed = isResume ? Number(resumeSource!.data.shuffleSeed) || 0 : (canShuffleTest(baseSession) ? newShuffleSeed() : 0);
+      const examSession = shuffleSeed ? shuffleSession(baseSession, shuffleSeed) : baseSession;
 
       // Detect RPSC RAS full tests and PYQs for mandatory-attempt extra time feature
       // Primary detection: use the parent category & subcategory names from the exam catalog
@@ -450,21 +548,16 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         console.log('[RPSC RAS] Detected RPSC RAS mode for test:', testId, '| title:', examSession.testTitle, '| cat:', examSession.testCategory, '| sub:', examSession.testSubcategory);
       }
 
-      // Continue from the newer of this browser's copy and the server's copy
-      const localProgress = readLocalProgress(user?.id, testId, 'tcs');
-      const serverProgress = await serverProgressPromise;
-      if (serverProgress === undefined) serverWritableRef.current = false;
-      const resumeSource = newerProgress(localProgress, serverProgress ?? null);
       const examLangToUse = initialExamLanguage || authLanguage || 'en';
 
-      if (resumeSource && resumeSource.data?.responses && Object.keys(resumeSource.data.responses).length > 0) {
+      if (isResume && resumeSource) {
         resumedSavedAtRef.current = resumeSource.savedAt || 0;
         const sectionCount = examSession.sections.length;
         const sectionIdx = (resumeSource.currentSectionIndex ?? 0) < sectionCount ? (resumeSource.currentSectionIndex ?? 0) : 0;
         const sectionQuestionCount = examSession.questions.filter(q => q.sectionId === examSession.sections[sectionIdx]?.id).length;
         const questionIdx = (resumeSource.currentQuestionIndex ?? 0) < sectionQuestionCount ? (resumeSource.currentQuestionIndex ?? 0) : 0;
         initSession(examSession, 3, {
-          responses: resumeSource.data.responses as any,
+          responses: responsesToDisplay(examSession, resumeSource.data.responses) as any,
           timeRemaining: resumeSource.timeRemaining ?? examSession.totalDurationSeconds,
           violationsCount: resumeSource.violations ?? 0,
           currentSectionIndex: sectionIdx,
@@ -498,7 +591,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
   const hasSession = !!state.session;
   useEffect(() => {
-    if (!hasSession || state.isExamSubmitted) return;
+    if (!hasSession || state.isExamSubmitted || isLive) return;
     const heartbeat = setInterval(async () => {
       if (!serverWritableRef.current) {
         // Server copy couldn't be checked at start: check again before writing to it
@@ -512,7 +605,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       if (stateRef.current.isTimerRunning) persistProgress({ server: true });
     }, 15000);
     return () => clearInterval(heartbeat);
-  }, [hasSession, state.isExamSubmitted, persistProgress, testId]);
+  }, [hasSession, state.isExamSubmitted, persistProgress, testId, isLive]);
 
   // Page closing, reloading or left: save now, with a request that outlives the tab
   useEffect(() => {
@@ -540,18 +633,21 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       // Submitted: drop the saved progress, and let any progress save still in flight finish
       // before the attempt is recorded, so it can't bring the test back as "ongoing"
       if (serverSaveTimerRef.current) clearTimeout(serverSaveTimerRef.current);
-      clearLocalProgress(testId, currentUser.id);
+      // (a live test keeps its answers on the device until the server has scored them)
+      if (!isLive) clearLocalProgress(testId, currentUser.id);
       const progressFlushed = progressSyncRef.current ? progressSyncRef.current.stopAndFlush() : Promise.resolve();
 
       const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number }> = {};
       let totalElapsedSeconds = 0;
-      Object.keys(state.responses).forEach(qId => {
+      // Original option numbers, so the server, analysis and ranks see the real answers
+      const originalResponses = state.session ? responsesToOriginal(state.session, state.responses) : state.responses;
+      Object.keys(originalResponses).forEach(qId => {
         savedResponses[qId] = {
-          selectedOptionIndex: state.responses[qId].selectedOptionIndex,
-          elapsedSeconds: state.responses[qId].elapsedSeconds,
-          ...(state.responses[qId].answeredAt ? { answeredAt: state.responses[qId].answeredAt } : {}),
+          selectedOptionIndex: originalResponses[qId].selectedOptionIndex,
+          elapsedSeconds: originalResponses[qId].elapsedSeconds,
+          ...(originalResponses[qId].answeredAt ? { answeredAt: originalResponses[qId].answeredAt } : {}),
         };
-        totalElapsedSeconds += state.responses[qId].elapsedSeconds || 0;
+        totalElapsedSeconds += originalResponses[qId].elapsedSeconds || 0;
       });
 
       // Sum of per-question elapsedSeconds, not totalDurationSeconds - timeRemaining:
@@ -563,6 +659,11 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       const attemptTitle = state.session?.testTitle || "Mock Test Attempt";
       const { obtainedMarks, totalMarks, accuracyPercentage } = state.score;
       const violations = state.violationsCount;
+      if (isLive) {
+        liveSubmitRef.current = { responses: savedResponses, seconds: totalElapsedSeconds };
+        submitLive();
+        return;
+      }
       if (offline) {
         // Scored here with the downloaded answer key; the server re-scores it when uploaded
         offline.onMockSubmitted({
@@ -597,6 +698,22 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
         .sort((a, b) => a.orderIndex - b.orderIndex)[state.currentQuestionIndex]?.id
     : null;
 
+
+  if (isLive && liveStartError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-slate-950 font-sans p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full text-center shadow border border-slate-200 dark:border-slate-800">
+          <AlertCircle className="h-9 w-9 text-amber-500 mx-auto" />
+          <p className="mt-3 font-semibold text-slate-800 dark:text-slate-100">{authLanguage === 'hi' ? 'लाइव टेस्ट शुरू नहीं हो सका' : "The live test couldn't start"}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{liveStartError}</p>
+          <div className="mt-5 flex gap-2 justify-center">
+            <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold cursor-pointer">{authLanguage === 'hi' ? 'फिर से कोशिश करें' : 'Try again'}</button>
+            <button onClick={() => handleReturnToTestSeries(testId, examCatalog, router)} className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold cursor-pointer">{authLanguage === 'hi' ? 'वापस जाएँ' : 'Go back'}</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!state.session || !isMounted) {
     return (
@@ -979,7 +1096,17 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
 
       {/* GATING / SUBMITTED SCREEN OVERLAY */}
-      {isExamSubmitted ? (
+      {isExamSubmitted && isLive ? (
+        <LiveTestResult
+          result={liveResult}
+          error={liveError}
+          submitting={liveSubmitting}
+          language={language}
+          onRetry={submitLive}
+          onNewTest={() => window.location.reload()}
+          onExit={() => handleReturnToTestSeries(testId, examCatalog, router)}
+        />
+      ) : isExamSubmitted ? (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 max-w-5xl w-full shadow-xl animate-in zoom-in-95 duration-200 text-slate-800 dark:text-slate-100 my-auto">
             {/* Header Banner */}
@@ -2821,6 +2948,17 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
     setMounted(true);
     const fetchQs = async () => {
       if (offline) { setCustomQs(offline.customQs); setFetching(false); return; }
+      if (isLiveTestId(testId)) {
+        // The paper is made when the test starts; the instructions only need its shape
+        const cfg = LIVE_TESTS[testId];
+        setCustomQs({
+          questions: Array.from({ length: liveQuestionCount(cfg) }, (_, i) => ({ id: `live_${i}`, section: cfg.section, textEn: '', optionsEn: ['', '', '', ''] })),
+          positiveMarks: cfg.positiveMarks, negativeMarks: cfg.negativeMarks, durationMinutes: cfg.durationMinutes,
+          questionsCount: liveQuestionCount(cfg), maxMarks: liveQuestionCount(cfg) * cfg.positiveMarks,
+        });
+        setFetching(false);
+        return;
+      }
       try {
         const res = await fetch('/api/db', {
           method: 'POST',
@@ -2865,6 +3003,7 @@ function ExamInstructionsScreen({ testId, onStart }: { testId: string; onStart: 
   };
   
   const examSession = generateExamSession(testId, examCatalog, customQs);
+  if (isLiveTestId(testId)) examSession.testTitle = LIVE_TESTS[testId].title;
 
   if (!examSession.questions || examSession.questions.length === 0) {
     return <TestUploadedSoonCard testId={testId} testTitle={examSession.testTitle} catalog={examCatalog} router={router} currentUser={currentUser} />;

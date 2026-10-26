@@ -317,6 +317,7 @@ async function reports(data: any) {
   return ok({
     reports: rows.map(r => ({
       id: r.id, questionId: r.questionId, questionText: r.questionText, testId: r.mockTestId, testTitle: r.mockTestTitle,
+      examName: r.examName, sectionName: r.sectionName, questionNumber: r.questionNumber, reason: r.reason, language: r.language, source: r.source,
       message: r.message, userId: r.userId, candidateCode: r.candidateCode,
       userName: r.userId ? byId.get(r.userId)?.fullName || null : null, userEmail: r.userId ? byId.get(r.userId)?.email || null : null,
       createdAt: iso(r.createdAt),

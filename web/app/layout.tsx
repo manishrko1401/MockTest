@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./AuthContext";
+import PresenceReporter from "./components/PresenceReporter";
 import DeploymentRecovery from "./components/DeploymentRecovery";
 import DesktopBridge from "./components/DesktopBridge";
 import { cookies } from "next/headers";
@@ -69,6 +70,7 @@ export default async function RootLayout({
         <AuthProvider initialUserProfile={userProfile}>
           <DeploymentRecovery />
           <DesktopBridge />
+          <PresenceReporter />
           {children}
         </AuthProvider>
       </body>

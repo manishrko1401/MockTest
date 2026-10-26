@@ -9,9 +9,11 @@ import { useI18n } from '../i18n';
 import { useNav, useTabSection } from '../nav';
 import { useUser } from '../session';
 import { useTheme } from '../theme';
-import { Button, Card, Chip, Empty, ErrorBox, Header, IconTile, Loading, Pill, SearchBar, SectionTitle, Segmented, Sheet, Tabs, round2 } from '../ui';
+import { TourTarget, useScreenTour, useTourScroll } from '../tour';
+import { Button, Card, Chip, Empty, ErrorBox, Header, IconTile, Loading, Pill, SearchBar, SectionTitle, Sheet, Tabs, round2 } from '../ui';
 import type { MockTestItem, MockUser, TestCategory } from '../shared/webTypes';
 import { isCbatTest } from '../shared/examScoring';
+import { isLiveTestId } from '../shared/liveTestShared';
 import { DownloadButton } from './OfflineScreen';
 import { TypingHubScreen } from './TypingScreens';
 import { ANYTIME_HOURS, api, LIMIT_PICKS, roomLink } from '../friendsApi';
@@ -57,7 +59,9 @@ export function TestsScreen() {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header large title={hi ? 'टेस्ट' : 'Tests'} border={false} />
       <View style={{ paddingHorizontal: 16, paddingBottom: 6, backgroundColor: t.header }}>
-        <Tabs options={[{ key: 'mock', label: hi ? 'मॉक टेस्ट' : 'Mock tests' }, { key: 'typing', label: hi ? 'टाइपिंग टेस्ट' : 'Typing tests' }]} value={kind} onChange={setKind} />
+        <TourTarget id="tests.kind">
+          <Tabs options={[{ key: 'mock', label: hi ? 'मॉक टेस्ट' : 'Mock tests' }, { key: 'typing', label: hi ? 'टाइपिंग टेस्ट' : 'Typing tests' }]} value={kind} onChange={setKind} />
+        </TourTarget>
       </View>
       <View style={{ flex: 1, display: kind === 'mock' ? 'flex' : 'none' }}><MockCatalog /></View>
       <View style={{ flex: 1, display: kind === 'typing' ? 'flex' : 'none' }}><TypingHubScreen embedded /></View>
@@ -74,10 +78,20 @@ function MockCatalog() {
   const all = useMemo(() => flattenTests(catalog), [catalog]);
   const q = search.trim().toLowerCase();
   const results = useMemo(() => (q.length < 2 ? [] : all.filter(x => x.test.title.toLowerCase().includes(q) || x.examName.toLowerCase().includes(q)).slice(0, 80)), [all, q]);
+  const scroll = useTourScroll('app_tests');
+  useScreenTour('app_tests', hi ? [
+    { target: 'tests.kind', fixed: true, title: 'मॉक या टाइपिंग', text: 'यहां मॉक टेस्ट और टाइपिंग टेस्ट के बीच बदलें।' },
+    { target: 'tests.search', title: 'कोई भी टेस्ट खोजें', text: 'परीक्षा या टेस्ट का नाम लिखें, जैसे "CGL" या "NTPC"।' },
+    { target: 'tests.category', title: 'अपनी परीक्षा चुनें', text: 'श्रेणी खोलें, फिर परीक्षा और उसकी टेस्ट सीरीज़। हर टेस्ट पर फ्री या PRO लिखा होता है।' },
+  ] : [
+    { target: 'tests.kind', fixed: true, title: 'Mock or typing', text: 'Switch between mock tests and typing tests here.' },
+    { target: 'tests.search', title: 'Find any test', text: 'Type an exam or test name, like "CGL" or "NTPC".' },
+    { target: 'tests.category', title: 'Pick your exam', text: 'Open a category, then the exam and its test series. Every test shows if it is FREE or PRO.' },
+  ], ready && catalog.length > 0 && nav.tab === 'tests' && nav.stack.length === 0);
 
   const header = (
     <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
-      <SearchBar value={search} onChangeText={setSearch} placeholder={hi ? 'परीक्षा या टेस्ट खोजें' : 'Search exams or tests'} />
+      <TourTarget id="tests.search"><SearchBar value={search} onChangeText={setSearch} placeholder={hi ? 'परीक्षा या टेस्ट खोजें' : 'Search exams or tests'} /></TourTarget>
       {error === 'offline' && !catalog.length ? <ErrorBox style={{ marginHorizontal: 0 }} message={hi ? 'इंटरनेट नहीं है।' : 'No internet connection.'} onRetry={refresh} /> : null}
       {q.length < 2 ? (
         <Text style={{ color: t.textSoft, fontSize: 13, fontWeight: '700', marginTop: 16, marginBottom: 4 }}>
@@ -103,6 +117,7 @@ function MockCatalog() {
   }
   return (
     <FlatList
+      {...scroll}
       key="categories"
       data={ready ? catalog : []}
       keyExtractor={c => c.id}
@@ -112,9 +127,9 @@ function MockCatalog() {
       columnWrapperStyle={{ paddingHorizontal: 10 }}
       contentContainerStyle={{ paddingBottom: 24 }}
       refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={refresh} />}
-      renderItem={({ item: c }) => {
+      renderItem={({ item: c, index }) => {
         const n = countTests(c);
-        return (
+        const tile = (
           <Card onPress={() => nav.push({ name: 'category', categoryId: c.id })} style={{ flex: 1, margin: 6, padding: 14, minHeight: 150 }}>
             <Logo uri={c.logoUrl} />
             <Text numberOfLines={2} style={{ color: t.text, fontWeight: '800', fontSize: 14.5, marginTop: 12, lineHeight: 19 }}>{catName(c, hi)}</Text>
@@ -123,6 +138,7 @@ function MockCatalog() {
             </Text>
           </Card>
         );
+        return index === 0 ? <TourTarget id="tests.category" style={{ flex: 1 }}>{tile}</TourTarget> : tile;
       }}
     />
   );
@@ -147,12 +163,13 @@ export function CategoryScreen({ categoryId }: { categoryId: string }) {
         ListEmptyComponent={<Empty title={hi ? 'अभी कोई परीक्षा नहीं' : 'No exams yet'} />}
         renderItem={({ item: s }: any) => {
           const n = examTests(s);
+          const seriesCount = (s.subSubCategories || []).filter((ss: any) => ss.tests?.length).length;
           return (
             <Card onPress={() => nav.push({ name: 'exam', categoryId, examId: s.id })} style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
               <Logo uri={cat.logoUrl} size={46} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: t.text, fontWeight: '800', fontSize: 15.5 }}>{catName(s, hi)}</Text>
-                <Text style={{ color: t.textSoft, fontSize: 12.5, marginTop: 3 }}>{hi ? `${n} मॉक टेस्ट` : `${n} mock tests`}{s.subSubCategories?.length ? ` · ${s.subSubCategories.length} ${hi ? 'सीरीज़' : 'series'}` : ''}</Text>
+                <Text style={{ color: t.textSoft, fontSize: 12.5, marginTop: 3 }}>{hi ? `${n} मॉक टेस्ट` : `${n} mock tests`}{seriesCount ? ` · ${seriesCount} ${hi ? 'सीरीज़' : 'series'}` : ''}</Text>
               </View>
               <ChevronRight size={20} color={t.textMuted} />
             </Card>
@@ -163,38 +180,98 @@ export function CategoryScreen({ categoryId }: { categoryId: string }) {
   );
 }
 
-// ---- An exam: its test series and tests ----------------------------------------------------------
+// ---- An exam: its test series (tiles, like the exams list) or its tests ---------------------------
+
+type Series = { id: string; name: string; nameHi?: string; tests: MockTestItem[] };
+const DIRECT = '_direct';
+
+/** The exam's test series with tests; tests sitting directly under the exam become one more series. */
+function examSeries(exam: any, hi: boolean): Series[] {
+  if (!exam) return [];
+  const list: Series[] = (exam.subSubCategories || []).filter((ss: any) => ss.tests?.length)
+    .map((ss: any) => ({ id: ss.id, name: ss.name, nameHi: ss.nameHi, tests: ss.tests }));
+  // Tests that sit directly under the exam (older catalogue copies repeat the series' tests there)
+  const inSeries = new Set(list.flatMap(g => g.tests.map(x => x.id)));
+  const direct = (exam.tests || []).filter((x: any) => !inSeries.has(x.id));
+  if (direct.length) list.unshift({ id: DIRECT, name: list.length ? 'Other tests' : 'Tests', nameHi: list.length ? 'अन्य टेस्ट' : 'टेस्ट', tests: direct });
+  return list;
+}
+
+function useExam(categoryId: string, examId: string) {
+  const { catalog } = useData();
+  const cat = catalog.find(c => c.id === categoryId);
+  return { cat, exam: cat?.subCategories.find(s => s.id === examId) as any };
+}
+
+function TestList({ tests, header }: { tests: MockTestItem[]; header?: React.ReactElement }) {
+  const { hi } = useI18n();
+  return (
+    <FlatList
+      data={tests}
+      keyExtractor={x => x.id}
+      initialNumToRender={10}
+      ListHeaderComponent={header}
+      contentContainerStyle={{ paddingBottom: 24, paddingTop: 8 }}
+      ListEmptyComponent={<Empty title={hi ? 'अभी कोई टेस्ट नहीं' : 'No tests yet'} />}
+      renderItem={({ item }) => <TestCard test={item} />}
+    />
+  );
+}
 
 export function ExamTestsScreen({ categoryId, examId }: { categoryId: string; examId: string }) {
   const t = useTheme();
   const { hi } = useI18n();
   const nav = useNav();
-  const { catalog } = useData();
-  const exam: any = catalog.find(c => c.id === categoryId)?.subCategories.find(s => s.id === examId);
-  const groups: { key: string; label: string; tests: MockTestItem[] }[] = useMemo(() => {
-    if (!exam) return [];
-    const list = (exam.subSubCategories || []).filter((ss: any) => ss.tests?.length).map((ss: any) => ({ key: ss.id, label: `${catName(ss, hi)} (${ss.tests.length})`, tests: ss.tests }));
-    // Tests that sit directly under the exam (older catalogue copies repeat the series' tests there)
-    const inSeries = new Set(list.flatMap((g: any) => g.tests.map((x: any) => x.id)));
-    const direct = (exam.tests || []).filter((x: any) => !inSeries.has(x.id));
-    if (direct.length) list.unshift({ key: '_direct', label: `${hi ? 'टेस्ट' : 'Tests'} (${direct.length})`, tests: direct });
-    return list;
-  }, [exam, hi]);
-  const [group, setGroup] = useState<string>('');
-  const active = groups.find(g => g.key === group) || groups[0];
+  const { cat, exam } = useExam(categoryId, examId);
+  const series = useMemo(() => examSeries(exam, hi), [exam, hi]);
   if (!exam) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title="" onBack={nav.pop} /><Loading /></View>;
+  const total = series.reduce((n, s) => n + s.tests.length, 0);
+  const hasSeries = (exam.subSubCategories || []).some((ss: any) => ss.tests?.length);
+
+  // No test series: the tests straight away
+  if (!hasSeries) {
+    return (
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
+        <Header title={catName(exam, hi)} subtitle={`${total} ${hi ? 'टेस्ट' : 'tests'}`} onBack={nav.pop} />
+        <TestList tests={series[0]?.tests || []} />
+      </View>
+    );
+  }
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={catName(exam, hi)} subtitle={active ? `${active.tests.length} ${hi ? 'टेस्ट' : 'tests'}` : undefined} onBack={nav.pop} />
-      {groups.length > 1 ? <Segmented options={groups.map(g => ({ key: g.key, label: g.label }))} value={active?.key} onChange={setGroup} /> : null}
+      <Header title={catName(exam, hi)} subtitle={hi ? `${series.length} सीरीज़ · ${total} टेस्ट` : `${series.length} series · ${total} tests`} onBack={nav.pop} />
       <FlatList
-        data={active?.tests || []}
-        keyExtractor={x => x.id}
-        initialNumToRender={10}
-        contentContainerStyle={{ paddingBottom: 24, paddingTop: groups.length > 1 ? 0 : 8 }}
-        ListEmptyComponent={<Empty title={hi ? 'अभी कोई टेस्ट नहीं' : 'No tests yet'} />}
-        renderItem={({ item }) => <TestCard test={item} />}
+        data={series}
+        keyExtractor={s => s.id}
+        contentContainerStyle={{ padding: 16, gap: 10 }}
+        renderItem={({ item: s }) => (
+          <Card onPress={() => nav.push({ name: 'series', categoryId, examId, seriesId: s.id })} style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <Logo uri={cat?.logoUrl} size={46} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: t.text, fontWeight: '800', fontSize: 15.5 }}>{catName(s, hi)}</Text>
+              <Text style={{ color: t.textSoft, fontSize: 12.5, marginTop: 3 }}>{hi ? `${s.tests.length} मॉक टेस्ट` : `${s.tests.length} mock tests`}</Text>
+            </View>
+            <ChevronRight size={20} color={t.textMuted} />
+          </Card>
+        )}
       />
+    </View>
+  );
+}
+
+// ---- A test series: its tests ---------------------------------------------------------------------
+
+export function SeriesTestsScreen({ categoryId, examId, seriesId }: { categoryId: string; examId: string; seriesId: string }) {
+  const t = useTheme();
+  const { hi } = useI18n();
+  const nav = useNav();
+  const { exam } = useExam(categoryId, examId);
+  const series = useMemo(() => examSeries(exam, hi).find(s => s.id === seriesId), [exam, hi, seriesId]);
+  if (!series) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title="" onBack={nav.pop} />{exam ? <Empty title={hi ? 'सीरीज़ नहीं मिली' : 'Series not found'} /> : <Loading />}</View>;
+  return (
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <Header title={catName(series, hi)} subtitle={`${catName(exam, hi)} · ${series.tests.length} ${hi ? 'टेस्ट' : 'tests'}`} onBack={nav.pop} />
+      <TestList tests={series.tests} />
     </View>
   );
 }
@@ -252,7 +329,22 @@ export function TestInfoScreen({ testId }: { testId: string }) {
   const [l1, setL1] = useState('English');
   const [l2, setL2] = useState('Hindi');
   const [roomSheet, setRoomSheet] = useState(false);
+  const scroll = useTourScroll('app_test_info');
+  useScreenTour('app_test_info', hi ? [
+    { target: 'info.facts', title: 'टेस्ट की जानकारी', text: 'प्रश्न, समय और कुल अंक। PRO टेस्ट पास प्रो के साथ खुलते हैं।' },
+    { target: 'info.lang', title: 'प्रश्नों की भाषा', text: 'अंग्रेज़ी या हिंदी चुनें। टेस्ट के दौरान भी भाषा बदल सकते हैं।' },
+    { target: 'info.start', title: 'टेस्ट शुरू करें', text: 'तैयार होने पर शुरू करें। उत्तर अपने आप सेव होते हैं: बीच में छोड़ें तो बाद में जारी रखें।' },
+    { target: 'info.friends', title: 'दोस्तों के साथ', text: 'एक रूम बनाएं, दोस्तों को बुलाएं और एक ही टेस्ट के बाद अंक और समय की तुलना करें।' },
+    { target: 'info.download', title: 'ऑफ़लाइन के लिए डाउनलोड', text: 'टेस्ट डाउनलोड करें और बिना इंटरनेट दें। इंटरनेट आने पर परिणाम अपलोड हो जाता है।' },
+  ] : [
+    { target: 'info.facts', title: 'About this test', text: 'Questions, time and total marks. PRO tests open with Pass Pro.' },
+    { target: 'info.lang', title: 'Question language', text: 'Choose English or Hindi. You can also switch language during the test.' },
+    { target: 'info.start', title: 'Start the test', text: 'Start when you are ready. Answers are saved as you go: leave in the middle and resume later.' },
+    { target: 'info.friends', title: 'With friends', text: 'Create a room, invite friends and compare marks and time after the same test.' },
+    { target: 'info.download', title: 'Download for offline', text: 'Download the test and take it without internet. The result uploads when you are back online.' },
+  ], !!test && tierAllows(test.requiredTier, user.subscriptionTier) && !isCbatTest(test.id, catalog)); // a test the student can start
   if (!test) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title="" onBack={nav.pop} /><Empty title={hi ? 'टेस्ट नहीं मिला' : 'Test not found'} /></View>;
+  const live = isLiveTestId(test.id);
 
   const { ongoing, completed } = testStatus(user, test.id);
   const allowed = tierAllows(test.requiredTier, user.subscriptionTier) || completed.length > 0;
@@ -272,7 +364,8 @@ export function TestInfoScreen({ testId }: { testId: string }) {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header title={hi ? 'टेस्ट विवरण' : 'Test details'} onBack={nav.pop} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
+      <ScrollView {...scroll} contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
+        <TourTarget id="info.facts">
         <Card>
           <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
             <Pill text={!test.requiredTier || test.requiredTier === 'None' ? (hi ? 'फ्री' : 'FREE') : 'PRO'} tone={!test.requiredTier || test.requiredTier === 'None' ? 'success' : 'warning'} />
@@ -295,11 +388,14 @@ export function TestInfoScreen({ testId }: { testId: string }) {
           ) : null}
           {test.testbookTotalUsers ? <Text style={{ color: t.textSoft, fontSize: 12.5, marginTop: 6 }}>{test.testbookTotalUsers.toLocaleString('en-IN')} {hi ? 'विद्यार्थियों ने दिया' : 'students have taken it'}</Text> : null}
         </Card>
+        </TourTarget>
 
         {allowed && !cbat ? (
           <>
             <SectionTitle>{hi ? 'प्रश्नों की भाषा' : 'Question language'}</SectionTitle>
-            <Tabs options={[{ key: 'en', label: 'English', icon: <Languages size={15} color={examLang === 'en' ? t.text : t.textSoft} /> }, { key: 'hi', label: 'हिन्दी' }]} value={examLang} onChange={setExamLang} />
+            <TourTarget id="info.lang">
+              <Tabs options={[{ key: 'en', label: 'English', icon: <Languages size={15} color={examLang === 'en' ? t.text : t.textSoft} /> }, { key: 'hi', label: 'हिन्दी' }]} value={examLang} onChange={setExamLang} />
+            </TourTarget>
             {isCtet ? (
               <>
                 <Text style={{ color: t.textSoft, fontWeight: '700', marginTop: 14, marginBottom: 8 }}>{hi ? 'भाषा I' : 'Language I'}</Text>
@@ -326,11 +422,14 @@ export function TestInfoScreen({ testId }: { testId: string }) {
           ) : ongoing ? (
             <Button title={hi ? 'टेस्ट जारी रखें' : 'Resume test'} icon={<Play size={18} color={t.primaryText} />} onPress={start} />
           ) : (
-            <Button title={completed.length ? (hi ? 'फिर से दें' : 'Retake test') : (hi ? 'टेस्ट शुरू करें' : 'Start test')} icon={completed.length ? <RotateCcw size={18} color={t.primaryText} /> : <Play size={18} color={t.primaryText} />} onPress={start} />
+            <TourTarget id="info.start">
+              <Button title={completed.length ? (hi ? 'फिर से दें' : 'Retake test') : (hi ? 'टेस्ट शुरू करें' : 'Start test')} icon={completed.length ? <RotateCcw size={18} color={t.primaryText} /> : <Play size={18} color={t.primaryText} />} onPress={start} />
+            </TourTarget>
           )}
           {completed.length ? <Button outline title={hi ? 'परिणाम और समाधान' : 'Result & solutions'} icon={<BarChart3 size={18} color={t.primary} />} onPress={() => nav.push({ name: 'analysis', testId: test.id })} /> : null}
-          {allowed && !cbat ? <Button soft title={hi ? 'दोस्तों के साथ दें' : 'Take with friends'} icon={<Swords size={18} color={t.primary} />} onPress={() => setRoomSheet(true)} /> : null}
-          {allowed ? <DownloadButton kind="mock" id={test.id} /> : null}
+          {allowed && !cbat && !live ? <TourTarget id="info.friends"><Button soft title={hi ? 'दोस्तों के साथ दें' : 'Take with friends'} icon={<Swords size={18} color={t.primary} />} onPress={() => setRoomSheet(true)} /></TourTarget> : null}
+          {allowed && !live ? <TourTarget id="info.download"><DownloadButton kind="mock" id={test.id} /></TourTarget> : null}
+          {live ? <Text style={{ color: t.textMuted, fontSize: 12.5, lineHeight: 18 }}>{hi ? 'लाइव टेस्ट: हर बार बैंक से नया प्रश्न पत्र बनता है। परिणाम केवल एक बार दिखता है और सहेजा नहीं जाता।' : 'Live test: a new paper from the question bank every time. The result is shown once and is not saved.'}</Text> : null}
         </View>
 
         {completed.length ? (

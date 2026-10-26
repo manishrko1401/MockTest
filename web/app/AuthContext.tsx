@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { clearLocalProgress } from './lib/examProgress';
-import { isDesktopApp, desktopAppVersion } from './lib/desktopApp';
+import { isDesktopApp } from './lib/desktopApp';
 import { bookmarkChanged, bookmarkNotSaved, ACCOUNT_BOOKMARKS } from './lib/offlineBookmarks';
 
 export interface MockTestItem {
@@ -113,6 +113,11 @@ export interface MockUser {
   profileTourCompletedAt?: string | null;
   plannerTourCompletedAt?: string | null;
   friendsTourCompletedAt?: string | null;
+  /** Android app tours finished (welcome slides, screen tips); undefined = unknown */
+  appTours?: string[];
+  /** Admin user list only: when the account was made, and tests finished */
+  createdAtIso?: string | null;
+  testsTaken?: number;
   currentSessionId?: string;
   candidateCode: string;
   name: string;
@@ -170,11 +175,23 @@ export interface ReportedQuestion {
   questionText: string;
   mockTestId: string;
   mockTestTitle: string;
+  examName?: string;
+  sectionName?: string;
+  questionNumber?: number | null;
+  language?: string;
+  /** wrong_answer, wrong_question, options, solution, typo, translation, image, other */
+  reason?: string;
+  /** web, mobile_web or android */
+  source?: string;
   message: string;
   userId?: string | null;
   candidateCode?: string | null;
   createdAt: string;
+  createdAtIso?: string | null;
 }
+
+/** Extra details sent with a report (the server fills in what it can from the test itself). */
+export type ReportDetails = { reason?: string; examName?: string; sectionName?: string; questionNumber?: number | null; language?: string };
 
 interface AuthContextType {
   currentUser: MockUser | null;
@@ -195,7 +212,8 @@ interface AuthContextType {
     message: string,
     questionText?: string,
     mockTestId?: string,
-    mockTestTitle?: string
+    mockTestTitle?: string,
+    details?: ReportDetails
   ) => Promise<{ success: boolean; error?: string }>;
   deleteReportedQuestion: (
     id: string
@@ -1184,43 +1202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     }
   }, []);
 
-  // Presence Ping: update lastSeen on login, when the user returns to the tab, and every
-  // few minutes while the tab is visible (online / offline in the friend list)
-  useEffect(() => {
-    if (!currentUser?.id) return;
-
-    // The server tells computer from phone by the browser; the Windows app says so itself
-    const inWindowsApp = isDesktopApp();
-    let appVersion: string | null = null;
-    if (inWindowsApp) desktopAppVersion().then(v => { appVersion = v; });
-
-    // Immediate ping on login or page mount
-    const sendPing = () => {
-      if (document.visibilityState !== 'visible') return;
-      fetch('/api/db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'ping',
-          data: inWindowsApp ? { userId: currentUser.id, platform: 'windows', version: appVersion } : { userId: currentUser.id, platform: 'web' }
-        })
-      }).catch(() => {}); // Silent fail
-    };
-
-    // Fire immediately when user is logged in
-    sendPing();
-
-    // Fire when user returns to the tab (switches back from another app/tab)
-    document.addEventListener('visibilitychange', sendPing);
-    // ...and every few minutes while the tab is open, so friends see you as online
-    // (the server writes it at most once per 2 minutes)
-    const heartbeat = setInterval(sendPing, 4 * 60 * 1000);
-
-    return () => {
-      document.removeEventListener('visibilitychange', sendPing);
-      clearInterval(heartbeat);
-    };
-  }, [currentUser?.id]);
+  // Presence (online / what the student is doing) is reported by components/PresenceReporter
 
   // Load admin data only if the logged-in user is an administrator/staff
   useEffect(() => {
@@ -2567,7 +2549,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     message: string,
     questionText?: string,
     mockTestId?: string,
-    mockTestTitle?: string
+    mockTestTitle?: string,
+    details?: ReportDetails
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/db', {
@@ -2581,12 +2564,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
             questionText,
             mockTestId,
             mockTestTitle,
+            ...(details || {}),
           },
         }),
       });
       const data = await res.json();
       if (data.success && data.reported) {
-        setReportedQuestionsList(prev => [data.reported, ...prev]);
+        setReportedQuestionsList(prev => [data.reported, ...prev.filter(r => r.id !== data.reported.id)]);
         return { success: true };
       }
       return { success: false, error: data.error || 'Failed to submit report' };

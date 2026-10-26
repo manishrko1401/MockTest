@@ -18,6 +18,7 @@ import { NoticeDetailTour } from '../../components/NoticesTour';
 
 import { processQuestionHtml } from '../../lib/mathUtils';
 import { sanitizeDomHtml } from '../../lib/domSanitize';
+import { setPresenceActivity } from '../../components/PresenceReporter';
 
 interface NoticeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -357,6 +358,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   }, [noticeId, noticesList]);
 
   const notice = fetchedNotice || (noticeId ? noticesList.find(n => n.id === noticeId) : null);
+  React.useEffect(() => { if (notice?.title) setPresenceActivity(`Reading notice: ${notice.title}`); }, [notice?.title]);
+  React.useEffect(() => () => setPresenceActivity(null), []);
   const parsedLinks = React.useMemo(() => notice ? extractParsedLinks(notice, notice.contentHtml || '') : [], [notice]);
   const sanitizedContent = React.useMemo(() => notice?.contentHtml ? sanitizeNoticeHtml(notice.contentHtml) : '', [notice]);
 

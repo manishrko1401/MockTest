@@ -30,6 +30,8 @@ export interface Question {
   };
   positiveMark?: number;
   negativeMark?: number;
+  /** Options must keep their order when a test is shuffled ("All of the above", arrangements) */
+  fixedOrder?: boolean;
 }
 
 export interface Section {
@@ -52,6 +54,7 @@ export interface ActiveSession {
   questions: Question[];
   hasSectionalTiming?: boolean; // When true, lock users per section with per-section countdown
   lockSectionOnSubmit?: boolean; // When true, total test duration applies, and submitting a section advances and locks previous sections
+  shuffleSeed?: number; // Set when this attempt's questions and options are shuffled (lib/examShuffle.ts)
 }
 
 export type PaletteState = 1 | 2 | 3 | 4 | 5;
@@ -198,6 +201,11 @@ export interface MockUser {
   profileTourCompletedAt?: string | null;
   plannerTourCompletedAt?: string | null;
   friendsTourCompletedAt?: string | null;
+  /** Android app tours finished (welcome slides, screen tips); undefined = unknown */
+  appTours?: string[];
+  /** Admin user list only: when the account was made, and tests finished */
+  createdAtIso?: string | null;
+  testsTaken?: number;
   currentSessionId?: string;
   candidateCode: string;
   name: string;

@@ -3,6 +3,7 @@ import { AppState, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { clearToken, loadToken, onSignedOut, request, saveToken } from './api';
 import { unregisterPushDevice } from './push';
+import { getAppActivity, onAppActivity } from './presence';
 import { readJson, removeJson, writeJson } from './storage';
 import type { MockUser } from './shared/webTypes';
 
@@ -64,18 +65,24 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return onSignedOut(() => keep(null));
   }, [keep, refreshUser]);
 
-  // "I'm here": online status for friends, and which app / version for the admin Platforms page.
-  // On opening, on coming back to the screen and every 4 minutes while open.
+  // "I'm here": online status for friends and the admin panel (with what the student is doing),
+  // and which app / version for the admin Platforms page. On opening, on coming back, when the
+  // screen changes and every minute while open; "left" when the app goes to the background.
   const signedInId = user?.id;
   useEffect(() => {
     if (!signedInId) return;
     const release = (Platform.constants as { Release?: string | number } | undefined)?.Release;
     const info = { platform: 'android', version: Constants.expoConfig?.version || null, os: release ? `Android ${release}` : `Android API ${Platform.Version}` };
-    const ping = () => { if (AppState.currentState === 'active') request('ping', info).catch(() => {}); };
+    const ping = (state: 'active' | 'left' = 'active') => {
+      if (state === 'active' && AppState.currentState !== 'active') return;
+      request('ping', { ...info, state, activity: getAppActivity() }).catch(() => {});
+    };
     ping();
-    const sub = AppState.addEventListener('change', s => { if (s === 'active') ping(); });
-    const timer = setInterval(ping, 4 * 60 * 1000);
-    return () => { sub.remove(); clearInterval(timer); };
+    const sub = AppState.addEventListener('change', s => ping(s === 'active' ? 'active' : 'left'));
+    const timer = setInterval(() => ping(), 60 * 1000);
+    let soon: ReturnType<typeof setTimeout> | null = null;
+    const offActivity = onAppActivity(() => { if (soon) clearTimeout(soon); soon = setTimeout(() => ping(), 1500); });
+    return () => { sub.remove(); clearInterval(timer); offActivity(); if (soon) clearTimeout(soon); };
   }, [signedInId]);
 
   const finishSignIn = useCallback(async (res: { user: User; authToken?: string }) => {

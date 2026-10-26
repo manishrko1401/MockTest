@@ -64,3 +64,6 @@ web/*.txt
 *service-account*.json
 *firebase-adminsdk*.json
 google-services*.json*
+
+# Question banks (paid content; kept out of the public repo)
+question-banks/

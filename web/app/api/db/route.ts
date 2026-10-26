@@ -45,8 +45,13 @@ import {
 } from '../../lib/serverAuth';
 import { PLANNER_ACTIONS, handlePlannerAction } from '../../lib/planner';
 import { ROOM_ACTIONS, handleRoomAction } from '../../lib/friendRooms';
+import { LIVE_ACTIONS, handleLiveAction, liveBankQuestions } from '../../lib/liveTest';
+import { isLiveTestId } from '../../lib/liveTestShared';
 import { FRIEND_ACTIONS, handleFriendAction } from '../../lib/friends';
 import { generateExamSession } from '../../lib/examUtils';
+import { listPresence, recordPresence } from '../../lib/presence';
+import { adminUserOverview } from '../../lib/adminUserOverview';
+import { deleteStaffMessage, supportInbox, supportStudentContext, updateSupportThread } from '../../lib/supportDesk';
 import { notifyStaff, studentLabel, shorten } from '../../lib/adminPush';
 import { hitLimit, clearLimit, countHits } from '../../lib/dbRateLimit';
 import { sanitizeNoticeHtml } from '../../lib/sanitizeNotice';
@@ -90,6 +95,8 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   'get-typing-test-by-id': { level: 'public', optionalIdentity: true },
   'evaluate-typing': { level: 'public' },
   'ping': { level: 'public', optionalIdentity: true },
+  'admin-presence': { level: 'staff', roles: [] }, // who is online now and what they are doing
+  'admin-user-overview': { level: 'staff', roles: [] }, // one student: everything about the account
   'submit-suggestion': { level: 'public', optionalIdentity: true },
   'report-question': { level: 'public', optionalIdentity: true },
 
@@ -134,6 +141,7 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   // Test with Friends (app/lib/friendRooms.ts)
   ...Object.fromEntries(ROOM_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
   ...Object.fromEntries(FRIEND_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
+  ...Object.fromEntries(LIVE_ACTIONS.map(a => [a, { level: 'user' } as ActionAccess])),
 
   // Staff: ADMIN only
   'admin-data': { level: 'staff', roles: [...SUPPORT_ROLES, ...CONTENT_ROLES, ...NOTICE_ROLES] }, // non-admins get a reduced list
@@ -150,6 +158,7 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
   'db-stats': { level: 'staff', roles: [] },
   'delete-all-typing-tests': { level: 'staff', roles: [] },
   'delete-reported-question': { level: 'staff', roles: [] },
+  'reported-question-view': { level: 'staff', roles: ['SUPPORT_TEAM', 'TEST_CREATOR'] },
 
   // Staff: test content
   'add-category': { level: 'staff', roles: CONTENT_ROLES },
@@ -189,6 +198,10 @@ const ACTION_ACCESS: Record<string, ActionAccess> = {
 
   // Staff: support
   'get-support-users': { level: 'staff', roles: SUPPORT_ROLES },
+  'support-inbox': { level: 'staff', roles: SUPPORT_ROLES },
+  'support-thread-update': { level: 'staff', roles: SUPPORT_ROLES },
+  'support-student-context': { level: 'staff', roles: SUPPORT_ROLES },
+  'support-delete-message': { level: 'staff', roles: SUPPORT_ROLES },
   'delete-support-conversation': { level: 'staff', roles: SUPPORT_ROLES },
   'edit-support-message': { level: 'staff', roles: SUPPORT_ROLES },
   'get-suggestions': { level: 'staff', roles: SUPPORT_ROLES },
@@ -397,7 +410,11 @@ export async function POST(request: Request) {
     if (action === 'ping') {
       if (requester) {
         const seen = classifyPlatform(request, { ...(body || {}), ...(data && typeof data === 'object' ? data : {}) });
-        await Promise.all([touchUserLastSeen(requester.id, seen.platform), recordPlatform(requester.id, seen)]);
+        await Promise.all([
+          touchUserLastSeen(requester.id, seen.platform),
+          recordPlatform(requester.id, seen),
+          recordPresence(requester.id, { state: data?.state, activity: data?.activity, platform: seen.platform }),
+        ]);
       }
       return NextResponse.json({ success: true });
     }
@@ -469,6 +486,10 @@ export async function POST(request: Request) {
 
     if ((FRIEND_ACTIONS as readonly string[]).includes(action)) {
       return await handleFriendAction(action, data, requester!);
+    }
+
+    if ((LIVE_ACTIONS as readonly string[]).includes(action)) {
+      return await handleLiveAction(action, data, requester!, { tierAllows });
     }
 
     if ((ROOM_ACTIONS as readonly string[]).includes(action)) {
@@ -575,15 +596,10 @@ export async function POST(request: Request) {
         return await handleReorderSubSubCategories(data);
       case 'reorder-mocktests':
         return await handleReorderMockTests(data);
-      case 'report-question': {
-        const res = await handleReportQuestion(data);
-        if (res.ok) notifyStaff('report', async () => ({
-          title: `Question reported${data?.mockTestTitle ? ` · ${shorten(data.mockTestTitle, 60)}` : ''}`,
-          body: `${await studentLabel(data?.userId, 'Visitor')}: ${shorten(data?.message || '')}`,
-          data: { screen: 'reports' },
-        }));
-        return res;
-      }
+      case 'report-question':
+        return await handleReportQuestion(data, request);
+      case 'reported-question-view':
+        return await handleReportedQuestionView(data);
       case 'delete-reported-question':
         return await handleDeleteReportedQuestion(data);
       case 'get-support-messages':
@@ -594,6 +610,21 @@ export async function POST(request: Request) {
         return await handleSendSupportMessage(data);
       case 'get-support-users':
         return await handleGetSupportUsers();
+      case 'support-inbox':
+        return NextResponse.json({ success: true, ...(await supportInbox()) });
+      case 'support-thread-update': {
+        const id = String(data?.userId || '').slice(0, 100);
+        if (!id) return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
+        const staff = requesterUserId ? await prisma.user.findUnique({ where: { id: requesterUserId }, select: { fullName: true } }) : null;
+        await updateSupportThread(id, data, staff?.fullName || 'Staff');
+        return NextResponse.json({ success: true });
+      }
+      case 'support-student-context': {
+        const ctx = await supportStudentContext(String(data?.userId || '').slice(0, 100));
+        return ctx ? NextResponse.json({ success: true, ...ctx }) : NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      }
+      case 'support-delete-message':
+        return NextResponse.json({ success: await deleteStaffMessage(String(data?.messageId || '').slice(0, 100)) });
       case 'delete-support-conversation':
         return await handleDeleteSupportConversation(data);
       case 'edit-support-message':
@@ -612,6 +643,12 @@ export async function POST(request: Request) {
         return await handleCompleteTour(data, requesterUserId);
       case 'get-session-responses':
         return await handleGetSessionResponses(data);
+      case 'admin-user-overview': {
+        const overview = await adminUserOverview(String(data?.userId || '').slice(0, 100));
+        return overview ? NextResponse.json({ success: true, ...overview }) : NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      }
+      case 'admin-presence':
+        return NextResponse.json({ success: true, online: await listPresence(), now: new Date().toISOString() });
       case 'admin-data':
         return await handleAdminData(requesterRole);
       case 'get-attempts':
@@ -1587,6 +1624,7 @@ async function handleSignup(data: any, request?: Request) {
       profileTourCompletedAt: null,
       plannerTourCompletedAt: null,
       friendsTourCompletedAt: null,
+      appTours: [],
       testSessions: [],
       bookmarkedQuestions: [],
     },
@@ -1953,6 +1991,7 @@ async function handleGoogleAuth(data: any, request?: Request) {
       profileTourCompletedAt: null,
       plannerTourCompletedAt: null,
       friendsTourCompletedAt: null,
+      appTours: [],
       profilePhoto: newUser.profilePhoto,
       testSessions: [],
       bookmarkedQuestions: [],
@@ -2348,6 +2387,9 @@ async function handleOfflineDownload(data: any, requester: { id: string; role: s
   const { kind, id, devicePublicKey } = data || {};
   if ((kind !== 'mock' && kind !== 'typing') || typeof id !== 'string' || !id || typeof devicePublicKey !== 'string') {
     return NextResponse.json({ success: false, error: 'Invalid download request' }, { status: 400 });
+  }
+  if (kind === 'mock' && isLiveTestId(id)) {
+    return NextResponse.json({ success: false, error: 'Live tests make a new paper every time, so they can only be taken online.' }, { status: 400 });
   }
   const limit = await hitLimit(`offline_download:${requester.id}`, 40, 24 * 60 * 60 * 1000);
   if (!limit.allowed) {
@@ -4338,34 +4380,110 @@ async function handleGetCustomQuestions(rawPayload: any, requester: { id: string
   });
 }
 
-async function handleReportQuestion(data: any) {
-  const { questionId, message, questionText, mockTestId, mockTestTitle, userId, candidateCode } = data;
+// ---- Reported questions ------------------------------------------------------------------
 
-  const reported = await prisma.reportedQuestion.create({
-    data: {
-      questionId,
-      message,
-      questionText: questionText || '',
-      mockTestId: mockTestId || '',
-      mockTestTitle: mockTestTitle || '',
-      userId: userId || null,
-      candidateCode: candidateCode || null,
-    },
-  });
+const REPORT_REASONS = ['wrong_answer', 'wrong_question', 'options', 'solution', 'typo', 'translation', 'image', 'other'] as const;
 
+/**
+ * Where a question is in its test (exam, test, section, number) and its full content, worked
+ * out on the server from the test itself (so a report doesn't depend on what the browser sent).
+ */
+async function describeTestQuestion(testId: string, questionId: string) {
+  try {
+    // A live test's paper isn't stored: look the question up in its bank
+    const live = isLiveTestId(testId) ? await liveBankQuestions(testId) : null;
+    const loaded = live ? { mockTest: await prisma.mockTest.findUnique({ where: { id: testId }, include: { sections: true } }), questions: live } : await loadTestQuestions(testId);
+    const { mockTest, questions } = loaded as { mockTest: any; questions: any[] | null };
+    if (!questions?.length) return null;
+    const catalog = catalogCache.examCatalog || await getCompiledExamCatalog();
+    const session = generateExamSession(testId, catalog, {
+      questions, positiveMarks: mockTest?.positiveMarks, negativeMarks: mockTest?.negativeMarks,
+      durationMinutes: mockTest?.durationMinutes, sections: mockTest?.sections,
+    });
+    const index = session.questions.findIndex((q: any) => q.id === questionId);
+    const q: any = index >= 0 ? session.questions[index] : null;
+    const section = q ? session.sections.find((x: any) => x.id === q.sectionId) : null;
+    return {
+      testTitle: mockTest?.title || session.testTitle || '',
+      examName: [session.testCategory, session.testSubcategory].filter(Boolean).join(' › '),
+      sectionName: (section as any)?.name || '',
+      number: index >= 0 ? index + 1 : null,
+      question: q ? { id: q.id, content: q.content, correctOptionIndex: q.correctOptionIndex, explanation: q.explanation, positiveMark: q.positiveMark, negativeMark: q.negativeMark } : null,
+    };
+  } catch (err) {
+    console.error('describeTestQuestion failed:', err);
+    return null;
+  }
+}
+
+const reportView = (r: any) => ({
+  id: r.id, questionId: r.questionId, questionText: r.questionText, mockTestId: r.mockTestId, mockTestTitle: r.mockTestTitle,
+  examName: r.examName || '', sectionName: r.sectionName || '', questionNumber: r.questionNumber ?? null,
+  language: r.language || 'en', reason: r.reason || '', source: r.source || 'web',
+  message: r.message, userId: r.userId, candidateCode: r.candidateCode, createdAt: formatDateTime(r.createdAt), createdAtIso: r.createdAt?.toISOString?.() || null,
+});
+
+async function handleReportQuestion(data: any, request?: Request) {
+  const questionId = String(data?.questionId || '').trim().slice(0, 200);
+  const testId = String(data?.mockTestId || '').trim().slice(0, 200);
+  const message = String(data?.message || '').trim().slice(0, 3000);
+  const reason = REPORT_REASONS.includes(data?.reason) ? data.reason : 'other';
+  if (!questionId) return NextResponse.json({ success: false, error: 'Question is missing. Please reopen the question and try again.' }, { status: 400 });
+  if (message.length < 3 && reason === 'other') return NextResponse.json({ success: false, error: 'Please tell us what is wrong with this question.' }, { status: 400 });
+
+  // The same student reporting the same question again within a day: update that report instead
+  const userId: string | null = data?.userId || null;
+  const [found, reporter] = await Promise.all([
+    testId ? describeTestQuestion(testId, questionId) : Promise.resolve(null),
+    userId ? prisma.user.findUnique({ where: { id: userId }, select: { candidateCode: true } }) : Promise.resolve(null),
+  ]);
+  const clip = (v: unknown, n: number) => String(v ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+  const language = data?.language === 'hi' ? 'hi' : 'en';
+  const questionText = clip(found?.question?.content?.[language]?.questionText || found?.question?.content?.en?.questionText || data?.questionText, 2000);
+  const ua = (request?.headers.get('user-agent') || '').toLowerCase();
+  const source = ua.includes('okhttp') || (!!ua && !ua.includes('mozilla')) ? 'android' : /mobile|android|iphone/.test(ua) ? 'mobile_web' : 'web';
+  const fields = {
+    questionId, message, reason, language, source, questionText,
+    mockTestId: testId,
+    mockTestTitle: clip(found?.testTitle || data?.mockTestTitle, 300),
+    examName: clip(found?.examName || data?.examName, 200),
+    sectionName: clip(found?.sectionName || data?.sectionName, 200),
+    questionNumber: found?.number ?? (Number.isInteger(Number(data?.questionNumber)) ? Number(data.questionNumber) : null),
+    userId,
+    candidateCode: reporter?.candidateCode || null,
+  };
+
+  const recent = userId ? await prisma.reportedQuestion.findFirst({
+    where: { userId, questionId, createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } }, select: { id: true },
+  }) : null;
+  const reported = recent
+    ? await prisma.reportedQuestion.update({ where: { id: recent.id }, data: fields })
+    : await prisma.reportedQuestion.create({ data: fields });
+
+  notifyStaff('report', async () => ({
+    title: `Question reported${fields.examName ? ` · ${shorten(fields.examName, 50)}` : ''}`,
+    body: `${await studentLabel(userId, 'Visitor')} · ${shorten(fields.mockTestTitle || 'Test', 60)}${fields.questionNumber ? ` · Q${fields.questionNumber}` : ''}: ${shorten(message || reason)}`,
+    data: { screen: 'reports' },
+  }));
+
+  return NextResponse.json({ success: true, reported: reportView(reported) });
+}
+
+/** Admin: one report with the question (text, options, correct answer, solution) and its other reports. */
+async function handleReportedQuestionView(data: any) {
+  const id = String(data?.id || '').trim();
+  const report = id ? await prisma.reportedQuestion.findUnique({ where: { id } }) : null;
+  if (!report) return NextResponse.json({ success: false, error: 'Report not found (it may have been resolved).' }, { status: 404 });
+  const [found, others] = await Promise.all([
+    report.mockTestId ? describeTestQuestion(report.mockTestId, report.questionId) : Promise.resolve(null),
+    prisma.reportedQuestion.findMany({ where: { questionId: report.questionId, id: { not: report.id } }, orderBy: { createdAt: 'desc' }, take: 20 }),
+  ]);
   return NextResponse.json({
     success: true,
-    reported: {
-      id: reported.id,
-      questionId: reported.questionId,
-      message: reported.message,
-      questionText: reported.questionText,
-      mockTestId: reported.mockTestId,
-      mockTestTitle: reported.mockTestTitle,
-      userId: reported.userId,
-      candidateCode: reported.candidateCode,
-      createdAt: formatDateTime(reported.createdAt),
-    },
+    report: reportView(report),
+    question: found?.question || null,
+    location: found ? { examName: found.examName, testTitle: found.testTitle, sectionName: found.sectionName, number: found.number } : null,
+    others: others.map(reportView),
   });
 }
 
@@ -5327,11 +5445,13 @@ async function handleDeleteReportedQuestion(data: any) {
 type TourFlags = {
   tourCompletedAt?: string | null; noticesTourCompletedAt?: string | null; testsTourCompletedAt?: string | null; typingTourCompletedAt?: string | null;
   lockerTourCompletedAt?: string | null; profileTourCompletedAt?: string | null; plannerTourCompletedAt?: string | null; friendsTourCompletedAt?: string | null;
+  /** Android app tours finished (welcome slides and screen tips); absent when unknown */
+  appTours?: string[];
 };
 
 // Newer page tours (Study Planner, With Friends) are kept in their own small table instead of
 // one more users column each: one row per user and finished tour.
-const TABLE_TOURS = ['planner', 'friends'] as const;
+const TABLE_TOURS = ['planner', 'friends', 'app_welcome', 'app_home', 'app_tests', 'app_test_info', 'app_analysis'] as const;
 let userToursReady: Promise<void> | null = null;
 function ensureUserToursTable(): Promise<void> {
   if (!userToursReady) {
@@ -5348,13 +5468,13 @@ function ensureUserToursTable(): Promise<void> {
   return userToursReady;
 }
 
-async function readTableTours(userId: string): Promise<Pick<TourFlags, 'plannerTourCompletedAt' | 'friendsTourCompletedAt'>> {
+async function readTableTours(userId: string): Promise<Pick<TourFlags, 'plannerTourCompletedAt' | 'friendsTourCompletedAt' | 'appTours'>> {
   try {
     await ensureUserToursTable();
     const rows = await prisma.$queryRawUnsafe<{ tour: string; completedAt: Date }[]>(
       `SELECT tour, "completedAt" FROM user_tours WHERE "userId" = $1`, userId);
     const at = (t: string) => { const r = rows.find(x => x.tour === t); return r ? new Date(r.completedAt).toISOString() : null; };
-    return { plannerTourCompletedAt: at('planner'), friendsTourCompletedAt: at('friends') };
+    return { plannerTourCompletedAt: at('planner'), friendsTourCompletedAt: at('friends'), appTours: rows.map(r => r.tour).filter(t => t.startsWith('app_')) };
   } catch {
     return {}; // unknown: never starts these tours by itself
   }
@@ -5600,6 +5720,13 @@ async function handleAdminData(requesterRole: string | null) {
     });
   }
 
+  // Tests taken per student (one grouped count, for the list's "Tests" column and sorting)
+  const testCounts = new Map<string, number>();
+  try {
+    const rows = await prisma.$queryRaw<{ userId: string; n: number }[]>`SELECT "userId", COUNT(*)::int AS n FROM user_test_sessions WHERE status IN ('COMPLETED', 'AUTO_SUBMITTED') GROUP BY "userId"`;
+    for (const r of rows) testCounts.set(r.userId, r.n);
+  } catch { /* the column stays empty */ }
+
   // Map users to UI model format (testSessions is [] at bootstrap; loaded on demand)
   const usersList = users.map((u: any) => ({
     id: u.id,
@@ -5621,6 +5748,8 @@ async function handleAdminData(requesterRole: string | null) {
     bookmarkedQuestions: [], // not used by the admin screens; not read (egress)
     lastSeen: u.lastSeen ? u.lastSeen.toISOString() : null,
     lastPlatform: u.lastPlatform || 'web',
+    createdAtIso: u.createdAt ? u.createdAt.toISOString() : null,
+    testsTaken: testCounts.get(u.id) || 0,
     testSessions: [], // Loaded lazily via get-user-details action
   }));
 
@@ -5631,17 +5760,7 @@ async function handleAdminData(requesterRole: string | null) {
     },
   });
 
-  const reportedQuestionsList = reportedQuestions.map((rq: any) => ({
-    id: rq.id,
-    questionId: rq.questionId,
-    questionText: rq.questionText,
-    mockTestId: rq.mockTestId,
-    mockTestTitle: rq.mockTestTitle,
-    message: rq.message,
-    userId: rq.userId || null,
-    candidateCode: rq.candidateCode || null,
-    createdAt: formatDateTime(rq.createdAt),
-  }));
+  const reportedQuestionsList = reportedQuestions.map(reportView);
 
   return NextResponse.json({
     success: true,

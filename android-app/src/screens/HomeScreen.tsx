@@ -11,6 +11,7 @@ import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { lift, useTheme } from '../theme';
+import { TourTarget, useScreenTour, useTourScroll } from '../tour';
 import { Badge, Banner, Card, IconTile, LinkText, Pill, ProgressBar, Ring, SectionTitle, StatusBarCover, round2 } from '../ui';
 import { useFriendsBadge } from '../friendsApi';
 import { isDone, checkinKey, localDay, tasksForDay, PlannerData } from '../shared/plannerShared';
@@ -69,9 +70,23 @@ export default function HomeScreen() {
     { label: hi ? 'सहायता' : 'Support', icon: Headphones, color: '#0284c7', onPress: () => nav.push({ name: 'support' }) },
   ];
 
+  // First visit: what's where on this screen (after the welcome slides)
+  const scroll = useTourScroll('app_home');
+  useScreenTour('app_home', hi ? [
+    { target: 'home.progress', title: 'आपकी प्रगति', text: 'हर टेस्ट के बाद आपकी औसत सटीकता, दिए गए टेस्ट और सबसे अच्छा स्कोर यहां दिखता है।' },
+    { target: 'home.actions', title: 'सब कुछ एक जगह', text: 'मॉक टेस्ट, टाइपिंग, सूचनाएं, बुकमार्क, सेव की नौकरियां, लॉकर, डाउनलोड और सहायता यहां से खोलें।' },
+    { target: 'home.bell', title: 'सूचनाएं', text: 'दोस्तों के अनुरोध, संदेश, टेस्ट रूम और सपोर्ट के जवाब यहां आते हैं।' },
+    { target: 'tabbar', fixed: true, title: 'ऐप में घूमें', text: 'होम, टेस्ट, प्लानर, दोस्त और "मैं": आपका खाता, पास प्रो, रेफ़रल और सेटिंग्स।' },
+  ] : [
+    { target: 'home.progress', title: 'Your progress', text: 'Your average accuracy, tests taken and best score, updated after every test.' },
+    { target: 'home.actions', title: 'Everything in one place', text: 'Open mock tests, typing, notices, bookmarks, saved jobs, the Locker, downloads and support from here.' },
+    { target: 'home.bell', title: 'Notifications', text: 'Friend requests, messages, test rooms and support replies arrive here.' },
+    { target: 'tabbar', fixed: true, title: 'Move around the app', text: 'Home, Tests, Planner, Friends and Me: your account, Pass Pro, referrals and settings.' },
+  ], nav.tab === 'home' && nav.stack.length === 0);
+
   return (
     <View style={{ flex: 1 }}>
-    <ScrollView style={{ flex: 1, backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 28 }}
+    <ScrollView {...scroll} style={{ flex: 1, backgroundColor: t.bg }} contentContainerStyle={{ paddingBottom: 28 }}
       refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} progressViewOffset={insets.top} onRefresh={async () => {
         setRefreshing(true); await Promise.all([refresh(), refreshUser()]); loadPlan(); friendsBadge.refresh(); setRefreshing(false);
       }} />}>
@@ -87,12 +102,14 @@ export default function HomeScreen() {
             <Newspaper size={20} color="#fff" />
           </Pressable>
           {/* friend requests, messages, rooms, support replies */}
+          <TourTarget id="home.bell">
           <Pressable onPress={() => nav.push({ name: 'notifications' })}
             accessibilityLabel={hi ? `सूचनाएं${friendsBadge.notifications ? ` (${friendsBadge.notifications} नई)` : ''}` : `Notifications${friendsBadge.notifications ? ` (${friendsBadge.notifications} new)` : ''}`}
             style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
             <Bell size={21} color="#fff" />
             {friendsBadge.notifications ? <Badge count={friendsBadge.notifications} inverted style={{ position: 'absolute', top: -2, right: -2 }} /> : null}
           </Pressable>
+          </TourTarget>
         </View>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
           <View style={{ backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 999, paddingHorizontal: 11, paddingVertical: 5 }}>
@@ -107,6 +124,7 @@ export default function HomeScreen() {
 
       <View style={{ paddingHorizontal: 16, marginTop: -46 }}>
         {/* Progress */}
+        <TourTarget id="home.progress">
         <Card style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, ...lift(t, 2) }}>
           <Ring value={avgAccuracy / 100} size={68} stroke={8} color={t.success}>
             <Text style={{ color: t.text, fontWeight: '900', fontSize: 15 }}>{avgAccuracy}%</Text>
@@ -122,6 +140,7 @@ export default function HomeScreen() {
             </View>
           </View>
         </Card>
+        </TourTarget>
 
         {error === 'offline' ? (
           <View style={{ marginTop: 12 }}>
@@ -143,7 +162,8 @@ export default function HomeScreen() {
         ))}
 
         {/* Quick actions */}
-        <Card style={{ marginTop: 14, flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4, paddingVertical: 8 }}>
+        <TourTarget id="home.actions" style={{ marginTop: 14 }}>
+        <Card style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 4, paddingVertical: 8 }}>
           {actions.map(a => (
             <Pressable key={a.label} onPress={a.onPress} style={({ pressed }) => ({ width: '25%', alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: pressed ? t.cardAlt : 'transparent' })}>
               <IconTile icon={a.icon} color={a.color} size={46} />
@@ -151,6 +171,7 @@ export default function HomeScreen() {
             </Pressable>
           ))}
         </Card>
+        </TourTarget>
 
         {/* Today's plan */}
         <SectionTitle right={<LinkText onPress={() => nav.setTab('planner')}>{hi ? 'प्लानर खोलें' : 'Open planner'}</LinkText>}>{hi ? 'आज की योजना' : "Today's plan"}</SectionTitle>

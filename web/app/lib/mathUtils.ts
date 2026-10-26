@@ -2,12 +2,16 @@
  * mathUtils.ts — Permanent, comprehensive math & symbol rendering utility.
  *
  * STRATEGY:
- * Instead of relying on MathJax (async CDN, race conditions, unprocessed elements),
- * we convert ALL known LaTeX patterns → rendered HTML directly in processQuestionHtml.
- * MathJax then only needs to handle exotic edge cases that weren't caught here.
+ * Every maths piece (\( \), \[ \], $$ $$, real $ $) becomes
+ *   <span class="math-inline" data-tex="…the original LaTeX…">…HTML fallback…</span>
+ * The fallback (fractions, roots, powers, symbols drawn in HTML) shows straight away and
+ * wherever MathJax isn't loaded. Where MathJax is loaded (MathJaxText on the website, the
+ * question page in the Android app) it typesets the original LaTeX from data-tex, so every
+ * construct (\over, matrices, \overline, nested fractions…) renders exactly. If MathJax can't
+ * parse a piece, the fallback stays.
  *
- * This guarantees correct rendering regardless of how or where the HTML is rendered
- * (MathJaxText component, plain dangerouslySetInnerHTML, SSR, etc.)
+ * Money and puzzle "$" signs are protected first (protectCurrencySymbols), and MathJax is not
+ * told to look for "$" itself, so "$50 … $60" can never turn into maths.
  */
 
 // ─────────────────────────────────────────────────────────────
@@ -137,6 +141,24 @@ export function protectCurrencySymbols(text: string): string {
   return s;
 }
 
+/**
+ * $…$ / $$…$$ pairs that are clearly maths (a LaTeX command, ^, _, braces, or an equation
+ * starting with a variable: "$a + b = 0$") become \( … \) / \[ … \] before money is protected.
+ * Money ("$5 billion and $10") and puzzle symbols ("7 $ B Z 9 $ 4") don't match.
+ */
+export function promoteDollarMath(text: string): string {
+  if (!text || !text.includes('$')) return text;
+  const looksLikeMath = (inner: string) => {
+    const s = inner.trim();
+    if (!s || /<\/?[a-zA-Z]/.test(s)) return false;
+    if (/\\[a-zA-Z]+|[\^_{}]/.test(s)) return true;
+    return /^[a-zA-Z](?:\s*[=+\-−×÷*/<>≤≥(]|\s*$)/.test(s) && !/\b(?:billion|million|crore|lakh|thousand)\b/i.test(s);
+  };
+  let s = text.replace(/(?<!\\)\$\$([^$]+?)\$\$/g, (m, inner) => (looksLikeMath(inner) ? `\\[${inner}\\]` : m));
+  s = s.replace(/(?<![\\$])\$(?!\$)([^$\n]+?)(?<!\\)\$(?!\$)/g, (m, inner) => (looksLikeMath(inner) && !/^\s|\s$/.test(inner) ? `\\(${inner}\\)` : m));
+  return s;
+}
+
 export function decodeHtmlEntities(text: string): string {
   if (!text) return '';
 
@@ -257,74 +279,184 @@ function parseBraceGroup(s: string, start: number): [string, number] {
 function renderLatexMath(latex: string): string {
   if (!latex) return '';
 
-  let result = latex;
+  // 1. Same meaning, simpler form: \dfrac → \frac, {a \over b} → \frac{a}{b}, size hints removed.
+  //    "<" / ">" in maths are comparisons, never tags.
+  let result = normalizeTex(latex.replace(/</g, LT).replace(/>/g, GT));
 
-  // 1. Strip outer \left \right \big etc. (visual size hints, not semantic)
-  result = result.replace(/\\(left|right|big|Big|bigg|Bigg)\s*/g, '');
+  // 2. Matrices / arrays → small HTML tables
+  result = renderMatrices(result);
 
-  // 2. \frac{numerator}{denominator} → rendered HTML fraction (handles nesting)
+  // 3. \frac{numerator}{denominator} and \binom{n}{k} → stacked HTML (handles nesting)
   result = renderFrac(result);
 
-  // 3. \sqrt{content} or \sqrt[n]{content} → √(content)
-  result = result.replace(/\\sqrt(?:\[([^\]]*)\])?\s*\{([^}]*)\}/g, (_, idx, inner) => {
-    const rendered = renderLatexMath(inner);
-    const indexPart = idx ? `<sup style="font-size:0.7em">${idx}</sup>` : '';
-    return `${indexPart}√<span style="text-decoration:overline">${rendered}</span>`;
-  });
-  result = result.replace(/\\sqrt(?:\[([^\]]*)\])?\s*([^{}\s])/g, (_, idx, char) => {
-    const indexPart = idx ? `<sup style="font-size:0.7em">${idx}</sup>` : '';
-    return `${indexPart}√${char}`;
-  });
+  // 4. \sqrt{…} (nested braces) or \sqrt[n]{…} → √ with a bar over the content
+  result = replaceCommandWithGroups(result, '\\sqrt', (inner, index) =>
+    `${index ? `<sup style="font-size:0.7em">${index}</sup>` : ''}√<span style="text-decoration:overline">${inner}</span>`, true);
+  result = result.replace(/\\sqrt\s*([^{}\s\\])/g, '√$1');
 
-  // 4. Comprehensive Superscripts (cubes, squares, powers) & Subscripts
+  // 5. Accents and bars
+  const over = (s: string) => `<span style="text-decoration:overline">${s}</span>`;
+  result = replaceCommandWithGroups(result, '\\overline', over);
+  result = replaceCommandWithGroups(result, '\\bar', over);
+  result = replaceCommandWithGroups(result, '\\underline', s => `<span style="text-decoration:underline">${s}</span>`);
+  result = replaceCommandWithGroups(result, '\\hat', s => `${s}̂`);
+  result = replaceCommandWithGroups(result, '\\widehat', s => `${s}̂`);
+  result = replaceCommandWithGroups(result, '\\vec', s => `${s}⃗`);
+  result = replaceCommandWithGroups(result, '\\overrightarrow', s => `${s}⃗`);
+  result = replaceCommandWithGroups(result, '\\dot', s => `${s}̇`);
+  result = replaceCommandWithGroups(result, '\\tilde', s => `${s}̃`);
+  result = replaceCommandWithGroups(result, '\\boxed', s => `<span style="border:1px solid currentColor;padding:0 3px">${s}</span>`);
+  result = replaceCommandWithGroups(result, '\\mathbb', s => s.replace(/[A-Z]/g, c => DOUBLE_STRUCK[c] || c));
+
+  // 6. Comprehensive Superscripts (cubes, squares, powers) & Subscripts
   result = renderPowersAndSubscripts(result);
 
-  // 6. \text{...} → plain text span
-  result = result.replace(/\\text\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
-  result = result.replace(/\\textrm\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
-  result = result.replace(/\\textbf\s*\{([^}]*)\}/g, (_, inner) => `<strong>${inner}</strong>`);
-  result = result.replace(/\\textit\s*\{([^}]*)\}/g, (_, inner) => `<em>${inner}</em>`);
-  result = result.replace(/\\mathrm\s*\{([^}]*)\}/g, (_, inner) => `<span>${inner}</span>`);
-  result = result.replace(/\\mathbf\s*\{([^}]*)\}/g, (_, inner) => `<strong>${inner}</strong>`);
-  result = result.replace(/\\mathit\s*\{([^}]*)\}/g, (_, inner) => `<em>${inner}</em>`);
+  // 7. \text{...} and font commands
+  result = replaceCommandWithGroups(result, '\\text', s => `<span>${s}</span>`);
+  result = replaceCommandWithGroups(result, '\\textrm', s => `<span>${s}</span>`);
+  result = replaceCommandWithGroups(result, '\\mathrm', s => `<span>${s}</span>`);
+  result = replaceCommandWithGroups(result, '\\operatorname', s => `<span>${s}</span>`);
+  result = replaceCommandWithGroups(result, '\\textbf', s => `<strong>${s}</strong>`);
+  result = replaceCommandWithGroups(result, '\\mathbf', s => `<strong>${s}</strong>`);
+  result = replaceCommandWithGroups(result, '\\boldsymbol', s => `<strong>${s}</strong>`);
+  result = replaceCommandWithGroups(result, '\\textit', s => `<em>${s}</em>`);
+  result = replaceCommandWithGroups(result, '\\mathit', s => `<em>${s}</em>`);
+  result = replaceCommandWithGroups(result, '\\color', (_c, _i, rest) => rest ?? '', false, true);
 
-  // 7. Simple LaTeX commands → Unicode
-  for (const [cmd, unicode] of Object.entries(LATEX_TO_UNICODE)) {
-    // Skip multi-char replacements that need special handling
-    if (cmd.startsWith('\\sqrt') || cmd.startsWith('\\frac') || cmd.startsWith('\\text') || cmd === '\\(' || cmd === '\\)' || cmd === '\\[' || cmd === '\\]') continue;
-    // Escape for regex: \alpha → \\alpha
+  // 8. Simple LaTeX commands → Unicode (longest first, so \leq wins over \le)
+  for (const [cmd, unicode] of UNICODE_COMMANDS) {
     const escaped = cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Match command at word boundary or followed by non-letter
-    const re = new RegExp(escaped + '(?![a-zA-Z])', 'g');
-    result = result.replace(re, unicode);
+    result = result.replace(new RegExp(escaped + (/[a-zA-Z]$/.test(cmd) ? '(?![a-zA-Z])' : ''), 'g'), unicode);
   }
 
-  // 8. Remove remaining curly braces {}, these are LaTeX grouping
-  result = result.replace(/\{([^}]*)\}/g, '$1');
+  // 8b. Font / size switches (\rm, \bf, \large…) and any other command left in front of a group
+  //     go before the braces do, so "\rm{conduction}" doesn't become "\rmconduction" and vanish
+  result = result.replace(/\\(?:rm|bf|it|sf|tt|cal|mathcal|mathsf|mathtt|mathop|large|Large|LARGE|small|normalsize|scriptsize|footnotesize|tiny|huge|Huge|space)(?![a-zA-Z])\s*/g, ' ');
+  result = result.replace(/\\[a-zA-Z]+(?=\s*\{)/g, '');
 
-  // 9. Remove remaining backslash commands we didn't handle
+  // 9. Remove remaining grouping braces (innermost first, until none are left)
+  for (let k = 0; k < 10 && /\{[^{}]*\}/.test(result); k++) result = result.replace(/\{([^{}]*)\}/g, '$1');
+
+  // 10. Line breaks (\\) in aligned / cases blocks; any other unknown command is dropped
+  result = result.replace(/\\\\/g, '<br>');
   result = result.replace(/\\[a-zA-Z]+/g, '');
+  result = result.replaceAll(ESCAPED_UNDERSCORE, '_').replaceAll(ESCAPED_AMP, '&amp;').replaceAll(LBRACE, '{').replaceAll(RBRACE, '}').replaceAll(LT, '&lt;').replaceAll(GT, '&gt;');
 
-  // 10. Collapse multiple spaces
+  // 11. Collapse multiple spaces
   result = result.replace(/\s{2,}/g, ' ');
 
   return result.trim();
+}
+
+const ESCAPED_UNDERSCORE = '@@@ESCUNDERSCOREX@@@';
+const ESCAPED_AMP = '@@@ESCAMPX@@@';
+const LT = '@@@LTX@@@';
+const GT = '@@@GTX@@@';
+const LBRACE = '@@@LBRACEX@@@';
+const RBRACE = '@@@RBRACEX@@@';
+const DOUBLE_STRUCK: Record<string, string> = { N: 'ℕ', Z: 'ℤ', Q: 'ℚ', R: 'ℝ', C: 'ℂ', P: 'ℙ' };
+const UNICODE_COMMANDS = Object.entries(LATEX_TO_UNICODE)
+  .filter(([cmd]) => !['\\sqrt{}', '\\(', '\\)', '\\[', '\\]'].includes(cmd))
+  .sort((a, b) => b[0].length - a[0].length);
+
+/** Same meaning, simpler form for the HTML fallback. */
+function normalizeTex(latex: string): string {
+  let s = latex;
+  s = s.replace(/\\(?:dfrac|tfrac|cfrac)(?![a-zA-Z])/g, '\\frac');
+  s = s.replace(/\\(?:displaystyle|textstyle|scriptstyle|limits|nolimits)(?![a-zA-Z])/g, '');
+  s = s.replace(/\\(?:left|right)\s*\./g, '');
+  s = s.replace(/\\(?:left|right|bigl|bigr|Bigl|Bigr|biggl|biggr|big|Big|bigg|Bigg)(?![a-zA-Z])\s*/g, '');
+  s = s.replace(/\\(?:left|right)\s*\\?([()[\]|{}])/g, '$1');
+  s = s.replace(/\\%/g, '%').replace(/\\&/g, ESCAPED_AMP).replace(/\\#/g, '#').replace(/\\_/g, ESCAPED_UNDERSCORE);
+  s = s.replace(/\\\{/g, LBRACE).replace(/\\\}/g, RBRACE).replace(/\\lbrace(?![a-zA-Z])/g, LBRACE).replace(/\\rbrace(?![a-zA-Z])/g, RBRACE);
+  s = s.replace(/\\(?:mathrm|text)\s*\{\s*\}/g, '');
+  s = s.replace(/\\[,;:!> ]/g, ' ');
+  s = convertOver(s, '\\over', (a, b) => `\\frac{${a}}{${b}}`);
+  s = convertOver(s, '\\choose', (a, b) => `\\binom{${a}}{${b}}`);
+  return s;
+}
+
+/** {a \over b} → \frac{a}{b} (the group around \over, or the whole piece). */
+function convertOver(input: string, word: string, make: (a: string, b: string) => string): string {
+  let s = input;
+  const re = new RegExp(word.replace(/\\/g, '\\\\') + '(?![a-zA-Z])');
+  for (let guard = 0; guard < 50; guard++) {
+    const m = re.exec(s);
+    if (!m) break;
+    const at = m.index;
+    let start = -1;
+    for (let j = at - 1, depth = 0; j >= 0; j--) {
+      if (s[j] === '}') depth++;
+      else if (s[j] === '{') { if (depth === 0) { start = j; break; } depth--; }
+    }
+    let end = s.length;
+    for (let j = at + word.length, depth = 0; j < s.length; j++) {
+      if (s[j] === '{') depth++;
+      else if (s[j] === '}') { if (depth === 0) { end = j; break; } depth--; }
+    }
+    const frac = make(s.slice(start + 1, at).trim(), s.slice(at + word.length, end).trim());
+    s = start >= 0 ? `${s.slice(0, start)}{${frac}}${s.slice(end + 1)}` : frac + s.slice(end + 1);
+  }
+  return s;
+}
+
+/**
+ * Replaces \cmd{…} (nested braces allowed; optional [index] when withIndex) using make().
+ * With takesRest, \cmd{x} applies to the rest of the piece (like \color{red} text).
+ */
+function replaceCommandWithGroups(input: string, cmd: string, make: (inner: string, index?: string, rest?: string) => string, withIndex = false, takesRest = false): string {
+  let s = input;
+  const re = new RegExp(cmd.replace(/\\/g, '\\\\') + '(?![a-zA-Z])');
+  for (let guard = 0; guard < 60; guard++) {
+    const m = re.exec(s);
+    if (!m) break;
+    let pos = m.index + cmd.length;
+    while (s[pos] === ' ') pos++;
+    let index: string | undefined;
+    if (withIndex && s[pos] === '[') {
+      const close = s.indexOf(']', pos);
+      if (close > pos) { index = s.slice(pos + 1, close); pos = close + 1; while (s[pos] === ' ') pos++; }
+    }
+    let inner: string, end: number;
+    if (s[pos] === '{') [inner, end] = parseBraceGroup(s, pos);
+    else if (s[pos] === '\\') { const w = /^\\[a-zA-Z]+/.exec(s.slice(pos)); inner = w ? w[0] : s[pos]; end = pos + inner.length; }
+    else { inner = s[pos] || ''; end = pos + (inner ? 1 : 0); }
+    // Keep a command just before (\cdot\hat{b}) separate from the replacement
+    const before = s.slice(0, m.index) + (/\\[a-zA-Z]+$/.test(s.slice(0, m.index)) ? ' ' : '');
+    if (takesRest) { s = before + make(inner, index, s.slice(end)); continue; }
+    s = before + make(inner, index) + s.slice(end);
+  }
+  return s;
+}
+
+/** \begin{matrix|pmatrix|bmatrix|vmatrix|array|cases|aligned} … \end{…} → a small inline table. */
+function renderMatrices(input: string): string {
+  return input.replace(/\\begin\{(matrix|pmatrix|bmatrix|Bmatrix|vmatrix|array|cases|aligned|align\*?|gathered|split)\}(\{[^}]*\})?([\s\S]*?)\\end\{\1\}/g, (_m, kind: string, _cols, body: string) => {
+    const rows = body.split(/\\\\/).map(r => r.trim()).filter(Boolean)
+      .map(r => `<span style="display:table-row">${r.split(/(?<!\\)&/).map(c => `<span style="display:table-cell;padding:1px 6px;text-align:${kind === 'cases' || kind.startsWith('align') ? 'left' : 'center'}">${c.trim()}</span>`).join('')}</span>`).join('');
+    const table = `<span style="display:inline-table;vertical-align:middle">${rows}</span>`;
+    const [l, r] = kind === 'pmatrix' ? ['(', ')'] : kind === 'bmatrix' ? ['[', ']'] : kind === 'Bmatrix' ? [LBRACE, RBRACE] : kind === 'vmatrix' ? ['|', '|'] : kind === 'cases' ? [LBRACE, ''] : ['', ''];
+    const big = (c: string) => (c ? `<span style="font-size:1.6em;vertical-align:middle;font-weight:300">${c}</span>` : '');
+    return `${big(l)}${table}${big(r)}`;
+  });
 }
 
 /**
  * Iterative \frac renderer that correctly handles nested braces.
  */
 function renderFrac(input: string): string {
-  if (!input.includes('\\frac')) return input;
+  if (!input.includes('\\frac') && !input.includes('\\binom')) return input;
 
   let result = input;
   let safetyLimit = 30;
 
-  while (result.includes('\\frac') && safetyLimit-- > 0) {
-    const fracIdx = result.indexOf('\\frac');
-    if (fracIdx < 0) break;
+  while (safetyLimit-- > 0) {
+    const found = /\\(frac|binom)(?![a-zA-Z])/.exec(result);
+    if (!found) break;
+    const fracIdx = found.index;
+    const isBinom = found[1] === 'binom';
 
-    let pos = fracIdx + 5; // skip '\frac'
+    let pos = fracIdx + found[0].length; // skip '\frac' / '\binom'
     while (pos < result.length && result[pos] === ' ') pos++;
 
     let num: string, den: string, endPos: number;
@@ -356,7 +488,9 @@ function renderFrac(input: string): string {
     const renderedNum = renderFrac(num);
     const renderedDen = renderFrac(den);
 
-    const fracHtml = `<span class="math-frac" style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.2;font-size:0.92em;margin:0 2px;"><span style="border-bottom:1.5px solid currentColor;padding:0 3px;min-width:10px;text-align:center;">${renderedNum}</span><span style="padding:0 3px;min-width:10px;text-align:center;">${renderedDen}</span></span>`;
+    const line = isBinom ? 'none' : '1.5px solid currentColor';
+    const stacked = `<span class="math-frac" style="display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.2;font-size:0.92em;margin:0 2px;"><span style="border-bottom:${line};padding:0 3px;min-width:10px;text-align:center;">${renderedNum}</span><span style="padding:0 3px;min-width:10px;text-align:center;">${renderedDen}</span></span>`;
+    const fracHtml = isBinom ? `(${stacked})` : stacked;
 
     result = result.substring(0, fracIdx) + fracHtml + result.substring(endPos);
   }
@@ -367,6 +501,132 @@ function renderFrac(input: string): string {
 // ─────────────────────────────────────────────────────────────
 // 6. MATH DELIMITER STRIPPER & SEGMENT PROCESSOR
 // ─────────────────────────────────────────────────────────────
+
+/**
+ * The LaTeX kept in data-tex. Percent-encoded with only [A-Za-z0-9%-] left, so the later
+ * power / subscript / entity passes (which look for ^ _ & < >) can never touch it.
+ */
+export function encodeTex(tex: string): string {
+  return encodeURIComponent(tex).replace(/[_.!~*'()]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+export function decodeTex(value: string): string {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+// A real HTML tag (not "a < b" inside maths)
+const HTML_TAG_RE = /<\/?(?:span|sup|sub|b|i|u|s|strong|em|br|p|div|font|img|table|thead|tbody|tr|td|th|li|ul|ol|a|small|big|math|mi|mo|mn|mrow|mfrac|svg)\b[^>]*>/i;
+
+// Symbol commands that sometimes appear in plain text (outside \( \)); shown as the symbol
+const PLAIN_SYMBOLS = ['triangle', 'angle', 'times', 'div', 'pi', 'theta', 'alpha', 'beta', 'gamma', 'delta', 'Delta', 'lambda',
+  'sigma', 'omega', 'Omega', 'phi', 'infty', 'pm', 'circ', 'cdot', 'therefore', 'because', 'Rightarrow', 'rightarrow', 'leq', 'geq', 'neq', 'approx'];
+const PLAIN_SYMBOL_RE = new RegExp(`\\\\(${PLAIN_SYMBOLS.join('|')})(?![a-zA-Z])`, 'g');
+
+/** A bare \frac{…}{…} / \dfrac / \sqrt{…} in plain text (no \( \) around it) → a maths piece. */
+function wrapBareLatex(text: string): string {
+  const re = /\\(d?frac|tfrac|sqrt)(?![a-zA-Z])/g;
+  let out = '';
+  let last = 0;
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    let pos = m.index + m[0].length;
+    if (m[1] === 'sqrt' && text[pos] === '[') { const c = text.indexOf(']', pos); if (c < 0) continue; pos = c + 1; }
+    const groups = m[1] === 'sqrt' ? 1 : 2;
+    let ok = true;
+    for (let g = 0; g < groups; g++) {
+      while (text[pos] === ' ') pos++;
+      if (text[pos] !== '{') { ok = false; break; }
+      const [, end] = parseBraceGroup(text, pos);
+      if (end > text.length || text[end - 1] !== '}') { ok = false; break; }
+      pos = end;
+    }
+    if (!ok) continue;
+    // a power right after it belongs to it: \frac{a}{b}^{2}
+    const pow = /^\^(?:\{[^{}]*\}|\d)/.exec(text.slice(pos));
+    if (pow) pos += pow[0].length;
+    out += text.slice(last, m.index) + mathSpan(text.slice(m.index, pos), false);
+    last = pos;
+    re.lastIndex = pos;
+  }
+  return last ? out + text.slice(last) : text;
+}
+
+/** Text between maths pieces: stray symbol commands, and "\n" / "\t" / \" left by bad escaping. */
+function tidyPlainText(text: string): string {
+  if (!text.includes('\\')) return text;
+  return wrapBareLatex(text)
+    .replace(PLAIN_SYMBOL_RE, (m, name) => LATEX_TO_UNICODE[`\\${name}`] ?? m)
+    .replace(/\\r\\n|\\n(?=[A-Z0-9\s(•\-–"'‘“ऀ-ॿ])/g, '<br>')
+    .replace(/\\t(?=[A-Z0-9\s])/g, ' ')
+    .replace(/\\"/g, '"');
+}
+
+/**
+ * Fixes for LaTeX as it comes from question banks, so MathJax shows what the author meant:
+ *  - curly brackets typed as brackets in sums, "27-[5-{6+2(7-3)}]": LaTeX would hide them
+ *  - ₹ and Hindi text inside maths go into \text{} (MathJax can't draw them as maths symbols)
+ *  - matrix rows whose "\\" lost a backslash ("1&3\2&-8")
+ */
+export function repairTex(tex: string): string {
+  let s = tex;
+  if (!s) return s;
+  // Matrix / array / aligned rows: a single "\" before a digit, minus, "a_1"-style entry or the
+  // next row's "&" is a row break that lost its second backslash
+  s = s.replace(/\\begin\{(matrix|pmatrix|bmatrix|Bmatrix|vmatrix|array|aligned|align\*?|cases|gathered|split|eqnarray\*?)\}([\s\S]*?)\\end\{\1\}/g, (m) =>
+    m.replace(/(?<!\\)\\(?=\s*&)|(?<!\\)\\(?=[-0-9]|[a-z]_|[a-z]&)/g, '\\\\'));
+  s = bracesAsBrackets(s);
+  // ₹, other currency signs and Devanagari runs → \text{…}
+  s = s.replace(/[₹€£¥ऀ-ॿ](?:[ऀ-ॿ\s]*[ऀ-ॿ])?/g, m => `\\text{${m}}`);
+  return s;
+}
+
+/** "{" … "}" written as curly brackets in a sum (not LaTeX grouping) → "\{" … "\}". */
+function bracesAsBrackets(tex: string): string {
+  if (!tex.includes('{')) return tex;
+  let out = '';
+  const stack: boolean[] = [];
+  for (let i = 0; i < tex.length; i++) {
+    const ch = tex[i];
+    if (ch === '\\') {
+      const m = /^\\(?:[a-zA-Z]+|.)/.exec(tex.slice(i));
+      const cmd = m ? m[0] : ch;
+      out += cmd;
+      i += cmd.length - 1;
+      continue;
+    }
+    if (ch === '{') {
+      const before = out.replace(/\s+$/, '');
+      const prev = before.slice(-1);
+      const afterCommand = /\\[a-zA-Z]+$/.test(before);
+      const [inner, end] = parseBraceGroup(tex, i);
+      const next = tex.slice(end).trimStart()[0];
+      const topLevel = inner.replace(/\{[^{}]*\}/g, 'X').replace(/\{[^{}]*\}/g, 'X');
+      // Not an argument of a command, a power / subscript, or the 2nd part of \frac{..}{..}
+      const literal = !afterCommand && prev !== '' && !'^_}]'.includes(prev);
+      const isSum = /[-+×÷*/=]|\\times|\\div|\\cdot/.test(topLevel.slice(1)) && /[0-9a-zA-Z)]/.test(topLevel);
+      const asBracket = literal && isSum && next !== '^' && next !== '_' && !/\\(?:over|choose|atop)(?![a-zA-Z])/.test(inner);
+      stack.push(asBracket);
+      out += asBracket ? '\\{' : '{';
+      continue;
+    }
+    if (ch === '}') {
+      out += stack.pop() ? '\\}' : '}';
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+/** One maths piece: the original LaTeX for MathJax plus the HTML fallback. */
+function mathSpan(tex: string, display: boolean): string {
+  const t = repairTex(tex.trim());
+  if (!t) return '';
+  // A multi-row block (aligned steps) written as inline maths still gets its own lines
+  if (/\\begin\{(?:aligned|align\*?|gathered|split|eqnarray\*?)\}/.test(t)) display = true;
+  const fallback = renderLatexMath(t);
+  return display
+    ? `<span class="math-display" data-tex="${encodeTex(t)}" data-display="1" style="display:block;text-align:center;padding:4px 0;font-size:1.05em">${fallback}</span>`
+    : `<span class="math-inline" data-tex="${encodeTex(t)}">${fallback}</span>`;
+}
 
 /**
  * Processes a full text string that may contain math delimiters.
@@ -390,8 +650,7 @@ function processAllMath(text: string): string {
       const start = i + 2;
       const end = text.indexOf('\\]', start);
       if (end >= 0) {
-        const mathContent = text.substring(start, end);
-        result.push(`<span class="math-display" style="display:block;text-align:center;padding:4px 0;font-size:1.05em">${renderLatexMath(mathContent)}</span>`);
+        result.push(mathSpan(text.substring(start, end), true));
         i = end + 2;
         continue;
       }
@@ -402,8 +661,7 @@ function processAllMath(text: string): string {
       const start = i + 2;
       const end = text.indexOf('\\)', start);
       if (end >= 0) {
-        const mathContent = text.substring(start, end);
-        result.push(`<span class="math-inline">${renderLatexMath(mathContent)}</span>`);
+        result.push(mathSpan(text.substring(start, end), false));
         i = end + 2;
         continue;
       }
@@ -414,8 +672,7 @@ function processAllMath(text: string): string {
       const start = i + 2;
       const end = text.indexOf('$$', start);
       if (end >= 0) {
-        const mathContent = text.substring(start, end);
-        result.push(`<span class="math-display" style="display:block;text-align:center;padding:4px 0;font-size:1.05em">${renderLatexMath(mathContent)}</span>`);
+        result.push(mathSpan(text.substring(start, end), true));
         i = end + 2;
         continue;
       }
@@ -430,8 +687,9 @@ function processAllMath(text: string): string {
       }
       if (end > start) {
         const mathContent = text.substring(start, end);
-        if (isActualLatexMath(mathContent)) {
-          result.push(`<span class="math-inline">${renderLatexMath(mathContent)}</span>`);
+        // A pair that spans a protected money / puzzle "$" is not a maths piece
+        if (isActualLatexMath(mathContent) && !mathContent.includes('&#36;')) {
+          result.push(mathSpan(mathContent, false));
           i = end + 1;
           continue;
         }
@@ -446,7 +704,7 @@ function processAllMath(text: string): string {
       i++;
     }
     if (i > plainStart) {
-      result.push(text.substring(plainStart, i));
+      result.push(tidyPlainText(text.substring(plainStart, i)));
     } else {
       // Avoid infinite loop if nothing was consumed
       result.push(text[i]);
@@ -477,14 +735,26 @@ function processAllMath(text: string): string {
 export function processQuestionHtml(rawContent: string | null | undefined): string {
   if (!rawContent) return '';
 
-  // Step 1: Protect currency symbols ($50, $ 100, $10.50, $5,000, etc.) from math parser
-  let processed = protectCurrencySymbols(rawContent);
+  // Step 0: Maths copied from another site's MathJax output → its original LaTeX / MathML
+  let processed = cleanCopiedMathJax(rawContent);
+
+  // Step 1: Real $…$ maths → \( … \), then protect currency symbols ($50, $ 100, $10.50,
+  // $5,000, etc.) from math parser. (Without the first part "$x = \sqrt{10} + 3$" lost its
+  // closing "$" to the "3$ is money" rule.)
+  processed = promoteDollarMath(processed);
+  processed = protectCurrencySymbols(processed);
 
   // Step 2: Decode HTML entities (&amp;, &times;, &frac12;, &rupee;, &dollar;, etc.) 4 passes
   for (let i = 0; i < 4; i++) {
     const n = decodeHtmlEntities(processed);
     if (n === processed) break;
     processed = n;
+  }
+
+  // Step 2a: Image addresses whose underscores were turned into italics by a markdown converter
+  // ("lms<em>creative</em>elements/x.png" → "lms_creative_elements/x.png")
+  for (let k = 0; k < 4 && /src="[^"]*<em>/.test(processed); k++) {
+    processed = processed.replace(/(src="[^"]*?)<em>([^<"]*)<\/em>/g, '$1_$2_');
   }
 
   // Step 2b: Rescue broken or truncated <img> tag fragments and bare image filenames
@@ -542,6 +812,15 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
   const hasHtmlTags = /<[a-zA-Z]/.test(processed);
 
   if (hasHtmlTags) {
+    // \( … \) / \[ … \] pieces first: a "<" inside them ("\(\frac13 < x < 1\)") would otherwise
+    // be read as the start of an HTML tag and the rest of the sentence lost
+    const pieces: string[] = [];
+    processed = processed.replace(/\\\(([\s\S]*?)\\\)|\\\[([\s\S]*?)\\\]/g, (m, inline, display) => {
+      const inner = inline ?? display;
+      if (HTML_TAG_RE.test(inner)) return m; // maths split by real tags: handled per text node below
+      pieces.push(mathSpan(inner, display !== undefined));
+      return `@@@MATHPIECEX${pieces.length - 1}@@@`;
+    });
     // Content has HTML tags — process math only in text nodes (between tags)
     // Split by HTML tags, process text segments, reassemble
     processed = processed.replace(/(<[^>]+>)|([^<]+)/g, (match, tag, text) => {
@@ -549,6 +828,7 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
       if (text) return processAllMath(text); // Process math in text
       return match;
     });
+    processed = processed.replace(/@@@MATHPIECEX(\d+)@@@/g, (_m, n) => pieces[Number(n)]);
   } else {
     // Plain text — process all math
     processed = processAllMath(processed);
@@ -567,6 +847,56 @@ export function processQuestionHtml(rawContent: string | null | undefined): stri
   processed = processed.replaceAll('___SAFE_DOLLAR_SYM___', '&#36;');
 
   return processed;
+}
+
+/**
+ * Questions copied from sites that used MathJax 2 carry its drawn output (<span class="MathJax"
+ * data-mathml="…">, whose unescaped quotes break the HTML) next to the original
+ * <script type="math/tex">. Each drawn copy is replaced by that LaTeX, or by the clean MathML
+ * kept for screen readers when there is no script.
+ */
+export function cleanCopiedMathJax(html: string): string {
+  if (!html.includes('MathJax') && !html.includes('math/tex') && !html.includes('math/mml')) return html;
+  let s = html.replace(/<span class="MathJax_Preview"[^>]*>[\s\S]*?<\/span>/g, '');
+  const START = /<span class="MathJax(?:_Display|_SVG|_CHTML)?"/g;
+  const SCRIPT_AFTER = /^\s*<script[^>]*type="math\/(tex|mml)(; ?mode=display)?"[^>]*>([\s\S]*?)<\/script>/;
+  const cleanMml = (blob: string) => {
+    for (const m of blob.matchAll(/(<math\b[\s\S]*?<\/math>)/g)) if (!m[1].includes('<merror')) return m[1];
+    return '';
+  };
+  let out = '';
+  let last = 0;
+  for (let m = START.exec(s); m; m = START.exec(s)) {
+    const from = m.index;
+    // The drawn copy ends at its matching </span> (its MathML attribute holds no spans)
+    const tags = /<span\b|<\/span>/g;
+    tags.lastIndex = from;
+    let depth = 0, end = s.length;
+    for (let t = tags.exec(s); t; t = tags.exec(s)) {
+      if (t[0] === '</span>') { if (--depth === 0) { end = tags.lastIndex; break; } } else depth++;
+    }
+    const blob = s.slice(from, end);
+    // The original source: a <script type="math/tex"> inside or right after the copy
+    let replacement = '';
+    let to = end;
+    const inner = /<script[^>]*type="math\/tex(; ?mode=display)?"[^>]*>([\s\S]*?)<\/script>/.exec(blob);
+    const after = SCRIPT_AFTER.exec(s.slice(end));
+    if (inner) replacement = inner[1] ? `\\[${inner[2]}\\]` : `\\(${inner[2]}\\)`;
+    else if (after && after[1] === 'tex') replacement = after[2] ? `\\[${after[3]}\\]` : `\\(${after[3]}\\)`;
+    else replacement = cleanMml(blob) || (after ? cleanMml(after[3]) : '');
+    if (after) to = end + after[0].length;
+    out += s.slice(last, from) + replacement;
+    last = to;
+    START.lastIndex = to;
+  }
+  s = out + s.slice(last);
+  // Lone scripts: TeX → \( \), MathML kept when it isn't an error copy
+  s = s.replace(/<script[^>]*type="math\/tex(; ?mode=display)?"[^>]*>([\s\S]*?)<\/script>/g, (_m, display, tex) => (display ? `\\[${tex}\\]` : `\\(${tex}\\)`));
+  s = s.replace(/<script[^>]*type="math\/mml"[^>]*>([\s\S]*?)<\/script>/g, (_m, mml) => (mml.includes('<merror') ? '' : mml));
+  // Pieces of a drawn copy without its outer span: drop the absolute positioning so the
+  // characters at least read in a line
+  s = s.replace(/<span\b([^>]*\bid="MathJax-Span-\d+"[^>]*)>/g, (_m, attrs: string) => `<span${attrs.replace(/\sstyle="[^"]*"/g, '')}>`);
+  return s;
 }
 
 /**
@@ -640,7 +970,7 @@ export function renderPowersAndSubscripts(text: string): string {
 
   // 3. Subscripts (ONLY apply if preceded by a valid variable/identifier character e.g. x_1, a_n, H_2O, a_{n})
   // _{inner} -> <sub>inner</sub>
-  s = s.replace(/([a-zA-Z0-9\)])\s*_\s*\{([^}]+)\}/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');
+  s = s.replace(/([a-zA-Z0-9\)]|<\/sup>)\s*_\s*\{([^}]+)\}/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');
 
   // _(inner) -> <sub>inner</sub>
   s = s.replace(/([a-zA-Z0-9\)])\s*_\s*\(([^)]+)\)/g, '$1<sub style="font-size:0.75em;line-height:0;vertical-align:sub;">$2</sub>');

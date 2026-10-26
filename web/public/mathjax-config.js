@@ -2,8 +2,10 @@
 // layout.tsx loads this with strategy="beforeInteractive" to guarantee ordering.
 window.MathJax = {
   tex: {
-    inlineMath: [['\\(', '\\)'], ['$', '$']],
-    displayMath: [['\\[', '\\]'], ['$$', '$$']],
+    // Only \( \) and \[ \]: processQuestionHtml already turns real $…$ maths into these, so a
+    // "$" in plain text (money, puzzle symbols) is never read as maths
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
     processEscapes: true,
     packages: {'[+]': ['ams', 'boldsymbol', 'color']},
     macros: {

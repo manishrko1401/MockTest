@@ -3,7 +3,7 @@
 import { buildTestSeriesPath } from '../../../lib/testSeriesUrl';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
-import { generateExamSession, EXPLANATIONS } from '../../../lib/examUtils';
+import { generateExamSession } from '../../../lib/examUtils';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useIsMobile } from '../../../useIsMobile';
@@ -36,10 +36,13 @@ import { TRANSLATIONS } from '../../../translations';
 import { processQuestionHtml, decodeHtml } from '../../../lib/mathUtils';
 import MathJaxText from '../../../lib/MathJaxText';
 import MathJaxLoader from '../../../components/MathJaxLoader';
+import { QuestionReviewBody } from '../../../components/QuestionReviewBody';
 import { useOfflineMock } from '../../../lib/offlineExam';
 import OfflineBookmarkBadge from '../../../components/OfflineBookmarkBadge';
 import ShareScorecardButton from '../../../components/ShareScorecard';
 import FriendsRoomsForTest from '../../../friends/FriendsRoomsForTest';
+import { ReportQuestionDialog } from '../../../components/ReportQuestionDialog';
+import { setPresenceActivity } from '../../../components/PresenceReporter';
 
 // -----------------------------------------------------------------------------
 // RRB NTPC CBAT (Psycho Test) — T-Score result display
@@ -109,10 +112,6 @@ export default function ExamSolutionAnalysisPage() {
   const [selectedAttemptIdx, setSelectedAttemptIdx] = useState(0);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportQuestionId, setReportQuestionId] = useState('');
-  const [reportMessage, setReportMessage] = useState('');
-  const [reportingError, setReportingError] = useState('');
-  const [reportingSuccess, setReportingSuccess] = useState(false);
-  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [customQs, setCustomQs] = useState<any>(null);
   const [loadingCustomQs, setLoadingCustomQs] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState<'analysis' | 'solutions'>('analysis');
@@ -264,6 +263,9 @@ export default function ExamSolutionAnalysisPage() {
     : [];
 
   const selectedRecId = attempts[selectedAttemptIdx]?.id;
+  const presenceTitle = attempts[selectedAttemptIdx]?.title;
+  useEffect(() => { if (presenceTitle) setPresenceActivity(`Viewing result: ${presenceTitle}`); }, [presenceTitle]);
+  useEffect(() => () => setPresenceActivity(null), []);
   const selectedRecHasResponses = !!(
     attempts[selectedAttemptIdx]?.responses &&
     Object.keys(attempts[selectedAttemptIdx].responses).length > 0
@@ -760,52 +762,26 @@ export default function ExamSolutionAnalysisPage() {
   const userTime = effectiveResponses?.[activeQuestion.id]?.elapsedSeconds ?? 0;
   const isBookmarked = currentUser.bookmarkedQuestions?.some(b => b.testId === testId && b.questionId === activeQuestion.id) || false;
 
-  const activeExplanation = EXPLANATIONS[activeQuestion.id] || activeQuestion.explanation || {
-    en: "Detailed solution step-by-step is currently under verification by subject experts.",
-    hi: "विषय विशेषज्ञों द्वारा विस्तृत समाधान वर्तमान में सत्यापन के अधीन है।"
-  };
-
   // Report modal states & handlers (hooks are declared at the top of the component)
 
   const handleOpenReportModal = (qId: string) => {
     setReportQuestionId(qId);
-    setReportMessage('');
-    setReportingError('');
-    setReportingSuccess(false);
     setReportModalOpen(true);
   };
 
-  const handleReportSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reportMessage.trim()) {
-      setReportingError(language === 'hi' ? 'कृपया रिपोर्ट संदेश दर्ज करें।' : 'Please enter a report message.');
-      return;
-    }
-    setIsSubmittingReport(true);
-    setReportingError('');
+  // The question being reported (the one on screen when "Report" was pressed)
+  const reportIdx = questions.findIndex(q => q.id === reportQuestionId);
+  const reportQ = reportIdx >= 0 ? questions[reportIdx] : activeQuestion;
+  const reportSection = examSession.sections.find(s => s.id === reportQ?.sectionId);
+  const plain = (html?: string) => String(html || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const reportPreview = plain(processQuestionHtml(reportQ?.content[lang]?.questionText || reportQ?.content['en']?.questionText || '')).slice(0, 2000);
+  const reportExamName = [examSession.testCategory, examSession.testSubcategory].filter(Boolean).join(' › ');
 
-    try {
-      const qText = activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || '';
-      const result = await reportQuestion(
-        reportQuestionId,
-        reportMessage,
-        qText,
-        testId,
-        examSession.testTitle
-      );
-      if (result.success) {
-        setReportingSuccess(true);
-        setTimeout(() => {
-          setReportModalOpen(false);
-        }, 1500);
-      } else {
-        setReportingError(result.error || (language === 'hi' ? 'सहेजने में विफल।' : 'Failed to save report.'));
-      }
-    } catch (err: any) {
-      setReportingError(err.message || 'An error occurred.');
-    } finally {
-      setIsSubmittingReport(false);
-    }
+  const handleReportSubmit = async (reason: string, message: string) => {
+    return reportQuestion(reportQuestionId, message, reportPreview, testId, examSession.testTitle, {
+      reason, examName: reportExamName, sectionName: reportSection?.name || '',
+      questionNumber: reportIdx >= 0 ? reportIdx + 1 : null, language: lang === 'hi' ? 'hi' : 'en',
+    });
   };
 
   // KPI calculations
@@ -1503,94 +1479,13 @@ export default function ExamSolutionAnalysisPage() {
               onTouchEnd={handleTouchEnd}
               className="mt-4"
             >
-              {/* Question Box */}
-              <div className="mb-6 space-y-4" style={{ fontSize: `${questionFontSize}px` }}>
-                <MathJaxText
-                  component="div"
-                  className="font-semibold text-slate-900 dark:text-white leading-relaxed markup-content"
-                  content={processQuestionHtml(activeQuestion.content[lang]?.questionText || activeQuestion.content['en']?.questionText || "")}
-                />
-
-                {activeQuestion.content[lang]?.mathLatex && (
-                  <div className="bg-slate-100 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800/80 font-mono text-xs text-blue-600 dark:text-blue-400">
-                    Latex: {activeQuestion.content[lang].mathLatex}
-                  </div>
-                )}
-
-                {/* Optional Question Image */}
-                {(activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl) && (
-                  <div className="flex justify-center bg-slate-50 dark:bg-slate-800 p-2 border border-slate-200 dark:border-slate-800 rounded-md">
-                    <img
-                      src={activeQuestion.content[lang]?.imageUrl || activeQuestion.content['en']?.imageUrl}
-                      alt="Question Visual"
-                      className="max-h-72 object-contain"
-                    />
-                  </div>
-                )}
-              </div>
-
-            {/* Options List */}
-            <div className="space-y-3" style={{ fontSize: `${questionFontSize}px` }}>
-              {((activeQuestion.content[lang]?.options || activeQuestion.content['en']?.options) as any[]).map((opt, optIdx: number) => {
-                const optLabel = typeof opt === 'string' ? opt : opt.text;
-                const isCorrectIndex = optIdx === activeQuestion.correctOptionIndex;
-                const isUserSelectedIndex = optIdx === activeStatus.userSelectedOptionIndex;
-                
-                let optionStyle = 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200';
-                
-                if (isCorrectIndex) {
-                  optionStyle = 'border-green-500 bg-green-50/40 dark:border-green-800 dark:bg-green-950/20 text-slate-900 dark:text-green-300';
-                } else if (isUserSelectedIndex && !isCorrectIndex) {
-                  optionStyle = 'border-red-500 bg-red-50/40 dark:border-red-800 dark:bg-red-950/20 text-slate-900 dark:text-red-300';
-                }
-
-                return (
-                  <div
-                    key={optIdx}
-                    className={`border rounded-xl p-3.5 flex items-center justify-between transition ${optionStyle}`}
-                  >
-                    <span className="flex items-center gap-3 font-semibold">
-                      <span className={`h-5 w-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
-                        isCorrectIndex
-                          ? 'bg-green-600 text-white'
-                          : isUserSelectedIndex
-                          ? 'bg-red-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                      }`}>
-                        {String.fromCharCode(65 + optIdx)}
-                      </span>
-                      <MathJaxText content={processQuestionHtml(optLabel)} />
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      {isUserSelectedIndex && (
-                        <span className="text-[9px] uppercase font-black bg-blue-900 border border-blue-800 text-blue-400 px-2 py-0.5 rounded shadow">
-                          {language === 'hi' ? 'आपका विकल्प' : 'Your Choice'}
-                        </span>
-                      )}
-                      {isCorrectIndex && (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      )}
-                      {isUserSelectedIndex && !isCorrectIndex && (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Explanation card */}
-            <div className="mt-8 bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
-              <h5 className="font-extrabold text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 pb-2 mb-3.5 flex items-center gap-1.5">
-                <HelpCircle className="h-4 w-4 text-blue-500" /> {language === 'hi' ? 'विस्तृत व्याख्या और अवधारणा' : 'Detailed Explanation & Concept'}
-              </h5>
-              <MathJaxText
-                component="div"
-                className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold markup-content"
-                content={processQuestionHtml(activeExplanation[lang] || activeExplanation['en'] || "")}
+              <QuestionReviewBody
+                question={activeQuestion as any}
+                lang={lang}
+                hi={language === 'hi'}
+                fontSize={questionFontSize}
+                selectedOptionIndex={activeStatus.userSelectedOptionIndex ?? null}
               />
-            </div>
             </div>
 
           </div>
@@ -1804,81 +1699,18 @@ export default function ExamSolutionAnalysisPage() {
         </footer>
       )}
 
-      {/* 4. REPORT QUESTION POPUP MODAL */}
-      {reportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 text-slate-800 dark:text-slate-100 transition-all">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
-              <h3 className="font-extrabold text-sm uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5 text-red-500" />
-                {language === 'hi' ? 'प्रश्न रिपोर्ट करें' : 'Report Question'}
-              </h3>
-              <button
-                onClick={() => setReportModalOpen(false)}
-                className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-pointer border border-transparent"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleReportSubmit} className="space-y-4">
-              <div>
-                <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-                  {language === 'hi' ? 'प्रश्न आईडी' : 'Question ID'}
-                </label>
-                <input
-                  type="text"
-                  value={reportQuestionId}
-                  disabled
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 font-mono text-xs text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-                  {language === 'hi' ? 'रिपोर्ट विवरण / संदेश' : 'Report Description / Message'}
-                </label>
-                <textarea
-                  value={reportMessage}
-                  onChange={(e) => setReportMessage(e.target.value)}
-                  placeholder={language === 'hi' ? 'कृपया प्रश्न में त्रुटि या समस्या का विवरण दर्ज करें...' : 'Describe the issue or error in the question...'}
-                  rows={4}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-100 focus:border-blue-500 outline-none transition-colors"
-                />
-              </div>
-
-              {reportingError && (
-                <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-3 text-[11px] font-semibold text-red-600 dark:text-red-400 leading-tight">
-                  {reportingError}
-                </div>
-              )}
-
-              {reportingSuccess && (
-                <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-3 text-[11px] font-semibold text-green-600 dark:text-green-400 leading-tight">
-                  {language === 'hi' ? 'रिपोर्ट सफलतापूर्वक दर्ज की गई!' : 'Report submitted successfully!'}
-                </div>
-              )}
-
-              <div className="flex gap-3 justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={() => setReportModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition active:scale-95 cursor-pointer"
-                >
-                  {language === 'hi' ? 'रद्द करें' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmittingReport || reportingSuccess}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/25 transition active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmittingReport ? (language === 'hi' ? 'सबमिट किया जा रहा है...' : 'Submitting...') : (language === 'hi' ? 'जमा करें' : 'Submit')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* 4. REPORT QUESTION POPUP */}
+      <ReportQuestionDialog
+        open={reportModalOpen}
+        hi={language === 'hi'}
+        onClose={() => setReportModalOpen(false)}
+        onSubmit={handleReportSubmit}
+        info={{
+          questionId: reportQuestionId, examName: reportExamName, testTitle: examSession.testTitle,
+          sectionName: reportSection?.name, questionNumber: reportIdx >= 0 ? reportIdx + 1 : null, preview: reportPreview,
+          previewHtml: processQuestionHtml(reportQ?.content[lang]?.questionText || reportQ?.content['en']?.questionText || ''),
+        }}
+      />
       {viewMode === 'solution' && (
         <footer className="fixed bottom-0 inset-x-0 z-40 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-3 px-6 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
