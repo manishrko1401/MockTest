@@ -11,7 +11,7 @@ module.exports = {
     name: 'MockTest Hub',
     slug: 'mocktesthub',
     scheme: 'mocktesthub',
-    version: '2.2.1',
+    version: '2.2.2',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -19,7 +19,7 @@ module.exports = {
     android: {
       package: 'com.mocktesthub',
       // Higher than any version of the old app on Google Play
-      versionCode: 112,
+      versionCode: 113,
       adaptiveIcon: {
         foregroundImage: './assets/android-icon-foreground.png',
         backgroundImage: './assets/android-icon-background.png',

@@ -1,11 +1,11 @@
 {
-  "version": "2.2.1",
-  "versionCode": 112,
-  "releasedAt": "2026-10-25",
-  "key": "apps/android/MockTestHub_2.2.1.apk",
-  "file": "MockTestHub_2.2.1.apk",
-  "size": 45026522,
+  "version": "2.2.2",
+  "versionCode": 113,
+  "releasedAt": "2026-10-28",
+  "key": "apps/android/MockTestHub_2.2.2.apk",
+  "file": "MockTestHub_2.2.2.apk",
+  "size": 45060054,
   "minAndroid": "7.0",
-  "notes": "App tour: a quick welcome and tips on the main screens (replay it from Me)\nNew start screen with the MockTest Hub logo\nTest series now shown as tiles: open one to see its tests\nMaths questions show properly: fractions, roots, powers, matrices and symbols\nNew Report question screen with exam, test, question number, date and ID",
+  "notes": "Better app tour: clear tips on every screen (replay it from Me)\nLight theme by default (change it in Me → Appearance)\nQuestions and options come in a new order on every attempt\nComputer Knowledge Live Test and 80 chapter-wise tests\nSmall design fixes",
   "minVersionCode": 0
 }
