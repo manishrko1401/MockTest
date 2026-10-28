@@ -8,6 +8,7 @@ import { friendlyError } from '../api';
 import { setOnScreen } from '../push';
 import { useI18n } from '../i18n';
 import { useNav, useTabSection } from '../nav';
+import { TourTarget, useScreenTour, useTourScroll } from '../tour';
 import { useTheme } from '../theme';
 import { Avatar, Badge, Button, Card, confirm, Empty, ErrorBox, Header, IconButton, IconTile, Pill, SectionTitle, Skeleton, Tabs, StatusBarFor } from '../ui';
 import {
@@ -23,14 +24,26 @@ export function FriendsScreen() {
   const [tab, setTab] = useState<'rooms' | 'friends'>('rooms');
   // a friend-request notification opens 'friends'
   useTabSection('friends', useCallback((v: string) => { if (v === 'rooms' || v === 'friends') setTab(v); }, []));
+  const nav = useNav();
+  useScreenTour('app_friends', hi ? [
+    { target: 'friends.tabs', fixed: true, title: 'दोस्तों के साथ पढ़ाई', text: '"टेस्ट रूम" में दोस्तों के साथ एक ही टेस्ट दें। "मित्र और चैट" में दोस्त जोड़ें और उनसे बात करें।' },
+    { target: 'friends.join', title: 'रूम में जुड़ें', text: 'दोस्त ने रूम कोड भेजा है? यहां लिखें और "जुड़ें" दबाएं।' },
+    { target: 'friends.create', title: 'अपना रूम बनाएं', text: 'कोई भी मॉक टेस्ट चुनें और "दोस्तों के साथ दें" दबाएं। तुरंत या 72 घंटे तक कभी भी दें, फिर हर प्रश्न पर अंक, रैंक और समय की तुलना करें।' },
+  ] : [
+    { target: 'friends.tabs', fixed: true, title: 'Study with friends', text: '"Test rooms": take the same test with friends. "Friends & chat": add friends and talk to them.' },
+    { target: 'friends.join', title: 'Join a room', text: 'Got a room code from a friend? Type it here and tap "Join".' },
+    { target: 'friends.create', title: 'Create your own room', text: 'Pick any mock test and tap "Take with friends". Take it together now or any time within 72 hours, then compare marks, rank and time on every question.' },
+  ], tab === 'rooms' && nav.tab === 'friends' && nav.stack.length === 0);
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header large title={hi ? 'दोस्तों के साथ' : 'With Friends'} border={false} />
       <View style={{ paddingHorizontal: 16, paddingBottom: 8, backgroundColor: t.header }}>
+        <TourTarget id="friends.tabs">
         <Tabs options={[
           { key: 'rooms', label: hi ? 'टेस्ट रूम' : 'Test rooms' },
           { key: 'friends', label: hi ? 'मित्र और चैट' : 'Friends & chat', badge: badge.total },
         ]} value={tab} onChange={setTab} />
+        </TourTarget>
       </View>
       <View style={{ flex: 1, display: tab === 'rooms' ? 'flex' : 'none' }}><RoomsTab /></View>
       <View style={{ flex: 1, display: tab === 'friends' ? 'flex' : 'none' }}><FriendsTab active={tab === 'friends'} /></View>
@@ -42,6 +55,7 @@ export function FriendsScreen() {
 
 function RoomsTab() {
   const t = useTheme();
+  const tourScroll = useTourScroll('app_friends');
   const { hi } = useI18n();
   const nav = useNav();
   const [rooms, setRooms] = useState<MyRoom[] | null>(null);
@@ -81,9 +95,10 @@ function RoomsTab() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }} keyboardShouldPersistTaps="handled"
+    <ScrollView {...tourScroll} contentContainerStyle={{ padding: 16, paddingBottom: 30 }} keyboardShouldPersistTaps="handled"
       refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}>
       {/* Join */}
+      <TourTarget id="friends.join">
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <IconTile icon={DoorOpen} color={t.primary} />
@@ -103,9 +118,11 @@ function RoomsTab() {
         </View>
         {joinError ? <Text style={{ color: t.danger, marginTop: 8, fontWeight: '600' }}>{joinError}</Text> : null}
       </Card>
+      </TourTarget>
 
       {/* Create */}
-      <Card style={{ marginTop: 12, backgroundColor: t.primarySoft, borderColor: t.primarySoft }} flat>
+      <TourTarget id="friends.create" style={{ marginTop: 12 }}>
+      <Card style={{ backgroundColor: t.primarySoft, borderColor: t.primarySoft }} flat>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <IconTile icon={Swords} color={t.primary} bg={t.card} />
           <View style={{ flex: 1 }}>
@@ -115,6 +132,8 @@ function RoomsTab() {
         </View>
         <Button style={{ marginTop: 14 }} title={hi ? 'टेस्ट चुनें' : 'Choose a test'} icon={<GraduationCap size={18} color={t.primaryText} />} onPress={() => nav.setTab('tests', 'mock')} />
       </Card>
+
+      </TourTarget>
 
       {/* My rooms */}
       <SectionTitle>{hi ? 'मेरे रूम' : 'My rooms'}{rooms?.length ? ` (${rooms.length})` : ''}</SectionTitle>

@@ -5,6 +5,8 @@ import { request, friendlyError } from '../api';
 import { useI18n } from '../i18n';
 import { useTheme } from '../theme';
 import { Button, Card, confirm, Empty, ErrorBox, Field, Header, HeaderButton, Loading, Pill, ProgressBar, SectionTitle, Segmented, Sheet } from '../ui';
+import { useNav } from '../nav';
+import { TourTarget, useScreenTour, useTourScroll } from '../tour';
 import {
   addDays, chapterCounts, checkinKey, daysBetween, isDone, isRepeating, localDay, newId, percent, PlannerData, PlannerExam, PlannerTask,
   revisionDue, Syllabus, syllabusCounts, tasksForDay,
@@ -40,6 +42,21 @@ export default function PlannerScreen() {
   const checkins = useMemo(() => new Set((data?.checkins || []).map(c => checkinKey(c.taskId, c.day))), [data]);
   const L = (en: string, h: string) => (hi ? h : en);
 
+  // First visit: what the planner does
+  const nav = useNav();
+  const scroll = useTourScroll('app_planner');
+  useScreenTour('app_planner', hi ? [
+    { title: 'स्टडी प्लानर', text: 'अपनी तैयारी की योजना बनाएं: परीक्षा की तारीख, रोज़ के टास्क, सिलेबस और लक्ष्य, सब एक जगह। आपकी योजना आपके खाते में सेव रहती है।' },
+    { target: 'planner.sections', fixed: true, title: 'पांच हिस्से', text: '"आज": आज के टास्क और परीक्षा में बचे दिन। "टास्क": सभी टास्क। "परीक्षाएं": आपकी परीक्षा की तारीखें। "सिलेबस": विषय-वार टिक करें। "लक्ष्य": रोज़ कितने टेस्ट देने हैं।' },
+    { target: 'planner.add', fixed: true, title: 'टास्क या परीक्षा जोड़ें', text: '+ दबाएं: नया टास्क (एक बार या रोज़/हर हफ़्ते दोहराने वाला) या नई परीक्षा की तारीख जोड़ें।' },
+    { target: 'planner.day', title: 'दिन-ब-दिन', text: 'तीरों से दूसरे दिन देखें। टास्क पूरा होने पर उस पर टिक करें, प्रगति अपने आप गिनी जाती है।' },
+  ] : [
+    { title: 'Study Planner', text: 'Plan your preparation: exam dates, daily tasks, the syllabus and targets, all in one place. Your plan is saved to your account.' },
+    { target: 'planner.sections', fixed: true, title: 'Five parts', text: '"Today": today\'s tasks and days left to your exam. "Tasks": all tasks. "Exams": your exam dates. "Syllabus": tick off topics. "Targets": how many tests to take each day.' },
+    { target: 'planner.add', fixed: true, title: 'Add a task or exam', text: 'Tap + to add a task (once, or repeating daily or weekly) or a new exam date.' },
+    { target: 'planner.day', title: 'Day by day', text: 'Use the arrows to see another day. Tick a task when it is done and your progress is counted for you.' },
+  ], !!data && section === 'today' && nav.tab === 'planner' && nav.stack.length === 0);
+
   const setDone = async (task: PlannerTask, done: boolean) => {
     // Update at once, then save
     setData(d => {
@@ -63,15 +80,17 @@ export default function PlannerScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header large title={L('Study Planner', 'स्टडी प्लानर')}
-        right={section === 'tasks' || section === 'today' ? <HeaderButton label="Add task" icon={<Plus size={24} color={t.headerText} />} onPress={() => setEditTask({ dueDate: day, category: 'study', priority: 'medium', repeatDays: [] })} />
+        right={section === 'tasks' || section === 'today' ? <TourTarget id="planner.add"><HeaderButton label="Add task" icon={<Plus size={24} color={t.headerText} />} onPress={() => setEditTask({ dueDate: day, category: 'study', priority: 'medium', repeatDays: [] })} /></TourTarget>
           : section === 'exams' ? <HeaderButton label="Add exam" icon={<Plus size={24} color={t.headerText} />} onPress={() => setEditExam({ examDate: addDays(today, 30) })} /> : undefined} />
+      <TourTarget id="planner.sections">
       <Segmented options={[
         { key: 'today', label: L('Today', 'आज') }, { key: 'tasks', label: L('Tasks', 'टास्क') }, { key: 'exams', label: L('Exams', 'परीक्षाएं') },
         { key: 'syllabus', label: L('Syllabus', 'सिलेबस') }, { key: 'targets', label: L('Targets', 'लक्ष्य') },
       ]} value={section} onChange={setSection} />
+      </TourTarget>
       {error ? <ErrorBox message={error} /> : null}
 
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}>
+      <ScrollView {...scroll} contentContainerStyle={{ padding: 14, paddingBottom: 30 }} refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}>
         {section === 'today' ? (
           <>
             {data.targets.mockTestsPerDay || data.targets.typingTestsPerDay ? (
@@ -96,11 +115,13 @@ export default function PlannerScreen() {
                 <Text style={{ color: t.textSoft, fontSize: 12 }}>{L('days', 'दिन')}</Text>
               </Card>
             ))}
+            <TourTarget id="planner.day">
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 6 }}>
               <Pressable onPress={() => setDay(addDays(day, -1))} style={{ padding: 6 }} accessibilityLabel="Previous day"><ChevronLeft size={20} color={t.text} /></Pressable>
               <Text style={{ flex: 1, textAlign: 'center', color: t.text, fontWeight: '800' }}>{day === today ? L('Today', 'आज') : prettyDay(day, hi)}</Text>
               <Pressable onPress={() => setDay(addDays(day, 1))} style={{ padding: 6 }} accessibilityLabel="Next day"><ChevronRight size={20} color={t.text} /></Pressable>
             </View>
+            </TourTarget>
             {dayTasks.length === 0 ? <Empty title={L('Nothing planned', 'कुछ योजना नहीं')} text={L('Tap + to add a task for this day.', 'इस दिन का टास्क जोड़ने के लिए + दबाएं।')} /> : null}
             {dayTasks.map(task => <TaskRow key={task.id} task={task} done={isDone(task, day, checkins)} onToggle={d => setDone(task, d)} onEdit={() => setEditTask(task)} />)}
           </>

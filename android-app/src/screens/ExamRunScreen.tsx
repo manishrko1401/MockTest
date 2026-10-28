@@ -19,6 +19,7 @@ import { canShuffleTest, newShuffleSeed, responsesToDisplay, responsesToOriginal
 import { isRpscRasTest } from '../shared/examScoring';
 import { LIVE_TESTS, LivePaper, isLiveTestId, liveQuestionCount, livePaperKey } from '../shared/liveTestShared';
 import { newLocalId, openOffline, saveOfflineAttempt, syncOutbox } from '../offline';
+import { TourTarget, useScreenTour, useTour } from '../tour';
 
 // -----------------------------------------------------------------------------
 // The exam screen (TCS iON style), run by the website's own exam engine. Progress is saved
@@ -278,6 +279,32 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
   }, [testId, user.id, l1, l2, refreshUser, nav, offline, live]);
   useEffect(() => { if (submitted && phase === 'ready') sendAttempt(); }, [submitted, phase, sendAttempt]);
 
+  // ---- First test: what's where on the exam screen (the timer is paused while the tips show) ----
+  const tour = useTour();
+  const tourPaused = useRef(false);
+  useScreenTour('app_exam', hi ? [
+    { target: 'exam.timer', fixed: true, title: 'बचा हुआ समय', text: 'टेस्ट का बचा समय। आख़िरी 5 मिनट में यह लाल हो जाता है। समय खत्म होने पर टेस्ट अपने आप सबमिट हो जाता है। (ये टिप्स दिखने तक टाइमर रुका है।)' },
+    { target: 'exam.lang', fixed: true, title: 'भाषा बदलें', text: 'किसी भी समय प्रश्न हिंदी या अंग्रेज़ी में देखें।' },
+    { target: 'exam.palette', fixed: true, title: 'प्रश्न सूची और सबमिट', text: 'सभी प्रश्नों की सूची खोलें और किसी पर भी जाएं। रंग बताते हैं: हरा = उत्तर दिया, लाल = उत्तर नहीं, बैंगनी = रिव्यू के लिए। टेस्ट यहीं से सबमिट करें।' },
+    { target: 'exam.qinfo', fixed: true, title: 'प्रश्न की जानकारी', text: 'प्रश्न नंबर, सही उत्तर के अंक (+) और गलत उत्तर पर कटने वाले अंक (−), इस प्रश्न पर लगा समय, और अक्षर छोटे-बड़े करने के बटन।' },
+    { target: 'exam.actions', fixed: true, title: 'उत्तर सेव करें', text: 'विकल्प चुनें और "सेव व आगे" दबाएं। "मार्क व आगे" से प्रश्न बाद में देखने के लिए चिह्नित करें। "साफ़" से चुना उत्तर हटाएं।' },
+  ] : [
+    { target: 'exam.timer', fixed: true, title: 'Time left', text: 'Time remaining for the test. It turns red in the last 5 minutes, and the test submits itself when time runs out. (The timer is paused while these tips show.)' },
+    { target: 'exam.lang', fixed: true, title: 'Switch language', text: 'See the questions in Hindi or English at any time.' },
+    { target: 'exam.palette', fixed: true, title: 'Question palette & submit', text: 'Open the list of all questions and jump to any one. Colours show green = answered, red = not answered, purple = marked for review. Submit the test from here.' },
+    { target: 'exam.qinfo', fixed: true, title: 'About this question', text: 'Question number, marks for a right answer (+) and the marks cut for a wrong one (−), time spent on this question, and buttons to make the text smaller or larger.' },
+    { target: 'exam.actions', fixed: true, title: 'Save your answers', text: 'Tap an option, then "Save & Next". "Mark & Next" flags a question to look at again later. "Clear" removes your choice.' },
+  ], phase === 'ready' && !!state.session && !state.isExamSubmitted);
+  useEffect(() => {
+    if (tour.activeTour === 'app_exam' && stateRef.current.isTimerRunning && !tourPaused.current) {
+      tourPaused.current = true;
+      dispatch({ type: 'PAUSE_EXAM' });
+    } else if (tour.activeTour !== 'app_exam' && tourPaused.current) {
+      tourPaused.current = false;
+      dispatch({ type: 'RESUME_EXAM' });
+    }
+  }, [tour.activeTour]);
+
   // ---------------------------------------------------------------------------------------------
   if (phase === 'loading' || phase === 'submitting') {
     return (
@@ -355,18 +382,22 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
             <Text numberOfLines={1} style={{ color: t.heroText, fontWeight: '800', fontSize: 14.5 }}>{session.testTitle}</Text>
             <Text numberOfLines={1} style={{ color: t.heroText, opacity: 0.7, fontSize: 12 }}>{answeredInTest}/{session.questions.length} {hi ? 'उत्तर दिए' : 'answered'}{roomCode ? ` · ${hi ? 'रूम' : 'Room'} ${roomCode}` : ''}</Text>
           </View>
+          <TourTarget id="exam.timer">
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: lowTime ? '#dc2626' : 'rgba(255,255,255,0.16)', borderRadius: 10, paddingHorizontal: 10, height: 34 }}>
             <Clock size={15} color="#fff" />
             <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15, fontVariant: ['tabular-nums'] }}>{state.isExtraTimeMode ? '+' : ''}{fmt(time)}</Text>
           </View>
+          </TourTarget>
           {hasHindi ? (
+            <TourTarget id="exam.lang">
             <Pressable onPress={() => dispatch({ type: 'SET_LANGUAGE', payload: examLang === 'hi' ? 'en' : 'hi' })} style={{ width: 42, height: 42, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={hi ? 'भाषा बदलें' : 'Change language'}>
               <View style={{ borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 7, paddingHorizontal: 5, paddingVertical: 1 }}>
                 <Text style={{ color: '#fff', fontWeight: '900', fontSize: 12 }}>{examLang === 'hi' ? 'हि' : 'EN'}</Text>
               </View>
             </Pressable>
+            </TourTarget>
           ) : null}
-          <Pressable onPress={() => setPalette(true)} style={{ width: 42, height: 42, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={hi ? 'प्रश्न सूची' : 'Question palette'}><LayoutGrid size={22} color={t.heroText} /></Pressable>
+          <TourTarget id="exam.palette"><Pressable onPress={() => setPalette(true)} style={{ width: 42, height: 42, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel={hi ? 'प्रश्न सूची' : 'Question palette'}><LayoutGrid size={22} color={t.heroText} /></Pressable></TourTarget>
         </View>
         {session.sections.length > 1 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 6 }}>
@@ -388,6 +419,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
       <ProgressBar value={answeredInTest / Math.max(1, session.questions.length)} height={3} color={t.success} track={t.border} />
 
       {/* Question info */}
+      <TourTarget id="exam.qinfo">
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, height: 46, backgroundColor: t.card, borderBottomWidth: 1, borderBottomColor: t.border, gap: 8 }}>
         <Text style={{ color: t.text, fontWeight: '900', fontSize: 15 }}>{hi ? 'प्रश्न' : 'Q'} {state.currentQuestionIndex + 1}<Text style={{ color: t.textMuted, fontWeight: '700' }}>/{secQs.length}</Text></Text>
         <View style={{ backgroundColor: t.successSoft, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: t.success, fontWeight: '800', fontSize: 12 }}>+{q?.positiveMark ?? section?.positiveMark ?? 1}</Text></View>
@@ -398,6 +430,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
         <Pressable onPress={font.smaller} hitSlop={6} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: t.cardAlt }} accessibilityLabel={hi ? 'छोटा अक्षर' : 'Smaller text'}><AArrowDown size={17} color={t.text} /></Pressable>
         <Pressable onPress={font.bigger} hitSlop={6} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: t.cardAlt }} accessibilityLabel={hi ? 'बड़ा अक्षर' : 'Larger text'}><AArrowUp size={17} color={t.text} /></Pressable>
       </View>
+      </TourTarget>
       {notice ? (
         <Pressable onPress={() => setNotice('')} style={{ backgroundColor: t.warningSoft, paddingHorizontal: 14, paddingVertical: 10 }}><Text style={{ color: t.warning, fontWeight: '700' }}>{notice}</Text></Pressable>
       ) : null}
@@ -418,6 +451,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
       ) : <View style={{ flex: 1 }} />}
 
       {/* Actions */}
+      <TourTarget id="exam.actions">
       <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 + insets.bottom, backgroundColor: t.card, borderTopWidth: 1, borderTopColor: t.border }}>
         <Pressable disabled={state.currentQuestionIndex === 0} onPress={() => dispatch({ type: 'JUMP_TO_QUESTION', payload: { sectionIndex: state.currentSectionIndex, questionIndex: state.currentQuestionIndex - 1 } })}
           style={{ width: 46, height: 48, borderRadius: 12, borderWidth: 1.5, borderColor: t.border, alignItems: 'center', justifyContent: 'center', opacity: state.currentQuestionIndex === 0 ? 0.35 : 1 }} accessibilityLabel={hi ? 'पिछला प्रश्न' : 'Previous question'}>
@@ -427,6 +461,7 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
         <Button small outline tone="violet" title={hi ? 'मार्क व आगे' : 'Mark & Next'} onPress={() => dispatch({ type: 'MARK_FOR_REVIEW_AND_NEXT' })} style={{ flex: 1, height: 48, paddingHorizontal: 8 }} />
         <Button small title={isLastQuestion ? (hi ? 'सेव करें' : 'Save') : (hi ? 'सेव व आगे' : 'Save & Next')} onPress={() => dispatch({ type: 'SAVE_AND_NEXT' })} style={{ flex: 1.15, height: 48, paddingHorizontal: 8 }} tone="success" />
       </View>
+      </TourTarget>
 
       {/* Palette */}
       {palette ? (

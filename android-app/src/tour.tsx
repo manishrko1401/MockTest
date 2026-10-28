@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, Dimensions, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Text, View } from 'react-native';
+import { BackHandler, Dimensions, LayoutChangeEvent, Modal, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bell, CalendarCheck, GraduationCap, Keyboard, Trophy, UserRound, Users } from 'lucide-react-native';
+import { Bell, CalendarCheck, CloudDownload, GraduationCap, Keyboard, MonitorCheck, Radio, Trophy, UserRound, Users } from 'lucide-react-native';
 import { request } from './api';
 import { useI18n } from './i18n';
 import { useSession } from './session';
@@ -9,16 +9,18 @@ import { useTheme } from './theme';
 import { Button } from './ui';
 
 // -----------------------------------------------------------------------------
-// App tour. Welcome slides on the first start (what the app can do), then a few tips on the
-// main screens the first time each is opened: the screen dims and a bubble points at the real
-// button. Each part shows once per account (saved on the server, so not again after a
-// reinstall or on another phone); Me → "Replay app tour" shows everything again.
+// App tour. Welcome slides on the first start (what the app can do), then tips on each main
+// screen the first time it is opened: the screen dims and a bubble points at the real button.
+// Each part shows once per account (saved on the server, so not again after a reinstall or on
+// another phone); Me → "Replay app tour" shows everything again.
 // -----------------------------------------------------------------------------
 
-export type AppTour = 'app_welcome' | 'app_home' | 'app_tests' | 'app_test_info' | 'app_analysis';
-const ALL: AppTour[] = ['app_welcome', 'app_home', 'app_tests', 'app_test_info', 'app_analysis'];
+export type AppTour =
+  | 'app_welcome' | 'app_home' | 'app_tests' | 'app_typing' | 'app_test_info' | 'app_exam' | 'app_analysis'
+  | 'app_planner' | 'app_friends' | 'app_me';
+const ALL: AppTour[] = ['app_welcome', 'app_home', 'app_tests', 'app_typing', 'app_test_info', 'app_exam', 'app_analysis', 'app_planner', 'app_friends', 'app_me'];
 
-/** fixed: the target never scrolls (e.g. the tab bar), so the page isn't scrolled for it */
+/** fixed: the target never scrolls (header, tab bar, exam bars), so the page isn't scrolled for it */
 export type TourStep = { target?: string; title: string; text: string; fixed?: boolean };
 
 type Scroller = { ref: React.RefObject<any>; offset: number };
@@ -30,6 +32,8 @@ type TourValue = {
   isDone: (tour: AppTour) => boolean;
   /** The welcome slides are still to come or a tour is open (other pop-ups wait) */
   busy: boolean;
+  /** The tour showing now (the exam pauses its timer for it) */
+  activeTour: AppTour | null;
   start: (tour: AppTour, steps: TourStep[]) => void;
   register: (id: string, ref: React.RefObject<View | null>) => () => void;
   registerScroller: (tour: AppTour, s: Scroller) => () => void;
@@ -66,6 +70,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     known,
     isDone,
     busy: !!active || (known && !isDone('app_welcome')),
+    activeTour: active?.tour ?? null,
     start: (tour, steps) => setActive(a => a || { tour, steps, index: 0 }),
     register: (id, ref) => { targets.current.set(id, ref); return () => { if (targets.current.get(id) === ref) targets.current.delete(id); }; },
     registerScroller: (tour, s) => { scrollers.current.set(tour, s); return () => { if (scrollers.current.get(tour) === s) scrollers.current.delete(tour); }; },
@@ -83,7 +88,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
           targets={targets.current}
           scroller={scrollers.current.get(active.tour)}
           onIndex={index => setActive(a => (a ? { ...a, index } : a))}
-          onClose={() => { complete(active.tour); setActive(null); }}
+          // A tour counts as seen only if at least one tip was shown (otherwise it comes back next time)
+          onClose={shown => { if (shown) complete(active.tour); setActive(null); }}
         />
       ) : null}
     </Ctx.Provider>
@@ -121,9 +127,11 @@ export function useTourScroll(tour: AppTour) {
 export function useScreenTour(tour: AppTour, steps: TourStep[], ready: boolean) {
   const ctx = useContext(Ctx);
   const startable = !!ctx && ready && ctx.known && !ctx.busy && !ctx.isDone(tour);
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
   useEffect(() => {
     if (!startable) return;
-    const timer = setTimeout(() => ctx!.start(tour, steps), 700); // after the screen has drawn
+    const timer = setTimeout(() => ctx!.start(tour, stepsRef.current), 800); // after the screen has drawn
     return () => clearTimeout(timer);
   }, [startable]); // eslint-disable-line react-hooks/exhaustive-deps
 }
@@ -131,28 +139,29 @@ export function useScreenTour(tour: AppTour, steps: TourStep[], ready: boolean) 
 // ---- Welcome slides -------------------------------------------------------------------------------
 
 function WelcomeSlides({ onDone }: { onDone: () => void }) {
-  const t = useTheme();
   const { hi } = useI18n();
   const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
   const pager = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
   const slides: [any, string, string][] = hi ? [
-    [Trophy, 'MockTest Hub में आपका स्वागत है', 'सरकारी परीक्षा की पूरी तैयारी एक ही ऐप में: मॉक टेस्ट, टाइपिंग टेस्ट, नौकरी की सूचनाएं और बहुत कुछ।'],
-    [GraduationCap, 'मॉक टेस्ट', 'एसएससी, बैंकिंग, रेलवे, राज्य परीक्षाएं और भी। असली परीक्षा जैसी स्क्रीन, फिर पूरा विश्लेषण और हर प्रश्न का हल।'],
-    [Keyboard, 'टाइपिंग टेस्ट', 'असली परीक्षा की तरह टाइपिंग का अभ्यास, अंग्रेज़ी और हिंदी में, गति और शुद्धता के साथ।'],
-    [Bell, 'नौकरी की सूचनाएं', 'नए फ़ॉर्म, एडमिट कार्ड और रिज़ल्ट। नौकरियां सेव करें और जिनमें आवेदन किया उन्हें चिह्नित करें।'],
-    [CalendarCheck, 'स्टडी प्लानर', 'अपनी परीक्षा की तारीख और रोज़ के लक्ष्य रखें, काम पूरे करें और अपनी प्रगति देखें।'],
-    [Users, 'दोस्तों के साथ', 'टेस्ट रूम बनाएं, दोस्तों को बुलाएं, हर प्रश्न पर अंक और समय की तुलना करें और चैट करें।'],
-    [UserRound, 'सब कुछ "मैं" में', 'ऑफ़लाइन टेस्ट के लिए डाउनलोड, डॉक्यूमेंट लॉकर, रेफ़र करके कमाएं, पास प्रो और सहायता: सब "मैं" टैब में।'],
+    [Trophy, 'MockTest Hub में आपका स्वागत है', 'सरकारी परीक्षा की पूरी तैयारी एक ही ऐप में: मॉक टेस्ट, लाइव टेस्ट, टाइपिंग टेस्ट, नौकरी की सूचनाएं और स्टडी प्लानर।'],
+    [GraduationCap, 'मॉक टेस्ट', 'एसएससी, बैंकिंग, रेलवे, राज्य परीक्षाएं और भी। हर टेस्ट हिंदी और अंग्रेज़ी में, हर बार प्रश्न और विकल्प नए क्रम में।'],
+    [MonitorCheck, 'असली परीक्षा जैसी स्क्रीन', 'टाइमर, प्रश्न सूची, रिव्यू के लिए मार्क और सेक्शन: बिल्कुल असली CBT जैसा। बीच में छोड़ें तो बाद में वहीं से जारी रखें।'],
+    [Radio, 'लाइव टेस्ट', 'हर बार प्रश्न बैंक से बिल्कुल नया प्रश्न पत्र। परिणाम और हल तुरंत देखें। पास प्रो सदस्यों के लिए।'],
+    [Keyboard, 'टाइपिंग टेस्ट', 'असली परीक्षा की तरह टाइपिंग का अभ्यास, अंग्रेज़ी और हिंदी में, गति (WPM) और गलतियों के पूरे विवरण के साथ।'],
+    [CalendarCheck, 'स्टडी प्लानर', 'परीक्षा की तारीख डालें, रोज़ के टास्क और लक्ष्य बनाएं, पूरे होने पर टिक करें और अपनी प्रगति देखें।'],
+    [Users, 'दोस्तों के साथ', 'टेस्ट रूम बनाएं, दोस्तों को कोड भेजें, एक ही टेस्ट दें और अंक, रैंक व समय की तुलना करें। दोस्तों से चैट भी करें।'],
+    [CloudDownload, 'ऑफ़लाइन भी', 'टेस्ट डाउनलोड करें और बिना इंटरनेट दें। नौकरी की सूचनाएं, डॉक्यूमेंट लॉकर, रेफ़र करके कमाएं और सहायता: सब "मैं" टैब में।'],
   ] : [
-    [Trophy, 'Welcome to MockTest Hub', 'Your complete government exam preparation in one app: mock tests, typing tests, job notices and more.'],
-    [GraduationCap, 'Mock tests', 'SSC, Banking, Railways, State exams and more. A real exam screen, then a full analysis and the solution to every question.'],
-    [Keyboard, 'Typing tests', 'Practise typing just like the real exam, in English and Hindi, with your speed and accuracy.'],
-    [Bell, 'Job notices', 'New forms, admit cards and results. Save jobs and mark the ones you have applied for.'],
-    [CalendarCheck, 'Study Planner', 'Set your exam date and daily targets, tick off tasks and watch your progress.'],
-    [Users, 'With Friends', 'Create a test room, invite friends, compare marks and time on every question, and chat.'],
-    [UserRound, 'Everything under Me', 'Downloads for offline tests, the Document Locker, refer & earn, Pass Pro and support: all in the Me tab.'],
+    [Trophy, 'Welcome to MockTest Hub', 'Your complete government exam preparation in one app: mock tests, live tests, typing tests, job notices and a study planner.'],
+    [GraduationCap, 'Mock tests', 'SSC, Banking, Railways, State exams and more. Every test in Hindi and English, with questions and options in a new order each time.'],
+    [MonitorCheck, 'A real exam screen', 'Timer, question palette, mark for review and sections, just like the real CBT. Leave in the middle and continue later where you stopped.'],
+    [Radio, 'Live tests', 'A brand-new paper from the question bank every time. See your result and the solutions straight away. For Pass Pro members.'],
+    [Keyboard, 'Typing tests', 'Practise typing just like the real exam, in English and Hindi, with your speed (WPM) and every mistake shown.'],
+    [CalendarCheck, 'Study Planner', 'Add your exam date, make daily tasks and targets, tick them off and watch your progress.'],
+    [Users, 'With Friends', 'Create a test room, send friends the code, take the same test and compare marks, rank and time. Chat with friends too.'],
+    [CloudDownload, 'Works offline too', 'Download tests and take them without internet. Job notices, the Document Locker, refer & earn and support: all under the Me tab.'],
   ];
   const last = page === slides.length - 1;
   const go = (p: number) => { pager.current?.scrollTo({ x: p * width, animated: true }); setPage(p); };
@@ -160,9 +169,10 @@ function WelcomeSlides({ onDone }: { onDone: () => void }) {
   return (
     <Modal visible animationType="fade" statusBarTranslucent onRequestClose={onDone}>
       <View style={{ flex: 1, backgroundColor: '#1e4e79', paddingTop: insets.top, paddingBottom: insets.bottom }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 12, height: 52, alignItems: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, height: 52 }}>
+          <Text style={{ flex: 1, color: 'rgba(255,255,255,0.7)', fontWeight: '800', fontSize: 13 }}>{page + 1} / {slides.length}</Text>
           {!last ? (
-            <Pressable onPress={onDone} hitSlop={10} accessibilityRole="button" style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+            <Pressable onPress={onDone} hitSlop={10} accessibilityRole="button" style={{ paddingHorizontal: 4, paddingVertical: 8 }}>
               <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '800', fontSize: 15 }}>{hi ? 'छोड़ें' : 'Skip'}</Text>
             </Pressable>
           ) : null}
@@ -177,7 +187,7 @@ function WelcomeSlides({ onDone }: { onDone: () => void }) {
                 </View>
               </View>
               <Text style={{ color: '#fff', fontSize: 26, fontWeight: '900', textAlign: 'center', marginTop: 32, lineHeight: 32 }}>{title}</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 16, textAlign: 'center', marginTop: 14, lineHeight: 24 }}>{text}</Text>
+              <Text style={{ color: 'rgba(255,255,255,0.88)', fontSize: 16, textAlign: 'center', marginTop: 14, lineHeight: 24 }}>{text}</Text>
             </View>
           ))}
         </ScrollView>
@@ -206,70 +216,128 @@ function measure(ref?: React.RefObject<View | null>): Promise<Rect | null> {
 }
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+/** The target, measured a few times while the screen finishes drawing. */
+async function measureWithRetry(ref?: React.RefObject<View | null>): Promise<Rect | null> {
+  for (let i = 0; i < 6; i++) {
+    const r = await measure(ref);
+    if (r) return r;
+    await wait(150);
+  }
+  return null;
+}
+
 function Spotlight({ active, targets, scroller, onIndex, onClose }: {
-  active: Active; targets: Map<string, React.RefObject<View | null>>; scroller?: Scroller; onIndex: (i: number) => void; onClose: () => void;
+  active: Active; targets: Map<string, React.RefObject<View | null>>; scroller?: Scroller; onIndex: (i: number) => void; onClose: (shown: boolean) => void;
 }) {
   const t = useTheme();
   const { hi } = useI18n();
   const insets = useSafeAreaInsets();
-  const { width: W, height: H } = Dimensions.get('window');
+  // Where this overlay sits in the window. Button positions are measured in the window too, and the
+  // overlay (drawn under the status bar) may not start at 0: everything is placed relative to it.
+  const rootRef = useRef<View>(null);
+  const [frame, setFrame] = useState<Rect | null>(null);
   const [rect, setRect] = useState<Rect | null | undefined>(undefined);
-  // Steps whose target isn't on this screen (e.g. no "Download" for a locked test) are left out
-  const steps = useMemo(() => active.steps.filter(s => !s.target || targets.has(s.target)), [active.steps, targets]);
-  const index = Math.min(active.index, steps.length - 1);
-  const step = steps[index];
+  const [bubbleH, setBubbleH] = useState(0);
+  const shownRef = useRef(false);
+  // Only the tips whose button is really on this screen (e.g. no "Download" for a locked test),
+  // checked once the overlay is up, so the count and the last "Got it" are right
+  const [steps, setSteps] = useState<TourStep[] | null>(null);
+  useEffect(() => {
+    if (!frame || steps) return;
+    let alive = true;
+    (async () => {
+      const out: TourStep[] = [];
+      for (const s of active.steps) {
+        if (!s.target) { out.push(s); continue; }
+        if (!targets.has(s.target)) continue;
+        if (await measureWithRetry(targets.get(s.target))) out.push(s);
+      }
+      if (alive) setSteps(out);
+    })();
+    return () => { alive = false; };
+  }, [frame]); // eslint-disable-line react-hooks/exhaustive-deps
+  const list = steps || [];
+  const index = Math.min(active.index, Math.max(0, list.length - 1));
+  const step: TourStep | undefined = list[index];
   const lastIndex = useRef(index);
+  const close = useCallback(() => onClose(shownRef.current), [onClose]);
+
+  const onRootLayout = (_e: LayoutChangeEvent) => {
+    rootRef.current?.measureInWindow((x, y, w, h) => setFrame({ x, y, w: w || Dimensions.get('window').width, h: h || Dimensions.get('window').height }));
+  };
 
   useEffect(() => {
+    if (!frame || !steps || !step) return;
     let alive = true;
     setRect(undefined);
     (async () => {
-      const ref = step?.target ? targets.get(step.target) : undefined;
-      let r = await measure(ref);
-      // Bring it into view: not under the header, with room for the bubble
-      if (r && !step?.fixed && scroller?.ref.current && (r.y < insets.top + 70 || r.y + r.h > H - 220)) {
-        const y = Math.max(0, scroller.offset + r.y - H * 0.32);
-        if (scroller.ref.current.scrollTo) scroller.ref.current.scrollTo({ y, animated: true });
-        else scroller.ref.current.scrollToOffset?.({ offset: y, animated: true });
-        await wait(420);
-        r = await measure(ref);
+      const ref = step.target ? targets.get(step.target) : undefined;
+      let r = step.target ? await measureWithRetry(ref) : null;
+      // Bring it into view: below the header, with room for the bubble
+      const H = frame.h;
+      if (r && !step.fixed && scroller?.ref.current) {
+        const top = r.y - frame.y;
+        if (top < insets.top + 64 || top + Math.min(r.h, H * 0.45) > H - 240) {
+          const y = Math.max(0, scroller.offset + top - H * 0.22);
+          if (scroller.ref.current.scrollTo) scroller.ref.current.scrollTo({ y, animated: true });
+          else scroller.ref.current.scrollToOffset?.({ offset: y, animated: true });
+          await wait(450);
+          r = await measureWithRetry(ref);
+        }
       }
       if (!alive) return;
       // Its button isn't showing (e.g. no Download for this test): go on to the next tip
-      if (!r && step?.target) {
+      if (!r && step.target) {
         const back = index < lastIndex.current;
         const next = back ? index - 1 : index + 1;
-        if (next < 0 || next >= steps.length) { if (back) onIndex(index + 1); else onClose(); }
+        if (next < 0 || next >= list.length) { if (back) onIndex(index + 1); else close(); }
         else onIndex(next);
         return;
       }
       lastIndex.current = index;
+      shownRef.current = true;
       setRect(r);
     })();
     return () => { alive = false; };
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, frame, steps]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => { onClose(); return true; });
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { close(); return true; });
     return () => sub.remove();
-  }, [onClose]);
+  }, [close]);
 
-  useEffect(() => { if (!step) onClose(); }, [step, onClose]);
-  if (!step) return null;
-  const last = index === steps.length - 1;
+  // Nothing to show on this screen: close without counting the tour as seen
+  useEffect(() => { if (steps && !step) close(); }, [steps, step, close]);
+
+  const last = index === list.length - 1;
+  const H = frame?.h || Dimensions.get('window').height;
+  const W = frame?.w || Dimensions.get('window').width;
   const pad = 8;
-  const hole = rect ? { x: Math.max(4, rect.x - pad), y: Math.max(4, rect.y - pad), w: Math.min(W - 8, rect.w + pad * 2), h: rect.h + pad * 2 } : null;
-  const dim = 'rgba(4, 12, 24, 0.72)';
-  const below = hole ? hole.y + hole.h + 14 : 0;
-  const placeBelow = hole ? H - below > 230 : true;
-  const bubbleStyle = hole
-    ? (placeBelow ? { top: below } : { bottom: H - hole.y + 14 })
-    : { top: H * 0.3 };
+  // The highlighted area, in this overlay's coordinates, kept on screen
+  const hole = rect && frame ? (() => {
+    const x = Math.max(4, rect.x - frame.x - pad);
+    const y = Math.max(4, rect.y - frame.y - pad);
+    const right = Math.min(W - 4, rect.x - frame.x + rect.w + pad);
+    const bottom = Math.min(H - 4, rect.y - frame.y + rect.h + pad);
+    return { x, y, w: Math.max(0, right - x), h: Math.max(0, bottom - y) };
+  })() : null;
+  const dim = 'rgba(4, 12, 24, 0.74)';
+  const need = (bubbleH || 210) + 18;
+  const topLimit = insets.top + 8;
+  const bottomLimit = H - insets.bottom - 8;
+  const placement: 'below' | 'above' | 'over' | 'center' = !hole ? 'center'
+    : bottomLimit - (hole.y + hole.h) >= need ? 'below'
+      : hole.y - topLimit >= need ? 'above' : 'over';
+  const bubbleTop = !hole ? Math.max(topLimit, H * 0.3)
+    : placement === 'below' ? hole.y + hole.h + 14
+      : placement === 'above' ? hole.y - 14 - (bubbleH || 210)
+        : bottomLimit - (bubbleH || 210);
+  const arrowX = hole ? Math.max(28, Math.min(W - 44, hole.x + hole.w / 2 - 16 - 8)) : 0;
 
   return (
-    <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
-      <View style={{ flex: 1 }}>
-        {rect === undefined ? <View style={{ flex: 1, backgroundColor: dim }} /> : hole ? (
+    <Modal visible transparent animationType="fade" statusBarTranslucent onRequestClose={close}>
+      <View ref={rootRef} collapsable={false} onLayout={onRootLayout} style={{ flex: 1 }}>
+        {rect === undefined || !hole ? <View style={{ flex: 1, backgroundColor: dim }} /> : (
           <>
             <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: hole.y, backgroundColor: dim }} />
             <View style={{ position: 'absolute', left: 0, right: 0, top: hole.y + hole.h, bottom: 0, backgroundColor: dim }} />
@@ -277,22 +345,30 @@ function Spotlight({ active, targets, scroller, onIndex, onClose }: {
             <View style={{ position: 'absolute', left: hole.x + hole.w, right: 0, top: hole.y, height: hole.h, backgroundColor: dim }} />
             <View pointerEvents="none" style={{ position: 'absolute', left: hole.x, top: hole.y, width: hole.w, height: hole.h, borderRadius: 16, borderWidth: 2.5, borderColor: '#fff' }} />
           </>
-        ) : <View style={{ flex: 1, backgroundColor: dim }} />}
+        )}
 
-        {rect !== undefined ? (
-          <View style={{ position: 'absolute', left: 16, right: 16, ...bubbleStyle, backgroundColor: t.card, borderRadius: 18, padding: 18, elevation: 8 }} accessibilityLiveRegion="polite">
-            <Text style={{ color: t.primary, fontSize: 12, fontWeight: '800' }}>{index + 1} / {steps.length}</Text>
-            <Text style={{ color: t.text, fontSize: 18, fontWeight: '900', marginTop: 4 }}>{step.title}</Text>
+        {rect !== undefined && step ? (
+          <View
+            onLayout={e => { const h = e.nativeEvent.layout.height; if (Math.abs(h - bubbleH) > 1) setBubbleH(h); }}
+            style={{ position: 'absolute', left: 16, right: 16, top: bubbleTop, backgroundColor: t.card, borderRadius: 18, padding: 18, elevation: 10, opacity: bubbleH ? 1 : 0 }}
+            accessibilityLiveRegion="polite">
+            {placement === 'below' ? <View style={{ position: 'absolute', top: -8, left: arrowX, width: 16, height: 16, backgroundColor: t.card, transform: [{ rotate: '45deg' }] }} /> : null}
+            {placement === 'above' ? <View style={{ position: 'absolute', bottom: -8, left: arrowX, width: 16, height: 16, backgroundColor: t.card, transform: [{ rotate: '45deg' }] }} /> : null}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              {list.map((_, i) => <View key={i} style={{ width: i === index ? 18 : 6, height: 6, borderRadius: 3, backgroundColor: i === index ? t.primary : t.border }} />)}
+              <Text style={{ color: t.textMuted, fontSize: 12, fontWeight: '800', marginLeft: 4 }}>{index + 1} / {list.length}</Text>
+            </View>
+            <Text style={{ color: t.text, fontSize: 18, fontWeight: '900', marginTop: 8 }}>{step.title}</Text>
             <Text style={{ color: t.textSoft, fontSize: 14.5, lineHeight: 21, marginTop: 6 }}>{step.text}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 8 }}>
               {!last ? (
-                <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" style={{ paddingVertical: 8, paddingRight: 8 }}>
+                <Pressable onPress={close} hitSlop={8} accessibilityRole="button" style={{ paddingVertical: 8, paddingRight: 8 }}>
                   <Text style={{ color: t.textMuted, fontWeight: '800' }}>{hi ? 'छोड़ें' : 'Skip'}</Text>
                 </Pressable>
               ) : null}
               <View style={{ flex: 1 }} />
               {index > 0 ? <Button small outline title={hi ? 'पीछे' : 'Back'} onPress={() => onIndex(index - 1)} /> : null}
-              <Button small title={last ? (hi ? 'समझ गया' : 'Got it') : (hi ? 'आगे' : 'Next')} onPress={() => (last ? onClose() : onIndex(index + 1))} />
+              <Button small title={last ? (hi ? 'समझ गया' : 'Got it') : (hi ? 'आगे' : 'Next')} onPress={() => (last ? close() : onIndex(index + 1))} />
             </View>
           </View>
         ) : null}

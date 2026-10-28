@@ -8,7 +8,7 @@ import { useI18n } from '../i18n';
 import { useNav } from '../nav';
 import { useSession, useUser } from '../session';
 import { useTheme, useThemeMode } from '../theme';
-import { useTour } from '../tour';
+import { TourTarget, useScreenTour, useTour, useTourScroll } from '../tour';
 import { Avatar, Button, Card, confirm, Empty, ErrorBox, Field, Header, KeyValue, Loading, Pill, SectionTitle, Tabs } from '../ui';
 
 function MenuRow({ icon, color, label, onPress, right, danger, first }: { icon: any; color?: string; label: string; onPress: () => void; right?: React.ReactNode; danger?: boolean; first?: boolean }) {
@@ -34,10 +34,22 @@ export function ProfileScreen() {
   const tour = useTour();
   const isPro = user.subscriptionTier === 'Testbook Pass Pro';
   const plan = isPro ? 'PRO' : user.subscriptionTier === 'None' || !user.subscriptionTier ? (hi ? 'फ्री' : 'Free') : user.subscriptionTier.replace('Testbook ', '');
+  const scroll = useTourScroll('app_me');
+  useScreenTour('app_me', hi ? [
+    { target: 'me.stats', title: 'कॉइन, प्लान और रेफ़रल', text: 'दोस्तों को रेफ़र करके कॉइन कमाएं। "आपका प्लान" पर टैप करके पास प्रो देखें: सभी PRO टेस्ट और लाइव टेस्ट।' },
+    { target: 'me.settings', title: 'आपकी पसंद', text: 'डार्क या लाइट थीम और ऐप की भाषा (हिंदी या अंग्रेज़ी) यहां बदलें।' },
+    { target: 'me.things', title: 'आपकी चीज़ें', text: 'बुकमार्क किए प्रश्न, सेव की नौकरियां, डॉक्यूमेंट लॉकर (फ़ोटो, हस्ताक्षर, प्रमाणपत्र) और डाउनलोड किए ऑफ़लाइन टेस्ट।' },
+    { target: 'me.help', title: 'मदद चाहिए?', text: 'सपोर्ट टीम से चैट करें। यह ऐप टूर कभी भी "ऐप टूर फिर से देखें" से दोबारा देखें।' },
+  ] : [
+    { target: 'me.stats', title: 'Coins, plan and referrals', text: 'Earn coins by referring friends. Tap "Your plan" to see Pass Pro: every PRO test and the live tests.' },
+    { target: 'me.settings', title: 'Your preferences', text: 'Switch between dark and light theme and change the app language (Hindi or English) here.' },
+    { target: 'me.things', title: 'Your things', text: 'Bookmarked questions, saved jobs, the Document Locker (photo, signature, certificates) and your downloaded offline tests.' },
+    { target: 'me.help', title: 'Need help?', text: 'Chat with the support team. Watch this app tour again any time with "Replay app tour".' },
+  ], nav.tab === 'profile' && nav.stack.length === 0);
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header large title={tr('Me')} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      <ScrollView {...scroll} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         <Card onPress={() => nav.push({ name: 'editProfile' })} style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <Avatar name={user.name} size={62} />
           <View style={{ flex: 1 }}>
@@ -51,7 +63,8 @@ export function ProfileScreen() {
           <ChevronRight size={20} color={t.textMuted} />
         </Card>
 
-        <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+        <TourTarget id="me.stats" style={{ marginTop: 12 }}>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           {[
             { icon: Coins, color: t.accent, value: String(user.coins || 0), label: tr('Coins'), onPress: () => nav.push({ name: 'referrals' }) },
             { icon: Crown, color: isPro ? t.accent : t.textMuted, value: plan, label: tr('Your plan'), onPress: () => nav.push({ name: 'pass' }) },
@@ -65,6 +78,9 @@ export function ProfileScreen() {
           ))}
         </View>
 
+        </TourTarget>
+
+        <TourTarget id="me.settings">
         <SectionTitle>{tr('Appearance')}</SectionTitle>
         <Tabs options={[
           { key: 'system', label: hi ? 'सिस्टम' : 'System', icon: <SunMoon size={15} color={mode === 'system' ? t.text : t.textSoft} /> },
@@ -73,14 +89,17 @@ export function ProfileScreen() {
         ]} value={mode} onChange={setMode} />
         <SectionTitle>{tr('Language')}</SectionTitle>
         <Tabs options={[{ key: 'en', label: 'English' }, { key: 'hi', label: 'हिन्दी' }]} value={lang} onChange={setLang} />
+        </TourTarget>
 
         <SectionTitle>{hi ? 'मेरी चीज़ें' : 'My things'}</SectionTitle>
+        <TourTarget id="me.things">
         <Card style={{ padding: 0, overflow: 'hidden' }}>
           <MenuRow first icon={Bookmark} color={t.violet} label={tr('Bookmarks')} onPress={() => nav.push({ name: 'bookmarks' })} />
           <MenuRow icon={BriefcaseBusiness} color="#db2777" label={tr('Saved jobs')} onPress={() => nav.push({ name: 'savedJobs' })} />
           <MenuRow icon={Lock} color={t.textSoft} label={tr('Document Locker')} onPress={() => nav.push({ name: 'locker' })} />
           <MenuRow icon={Download} color={t.success} label={tr('Offline tests')} onPress={() => nav.push({ name: 'offline' })} />
         </Card>
+        </TourTarget>
 
         <SectionTitle>{tr('My account')}</SectionTitle>
         <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -91,10 +110,14 @@ export function ProfileScreen() {
         </Card>
 
         <SectionTitle>{hi ? 'सहायता' : 'Help'}</SectionTitle>
+        <TourTarget id="me.help">
         <Card style={{ padding: 0, overflow: 'hidden' }}>
           <MenuRow first icon={Headphones} color="#0284c7" label={tr('Help & support')} onPress={() => nav.push({ name: 'support' })} />
           <MenuRow icon={Compass} color={t.primary} label={hi ? 'ऐप टूर फिर से देखें' : 'Replay app tour'} onPress={() => { tour.replay(); nav.setTab('home'); }} />
-          <MenuRow icon={Shield} color={t.textSoft} label={hi ? 'गोपनीयता नीति' : 'Privacy policy'} onPress={() => Linking.openURL(`${getServer()}/privacy`)} />
+        </Card>
+        </TourTarget>
+        <Card style={{ padding: 0, overflow: 'hidden', marginTop: 10 }}>
+          <MenuRow first icon={Shield} color={t.textSoft} label={hi ? 'गोपनीयता नीति' : 'Privacy policy'} onPress={() => Linking.openURL(`${getServer()}/privacy`)} />
           <MenuRow icon={FileText} color={t.textSoft} label={hi ? 'नियम और शर्तें' : 'Terms'} onPress={() => Linking.openURL(`${getServer()}/terms`)} />
           <MenuRow icon={LogOut} danger label={tr('Sign out')} right={<View />}
             onPress={() => confirm(tr('Sign out') + '?', hi ? 'आप इस फ़ोन से लॉग आउट हो जाएंगे।' : 'You will be signed out on this phone.', tr('Sign out'), signOut)} />

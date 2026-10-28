@@ -103,7 +103,8 @@ const ThemeCtx = createContext<Ctx | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const system = useColorScheme();
-  const [mode, setModeState] = useState<ThemeMode>('system');
+  // Light until the user picks another theme in Me → Appearance
+  const [mode, setModeState] = useState<ThemeMode>('light');
   useEffect(() => {
     AsyncStorage.getItem(KEY).then(v => { if (v === 'light' || v === 'dark' || v === 'system') setModeState(v); }).catch(() => {});
   }, []);
@@ -115,11 +116,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme(): Theme {
   const v = useContext(ThemeCtx);
-  const system = useColorScheme();
-  return v ? v.theme : system === 'dark' ? dark : light;
+  return v ? v.theme : light;
 }
 
 export function useThemeMode() {
   const v = useContext(ThemeCtx);
-  return { mode: v?.mode || 'system', setMode: v?.setMode || (() => {}) };
+  return { mode: v?.mode || 'light', setMode: v?.setMode || (() => {}) };
 }

@@ -36,6 +36,8 @@ const catName = (c: { name: string; nameHi?: string }, hi: boolean) => (hi && c.
 const examTests = (s: any) => (s.subSubCategories || []).reduce((m: number, ss: any) => m + (ss.tests?.length || 0), 0) || (s.tests?.length || 0);
 const countTests = (c: TestCategory) => (c.subCategories || []).reduce((n, s: any) => n + examTests(s), 0);
 
+const examsText = (n: number, hi: boolean) => hi ? `${n} ${n === 1 ? 'परीक्षा' : 'परीक्षाएं'}` : `${n} ${n === 1 ? 'exam' : 'exams'}`;
+
 function Logo({ uri, size = 52 }: { uri?: string; size?: number }) {
   const t = useTheme();
   const [failed, setFailed] = useState(false);
@@ -64,7 +66,7 @@ export function TestsScreen() {
         </TourTarget>
       </View>
       <View style={{ flex: 1, display: kind === 'mock' ? 'flex' : 'none' }}><MockCatalog /></View>
-      <View style={{ flex: 1, display: kind === 'typing' ? 'flex' : 'none' }}><TypingHubScreen embedded /></View>
+      <View style={{ flex: 1, display: kind === 'typing' ? 'flex' : 'none' }}><TypingHubScreen embedded active={kind === 'typing'} /></View>
     </View>
   );
 }
@@ -81,12 +83,12 @@ function MockCatalog() {
   const scroll = useTourScroll('app_tests');
   useScreenTour('app_tests', hi ? [
     { target: 'tests.kind', fixed: true, title: 'मॉक या टाइपिंग', text: 'यहां मॉक टेस्ट और टाइपिंग टेस्ट के बीच बदलें।' },
-    { target: 'tests.search', title: 'कोई भी टेस्ट खोजें', text: 'परीक्षा या टेस्ट का नाम लिखें, जैसे "CGL" या "NTPC"।' },
-    { target: 'tests.category', title: 'अपनी परीक्षा चुनें', text: 'श्रेणी खोलें, फिर परीक्षा और उसकी टेस्ट सीरीज़। हर टेस्ट पर फ्री या PRO लिखा होता है।' },
+    { target: 'tests.search', title: 'कोई भी टेस्ट खोजें', text: 'परीक्षा या टेस्ट का नाम लिखें, जैसे "CGL", "NTPC" या "कंप्यूटर"। नतीजे तुरंत दिखते हैं।' },
+    { target: 'tests.category', title: 'अपनी परीक्षा चुनें', text: 'श्रेणी खोलें, फिर परीक्षा और उसकी टेस्ट सीरीज़। हर टेस्ट पर फ्री या PRO लिखा होता है। कुछ परीक्षाओं में "लाइव टेस्ट" भी है: हर बार नया प्रश्न पत्र।' },
   ] : [
     { target: 'tests.kind', fixed: true, title: 'Mock or typing', text: 'Switch between mock tests and typing tests here.' },
-    { target: 'tests.search', title: 'Find any test', text: 'Type an exam or test name, like "CGL" or "NTPC".' },
-    { target: 'tests.category', title: 'Pick your exam', text: 'Open a category, then the exam and its test series. Every test shows if it is FREE or PRO.' },
+    { target: 'tests.search', title: 'Find any test', text: 'Type an exam or test name, like "CGL", "NTPC" or "Computer". Results show as you type.' },
+    { target: 'tests.category', title: 'Pick your exam', text: 'Open a category, then the exam and its test series. Every test shows if it is FREE or PRO. Some exams also have a "Live Test": a new paper every time.' },
   ], ready && catalog.length > 0 && nav.tab === 'tests' && nav.stack.length === 0);
 
   const header = (
@@ -129,16 +131,19 @@ function MockCatalog() {
       refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={refresh} />}
       renderItem={({ item: c, index }) => {
         const n = countTests(c);
+        // Every tile sits in the same outer box (the first one is also the tour's target),
+        // so the first tile is exactly as wide as the others
         const tile = (
-          <Card onPress={() => nav.push({ name: 'category', categoryId: c.id })} style={{ flex: 1, margin: 6, padding: 14, minHeight: 150 }}>
+          <Card onPress={() => nav.push({ name: 'category', categoryId: c.id })} style={{ flex: 1, padding: 14, minHeight: 150 }}>
             <Logo uri={c.logoUrl} />
             <Text numberOfLines={2} style={{ color: t.text, fontWeight: '800', fontSize: 14.5, marginTop: 12, lineHeight: 19 }}>{catName(c, hi)}</Text>
             <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 4 }}>
-              {hi ? `${c.subCategories?.length || 0} परीक्षाएं` : `${c.subCategories?.length || 0} exams`} · {n} {hi ? 'टेस्ट' : 'tests'}
+              {examsText(c.subCategories?.length || 0, hi)} · {n} {hi ? 'टेस्ट' : n === 1 ? 'test' : 'tests'}
             </Text>
           </Card>
         );
-        return index === 0 ? <TourTarget id="tests.category" style={{ flex: 1 }}>{tile}</TourTarget> : tile;
+        const box = { flex: 1, margin: 6 };
+        return index === 0 ? <TourTarget id="tests.category" style={box}>{tile}</TourTarget> : <View style={box}>{tile}</View>;
       }}
     />
   );
@@ -155,7 +160,7 @@ export function CategoryScreen({ categoryId }: { categoryId: string }) {
   if (!cat) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title="" onBack={nav.pop} /><Loading /></View>;
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <Header title={catName(cat, hi)} subtitle={hi ? `${cat.subCategories.length} परीक्षाएं · ${countTests(cat)} टेस्ट` : `${cat.subCategories.length} exams · ${countTests(cat)} tests`} onBack={nav.pop} />
+      <Header title={catName(cat, hi)} subtitle={`${examsText(cat.subCategories.length, hi)} · ${countTests(cat)} ${hi ? 'टेस्ट' : countTests(cat) === 1 ? 'test' : 'tests'}`} onBack={nav.pop} />
       <FlatList
         data={cat.subCategories}
         keyExtractor={s => s.id}
@@ -331,17 +336,17 @@ export function TestInfoScreen({ testId }: { testId: string }) {
   const [roomSheet, setRoomSheet] = useState(false);
   const scroll = useTourScroll('app_test_info');
   useScreenTour('app_test_info', hi ? [
-    { target: 'info.facts', title: 'टेस्ट की जानकारी', text: 'प्रश्न, समय और कुल अंक। PRO टेस्ट पास प्रो के साथ खुलते हैं।' },
-    { target: 'info.lang', title: 'प्रश्नों की भाषा', text: 'अंग्रेज़ी या हिंदी चुनें। टेस्ट के दौरान भी भाषा बदल सकते हैं।' },
-    { target: 'info.start', title: 'टेस्ट शुरू करें', text: 'तैयार होने पर शुरू करें। उत्तर अपने आप सेव होते हैं: बीच में छोड़ें तो बाद में जारी रखें।' },
-    { target: 'info.friends', title: 'दोस्तों के साथ', text: 'एक रूम बनाएं, दोस्तों को बुलाएं और एक ही टेस्ट के बाद अंक और समय की तुलना करें।' },
-    { target: 'info.download', title: 'ऑफ़लाइन के लिए डाउनलोड', text: 'टेस्ट डाउनलोड करें और बिना इंटरनेट दें। इंटरनेट आने पर परिणाम अपलोड हो जाता है।' },
+    { target: 'info.facts', title: 'टेस्ट की जानकारी', text: 'प्रश्नों की संख्या, समय और कुल अंक। गलत उत्तर पर कटने वाले अंक भी पहले देख लें। PRO टेस्ट पास प्रो के साथ खुलते हैं।' },
+    { target: 'info.lang', title: 'प्रश्नों की भाषा', text: 'अंग्रेज़ी या हिंदी चुनें। टेस्ट के दौरान भी ऊपर के बटन से भाषा बदल सकते हैं।' },
+    { target: 'info.start', title: 'टेस्ट शुरू करें', text: 'हर बार प्रश्न और विकल्प नए क्रम में आते हैं। उत्तर अपने आप सेव होते हैं: बीच में छोड़ें तो बाद में वहीं से जारी रखें।' },
+    { target: 'info.friends', title: 'दोस्तों के साथ', text: 'एक रूम बनाएं, कोड दोस्तों को भेजें, सब एक ही टेस्ट दें और फिर अंक, रैंक और समय की तुलना करें।' },
+    { target: 'info.download', title: 'ऑफ़लाइन के लिए डाउनलोड', text: 'टेस्ट डाउनलोड करें और बिना इंटरनेट दें। इंटरनेट आने पर परिणाम अपने आप अपलोड हो जाता है।' },
   ] : [
-    { target: 'info.facts', title: 'About this test', text: 'Questions, time and total marks. PRO tests open with Pass Pro.' },
-    { target: 'info.lang', title: 'Question language', text: 'Choose English or Hindi. You can also switch language during the test.' },
-    { target: 'info.start', title: 'Start the test', text: 'Start when you are ready. Answers are saved as you go: leave in the middle and resume later.' },
-    { target: 'info.friends', title: 'With friends', text: 'Create a room, invite friends and compare marks and time after the same test.' },
-    { target: 'info.download', title: 'Download for offline', text: 'Download the test and take it without internet. The result uploads when you are back online.' },
+    { target: 'info.facts', title: 'About this test', text: 'Number of questions, time and total marks. Check the marks cut for a wrong answer too. PRO tests open with Pass Pro.' },
+    { target: 'info.lang', title: 'Question language', text: 'Choose English or Hindi. You can also switch language during the test with the button at the top.' },
+    { target: 'info.start', title: 'Start the test', text: 'Questions and options come in a new order every time. Answers are saved as you go: leave in the middle and continue later where you stopped.' },
+    { target: 'info.friends', title: 'With friends', text: 'Create a room, send friends the code, everyone takes the same test, then compare marks, rank and time.' },
+    { target: 'info.download', title: 'Download for offline', text: 'Download the test and take it without internet. The result uploads by itself when you are back online.' },
   ], !!test && tierAllows(test.requiredTier, user.subscriptionTier) && !isCbatTest(test.id, catalog)); // a test the student can start
   if (!test) return <View style={{ flex: 1, backgroundColor: t.bg }}><Header title="" onBack={nav.pop} /><Empty title={hi ? 'टेस्ट नहीं मिला' : 'Test not found'} /></View>;
   const live = isLiveTestId(test.id);

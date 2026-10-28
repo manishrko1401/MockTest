@@ -8,6 +8,7 @@ import { CheckCircle2, ChevronRight, Clock, Keyboard, RotateCcw, XCircle } from 
 import { request, friendlyError } from '../api';
 import { useI18n } from '../i18n';
 import { useNav } from '../nav';
+import { TourTarget, useScreenTour, useTourScroll } from '../tour';
 import { useUser } from '../session';
 import { useTheme } from '../theme';
 import { Button, Card, Empty, ErrorBox, Field, Header, IconTile, KeyValue, ListRow, Loading, Pill, SearchBar, SectionTitle, Segmented, StatusBarFor } from '../ui';
@@ -30,7 +31,7 @@ function useMyTypingAttempts() {
 
 // ---- Tab: typing exams --------------------------------------------------------------------------
 
-export function TypingHubScreen({ embedded }: { embedded?: boolean } = {}) {
+export function TypingHubScreen({ embedded, active = true }: { embedded?: boolean; active?: boolean } = {}) {
   const t = useTheme();
   const { hi, t: tr } = useI18n();
   const nav = useNav();
@@ -44,24 +45,35 @@ export function TypingHubScreen({ embedded }: { embedded?: boolean } = {}) {
   }, []);
   useEffect(() => { load(); }, [load]);
   const list = (cats || []).filter(c => !search.trim() || c.name.toLowerCase().includes(search.trim().toLowerCase()));
+  const scroll = useTourScroll('app_typing');
+  useScreenTour('app_typing', hi ? [
+    { target: 'typing.search', title: 'अपनी टाइपिंग परीक्षा खोजें', text: 'SSC, DSSSB, हाई कोर्ट, राज्य परीक्षाएं और भी। हर परीक्षा के अपने नियम हैं।' },
+    { target: 'typing.first', title: 'परीक्षा के नियम एक नज़र में', text: 'समय और पास होने की गति (WPM) अंग्रेज़ी और हिंदी के लिए। परीक्षा खोलें, अनुच्छेद चुनें और असली परीक्षा की तरह टाइप करें।' },
+    { title: 'स्कोरकार्ड', text: 'टेस्ट के बाद आपकी गति, शुद्धता और हर गलती (छूटे, गलत और ज़्यादा शब्द) परीक्षा के नियमों के अनुसार दिखती है।' },
+  ] : [
+    { target: 'typing.search', title: 'Find your typing exam', text: 'SSC, DSSSB, High Courts, State exams and more. Each exam has its own rules.' },
+    { target: 'typing.first', title: 'Exam rules at a glance', text: 'Time and the qualifying speed (WPM) for English and Hindi. Open an exam, pick a passage and type just like the real test.' },
+    { title: 'Your scorecard', text: 'After the test you see your speed, accuracy and every mistake (missed, wrong and extra words), checked with that exam’s rules.' },
+  ], active && !!cats && cats.length > 0 && (!embedded || (nav.tab === 'tests' && nav.stack.length === 0)));
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       {embedded ? null : <Header title={tr('Typing Tests')} subtitle={cats ? (hi ? `${cats.length} परीक्षाएं` : `${cats.length} exams`) : undefined} />}
       <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 }}>
-        <SearchBar value={search} onChangeText={setSearch} placeholder={hi ? 'परीक्षा खोजें (SSC, DSSSB, हाई कोर्ट…)' : 'Search exams (SSC, DSSSB, High Court…)'} />
+        <TourTarget id="typing.search"><SearchBar value={search} onChangeText={setSearch} placeholder={hi ? 'परीक्षा खोजें (SSC, DSSSB, हाई कोर्ट…)' : 'Search exams (SSC, DSSSB, High Court…)'} /></TourTarget>
         {cats ? <Text style={{ color: t.textSoft, fontSize: 13, fontWeight: '700', marginTop: 16 }}>{hi ? `${cats.length} टाइपिंग परीक्षाएं` : `${cats.length} typing exams`}</Text> : null}
       </View>
       {error ? <ErrorBox message={error} onRetry={load} /> : null}
       {!cats ? (!error ? <Loading /> : null) : (
         <FlatList
+          {...scroll}
           data={list}
           keyExtractor={c => c.id}
           contentContainerStyle={{ paddingBottom: 24 }}
           refreshControl={<RefreshControl refreshing={refreshing} colors={[t.primary]} onRefresh={() => { setRefreshing(true); load(); }} />}
           ListEmptyComponent={<Empty title={hi ? 'कुछ नहीं मिला' : 'Nothing found'} />}
-          renderItem={({ item: c }) => {
+          renderItem={({ item: c, index }) => {
             const cfg = detectExamCategory(c);
-            return (
+            const card = (
               <Card onPress={() => nav.push({ name: 'typingCategory', categoryId: c.id })} style={{ marginHorizontal: 16, marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 }}>
                 <IconTile icon={Keyboard} color={t.teal} />
                 <View style={{ flex: 1 }}>
@@ -75,6 +87,7 @@ export function TypingHubScreen({ embedded }: { embedded?: boolean } = {}) {
                 <ChevronRight size={18} color={t.textMuted} />
               </Card>
             );
+            return index === 0 ? <TourTarget id="typing.first">{card}</TourTarget> : card;
           }}
         />
       )}

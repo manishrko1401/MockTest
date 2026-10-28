@@ -73,15 +73,17 @@ export default function HomeScreen() {
   // First visit: what's where on this screen (after the welcome slides)
   const scroll = useTourScroll('app_home');
   useScreenTour('app_home', hi ? [
-    { target: 'home.progress', title: 'आपकी प्रगति', text: 'हर टेस्ट के बाद आपकी औसत सटीकता, दिए गए टेस्ट और सबसे अच्छा स्कोर यहां दिखता है।' },
-    { target: 'home.actions', title: 'सब कुछ एक जगह', text: 'मॉक टेस्ट, टाइपिंग, सूचनाएं, बुकमार्क, सेव की नौकरियां, लॉकर, डाउनलोड और सहायता यहां से खोलें।' },
-    { target: 'home.bell', title: 'सूचनाएं', text: 'दोस्तों के अनुरोध, संदेश, टेस्ट रूम और सपोर्ट के जवाब यहां आते हैं।' },
-    { target: 'tabbar', fixed: true, title: 'ऐप में घूमें', text: 'होम, टेस्ट, प्लानर, दोस्त और "मैं": आपका खाता, पास प्रो, रेफ़रल और सेटिंग्स।' },
+    { target: 'home.progress', title: 'आपकी प्रगति', text: 'हर टेस्ट के बाद यहां आपकी औसत सटीकता, दिए गए टेस्ट और सबसे अच्छा स्कोर अपडेट होता है। जितने ज़्यादा टेस्ट, उतनी सही तस्वीर।' },
+    { target: 'home.actions', title: 'सब कुछ एक टैप में', text: 'मॉक टेस्ट, टाइपिंग टेस्ट, नौकरी की सूचनाएं, बुकमार्क किए प्रश्न, सेव की नौकरियां, डॉक्यूमेंट लॉकर, ऑफ़लाइन टेस्ट और सहायता: सब यहां से खोलें।' },
+    { target: 'home.notices', title: 'नौकरी की सूचनाएं', text: 'नए फ़ॉर्म, एडमिट कार्ड, रिज़ल्ट और आंसर की। किसी भी नौकरी को सेव करें और आवेदन करने पर चिह्नित करें।' },
+    { target: 'home.bell', title: 'आपकी सूचनाएं', text: 'दोस्तों के अनुरोध, नए संदेश, टेस्ट रूम के निमंत्रण और सपोर्ट टीम के जवाब यहां आते हैं। नई सूचना पर लाल गिनती दिखती है।' },
+    { target: 'tabbar', fixed: true, title: 'ऐप में घूमें', text: 'होम, टेस्ट (मॉक, लाइव और टाइपिंग), प्लानर, दोस्त और "मैं": आपका खाता, पास प्रो, रेफ़रल, सेटिंग्स और यह टूर दोबारा।' },
   ] : [
-    { target: 'home.progress', title: 'Your progress', text: 'Your average accuracy, tests taken and best score, updated after every test.' },
-    { target: 'home.actions', title: 'Everything in one place', text: 'Open mock tests, typing, notices, bookmarks, saved jobs, the Locker, downloads and support from here.' },
-    { target: 'home.bell', title: 'Notifications', text: 'Friend requests, messages, test rooms and support replies arrive here.' },
-    { target: 'tabbar', fixed: true, title: 'Move around the app', text: 'Home, Tests, Planner, Friends and Me: your account, Pass Pro, referrals and settings.' },
+    { target: 'home.progress', title: 'Your progress', text: 'Your average accuracy, tests taken and best score, updated after every test. The more tests you take, the truer the picture.' },
+    { target: 'home.actions', title: 'Everything in one tap', text: 'Open mock tests, typing tests, job notices, bookmarked questions, saved jobs, the Document Locker, offline tests and support from here.' },
+    { target: 'home.notices', title: 'Job notices', text: 'New forms, admit cards, results and answer keys. Save any job and mark it once you have applied.' },
+    { target: 'home.bell', title: 'Your notifications', text: 'Friend requests, new messages, test room invites and replies from the support team arrive here. A red count shows anything new.' },
+    { target: 'tabbar', fixed: true, title: 'Move around the app', text: 'Home, Tests (mock, live and typing), Planner, Friends and Me: your account, Pass Pro, referrals, settings and this tour again.' },
   ], nav.tab === 'home' && nav.stack.length === 0);
 
   return (
@@ -97,10 +99,12 @@ export default function HomeScreen() {
             <Text style={{ color: t.heroText, opacity: 0.75, fontSize: 14, fontWeight: '600' }}>{greeting(hi)},</Text>
             <Text style={{ color: t.heroText, fontSize: 26, fontWeight: '900', letterSpacing: -0.4, marginTop: 2 }} numberOfLines={1}>{firstName || (hi ? 'विद्यार्थी' : 'Student')}</Text>
           </View>
+          <TourTarget id="home.notices">
           <Pressable onPress={() => nav.push({ name: 'notices' })} accessibilityLabel={tr('Notices')}
             style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }}>
             <Newspaper size={20} color="#fff" />
           </Pressable>
+          </TourTarget>
           {/* friend requests, messages, rooms, support replies */}
           <TourTarget id="home.bell">
           <Pressable onPress={() => nav.push({ name: 'notifications' })}

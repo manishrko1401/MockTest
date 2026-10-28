@@ -5451,7 +5451,7 @@ type TourFlags = {
 
 // Newer page tours (Study Planner, With Friends) are kept in their own small table instead of
 // one more users column each: one row per user and finished tour.
-const TABLE_TOURS = ['planner', 'friends', 'app_welcome', 'app_home', 'app_tests', 'app_test_info', 'app_analysis'] as const;
+const TABLE_TOURS = ['planner', 'friends', 'app_welcome', 'app_home', 'app_tests', 'app_typing', 'app_test_info', 'app_exam', 'app_analysis', 'app_planner', 'app_friends', 'app_me'] as const;
 let userToursReady: Promise<void> | null = null;
 function ensureUserToursTable(): Promise<void> {
   if (!userToursReady) {
