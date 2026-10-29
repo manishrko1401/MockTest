@@ -57,6 +57,8 @@ import {
   isRrbNtpcExam,
   isDsssbJsaExam,
   isKvsJsaExam,
+  correctionsAlwaysAllowed,
+  typingRetypeAllowed,
   isEmrsJsaExam,
   isNvsJsaExam,
   isCsirJsaExam,
@@ -464,7 +466,7 @@ export default function TCSiONTypingTerminalPage() {
         bCount,
         currentTest.qualifyingWpm || 35,
         currentTest.maxErrorPercentage || 5.0,
-        Boolean(isRrbNtpcExam(currentTest) || (currentTest.allowRetype ?? activeAttempt.allowRetype)),
+        Boolean(isRrbNtpcExam(currentTest) || correctionsAlwaysAllowed(currentTest) || (currentTest.allowRetype ?? activeAttempt.allowRetype)),
         currentTest,
         undefined,
         undefined,
@@ -514,7 +516,7 @@ export default function TCSiONTypingTerminalPage() {
       bCount,
       test.qualifyingWpm || 35,
       test.maxErrorPercentage || 5.0,
-      Boolean(isRrbNtpcExam(test) || (test.allowRetype ?? targetAtt.allowRetype)),
+      Boolean(isRrbNtpcExam(test) || correctionsAlwaysAllowed(test) || (test.allowRetype ?? targetAtt.allowRetype)),
       test,
       undefined,
       undefined,
@@ -774,7 +776,7 @@ export default function TCSiONTypingTerminalPage() {
       // Use the accurately snapshotted time (set when submit/time-out fired)
       const timeSpent = Math.max(mainTimeSpentSeconds, 1);
       const catChoice = isSscCglExam(test) ? selectedCategory : isSscChslExam(test) ? selectedChslCategory : selectedSpmcilCategory;
-      const isRetypeAllowed = isRrbNtpcExam(test) || Boolean(test.allowRetype);
+      const isRetypeAllowed = typingRetypeAllowed(test);
 
       const evalResult = evaluateTyping(
         test.passageText,
@@ -817,7 +819,7 @@ export default function TCSiONTypingTerminalPage() {
     if (phase === 'RESULT' && test && mainTypedText) {
       const timeSpent = Math.max(mainTimeSpentSeconds || Math.round((test.mainDurationMinutes || 10) * 60), 1);
       const catChoice = isSscCglExam(test) ? selectedCategory : isSscChslExam(test) ? selectedChslCategory : selectedSpmcilCategory;
-      const isRetypeAllowed = isRrbNtpcExam(test) || Boolean(test.allowRetype);
+      const isRetypeAllowed = typingRetypeAllowed(test);
       const evalResult = evaluateTyping(
         test.passageText,
         mainTypedText,
@@ -950,12 +952,12 @@ export default function TCSiONTypingTerminalPage() {
   };
 
   const isRrbNtpcTest = test ? isRrbNtpcExam(test) : false;
-  const isKvsJsaTest = test ? isKvsJsaExam(test) : false;
-  const isBackspaceEnabled = !isRrbNtpcTest && !isKvsJsaTest && test?.enableBackspace !== false && test?.backspaceRule !== 'DISABLED';
-  const isRetypeAllowed = isRrbNtpcTest || Boolean(test?.allowRetype);
+  // KVS JSA and NVS JSA always allow Backspace and retyping
+  const isBackspaceEnabled = (test ? correctionsAlwaysAllowed(test) : false) || (!isRrbNtpcTest && test?.enableBackspace !== false && test?.backspaceRule !== 'DISABLED');
+  const isRetypeAllowed = test ? typingRetypeAllowed(test) : false;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // If Backspace/Delete and corrections are disabled (RRB NTPC, KVS JSA, or admin disabled), block any correction
+    // If Backspace/Delete and corrections are disabled (RRB NTPC, or admin disabled), block any correction
     if (!isBackspaceEnabled) {
       // 1. Block Backspace and Delete
       if (e.key === 'Backspace' || e.key === 'Delete') {

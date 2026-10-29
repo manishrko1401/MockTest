@@ -14,7 +14,7 @@ import { useTheme } from '../theme';
 import { Button, Card, Empty, ErrorBox, Field, Header, IconTile, KeyValue, ListRow, Loading, Pill, SearchBar, SectionTitle, Segmented, StatusBarFor } from '../ui';
 import { newLocalId, openOffline, saveOfflineAttempt, syncOutbox } from '../offline';
 import { DownloadButton } from './OfflineScreen';
-import { detectExamCategory, evaluateTyping, isRrbNtpcExam, isSscCglExam, isSscChslExam, TypingCategory, TypingTest } from '../shared/typingTypes';
+import { correctionsAlwaysAllowed, detectExamCategory, evaluateTyping, isSscCglExam, isSscChslExam, typingRetypeAllowed, TypingCategory, TypingTest } from '../shared/typingTypes';
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
 
@@ -214,7 +214,8 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
   useEffect(() => () => { ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {}); }, []);
 
   const cfg = detectExamCategory(test || undefined);
-  const backspaceAllowed = test ? !(test.backspaceRule === 'DISABLED' || test.enableBackspace === false || cfg.backspaceAllowed === false) : true;
+  // KVS JSA and NVS JSA always allow Backspace (and retyping)
+  const backspaceAllowed = test ? correctionsAlwaysAllowed(test) || !(test.backspaceRule === 'DISABLED' || test.enableBackspace === false || cfg.backspaceAllowed === false) : true;
   const needsCategory = test ? (isSscCglExam(test) ? ['UR', 'OBC/EWS', 'SC/ST/Others'] : isSscChslExam(test) ? ['UR/EWS', 'OBC/SC/ST/PwBD/ESM'] : cfg.key === 'spmcil' ? ['UR', 'Reserved'] : null) : null;
   useEffect(() => { if (needsCategory && !needsCategory.includes(catChoice)) setCatChoice(needsCategory[0]); }, [needsCategory?.join()]); // eslint-disable-line react-hooks/exhaustive-deps
   const passage = phase === 'demo' ? (test?.demoPassageText || (test?.passageText || '').split(/\s+/).slice(0, 60).join(' ')) : (test?.passageText || '');
@@ -233,7 +234,7 @@ export function TypingRunScreen({ testId, offline }: { testId: string; offline?:
   const finishMain = useCallback(async () => {
     if (!test) return;
     const spent = Math.max(1, Math.min(mainSeconds, Math.round((Date.now() - started.current) / 1000)));
-    const retype = isRrbNtpcExam(test) || Boolean(test.allowRetype);
+    const retype = typingRetypeAllowed(test);
     const res = evaluateTyping(test.passageText, typedRef.current, spent, backspaces, test.qualifyingWpm || 35, test.maxErrorPercentage || 5, retype, test, undefined, undefined, undefined, test.language, needsCategory ? catChoice : undefined);
     setResult({ ...res, timeSpent: spent, backspaceCount: backspaces });
     setPhase('result');

@@ -236,11 +236,12 @@ export const EXAM_CATEGORIES: Record<ExamCategoryKey, ExamCategoryConfig> = {
     key: 'kvs-jsa',
     name: 'KVS JSA TYPING',
     slug: 'kvs-jsa-typing',
-    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM evaluation. Backspace & Delete keys disabled (no corrections allowed).',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net WPM evaluation. Backspace and retyping allowed.',
     standardDurationMinutes: 10,
     qualifyingSpeed: { en: 35, hi: 30 },
     evaluationMode: 'STANDARD_NET_SPEED',
-    backspaceAllowed: false
+    backspaceAllowed: true,
+    retypeAllowed: true
   },
   'emrs-jsa': {
     key: 'emrs-jsa',
@@ -255,11 +256,13 @@ export const EXAM_CATEGORIES: Record<ExamCategoryKey, ExamCategoryConfig> = {
     key: 'nvs-jsa',
     name: 'NVS JSA TYPING',
     slug: 'nvs-jsa-typing',
-    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net speed & accuracy evaluated.',
+    description: '10 min test, 35 WPM (En) / 30 WPM (Hi). Net speed & accuracy evaluated. Backspace and retyping allowed.',
     standardDurationMinutes: 10,
     qualifyingSpeed: { en: 35, hi: 30 },
     kdphTarget: { en: 10500, hi: 9000 },
-    evaluationMode: 'STANDARD_NET_SPEED'
+    evaluationMode: 'STANDARD_NET_SPEED',
+    backspaceAllowed: true,
+    retypeAllowed: true
   },
   'csir-jsa': {
     key: 'csir-jsa',
@@ -669,6 +672,16 @@ export function isKvsJsaExam(testOrCat?: any): boolean {
   if (title.includes('kvs') && (title.includes('jsa') || title.includes('junior secretar') || title.includes('typing'))) return true;
   if (title.includes('kvs')) return true;
   return detectExamCategory(testOrCat).key === 'kvs-jsa';
+}
+
+/** KVS JSA and NVS JSA: Backspace and retyping are always allowed, whatever a test's own settings say. */
+export function correctionsAlwaysAllowed(test?: any): boolean {
+  return isKvsJsaExam(test) || isNvsJsaExam(test);
+}
+
+/** May the student type the passage again after finishing it (counted in the speed)? */
+export function typingRetypeAllowed(test?: any): boolean {
+  return isRrbNtpcExam(test) || correctionsAlwaysAllowed(test) || Boolean(test?.allowRetype);
 }
 
 export function isEmrsJsaExam(testOrCat?: any): boolean {
