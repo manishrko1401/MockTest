@@ -81,8 +81,17 @@ export function hasFixedOptionOrder(q: Question): boolean {
   return false;
 }
 
-/** Only multiple-choice tests are shuffled (CBAT and typing use their own engines and never get here). */
+/**
+ * Shuffling is switched OFF (Nov 2026, owner's decision): new attempts keep the original
+ * question order and option order on the website and the app. Attempts started while it was
+ * on still resume with their saved seed, so they look the same as before.
+ * To switch it back on, restore the checks below (only multiple-choice tests; CBAT and
+ * typing use their own engines) and return true.
+ */
+export const SHUFFLE_ENABLED = false;
+
 export function canShuffleTest(session: ActiveSession): boolean {
+  if (!SHUFFLE_ENABLED) return false;
   if (!session?.questions?.length) return false;
   if (session.questions.some(q => q.questionType && q.questionType !== 'mcq')) return false;
   return true;
