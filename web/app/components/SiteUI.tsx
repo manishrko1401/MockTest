@@ -46,7 +46,11 @@ const TOUR_ANCHORS: Record<string, string> = {
   '/friends': 'nav-friends',
 };
 
-export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
+// Full width on every page (it used to be squeezed into the 1280px content column on all pages
+// but Home and Test Series, and its seven links wrapped onto two lines). `fluid` is kept so
+// existing callers still compile; it no longer changes anything.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function SiteHeader(_props: { fluid?: boolean } = {}) {
   const { currentUser, theme, toggleTheme, language, setLanguage, logout } = useAuth();
   const inDesktopApp = useIsDesktopApp();
   const t = TRANSLATIONS[language];
@@ -106,7 +110,7 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800" suppressHydrationWarning>
-      <div className={`${fluid ? 'px-4 sm:px-6' : container} h-14 flex items-center justify-between gap-3`}>
+      <div className="px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/" className="flex items-center gap-2 shrink-0 -ml-2 px-2 py-1 rounded-md transition-colors hover:bg-[#eef3f8] dark:hover:bg-slate-800" title={t.backToHome}>
             <div className="bg-[#E6F4FE] dark:bg-slate-800 rounded-md flex items-center justify-center h-8 w-8 border border-blue-200 dark:border-slate-700">
@@ -117,13 +121,14 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
               <p className="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:block">{t.logoSub}</p>
             </div>
           </Link>
-          <nav className="hidden lg:flex items-center gap-1 text-sm">
+          {/* All seven links need ~1280px on one line; narrower screens get the menu button */}
+          <nav className="hidden xl:flex items-center gap-1 text-sm">
             {NAV.map(item => (
               <Link
                 key={item.href}
                 href={item.href}
                 data-tour={TOUR_ANCHORS[item.href]}
-                className={`px-3 py-1.5 rounded-md transition-colors duration-150 ${
+                className={`px-2.5 2xl:px-3 py-1.5 rounded-md whitespace-nowrap transition-colors duration-150 ${
                   isActive(item.href)
                     ? 'text-[#1e4e79] dark:text-blue-300 font-medium bg-[#e3ecf5] dark:bg-blue-400/15 hover:bg-[#d6e3f0] dark:hover:bg-blue-400/25'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white'
@@ -213,7 +218,7 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
             type="button"
             onClick={() => setMobileOpen(v => !v)}
             data-tour="mobile-menu"
-            className={`relative lg:hidden h-8 w-8 flex items-center justify-center rounded-md border transition-colors cursor-pointer ${mobileOpen ? 'bg-[#eef3f8] border-[#1e4e79]/40 text-[#1e4e79] dark:bg-slate-800 dark:border-slate-600 dark:text-white' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white hover:border-[#1e4e79]/40'}`}
+            className={`relative xl:hidden h-8 w-8 flex items-center justify-center rounded-md border transition-colors cursor-pointer ${mobileOpen ? 'bg-[#eef3f8] border-[#1e4e79]/40 text-[#1e4e79] dark:bg-slate-800 dark:border-slate-600 dark:text-white' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white hover:border-[#1e4e79]/40'}`}
             aria-label="Menu"
             aria-expanded={mobileOpen}
           >
@@ -224,8 +229,8 @@ export function SiteHeader({ fluid = false }: { fluid?: boolean } = {}) {
       </div>
 
       {mobileOpen && (
-        <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-          <nav className={`${fluid ? 'px-4 sm:px-6' : container} py-2 flex flex-col text-sm`}>
+        <div className="xl:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <nav className="px-4 sm:px-6 py-2 flex flex-col text-sm">
             {NAV.map(item => (
               <Link key={item.href} href={item.href} className={`px-3 py-2.5 rounded-md transition-colors ${isActive(item.href) ? 'text-[#1e4e79] dark:text-blue-300 font-medium bg-[#e3ecf5] dark:bg-blue-400/15' : 'text-slate-700 dark:text-slate-300 hover:bg-[#eef3f8] hover:text-[#1e4e79] dark:hover:bg-slate-800 dark:hover:text-white'}`}>
                 {hi ? item.hi : item.en}{navBadge(item.href)}
