@@ -31,6 +31,11 @@ async function fetchUrl(url: string): Promise<string> {
   return await response.text();
 }
 
+// What each listing page gave this run (status / size / page title / links found), returned in
+// the response: a blocked or changed RojgarResult page otherwise looks like "nothing new"
+type PageReport = { url: string; ok: boolean; bytes?: number; links?: number; title?: string; error?: string };
+const pageTitle = (html: string) => (/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+
 type TargetCategory = {
   name: string;
   category: string;
@@ -161,11 +166,16 @@ export async function GET(request: Request) {
     // 1. RojgarResult's home page: only for its highlight links (read last, see 3). Its
     //    sections can't be told apart reliably (each is on the page twice and their names
     //    also appear in the page's styles), so the stages come from the category pages.
+    const pages: PageReport[] = [];
+    const LINK_RE = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    const countLinks = (html: string) => (html.match(LINK_RE) || []).length;
     let homeHtml = '';
     try {
       homeHtml = await fetchUrl('https://rojgarresult.com/');
+      pages.push({ url: 'https://rojgarresult.com/', ok: true, bytes: homeHtml.length, links: countLinks(homeHtml), title: pageTitle(homeHtml) });
     } catch (e: any) {
       console.error('Cron: Failed to fetch RojgarResult homepage:', e.message);
+      pages.push({ url: 'https://rojgarresult.com/', ok: false, error: e.message });
     }
 
     // 2. Fetch live notices directly from RojgarResult Category pages
@@ -181,6 +191,7 @@ export async function GET(request: Request) {
       if (rojgarUrl) {
         try {
           const catHtml = await fetchUrl(rojgarUrl);
+          pages.push({ url: rojgarUrl, ok: true, bytes: catHtml.length, links: countLinks(catHtml), title: pageTitle(catHtml) });
           const h2Regex = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
           let m;
           while ((m = h2Regex.exec(catHtml)) !== null) {
@@ -188,6 +199,7 @@ export async function GET(request: Request) {
           }
         } catch (e: any) {
           console.error(`Cron: Failed to fetch RojgarResult listing for ${target.name}:`, e.message);
+          pages.push({ url: rojgarUrl, ok: false, error: e.message });
         }
       }
     }
@@ -296,7 +308,7 @@ export async function GET(request: Request) {
 
     if (dryRun) {
       return NextResponse.json({
-        success: true, dryRun: true,
+        success: true, dryRun: true, pages, parsed: allScraped.length,
         new: newItemsQueue.map(w => `${w.category}: ${w.title}`),
         newStages: updateItemsQueue.filter(w => w.isNewStage).map(w => `${w.category}: ${w.title}`),
         refreshOnly: updateItemsQueue.filter(w => !w.isNewStage).length,
@@ -425,7 +437,8 @@ export async function GET(request: Request) {
         : `Sync complete. Imported ${newNoticesCount} new notices, updated ${updatedNoticesCount} notices from RojgarResult.`,
       imported: importedTitles,
       updated: updatedTitles,
-      remainingBacklog
+      remainingBacklog,
+      pages,
     });
   } catch (error: any) {
     console.error("Cron Error:", error);
