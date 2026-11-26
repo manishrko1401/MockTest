@@ -67,10 +67,16 @@ function parseFeed(xml: string): FeedItem[] {
 }
 
 async function fetchFeed(pages: number, report: PageReport[]): Promise<FeedItem[]> {
-  const urls = Array.from({ length: pages }, (_, i) => `https://rojgarresult.com/feed/?orderby=modified${i ? `&paged=${i + 1}` : ''}`);
+  // Fetch BOTH the default feed (sorted by publish date, newest posts) and the modified feed
+  // (sorted by last modified, catching stage updates on existing exam pages).
+  const defaultPages = Math.min(3, pages);
+  const urls = [
+    ...Array.from({ length: defaultPages }, (_, i) => `https://rojgarresult.com/feed/${i ? `?paged=${i + 1}` : ''}`),
+    ...Array.from({ length: pages }, (_, i) => `https://rojgarresult.com/feed/?orderby=modified${i ? `&paged=${i + 1}` : ''}`),
+  ];
   // One page at a time with a short pause: bursts of feed requests get rate-limited (429, then 403)
   const lists = await mapConcurrent(urls, 1, async (url, i) => {
-    if (i) await new Promise(r => setTimeout(r, 400));
+    if (i) await new Promise(r => setTimeout(r, 350));
     try {
       const xml = await fetchUrl(url);
       const items = parseFeed(xml);
@@ -304,7 +310,7 @@ export async function GET(request: Request) {
           { url: { in: allScraped.map(i => i.url) } }
         ]
       },
-      select: { id: true, title: true, contentHtml: true, lastDate: true, rawUrl: true, url: true, category: true }
+      select: { id: true, title: true, contentHtml: true, lastDate: true, rawUrl: true, url: true, category: true, publishDate: true }
     });
 
     // RojgarResult keeps ONE page per exam and adds each stage to it (form → admit card →
@@ -351,7 +357,10 @@ export async function GET(request: Request) {
       if (existing) {
         const hasContent = existing.contentHtml && existing.contentHtml.length > 5;
         const titleChanged = existing.title !== item.title;
-        if (forceResync || titleChanged || !hasContent) {
+        const feedDate = feedDateByUrl.get(item.url);
+        const feedPubStr = feedDate ? feedDate.toISOString().split('T')[0] : '';
+        const isNewerDate = !!feedPubStr && feedPubStr > (existing.publishDate || '');
+        if (forceResync || titleChanged || isNewerDate || !hasContent) {
           updateItemsQueue.push({
             id: existing.id,
             title: item.title,
@@ -359,7 +368,7 @@ export async function GET(request: Request) {
             category: item.category,
             type: item.type,
             isUpdate: true,
-            isNewStage: titleChanged,
+            isNewStage: titleChanged || isNewerDate,
             existingLastDate: existing.lastDate
           });
         }
@@ -390,13 +399,17 @@ export async function GET(request: Request) {
     const combinedWork = [...newItemsQueue, ...updateItemsQueue.filter(w => w.isNewStage), ...updateItemsQueue.filter(w => !w.isNewStage)];
 
     // Concurrently process items within deadline
+    const baseTime = Date.now();
     let workIndex = 0;
     while (workIndex < combinedWork.length && timeLeft() > 5000) {
       const batchSize = Math.min(5, combinedWork.length - workIndex);
-      const batch = combinedWork.slice(workIndex, workIndex + batchSize);
+      const batch = combinedWork.slice(workIndex, workIndex + batchSize).map((work, offset) => ({
+        work,
+        orderPos: workIndex + offset,
+      }));
       workIndex += batchSize;
 
-      await mapConcurrent(batch, 5, async (work) => {
+      await mapConcurrent(batch, 5, async ({ work, orderPos }) => {
         let dateObj = new Date();
         let directUrl = work.url;
         let lastDate: string | null = work.existingLastDate ?? null;
@@ -427,7 +440,8 @@ export async function GET(request: Request) {
 
         const dateStr = formatPublishDate(dateObj);
         const publishDateStr = dateObj.toISOString().split('T')[0];
-        const createdAtTimestamp = new Date(Date.now() + (importedIndex * 1000));
+        // Subtract orderPos * 1000 so newer items (lower orderPos) always have a later createdAt than older items
+        const createdAtTimestamp = new Date(baseTime - (orderPos * 1000));
 
         let contentLink: string | null = null;
         if (contentHtml) {

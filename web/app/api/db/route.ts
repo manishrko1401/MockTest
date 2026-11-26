@@ -1088,7 +1088,7 @@ async function buildBootstrapNotices() {
     ...NOTICE_CATEGORIES.map(category =>
       prisma.notice.findMany({
         where: { category },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ publishDate: 'desc' }, { createdAt: 'desc' }],
         take: 60,
         select: noticeSelect,
       })
@@ -1273,7 +1273,7 @@ async function handleCatalogSync(data: { lastSyncedAt?: string }) {
       ['announcement', 'result', 'admit_card', 'answer_key', 'notice'].map(category =>
         prisma.notice.findMany({
           where: { category },
-          orderBy: { createdAt: 'desc' },
+          orderBy: [{ publishDate: 'desc' }, { createdAt: 'desc' }],
           take: category === 'announcement' ? undefined : 40,
           select: noticeSelect,
         })
