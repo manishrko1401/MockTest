@@ -530,7 +530,20 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       const localProgress = readLocalProgress(user?.id, testId, 'tcs');
       const serverProgress = await serverProgressPromise;
       if (serverProgress === undefined) serverWritableRef.current = false;
-      const resumeSource = newerProgress(localProgress, serverProgress ?? null);
+      let resumeSource = newerProgress(localProgress, serverProgress ?? null);
+      // Opened from a started live friends room: an unfinished attempt saved before the host
+      // pressed Start would never count for the room, so start afresh instead of resuming it
+      const roomStart = Number(new URLSearchParams(window.location.search).get('roomStart')) || 0;
+      if (roomStart && !isLive && !offline && resumeSource && (resumeSource.savedAt || 0) < roomStart) {
+        clearLocalProgress(testId, user?.id);
+        if (user?.id) {
+          await fetch('/api/db', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'clear-ongoing-session', data: { userId: user.id, testId } }),
+          }).catch(() => {});
+        }
+        resumeSource = null;
+      }
       const isResume = !!(resumeSource && resumeSource.data?.responses && Object.keys(resumeSource.data.responses).length > 0);
 
       // Questions and options in a new random order for every attempt; a resumed attempt keeps

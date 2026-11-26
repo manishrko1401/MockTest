@@ -70,12 +70,23 @@ export async function roomApi<T = any>(action: string, data: Record<string, unkn
   } catch {
     throw new RoomError('No internet connection. Please try again.', 'OFFLINE', 0);
   }
+  // Held by Vercel's security checkpoint (DeploymentRecovery reloads the page to pass it)
+  if (res.status === 403 && res.headers.get('x-vercel-mitigated')) {
+    throw new RoomError('Verifying your browser. Please reload the page to continue.', 'CHECKPOINT', 403);
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.success === false) throw new RoomError(json.error || 'Something went wrong. Please try again.', json.code, res.status);
   return json as T;
 }
 
 export const roomUrl = (code: string) => `/friends/${code}`;
+
+/** The test page for a room. A started live room passes its start time, so an unfinished attempt
+ *  from before the start is thrown away and a fresh one begins (only such an attempt counts). */
+export const roomExamUrl = (room: { testId: string; mode: string; startedAt: string | null }) => {
+  const from = room.mode === 'live' && room.startedAt ? Date.parse(room.startedAt) : 0;
+  return `/exam/${room.testId}${from ? `?roomStart=${from}` : ''}`;
+};
 export const LIMIT_MIN = 2, LIMIT_MAX = 50, LIMIT_PICKS = [5, 10, 20, 50];
 export const SITE_ORIGIN = 'https://mocktesthub.vercel.app';
 

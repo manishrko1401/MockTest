@@ -12,7 +12,7 @@ import { generateExamSession } from '../../lib/examUtils';
 import type { Question } from '../../useTestEngine';
 import Comparison from './Comparison';
 import QuestionDiscussion from './QuestionDiscussion';
-import { RoomData, RoomError, SITE_ORIGIN, colorFor, initials, roomApi, roomUrl, timeLeft } from '../shared';
+import { RoomData, RoomError, SITE_ORIGIN, colorFor, initials, roomApi, roomExamUrl, roomUrl, timeLeft } from '../shared';
 
 // -----------------------------------------------------------------------------
 // One friends room: invite friends, the lobby (live rooms), taking the test, and after you
@@ -53,7 +53,7 @@ export default function FriendsRoomPage() {
       if (r.messageCounts) setCounts(r.messageCounts);
       // Live room: the host pressed Start while you were waiting in the lobby
       if (prevStatus.current === 'lobby' && r.room.status === 'open' && r.me.isMember && !r.me.finished) {
-        router.push(`/exam/${r.room.testId}`);
+        router.push(roomExamUrl(r.room));
       }
       prevStatus.current = r.room.status;
     } catch (e: any) {
@@ -293,7 +293,7 @@ export default function FriendsRoomPage() {
                       : (hi ? 'इस टेस्ट का आपका पहला प्रयास गिना जाएगा। जमा करने के बाद यहां लौटकर तुलना देखें।' : 'Your first attempt at this test counts. After submitting, come back here to compare.')}
                   </p>
                 </div>
-                <Link href={`/exam/${room.testId}`} className={btnPrimary}><Play className="h-4 w-4" />{hi ? 'टेस्ट शुरू करें' : 'Take the test'}</Link>
+                <Link href={roomExamUrl(room)} className={btnPrimary}><Play className="h-4 w-4" />{hi ? 'टेस्ट शुरू करें' : 'Take the test'}</Link>
               </div>
             )}
           </SectionCard>
