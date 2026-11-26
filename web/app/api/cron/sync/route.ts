@@ -307,6 +307,11 @@ export async function GET(request: Request) {
     console.log(`Cron: ${newItemsQueue.length} NEW notice(s) to insert, ${updateItemsQueue.length} notice(s) to update`);
 
     if (dryRun) {
+      // Other ways in to RojgarResult, to see what this server is allowed to read
+      for (const url of ['https://rojgarresult.com/feed/', 'https://rojgarresult.com/wp-json/wp/v2/posts?per_page=5&_fields=id,link']) {
+        try { const body = await fetchUrl(url); pages.push({ url, ok: true, bytes: body.length, title: body.slice(0, 60) }); }
+        catch (e: any) { pages.push({ url, ok: false, error: e.message }); }
+      }
       return NextResponse.json({
         success: true, dryRun: true, pages, parsed: allScraped.length,
         new: newItemsQueue.map(w => `${w.category}: ${w.title}`),
