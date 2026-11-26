@@ -36,6 +36,52 @@ async function fetchUrl(url: string): Promise<string> {
 type PageReport = { url: string; ok: boolean; bytes?: number; links?: number; title?: string; error?: string };
 const pageTitle = (html: string) => (/<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] || '').replace(/\s+/g, ' ').trim().slice(0, 80);
 
+// RojgarResult's Cloudflare refuses Vercel's servers (403) on its pages and its WordPress API,
+// but not on its RSS feed, which carries each post's full text. So when the listing pages are
+// refused, notices come from the feed (most recently changed first, so a page that gained a
+// new stage comes back too), and their content is read from the feed instead of the page.
+type FeedItem = { title: string; url: string; categories: string[]; published: Date | null; html: string };
+/** The stage a feed category stands for (only RojgarResult's four main sections) */
+function feedCategory(name: string): TargetCategory | null {
+  const n = name.toLowerCase();
+  const stage = n === 'recruitment' || n === 'latest jobs' ? 'notice' : n === 'result' ? 'result' : n === 'admit card' ? 'admit_card' : n === 'answer key' ? 'answer_key' : null;
+  return CATEGORY_CONFIG.find(c => c.category === stage) || null;
+}
+const unCdata = (s: string) => s.trim().replace(/^<!\[CDATA\[/, '').replace(/\]\]>$/, '');
+
+function parseFeed(xml: string): FeedItem[] {
+  return xml.split('<item>').slice(1).map(it => {
+    const tag = (name: string) => { const m = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(it); return m ? unCdata(m[1]) : ''; };
+    const title = tag('title');
+    const body = tag('content:encoded');
+    const published = tag('pubDate') ? new Date(tag('pubDate')) : null;
+    return {
+      title,
+      url: tag('link').trim(),
+      categories: (it.match(/<category>[\s\S]*?<\/category>/g) || []).map(c => unCdata(c.replace(/<\/?category>/g, '')).trim()),
+      published: published && !isNaN(published.getTime()) ? published : null,
+      // the extractors read a page: give them the post as one article under its title
+      html: body ? `<article><h1>${title}</h1>${body}</article>` : '',
+    };
+  }).filter(i => i.url && i.title);
+}
+
+async function fetchFeed(pages: number, report: PageReport[]): Promise<FeedItem[]> {
+  const urls = Array.from({ length: pages }, (_, i) => `https://rojgarresult.com/feed/?orderby=modified${i ? `&paged=${i + 1}` : ''}`);
+  const lists = await mapConcurrent(urls, 4, async url => {
+    try {
+      const xml = await fetchUrl(url);
+      const items = parseFeed(xml);
+      report.push({ url, ok: true, bytes: xml.length, links: items.length });
+      return items;
+    } catch (e: any) {
+      report.push({ url, ok: false, error: e.message });   // past the last page WordPress answers 404
+      return [];
+    }
+  });
+  return lists.flat().filter(Boolean);
+}
+
 type TargetCategory = {
   name: string;
   category: string;
@@ -130,6 +176,10 @@ export async function GET(request: Request) {
         .replace(/&#038;/g, '&')
         .replace(/&#8211;/g, '-')
         .replace(/&nbsp;/g, ' ')
+        // the feed writes more characters as codes (&#124; is "|", &#8217; is "’")
+        .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+        .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+        .replace(/&quot;/g, '"').replace(/&#039;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
         .replace(/\s+/g, ' ')
         .trim();
 
@@ -169,8 +219,10 @@ export async function GET(request: Request) {
     const pages: PageReport[] = [];
     const LINK_RE = /<h2[^>]*>\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
     const countLinks = (html: string) => (html.match(LINK_RE) || []).length;
+    // ?source=feed: skip the pages and read the feed (also for testing the fallback)
+    const forceFeed = searchParams.get('source') === 'feed';
     let homeHtml = '';
-    try {
+    if (!forceFeed) try {
       homeHtml = await fetchUrl('https://rojgarresult.com/');
       pages.push({ url: 'https://rojgarresult.com/', ok: true, bytes: homeHtml.length, links: countLinks(homeHtml), title: pageTitle(homeHtml) });
     } catch (e: any) {
@@ -186,7 +238,7 @@ export async function GET(request: Request) {
       'answer_key': 'https://rojgarresult.com/answer-key/'
     };
 
-    for (const target of CATEGORY_CONFIG) {
+    for (const target of forceFeed ? [] : CATEGORY_CONFIG) {
       const rojgarUrl = ROJGAR_CATEGORY_URLS[target.category];
       if (rojgarUrl) {
         try {
@@ -214,7 +266,24 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log(`Cron: Total unique notices parsed from RojgarResult: ${parsedItemsMap.size}`);
+    // 4. Listing pages refused or empty: read the RSS feed instead (see fetchFeed).
+    //    ?pages=N reads further back (10 posts a page), for catching up after a gap.
+    const feedHtmlByUrl = new Map<string, string>();
+    const feedDateByUrl = new Map<string, Date>();
+    let source: 'pages' | 'feed' = 'pages';
+    if (parsedItemsMap.size === 0) {
+      source = 'feed';
+      const feedPages = Math.min(80, Math.max(1, Number(searchParams.get('pages')) || 8));
+      for (const item of await fetchFeed(feedPages, pages)) {
+        if (item.html) feedHtmlByUrl.set(item.url, item.html);
+        if (item.published) feedDateByUrl.set(item.url, item.published);
+        const stages = item.categories.map(feedCategory).filter((c): c is TargetCategory => !!c);
+        if (stages.length) stages.forEach(c => addNoticeItem(item.url, item.title, c));
+        else addNoticeItem(item.url, item.title, detectCategoryFromTitle(item.title), true);
+      }
+    }
+
+    console.log(`Cron: Total unique notices parsed from RojgarResult (${source}): ${parsedItemsMap.size}`);
 
     const allScraped = Array.from(parsedItemsMap.values());
 
@@ -307,13 +376,8 @@ export async function GET(request: Request) {
     console.log(`Cron: ${newItemsQueue.length} NEW notice(s) to insert, ${updateItemsQueue.length} notice(s) to update`);
 
     if (dryRun) {
-      // Other ways in to RojgarResult, to see what this server is allowed to read
-      for (const url of ['https://rojgarresult.com/feed/', 'https://rojgarresult.com/wp-json/wp/v2/posts?per_page=5&_fields=id,link']) {
-        try { const body = await fetchUrl(url); pages.push({ url, ok: true, bytes: body.length, title: body.slice(0, 60) }); }
-        catch (e: any) { pages.push({ url, ok: false, error: e.message }); }
-      }
       return NextResponse.json({
-        success: true, dryRun: true, pages, parsed: allScraped.length,
+        success: true, dryRun: true, source, pages, parsed: allScraped.length,
         new: newItemsQueue.map(w => `${w.category}: ${w.title}`),
         newStages: updateItemsQueue.filter(w => w.isNewStage).map(w => `${w.category}: ${w.title}`),
         refreshOnly: updateItemsQueue.filter(w => !w.isNewStage).length,
@@ -337,7 +401,11 @@ export async function GET(request: Request) {
         let contentHtml: string | null = null;
 
         try {
-          const pageHtml = await fetchUrl(work.url);
+          // From the feed when the pages are refused (the feed has no datePublished: use pubDate)
+          const fromFeed = feedHtmlByUrl.get(work.url);
+          const feedDate = feedDateByUrl.get(work.url);
+          if (feedDate) dateObj = feedDate;
+          const pageHtml = fromFeed ?? await fetchUrl(work.url);
           directUrl = extractDirectLink(pageHtml, work.url, work.category);
           contentHtml = extractNoticeContent(pageHtml);
 
@@ -443,6 +511,7 @@ export async function GET(request: Request) {
       imported: importedTitles,
       updated: updatedTitles,
       remainingBacklog,
+      source,
       pages,
     });
   } catch (error: any) {
