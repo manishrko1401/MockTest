@@ -31,7 +31,10 @@ export default function PlannerScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [editTask, setEditTask] = useState<Partial<PlannerTask> | null>(null);
   const [editExam, setEditExam] = useState<Partial<PlannerExam> | null>(null);
-  const [openSyllabus, setOpenSyllabus] = useState<string | null>(null);
+  // The syllabus open in the editor. Kept as the object, not just its id: a syllabus that was
+  // just added isn't in `data` until the reload finishes, and looking it up by id then gave
+  // undefined and crashed the editor ("Start blank" / a template in Add syllabus).
+  const [openSyllabus, setOpenSyllabus] = useState<Syllabus | null>(null);
 
   const load = useCallback(async () => {
     try { setData(await request('planner-get', { today: localDay(), tzOffset: new Date().getTimezoneOffset() })); setError(''); }
@@ -170,7 +173,7 @@ export default function PlannerScreen() {
 
       {editTask ? <TaskEditor task={editTask} today={today} onClose={() => setEditTask(null)} onSaved={() => { setEditTask(null); load(); }} /> : null}
       {editExam ? <ExamEditor exam={editExam} onClose={() => setEditExam(null)} onSaved={() => { setEditExam(null); load(); }} /> : null}
-      {openSyllabus ? <SyllabusEditor syllabus={data.syllabi.find(s => s.id === openSyllabus)!} onClose={() => { setOpenSyllabus(null); load(); }} /> : null}
+      {openSyllabus ? <SyllabusEditor syllabus={data.syllabi.find(s => s.id === openSyllabus.id) || openSyllabus} onClose={() => { setOpenSyllabus(null); load(); }} /> : null}
     </View>
   );
 }
@@ -308,7 +311,7 @@ function TargetsForm({ data, onSaved }: { data: PlannerData; onSaved: (t: Planne
   );
 }
 
-function SyllabusList({ data, onOpen, onChanged }: { data: PlannerData; onOpen: (id: string) => void; onChanged: () => void }) {
+function SyllabusList({ data, onOpen, onChanged }: { data: PlannerData; onOpen: (syllabus: Syllabus) => void; onChanged: () => void }) {
   const t = useTheme();
   const { hi } = useI18n();
   const L = (en: string, h: string) => (hi ? h : en);
@@ -318,14 +321,14 @@ function SyllabusList({ data, onOpen, onChanged }: { data: PlannerData; onOpen: 
       name: tpl ? (hi ? tpl.nameHi : tpl.name) : L('My syllabus', 'मेरा सिलेबस'), examId: null,
       subjects: tpl ? tpl.subjects.map(s => ({ id: newId(), name: s.name, chapters: s.chapters.map(c => ({ id: newId(), name: c, status: 'todo' as const, revisions: 0, completedAt: null, revisedAt: null })) })) : [],
     };
-    try { const r = await request('planner-save-syllabus', { syllabus }); setAdding(false); onChanged(); onOpen(r.syllabus.id); } catch { /* shown on reload */ }
+    try { const r = await request('planner-save-syllabus', { syllabus }); setAdding(false); onChanged(); onOpen(r.syllabus); } catch { /* shown on reload */ }
   };
   return (
     <>
       {data.syllabi.map(s => {
         const c = syllabusCounts(s);
         return (
-          <Pressable key={s.id} onPress={() => onOpen(s.id)}>
+          <Pressable key={s.id} onPress={() => onOpen(s)}>
             <Card style={{ marginBottom: 10 }}>
               <Text style={{ color: t.text, fontWeight: '800' }}>{s.name}</Text>
               <Text style={{ color: t.textSoft, fontSize: 12, marginTop: 2 }}>{c.done}/{c.total} {L('chapters done', 'अध्याय पूरे')} · {s.subjects.length} {L('subjects', 'विषय')}</Text>
