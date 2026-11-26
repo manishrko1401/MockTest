@@ -68,7 +68,9 @@ function parseFeed(xml: string): FeedItem[] {
 
 async function fetchFeed(pages: number, report: PageReport[]): Promise<FeedItem[]> {
   const urls = Array.from({ length: pages }, (_, i) => `https://rojgarresult.com/feed/?orderby=modified${i ? `&paged=${i + 1}` : ''}`);
-  const lists = await mapConcurrent(urls, 4, async url => {
+  // One page at a time with a short pause: bursts of feed requests get rate-limited (429, then 403)
+  const lists = await mapConcurrent(urls, 1, async (url, i) => {
+    if (i) await new Promise(r => setTimeout(r, 400));
     try {
       const xml = await fetchUrl(url);
       const items = parseFeed(xml);
