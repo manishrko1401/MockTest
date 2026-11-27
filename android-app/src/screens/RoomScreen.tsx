@@ -217,6 +217,9 @@ export default function RoomScreen({ code }: { code: string }) {
 
 // ---- Comparison ---------------------------------------------------------------------------------
 
+/** A member's answer in short: the option letter, or the typed number for numerical questions */
+const answerLabel = (a: (number | string | null)[]) => (typeof a[3] === 'string' ? a[3] : typeof a[0] === 'number' ? String.fromCharCode(65 + a[0]) : '–');
+
 function ComparisonView({ data, meId, onOpenQuestion }: { data: RoomData; meId: string; onOpenQuestion: (i: number) => void }) {
   const t = useTheme();
   const { hi } = useI18n();
@@ -307,7 +310,7 @@ function ComparisonView({ data, meId, onOpenQuestion }: { data: RoomData; meId: 
                         return (
                           <View key={r.userId} style={{ flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, height: 24, borderRadius: 12, backgroundColor: bg + (a[2] === null ? '' : '22'), borderWidth: 1, borderColor: a[2] === null ? t.border : bg }}>
                             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colorFor(r.userId) }} />
-                            <Text style={{ color: a[2] === null ? t.textMuted : bg, fontSize: 11, fontWeight: '800' }}>{a[0] === null ? '–' : String.fromCharCode(65 + a[0])} {Math.round(a[1])}s</Text>
+                            <Text style={{ color: a[2] === null ? t.textMuted : bg, fontSize: 11, fontWeight: '800' }}>{answerLabel(a)} {Math.round(a[1])}s</Text>
                           </View>
                         );
                       })}
@@ -386,7 +389,7 @@ function QuestionDiscussion({ code, data, index, meId, onIndex, onClose }: { cod
                 <View key={r.userId} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, height: 34, borderRadius: 17, backgroundColor: t.cardAlt }}>
                   <Avatar name={names.get(r.userId)} color={colorFor(r.userId)} size={22} />
                   <Text style={{ color: t.text, fontWeight: '700', fontSize: 12.5 }} numberOfLines={1}>{(names.get(r.userId) || '').split(' ')[0]}{r.userId === meId ? (hi ? ' (आप)' : ' (you)') : ''}</Text>
-                  <Text style={{ color: col, fontWeight: '900', fontSize: 12.5 }}>{a[0] === null ? '–' : String.fromCharCode(65 + a[0])}{a[2] === 1 ? ' ✓' : a[2] === 0 ? ' ✗' : ''}</Text>
+                  <Text style={{ color: col, fontWeight: '900', fontSize: 12.5 }}>{answerLabel(a)}{a[2] === 1 ? ' ✓' : a[2] === 0 ? ' ✗' : ''}</Text>
                   <Text style={{ color: t.textMuted, fontSize: 11.5 }}>{fmtTime(a[1])}</Text>
                 </View>
               );
@@ -403,7 +406,10 @@ function QuestionDiscussion({ code, data, index, meId, onIndex, onClose }: { cod
               pageKey={`${question.id}-room-${lang}`}
               {...questionInput(question, lang)}
               selected={null}
-              review={{ correct: question.correctOptionIndex, chosen: me?.answers[index]?.[0] ?? null, explanation: explanationOf(question, lang) }}
+              review={{
+                correct: question.correctOptionIndex, chosen: me?.answers[index]?.[0] ?? null, explanation: explanationOf(question, lang),
+                ...(question.questionType === 'numerical_value' ? { numeric: { typed: me?.answers[index]?.[3] ?? null, answer: question.numericAnswer ?? null, right: me?.answers[index]?.[2] === 1 } } : {}),
+              }}
               labels={{ passage: hi ? 'अनुच्छेद' : 'Passage', explanation: hi ? 'व्याख्या' : 'Solution', yourAnswer: hi ? 'आपका उत्तर' : 'Your answer', correct: hi ? 'सही उत्तर' : 'Correct answer', skipped: hi ? 'उत्तर नहीं दिया' : 'Not answered', right: hi ? 'सही' : 'Correct', wrong: hi ? 'गलत' : 'Wrong' }}
             />
           ) : loadError ? <ErrorBox message={loadError} /> : <ActivityIndicator color={t.primary} style={{ marginTop: 40 }} />

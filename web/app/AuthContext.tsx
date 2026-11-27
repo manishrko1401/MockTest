@@ -73,7 +73,7 @@ export interface MockTestRecord {
   createdAt?: string;
   positiveMarks?: number | null;
   negativeMarks?: number | null;
-  responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>;
+  responses?: Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number; answeredAt?: number; }>;
   timeRemaining?: number;
   currentSectionIndex?: number;
   currentQuestionIndex?: number;
@@ -226,7 +226,7 @@ interface AuthContextType {
     accuracy: number,
     durationSeconds: number,
     violations: number,
-    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>,
+    responses?: Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number; answeredAt?: number; }>,
     extra?: { lang1?: string; lang2?: string }
   ) => void;
   /** Resolves when the last submitted attempt has been saved and scored by the server (max 10s). */
@@ -2090,7 +2090,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; initialUserProf
     accuracy: number,
     durationSeconds: number,
     violations: number,
-    responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>,
+    responses?: Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number; answeredAt?: number; }>,
     extra?: { lang1?: string; lang2?: string }
   ) => {
     if (!currentUser) return;

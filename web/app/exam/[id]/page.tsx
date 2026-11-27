@@ -210,6 +210,7 @@ import { generateExamSession } from '../../lib/examUtils';
 import { canShuffleTest, newShuffleSeed, responsesToDisplay, responsesToOriginal, shuffleSession } from '../../lib/examShuffle';
 import { LIVE_TESTS, LivePaper, LiveResult, isLiveTestId, liveQuestionCount, livePaperKey } from '../../lib/liveTestShared';
 import LiveTestResult from './LiveTestResult';
+import NumericAnswerPad from './NumericAnswerPad';
 
 
 // Everything about an ongoing test that is worth an immediate server backup when it changes
@@ -218,7 +219,7 @@ function progressSignature(s: any): string {
   let out = `${s.currentSectionIndex}:${s.currentQuestionIndex}:${(s.submittedSectionIndices || []).join(',')}:${s.isExtraTimeMode ? 1 : 0}:${s.violationsCount}|`;
   for (const id in s.responses) {
     const r = s.responses[id];
-    out += `${r.selectedOptionIndex ?? '-'}${r.tempOptionIndex ?? '-'}${r.state},`;
+    out += `${r.selectedOptionIndex ?? '-'}${r.tempOptionIndex ?? '-'}${r.numericValue ?? ''}~${r.tempNumericValue ?? ''}${r.state},`;
   }
   return out;
 }
@@ -228,6 +229,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
     state,
     initSession,
     selectOption,
+    setNumericAnswer,
     saveAndNext,
     clearResponse,
     markForReviewAndNext,
@@ -650,13 +652,15 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
       if (!isLive) clearLocalProgress(testId, currentUser.id);
       const progressFlushed = progressSyncRef.current ? progressSyncRef.current.stopAndFlush() : Promise.resolve();
 
-      const savedResponses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number }> = {};
+      const savedResponses: Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number; answeredAt?: number }> = {};
       let totalElapsedSeconds = 0;
       // Original option numbers, so the server, analysis and ranks see the real answers
       const originalResponses = state.session ? responsesToOriginal(state.session, state.responses) : state.responses;
       Object.keys(originalResponses).forEach(qId => {
         savedResponses[qId] = {
           selectedOptionIndex: originalResponses[qId].selectedOptionIndex,
+          // Numerical-answer questions: the saved typed answer
+          ...(originalResponses[qId].numericValue ? { numericValue: originalResponses[qId].numericValue } : {}),
           elapsedSeconds: originalResponses[qId].elapsedSeconds,
           ...(originalResponses[qId].answeredAt ? { answeredAt: originalResponses[qId].answeredAt } : {}),
         };
@@ -1442,7 +1446,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
             const activeNeg = currentQuestion?.negativeMark !== undefined && currentQuestion?.negativeMark !== null ? Number(currentQuestion.negativeMark) : Number(currentSection?.negativeMark ?? 0.5);
             return (
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-[10px] font-bold shrink-0">
-                <span className="text-[#0747A6] dark:text-blue-400">Question Type: MCQ</span>
+                <span className="text-[#0747A6] dark:text-blue-400">Question Type: {currentQuestion?.questionType === 'numerical_value' ? 'Numerical' : 'MCQ'}</span>
                 <div className="flex gap-2">
                   <span className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-1.5 py-0.5 rounded text-[9px]">
                     +{activePos}
@@ -1538,6 +1542,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                     {/* Options Grid */}
                     <div className="space-y-2" style={{ fontSize: `${questionFontSize}px` }}>
                       {(() => {
+                        // Numerical-answer question (JEE Section B): answer box + keypad instead of options
+                        if (currentQuestion.questionType === 'numerical_value') {
+                          return <NumericAnswerPad compact value={activeResponse?.tempNumericValue ?? ''} onChange={setNumericAnswer} hi={questionLang === 'hi'} />;
+                        }
                         let options = (questionLang === 'en'
                           ? currentQuestion.content.en.options
                           : currentQuestion.content.hi.options
@@ -1916,7 +1924,7 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
 
               return (
                 <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2 text-[11px] font-bold shrink-0">
-                  <span className="text-[#0747A6] dark:text-blue-400 text-xs">Question Type: Multiple Choice Question</span>
+                  <span className="text-[#0747A6] dark:text-blue-400 text-xs">Question Type: {currentQuestion?.questionType === 'numerical_value' ? 'Numerical Value' : 'Multiple Choice Question'}</span>
                   <div className="flex gap-2">
                     <span className="text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-2 py-0.5 rounded">
                       Marks: +{activePos}
@@ -2064,6 +2072,10 @@ function TcsIonEngine({ testId, initialExamLanguage, selectedLang1, selectedLang
                       {/* Options List Grid */}
                       <div className="space-y-3 pl-2" style={{ fontSize: `${questionFontSize}px` }}>
                         {(() => {
+                          // Numerical-answer question (JEE Section B): answer box + keypad instead of options
+                          if (currentQuestion.questionType === 'numerical_value') {
+                            return <NumericAnswerPad value={activeResponse?.tempNumericValue ?? ''} onChange={setNumericAnswer} hi={questionLang === 'hi'} />;
+                          }
                           let options = (questionLang === 'en'
                             ? currentQuestion.content.en.options
                             : currentQuestion.content.hi.options

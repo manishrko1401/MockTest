@@ -18,7 +18,7 @@ function Avatar({ id, name, size = 28 }: { id: string; name: string; size?: numb
   );
 }
 
-function Cell({ a, fastest }: { a: [number | null, number, 1 | 0 | null] | undefined; fastest: boolean }) {
+function Cell({ a, fastest }: { a: ComparisonData["results"][number]["answers"][number] | undefined; fastest: boolean }) {
   if (!a) return <span className="text-slate-300">·</span>;
   const [, t, r] = a;
   const icon = r === 1 ? <Check className="h-3.5 w-3.5" /> : r === 0 ? <X className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />;

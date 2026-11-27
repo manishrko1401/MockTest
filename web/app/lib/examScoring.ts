@@ -7,7 +7,90 @@ import type { ActiveSession } from '../useTestEngine';
 // before the test is submitted.
 // -----------------------------------------------------------------------------
 
-export type ResponseInput = { selectedOptionIndex: number | null; state?: number };
+export type ResponseInput = { selectedOptionIndex: number | null; state?: number; numericValue?: string | null };
+
+/** A typed answer to a numerical-answer question: a plain decimal number such as "12", "-3.5", ".5" */
+export function parseNumericAnswer(v: unknown): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v !== 'string') return null;
+  const s = v.trim().replace(/−/g, '-');
+  if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** One part of an answer key: a number ("12") or a range ("1.9-2.1", "1.9 to 2.1") for rounded answers */
+function keyPartRange(part: string): [number, number] | null {
+  const p = part.trim();
+  const single = parseNumericAnswer(p);
+  if (single !== null) return [single, single];
+  const r = /^([-+]?(?:\d+\.?\d*|\.\d+))\s*(?:to|–|—|-)\s*([-+]?(?:\d+\.?\d*|\.\d+))$/i.exec(p);
+  if (!r) return null;
+  const x = Number(r[1]), y = Number(r[2]);
+  return [Math.min(x, y), Math.max(x, y)];
+}
+
+/**
+ * Same number (12 = 12.0 = 12.00). The key may give a range "1.9-2.1" for rounded answers, and
+ * alternatives separated by "|" when more than one value is right ("1|-1").
+ */
+export function numericAnswerMatches(typed: unknown, key: unknown): boolean {
+  const n = parseNumericAnswer(typed);
+  if (n === null || key === null || key === undefined) return false;
+  return String(key).split('|').some(part => {
+    const r = keyPartRange(part);
+    if (!r) return false;
+    const eps = 1e-9 * Math.max(1, Math.abs(r[0]), Math.abs(r[1]));
+    return n >= r[0] - eps && n <= r[1] + eps;
+  });
+}
+
+const NUMERIC_MAX_DIGITS = 12;
+
+/** The answer keypad (website and app): the effect of pressing a key on the text in the answer box. */
+export function applyNumericKey(value: string, key: string): string {
+  const v = value || '';
+  switch (key) {
+    case 'CE': return '';
+    case 'DEL': return v.slice(0, -1);
+    case '+/-': return v.startsWith('-') ? v.slice(1) : (v ? '-' + v : '-');
+    case '.': {
+      if (v.includes('.')) return v;
+      const digits = v.replace('-', '');
+      if (digits.length >= NUMERIC_MAX_DIGITS) return v;
+      return digits ? v + '.' : (v.startsWith('-') ? '-0.' : '0.');
+    }
+    default: {
+      if (!/^\d$/.test(key)) return v;
+      if (v.replace(/[-.]/g, '').length >= NUMERIC_MAX_DIGITS) return v;
+      // no leading zeros ("007" -> "7"), but "0.5" stays
+      if (v === '0') return key;
+      if (v === '-0') return '-' + key;
+      return v + key;
+    }
+  }
+}
+
+/** An answer key an admin may set: a number ("12", "-3.5"), a range ("2.4-2.6") or alternatives ("1|-1"). */
+export function isValidAnswerKey(v: unknown): boolean {
+  if (v === null || v === undefined) return false;
+  const parts = String(v).split('|');
+  return parts.length > 0 && parts.every(p => keyPartRange(p) !== null);
+}
+
+/** Did the student answer this question (a saved option, or a typed number for numerical questions)? */
+export function isAnswered(q: { questionType?: string }, resp: ResponseInput | undefined | null): boolean {
+  if (!resp) return false;
+  if (q.questionType === 'numerical_value') return parseNumericAnswer(resp.numericValue) !== null;
+  return resp.state === 3 || resp.state === 5 || (resp.selectedOptionIndex !== null && resp.selectedOptionIndex !== undefined);
+}
+
+/** Right answer? Numerical questions compare the typed number with the key; others the option. */
+export function isCorrectAnswer(q: { questionType?: string; correctOptionIndex: number; numericAnswer?: string | null }, resp: ResponseInput | undefined | null): boolean {
+  if (!resp) return false;
+  if (q.questionType === 'numerical_value') return numericAnswerMatches(resp.numericValue, q.numericAnswer);
+  return resp.selectedOptionIndex === q.correctOptionIndex;
+}
 export type ScoreResult = {
   totalMarks: number; obtainedMarks: number; correctCount: number;
   incorrectCount: number; unattemptedCount: number; accuracyPercentage: number;
@@ -28,11 +111,12 @@ export function scoreSession(session: ActiveSession, responses: Record<string, R
       totalMarks += positive;
 
       // Count only ANSWERED (3) or ANSWERED_AND_MARKED_FOR_REVIEW (5), i.e. a saved option
-      if (resp && (resp.state === 3 || resp.state === 5 || (resp.selectedOptionIndex !== null && resp.selectedOptionIndex !== undefined))) {
+      // (numerical-answer questions: a saved typed number)
+      if (resp && isAnswered(q, resp)) {
         // RPSC RAS: option index 4 = "Leave question unattempted" — 0 marks, no penalty
         if (isRpscRasMode && resp.selectedOptionIndex === 4) {
           unattemptedCount += 1;
-        } else if (resp.selectedOptionIndex === q.correctOptionIndex) {
+        } else if (isCorrectAnswer(q, resp)) {
           obtainedMarks += positive;
           correctCount += 1;
         } else {

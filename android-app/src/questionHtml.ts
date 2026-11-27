@@ -13,7 +13,11 @@ export type QuestionPageInput = {
   options: { text: string; imageUrl?: string }[];
   selected: number | null;
   /** Review mode: show the correct answer (and the student's choice) */
-  review?: { correct: number; chosen: number | null; explanation?: string };
+  review?: {
+    correct: number; chosen: number | null; explanation?: string;
+    /** Numerical-answer questions: the typed answer, the correct one, and whether they match */
+    numeric?: { typed: string | null; answer: string | null; right: boolean };
+  };
   fontScale?: number;
   watermark?: string;
   /** Where MathJax is loaded from (inside the APK, or a CDN in the browser preview) */
@@ -73,7 +77,13 @@ export function questionPage(q: QuestionPageInput, t: Theme): string {
 
   // Review: one line that says how the student did
   let verdict = '';
-  if (q.review) {
+  if (q.review?.numeric) {
+    const { typed, answer, right } = q.review.numeric;
+    const state = !typed ? 'skip' : right ? 'right' : 'wrong';
+    const label = state === 'skip' ? L.skipped : state === 'right' ? L.right : L.wrong;
+    const detail = typed ? `${L.yourAnswer}: ${typed} · ${L.correct}: ${answer ?? '—'}` : `${L.correct}: ${answer ?? '—'}`;
+    verdict = `<div class="verdict ${state}"><b>${state === 'right' ? '✓' : state === 'wrong' ? '✗' : '–'} ${esc(label)}</b><span>${esc(detail)}</span></div>`;
+  } else if (q.review) {
     const { correct, chosen } = q.review;
     const state = chosen === null || chosen === undefined ? 'skip' : chosen === correct ? 'right' : 'wrong';
     const label = state === 'skip' ? L.skipped : state === 'right' ? L.right : L.wrong;

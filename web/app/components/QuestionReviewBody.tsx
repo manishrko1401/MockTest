@@ -5,6 +5,7 @@ import { CheckCircle2, HelpCircle, XCircle } from 'lucide-react';
 import MathJaxText from '../lib/MathJaxText';
 import { processQuestionHtml } from '../lib/mathUtils';
 import { EXPLANATIONS } from '../lib/examUtils';
+import { numericAnswerMatches, parseNumericAnswer } from '../lib/examScoring';
 
 // -----------------------------------------------------------------------------
 // A question as students see it on the result analysis page: the question, its image, the
@@ -16,10 +17,13 @@ export type ReviewQuestion = {
   id: string;
   content: Record<string, { questionText?: string; options?: any[]; imageUrl?: string; mathLatex?: string } | undefined>;
   correctOptionIndex: number;
+  questionType?: string;
+  /** Numerical-answer questions: the correct answer */
+  numericAnswer?: string | null;
   explanation?: Record<string, string>;
 };
 
-export function QuestionReviewBody({ question, lang, hi, fontSize = 14, selectedOptionIndex = null }: {
+export function QuestionReviewBody({ question, lang, hi, fontSize = 14, selectedOptionIndex = null, numericValue = null }: {
   question: ReviewQuestion;
   /** The question's language */
   lang: 'en' | 'hi';
@@ -27,6 +31,8 @@ export function QuestionReviewBody({ question, lang, hi, fontSize = 14, selected
   hi: boolean;
   fontSize?: number;
   selectedOptionIndex?: number | null;
+  /** Numerical-answer questions: what the student typed */
+  numericValue?: string | null;
 }) {
   const content = question.content[lang] || question.content['en'];
   const options = (question.content[lang]?.options || question.content['en']?.options || []) as any[];
@@ -59,6 +65,27 @@ export function QuestionReviewBody({ question, lang, hi, fontSize = 14, selected
           </div>
         )}
       </div>
+
+      {/* Numerical-answer question: the typed answer next to the correct one */}
+      {question.questionType === 'numerical_value' && (() => {
+        const answered = parseNumericAnswer(numericValue) !== null;
+        const right = answered && numericAnswerMatches(numericValue, question.numericAnswer);
+        return (
+          <div className="grid sm:grid-cols-2 gap-3" style={{ fontSize: `${fontSize}px` }}>
+            <div className={`border rounded-xl p-3.5 ${!answered ? 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900' : right ? 'border-green-500 bg-green-50/40 dark:border-green-800 dark:bg-green-950/20' : 'border-red-500 bg-red-50/40 dark:border-red-800 dark:bg-red-950/20'}`}>
+              <div className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 mb-1">{hi ? 'आपका उत्तर' : 'Your answer'}</div>
+              <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                {answered ? numericValue : <span className="font-semibold text-slate-500 dark:text-slate-400">{hi ? 'उत्तर नहीं दिया' : 'Not answered'}</span>}
+                {answered && (right ? <CheckCircle2 className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />)}
+              </div>
+            </div>
+            <div className="border rounded-xl p-3.5 border-green-500 bg-green-50/40 dark:border-green-800 dark:bg-green-950/20">
+              <div className="text-[10px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 mb-1">{hi ? 'सही उत्तर' : 'Correct answer'}</div>
+              <div className="font-bold text-slate-900 dark:text-green-300">{question.numericAnswer ?? '—'}</div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Options List */}
       <div className="space-y-3" style={{ fontSize: `${fontSize}px` }}>

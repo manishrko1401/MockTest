@@ -23,6 +23,8 @@ export interface Question {
     hi: QuestionContent;
   };
   correctOptionIndex: number; // Used for evaluation
+  /** questionType 'numerical_value': the correct answer as written by the setter ("12", "-0.5"); only after submitting */
+  numericAnswer?: string | null;
   orderIndex: number;
   explanation?: {
     en: string;
@@ -63,6 +65,10 @@ export interface QuestionResponse {
   questionId: string;
   selectedOptionIndex: number | null; // Saved option index
   tempOptionIndex: number | null;     // Unsaved selection (active UI radio button state)
+  /** Numerical-answer questions: saved typed answer ("12", "-3.5") */
+  numericValue?: string | null;
+  /** Numerical-answer questions: what is in the answer box, not yet saved */
+  tempNumericValue?: string | null;
   state: PaletteState;
   elapsedSeconds: number;
   /** When an option was last tapped (ms, the device's clock) */
@@ -139,7 +145,7 @@ export interface MockTestRecord {
   createdAt?: string;
   positiveMarks?: number | null;
   negativeMarks?: number | null;
-  responses?: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number; }>;
+  responses?: Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number; answeredAt?: number; }>;
   timeRemaining?: number;
   currentSectionIndex?: number;
   currentQuestionIndex?: number;

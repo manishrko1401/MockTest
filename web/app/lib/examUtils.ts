@@ -36,6 +36,10 @@ export const EXPLANATIONS: Record<string, { en: string; hi: string }> = {
   }
 };
 
+/** A stored question that is answered by typing a number (questionType "numerical", set in the form builder). */
+export const isNumericalItem = (item: any) =>
+  !!item && (item.questionType === 'numerical' || item.questionType === 'numerical_value' || item.type === 'numerical');
+
 export const generateExamSession = (id: string, examCatalog?: TestCategory[], customQs?: any, lang1?: string, lang2?: string): ActiveSession => {
   let title = "Government Prep Mock Test Simulator";
   let duration = 3600; // 60 mins
@@ -244,25 +248,29 @@ export const generateExamSession = (id: string, examCatalog?: TestCategory[], cu
           ? Number(item.negativeMarks) 
           : (item.negativeMark !== undefined && item.negativeMark !== null && item.negativeMark !== '' ? Number(item.negativeMark) : defaultNegForSection);
 
+        // Numerical-answer question (JEE Section B): typed on a keypad, no options. The key is
+        // answerValue, which (like correctIndex) is only sent after the test is submitted.
+        const numerical = isNumericalItem(item);
         return {
           id: item.id || `q_custom_${id}_${idx}`,
           sectionId: secId,
-          questionType: "mcq",
+          questionType: numerical ? 'numerical_value' : "mcq",
           orderIndex: qOrder,
-          correctOptionIndex: item.correctIndex ?? 0,
+          correctOptionIndex: numerical ? -1 : (item.correctIndex ?? 0),
+          ...(numerical ? { numericAnswer: item.answerValue != null && item.answerValue !== '' ? String(item.answerValue) : null } : {}),
           positiveMark: qPosMark,
           negativeMark: qNegMark,
           ...(item.fixedOrder ? { fixedOrder: true } : {}),
           content: {
             en: {
               questionText: item.textEn || item.questionText || item.text || '',
-              options: item.optionsEn || item.options || [],
+              options: numerical ? [] : (item.optionsEn || item.options || []),
               imageUrl: item.imageUrlEn || item.imageUrl,
               comprehension: item.comprehensionEn || item.comprehension
             },
             hi: {
               questionText: item.textHi || item.questionText || item.textHi || item.textEn || item.text || '',
-              options: item.optionsHi || item.options || item.optionsEn || item.options || [],
+              options: numerical ? [] : (item.optionsHi || item.options || item.optionsEn || item.options || []),
               imageUrl: item.imageUrlHi || item.imageUrl,
               comprehension: item.comprehensionHi || item.comprehension
             }

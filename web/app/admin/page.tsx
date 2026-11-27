@@ -29,6 +29,7 @@ import { InquiryManager } from './components/InquiryManager';
 import { IntegrityManager } from './components/IntegrityManager';
 import { PlatformManager } from './components/PlatformManager';
 import { platformLabel } from '../lib/platformLabels';
+import { isValidAnswerKey } from '../lib/examScoring';
 import { ContactLinksManager } from './components/ContactLinksManager';
 import { DocumentLockerManager } from './components/DocumentLockerManager';
 import { TypingTestManager } from './components/TypingTestManager';
@@ -283,6 +284,9 @@ export default function AdminAnalytics() {
   const [opt5En, setOpt5En] = useState('');
   const [opt5Hi, setOpt5Hi] = useState('');
   const [formCorrectIndex, setFormCorrectIndex] = useState(0);
+  // Numerical-answer questions (JEE Section B): no options, the admin types the correct number
+  const [formAnswerType, setFormAnswerType] = useState<'mcq' | 'numerical'>('mcq');
+  const [formAnswerValue, setFormAnswerValue] = useState('');
   const [formExplanationEn, setFormExplanationEn] = useState('');
   const [formExplanationHi, setFormExplanationHi] = useState('');
   const [formPositiveMarks, setFormPositiveMarks] = useState<string>('');
@@ -920,7 +924,13 @@ export default function AdminAnalytics() {
       return;
     }
 
-    if (!opt1En.trim() || !opt1Hi.trim() || !opt2En.trim() || !opt2Hi.trim()) {
+    const numerical = formAnswerType === 'numerical';
+    if (numerical && !isValidAnswerKey(formAnswerValue)) {
+      showToast("Enter the correct answer as a number (like 12 or -3.5), a range (like 2.4-2.6) or alternatives (like 1|-1)");
+      return;
+    }
+
+    if (!numerical && (!opt1En.trim() || !opt1Hi.trim() || !opt2En.trim() || !opt2Hi.trim())) {
       showToast("First 2 options are required in both English and Hindi");
       return;
     }
@@ -941,7 +951,7 @@ export default function AdminAnalytics() {
       optionsHi.push(opt5Hi.trim() || "विकल्प 5");
     }
 
-    if (formCorrectIndex >= optionsEn.length) {
+    if (!numerical && formCorrectIndex >= optionsEn.length) {
       showToast(`Correct option index is out of bounds (max: ${optionsEn.length})`);
       return;
     }
@@ -958,9 +968,9 @@ export default function AdminAnalytics() {
         : 'q_' + Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 6),
       textEn: formTextEn.trim(),
       textHi: formTextHi.trim(),
-      optionsEn,
-      optionsHi,
-      correctIndex: Number(formCorrectIndex),
+      ...(numerical
+        ? { questionType: 'numerical', answerValue: formAnswerValue.trim(), optionsEn: [], optionsHi: [], correctIndex: 0 }
+        : { optionsEn, optionsHi, correctIndex: Number(formCorrectIndex) }),
       explanationEn: formExplanationEn.trim() || undefined,
       explanationHi: formExplanationHi.trim() || undefined,
       section: sectionToSave,
@@ -998,6 +1008,7 @@ export default function AdminAnalytics() {
     setOpt5En('');
     setOpt5Hi('');
     setFormCorrectIndex(0);
+    setFormAnswerValue('');
     setFormExplanationEn('');
     setFormExplanationHi('');
     setFormPositiveMarks('');
@@ -1561,6 +1572,10 @@ export default function AdminAnalytics() {
               setOpt5Hi={setOpt5Hi}
               formCorrectIndex={formCorrectIndex}
               setFormCorrectIndex={setFormCorrectIndex}
+              formAnswerType={formAnswerType}
+              setFormAnswerType={setFormAnswerType}
+              formAnswerValue={formAnswerValue}
+              setFormAnswerValue={setFormAnswerValue}
               formExplanationEn={formExplanationEn}
               setFormExplanationEn={setFormExplanationEn}
               formExplanationHi={formExplanationHi}

@@ -15,7 +15,7 @@ import { CreateRoomSheet } from './TestScreens';
 import { api, MyRoom } from '../friendsApi';
 import QuestionView from '../QuestionView';
 import { generateExamSession, EXPLANATIONS } from '../shared/examUtils';
-import { isCbatTest, isRpscRasTest, scoreSession } from '../shared/examScoring';
+import { isAnswered, isCbatTest, isCorrectAnswer, isRpscRasTest, scoreSession } from '../shared/examScoring';
 import { matchCbatBatteryKey } from '../shared/cbatData';
 import { offlineAttempts, openOffline } from '../offline';
 import type { ActiveSession, Question } from '../shared/webTypes';
@@ -136,7 +136,7 @@ export function AnalysisScreen({ testId, attemptId, offline }: { testId: string;
   const record = attempts.find(a => a.id === selId) || attempts[0];
   const testItem = useMemo(() => flattenTests(catalog).find(x => x.test.id === testId)?.test, [catalog, testId]);
   const [session, setSession] = useState<ActiveSession | null>(null);
-  const [responses, setResponses] = useState<Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number }> | null>(null);
+  const [responses, setResponses] = useState<Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number }> | null>(null);
   const [error, setError] = useState('');
   const [viewer, setViewer] = useState<{ list: Question[]; index: number } | null>(null);
 
@@ -179,6 +179,8 @@ export function AnalysisScreen({ testId, attemptId, offline }: { testId: string;
   const score = session && responses ? scoreSession(session, responses as any, rpsc) : null;
   const status = (q: Question) => {
     const r = responses?.[q.id];
+    // Numerical-answer questions: marked on the typed number
+    if (q.questionType === 'numerical_value') return !isAnswered(q, r) ? 'skipped' : isCorrectAnswer(q, r) ? 'correct' : 'wrong';
     if (!r || r.selectedOptionIndex === null || r.selectedOptionIndex === undefined || (rpsc && r.selectedOptionIndex === 4)) return 'skipped';
     return r.selectedOptionIndex === q.correctOptionIndex ? 'correct' : 'wrong';
   };
@@ -328,7 +330,7 @@ export function AnalysisScreen({ testId, attemptId, offline }: { testId: string;
       {viewer && session && responses ? (
         <SolutionViewer
           testId={testId} testTitle={record.title} session={session} list={viewer.list} index={viewer.index} lang={lang}
-          chosen={(q: Question) => responses[q.id]?.selectedOptionIndex ?? null} rpsc={rpsc}
+          chosen={(q: Question) => responses[q.id]?.selectedOptionIndex ?? null} typed={(q: Question) => responses[q.id]?.numericValue ?? null} rpsc={rpsc}
           onClose={() => setViewer(null)} onIndex={i => setViewer(v => (v ? { ...v, index: i } : v))}
         />
       ) : null}
@@ -380,8 +382,10 @@ export function SolutionsList({ session, status, onOpen, noBookmark }: { session
 }
 
 /** Full-screen question review: correct answer, the student's choice, explanation, bookmark, report. */
-export function SolutionViewer({ testId, testTitle, session, list, index, lang, chosen, rpsc, onClose, onIndex, noBookmark }: {
-  testId: string; testTitle: string; session?: ActiveSession; list: Question[]; index: number; lang: 'en' | 'hi'; chosen: (q: Question) => number | null; rpsc?: boolean;
+export function SolutionViewer({ testId, testTitle, session, list, index, lang, chosen, typed, rpsc, onClose, onIndex, noBookmark }: {
+  testId: string; testTitle: string; session?: ActiveSession; list: Question[]; index: number; lang: 'en' | 'hi'; chosen: (q: Question) => number | null;
+  /** Numerical-answer questions: what the student typed */
+  typed?: (q: Question) => string | null; rpsc?: boolean;
   onClose: () => void; onIndex: (i: number) => void;
   /** Live tests: the paper isn't kept, so a bookmark couldn't be opened later */
   noBookmark?: boolean;
@@ -452,7 +456,10 @@ export function SolutionViewer({ testId, testTitle, session, list, index, lang, 
           {...input}
           selected={null}
           fontScale={font.scale}
-          review={{ correct: q.correctOptionIndex, chosen: chosen(q), explanation: explanationOf(q, qLang) }}
+          review={{
+            correct: q.correctOptionIndex, chosen: chosen(q), explanation: explanationOf(q, qLang),
+            ...(q.questionType === 'numerical_value' ? { numeric: { typed: typed?.(q) ?? null, answer: q.numericAnswer ?? null, right: isCorrectAnswer(q, { selectedOptionIndex: null, numericValue: typed?.(q) ?? null }) } } : {}),
+          }}
           watermark={`${user.name} · ${user.candidateCode}`}
           labels={{
             passage: hi ? 'अनुच्छेद' : 'Passage', explanation: hi ? 'व्याख्या' : 'Solution', yourAnswer: hi ? 'आपका उत्तर' : 'Your answer', correct: hi ? 'सही उत्तर' : 'Correct answer',

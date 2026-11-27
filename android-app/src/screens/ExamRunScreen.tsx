@@ -13,6 +13,7 @@ import { useSession, useUser } from '../session';
 import { useTheme } from '../theme';
 import { Button, Card, Dialog, ProgressBar, Sheet, StatusBarFor } from '../ui';
 import QuestionView from '../QuestionView';
+import NumericAnswerPad from '../NumericAnswerPad';
 import { engineReducer, getSectionQuestions, EngineResumeData, EngineState } from '../shared/examEngine';
 import { generateExamSession } from '../shared/examUtils';
 import { canShuffleTest, newShuffleSeed, responsesToDisplay, responsesToOriginal, shuffleSession } from '../shared/examShuffle';
@@ -230,13 +231,18 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
     const s = stateRef.current;
     if (!s.session || !s.score) return;
     setPhase('submitting');
-    const responses: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; answeredAt?: number }> = {};
+    const responses: Record<string, { selectedOptionIndex: number | null; numericValue?: string; elapsedSeconds: number; answeredAt?: number }> = {};
     let total = 0;
     // Original option numbers, so the server scores and analyses the real answers
     const original = responsesToOriginal(s.session, s.responses);
     Object.keys(original).forEach(id => {
       const r: any = original[id];
-      responses[id] = { selectedOptionIndex: r.selectedOptionIndex, elapsedSeconds: r.elapsedSeconds, ...(r.answeredAt ? { answeredAt: r.answeredAt } : {}) };
+      responses[id] = {
+        selectedOptionIndex: r.selectedOptionIndex,
+        // Numerical-answer questions: the saved typed answer
+        ...(r.numericValue ? { numericValue: r.numericValue } : {}),
+        elapsedSeconds: r.elapsedSeconds, ...(r.answeredAt ? { answeredAt: r.answeredAt } : {}),
+      };
       total += original[id].elapsedSeconds || 0;
     });
     if (live) {
@@ -449,6 +455,11 @@ export default function ExamRunScreen({ testId, resume, lang, l1, l2, offline, r
           labels={{ passage: hi ? 'अनुच्छेद' : 'Passage', explanation: '', yourAnswer: '', correct: '' }}
         />
       ) : <View style={{ flex: 1 }} />}
+
+      {/* Numerical-answer question (JEE Section B): answer box + keypad instead of options */}
+      {q?.questionType === 'numerical_value' ? (
+        <NumericAnswerPad hi={examLang === 'hi'} value={resp?.tempNumericValue ?? ''} onChange={value => dispatch({ type: 'SET_NUMERIC_ANSWER', payload: { value } })} />
+      ) : null}
 
       {/* Actions */}
       <TourTarget id="exam.actions">

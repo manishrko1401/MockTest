@@ -282,6 +282,7 @@ model QuestionResponseState {
   session             UserTestSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   questionId          String
   selectedOptionIndex Int?
+  numericValue        String? // numerical-answer questions (JEE Section B): the typed answer
   state               Int                  @default(1) // 1: NOT_VISITED, 2: NOT_ANSWERED, 3: ANSWERED, 4: MARKED_FOR_REVIEW, 5: ANSWERED_AND_MARKED_FOR_REVIEW
   elapsedSeconds      Int                  @default(0)
   updatedAt           DateTime             @updatedAt

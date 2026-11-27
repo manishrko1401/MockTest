@@ -4,6 +4,7 @@ import { buildTestSeriesPath } from '../../../lib/testSeriesUrl';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, MockUser, MockTestRecord } from '../../../AuthContext';
 import { generateExamSession } from '../../../lib/examUtils';
+import { isAnswered, isCorrectAnswer } from '../../../lib/examScoring';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useIsMobile } from '../../../useIsMobile';
@@ -122,7 +123,7 @@ export default function ExamSolutionAnalysisPage() {
   // attempt is currently open, via the get-session-responses endpoint. Without it, this page's
   // hasActualResponses check sees {} and falls back to reconstructing FAKE, seeded
   // correct/incorrect/skipped statuses — which then also feeds a wrong section-wise score.
-  const [fetchedResponses, setFetchedResponses] = useState<Record<string, Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }>>>({});
+  const [fetchedResponses, setFetchedResponses] = useState<Record<string, Record<string, { selectedOptionIndex: number | null; numericValue?: string | null; elapsedSeconds: number; state?: number }>>>({});
 
   const getAttemptLabel = (idx: number, total: number, attemptLang: 'en' | 'hi' = 'en') => {
     if (idx === 0) {
@@ -478,6 +479,11 @@ export default function ExamSolutionAnalysisPage() {
       const resp = effectiveResponses[q.id];
       const userSelectedOptionIndex = resp.selectedOptionIndex ?? -1;
       let status: 'correct' | 'incorrect' | 'skipped' = 'skipped';
+      if (q.questionType === 'numerical_value') {
+        // Numerical-answer question: marked on the typed number
+        status = !isAnswered(q, resp) ? 'skipped' : isCorrectAnswer(q, resp) ? 'correct' : 'incorrect';
+        return { questionId: q.id, status, userSelectedOptionIndex: -1, numericValue: (resp as any).numericValue ?? null };
+      }
       if (userSelectedOptionIndex === -1 || userSelectedOptionIndex === null) {
         status = 'skipped';
       } else if (isRpscRasMode && userSelectedOptionIndex === 4) {
@@ -1485,6 +1491,7 @@ export default function ExamSolutionAnalysisPage() {
                 hi={language === 'hi'}
                 fontSize={questionFontSize}
                 selectedOptionIndex={activeStatus.userSelectedOptionIndex ?? null}
+                numericValue={(activeStatus as any).numericValue ?? null}
               />
             </div>
 

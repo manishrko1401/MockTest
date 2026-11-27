@@ -21,7 +21,8 @@ export interface MemberResult {
   userId: string; score: number; maxScore: number; accuracy: number; timeSeconds: number; completedAt: string | null;
   correct: number; wrong: number; skipped: number;
   sections: Record<string, { score: number; correct: number; wrong: number; skipped: number; time: number }>;
-  answers: [number | null, number, 1 | 0 | null][];
+  /** per question: [chosen option, seconds, 1 right / 0 wrong / null skipped, typed answer for numerical questions] */
+  answers: ([number | null, number, 1 | 0 | null] | [number | null, number, 1 | 0 | null, string])[];
   /** Held by the exam integrity checks: listed, not ranked, until an admin clears it */
   underReview?: boolean;
 }

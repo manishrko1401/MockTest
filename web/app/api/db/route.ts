@@ -61,7 +61,7 @@ import { NOTIFY_ACTIONS, handleNotifyAction, notifyUser } from '../../lib/userNo
 import { analyzeAttempt, countWords } from '../../lib/integrityRules';
 import { unstable_cache } from 'next/cache';
 import { CATALOG_TAG, NOTICES_TAG, CATALOG_REVALIDATE_S, NOTICES_REVALIDATE_S, invalidateShared } from '../../lib/sharedCache';
-import { scoreSession, scoreCbat, isCbatTest, isRpscRasTest, stripAnswers, ScoreResult } from '../../lib/examScoring';
+import { scoreSession, scoreCbat, isCbatTest, isRpscRasTest, stripAnswers, ScoreResult, parseNumericAnswer } from '../../lib/examScoring';
 
 // -----------------------------------------------------------------------------
 // Who may call each action (see ACCESS CONTROL in POST). Not listed = refused.
@@ -1892,10 +1892,11 @@ async function handleGoogleAuth(data: any, request?: Request) {
       googleDriveEmail: user.googleDriveEmail,
       googleDriveFolderId: user.googleDriveFolderId,
       testSessions: (user.testSessions || []).map((session: any) => {
-        const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+        const responsesRecord: Record<string, { selectedOptionIndex: number | null; numericValue?: string; elapsedSeconds: number; state?: number }> = {};
         (session.responses || []).forEach((r: any) => {
           responsesRecord[r.questionId] = {
             selectedOptionIndex: r.selectedOptionIndex,
+            ...(r.numericValue ? { numericValue: r.numericValue } : {}),
             elapsedSeconds: r.elapsedSeconds,
             state: r.state,
           };
@@ -2414,7 +2415,7 @@ async function handleOfflineDownload(data: any, requester: { id: string; role: s
       where: { userId: requester.id, mockTestId: mockTest.id, status: { in: ['COMPLETED', 'AUTO_SUBMITTED'] } },
       orderBy: { completedAt: 'desc' },
       take: 3,
-      include: { responses: { select: { questionId: true, selectedOptionIndex: true, state: true, elapsedSeconds: true } } },
+      include: { responses: { select: { questionId: true, selectedOptionIndex: true, numericValue: true, state: true, elapsedSeconds: true } } },
     });
     const withImages = await embedImages(questions);
     const version = crypto.createHash('sha256').update(JSON.stringify(questions)).digest('hex').slice(0, 16);
@@ -2436,7 +2437,7 @@ async function handleOfflineDownload(data: any, requester: { id: string; role: s
           accuracy: s.accuracyPercentage ?? 0, durationSeconds: s.timeSpentSeconds, status: s.status, violations: s.violationsCount,
           date: s.startedAt.toISOString().split('T')[0], startedAt: s.startedAt.toISOString(),
           completedAt: s.completedAt ? s.completedAt.toISOString() : null, createdAt: s.createdAt.toISOString(),
-          responses: Object.fromEntries(s.responses.map(r => [r.questionId, { selectedOptionIndex: r.selectedOptionIndex, elapsedSeconds: r.elapsedSeconds, state: r.state }])),
+          responses: Object.fromEntries(s.responses.map(r => [r.questionId, { selectedOptionIndex: r.selectedOptionIndex, ...(r.numericValue ? { numericValue: r.numericValue } : {}), elapsedSeconds: r.elapsedSeconds, state: r.state }])),
         })),
       },
     };
@@ -2746,13 +2747,18 @@ async function handleAddAttempt(data: any, request?: Request) {
   // not in the Prisma DB). The session itself is already saved so we never lose the score.
   if (responses) {
     try {
-      const responsesData = Object.entries(responses).map(([qId, val]: any) => ({
-        sessionId: session.id,
-        questionId: qId,
-        selectedOptionIndex: val.selectedOptionIndex,
-        state: val.selectedOptionIndex !== null ? 3 : 2,
-        elapsedSeconds: val.elapsedSeconds || 0,
-      }));
+      const responsesData = Object.entries(responses).map(([qId, val]: any) => {
+        // Numerical-answer questions: the typed answer ("12", "-3.5")
+        const numericValue = parseNumericAnswer(val?.numericValue) !== null ? String(val.numericValue).trim().slice(0, 20) : null;
+        return {
+          sessionId: session.id,
+          questionId: qId,
+          selectedOptionIndex: val.selectedOptionIndex,
+          numericValue,
+          state: val.selectedOptionIndex !== null || numericValue !== null ? 3 : 2,
+          elapsedSeconds: val.elapsedSeconds || 0,
+        };
+      });
       if (responsesData.length > 0) {
         // Use skipDuplicates and catch FK errors gracefully
         await prisma.questionResponseState.createMany({
@@ -2912,6 +2918,7 @@ async function handleSaveOngoingSession(data: any, request?: Request) {
         sessionId,
         questionId: qId,
         selectedOptionIndex: val.selectedOptionIndex,
+        numericValue: parseNumericAnswer(val?.numericValue) !== null ? String(val.numericValue).trim().slice(0, 20) : null,
         state: val.state !== undefined ? val.state : (val.selectedOptionIndex !== null ? 3 : 2),
         elapsedSeconds: val.elapsedSeconds || 0,
       }));
@@ -3000,17 +3007,19 @@ async function handleSaveExamProgress(data: any) {
       .map(([questionId, r]: any) => ({
         q: questionId,
         s: typeof r.selectedOptionIndex === 'number' ? r.selectedOptionIndex : null,
+        n: parseNumericAnswer(r.numericValue) !== null ? String(r.numericValue).trim().slice(0, 20) : null,
         st: [1, 2, 3, 4, 5].includes(r.state) ? r.state : 2,
         e: toInt(r.elapsedSeconds),
       }));
     if (rows.length > 0) {
       try {
         await prisma.$executeRaw`
-          INSERT INTO question_response_states (id, "sessionId", "questionId", "selectedOptionIndex", state, "elapsedSeconds", "updatedAt")
-          SELECT gen_random_uuid()::text, ${session.id}, x.q, x.s, x.st, x.e, NOW()
-          FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS x(q text, s int, st int, e int)
+          INSERT INTO question_response_states (id, "sessionId", "questionId", "selectedOptionIndex", "numericValue", state, "elapsedSeconds", "updatedAt")
+          SELECT gen_random_uuid()::text, ${session.id}, x.q, x.s, x.n, x.st, x.e, NOW()
+          FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS x(q text, s int, n text, st int, e int)
           ON CONFLICT ("sessionId", "questionId") DO UPDATE SET
             "selectedOptionIndex" = EXCLUDED."selectedOptionIndex",
+            "numericValue" = EXCLUDED."numericValue",
             state = EXCLUDED.state,
             "elapsedSeconds" = EXCLUDED."elapsedSeconds",
             "updatedAt" = NOW()`;
@@ -3050,7 +3059,7 @@ async function handleGetExamProgress(data: any) {
   // savedAt 0 so a progress copy in this browser, if any, is preferred.
   const responseRows = await prisma.questionResponseState.findMany({
     where: { sessionId: session.id },
-    select: { questionId: true, selectedOptionIndex: true, state: true, elapsedSeconds: true },
+    select: { questionId: true, selectedOptionIndex: true, numericValue: true, state: true, elapsedSeconds: true },
   });
   const responses: Record<string, any> = {};
   for (const r of responseRows) {
@@ -3058,6 +3067,8 @@ async function handleGetExamProgress(data: any) {
       questionId: r.questionId,
       selectedOptionIndex: r.selectedOptionIndex,
       tempOptionIndex: r.selectedOptionIndex,
+      numericValue: r.numericValue,
+      tempNumericValue: r.numericValue,
       state: r.state,
       elapsedSeconds: r.elapsedSeconds,
     };
@@ -5656,6 +5667,7 @@ async function handleGetSessionResponses(data: any) {
         select: {
           questionId: true,
           selectedOptionIndex: true,
+          numericValue: true,
           state: true,
           elapsedSeconds: true,
         },
@@ -5667,10 +5679,11 @@ async function handleGetSessionResponses(data: any) {
     return NextResponse.json({ success: false, error: 'Session not found' }, { status: 404 });
   }
 
-  const responsesRecord: Record<string, { selectedOptionIndex: number | null; elapsedSeconds: number; state?: number }> = {};
+  const responsesRecord: Record<string, { selectedOptionIndex: number | null; numericValue?: string; elapsedSeconds: number; state?: number }> = {};
   session.responses.forEach((r) => {
     responsesRecord[r.questionId] = {
       selectedOptionIndex: r.selectedOptionIndex,
+      ...(r.numericValue ? { numericValue: r.numericValue } : {}),
       elapsedSeconds: r.elapsedSeconds,
       state: r.state,
     };
@@ -6084,6 +6097,7 @@ async function handleGetAdminSessionAnalysis(rawPayload: any) {
             id: true,
             questionId: true,
             selectedOptionIndex: true,
+            numericValue: true,
             state: true,
             elapsedSeconds: true,
           }

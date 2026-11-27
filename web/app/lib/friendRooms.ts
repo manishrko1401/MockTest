@@ -3,7 +3,7 @@ import { isLiveTestId } from './liveTestShared';
 import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
 import { generateExamSession } from './examUtils';
-import { isCbatTest, isRpscRasTest } from './examScoring';
+import { isAnswered, isCbatTest, isCorrectAnswer, isRpscRasTest } from './examScoring';
 import { checkRateLimit } from './botProtection';
 import { areFriends, ensureFriendTables, relationsWith, sendFriendMessage } from './friends';
 import { markNotificationsRead, nameOf, notifyUser } from './userNotify';
@@ -197,6 +197,9 @@ async function linkAttempts(room: RoomRow, members: MemberRow[]) {
 // EGRESS-OPT: the room page refreshes every few seconds, and building the comparison reads
 // every member's answers. A submitted attempt never changes, so a comparison is reused until
 // another member finishes (the key holds the finished attempts) or 15 minutes pass.
+/** One member's answer to a question in the comparison (the typed answer only for numerical questions) */
+type RoomAnswer = [number | null, number, 1 | 0 | null] | [number | null, number, 1 | 0 | null, string];
+
 const comparisonMemo = new Map<string, { at: number; value: Awaited<ReturnType<typeof buildComparisonFresh>> }>();
 const COMPARISON_TTL_MS = 15 * 60 * 1000;
 
@@ -226,7 +229,7 @@ async function buildComparisonFresh(room: RoomRow, members: MemberRow[], deps: R
       where: { id: { in: done.map(m => m.sessionId!) } },
       select: {
         id: true, userId: true, finalScore: true, maxScore: true, accuracyPercentage: true, timeSpentSeconds: true, completedAt: true, startedAt: true,
-        responses: { select: { questionId: true, selectedOptionIndex: true, state: true, elapsedSeconds: true } },
+        responses: { select: { questionId: true, selectedOptionIndex: true, numericValue: true, state: true, elapsedSeconds: true } },
       },
     }),
   ]);
@@ -251,24 +254,26 @@ async function buildComparisonFresh(room: RoomRow, members: MemberRow[], deps: R
     const byQ = new Map(s.responses.map(r => [r.questionId, r]));
     let correct = 0, wrong = 0, skipped = 0;
     const sections: Record<string, { score: number; correct: number; wrong: number; skipped: number; time: number }> = {};
-    // per question: [chosen option or null, seconds, 1 correct / 0 wrong / null skipped]
-    const answers: [number | null, number, 1 | 0 | null][] = ordered.map(q => {
+    // per question: [chosen option or null, seconds, 1 correct / 0 wrong / null skipped, typed answer (numerical questions)]
+    const answers: RoomAnswer[] = ordered.map((q): RoomAnswer => {
       const r = byQ.get(q.id);
       const { pos, neg } = marksOf(q);
       const sec = (sections[q.sectionId] ||= { score: 0, correct: 0, wrong: 0, skipped: 0, time: 0 });
       const t = Math.max(0, r?.elapsedSeconds || 0);
       sec.time += t;
-      const answered = !!r && (r.state === 3 || r.state === 5 || (r.selectedOptionIndex !== null && r.selectedOptionIndex !== undefined));
+      const answered = isAnswered(q, r);
       if (!answered || (rpsc && r!.selectedOptionIndex === 4)) {
         skipped++; sec.skipped++;
         return [r?.selectedOptionIndex ?? null, t, null];
       }
-      if (r!.selectedOptionIndex === q.correctOptionIndex) {
+      // Numerical-answer questions are marked on the typed number (no option is chosen)
+      const typed = q.questionType === 'numerical_value' && r?.numericValue ? [r.numericValue] as [string] : [] as [];
+      if (isCorrectAnswer(q, r)) {
         correct++; sec.correct++; sec.score += pos;
-        return [r!.selectedOptionIndex, t, 1];
+        return [r!.selectedOptionIndex, t, 1, ...typed];
       }
       wrong++; sec.wrong++; sec.score -= neg;
-      return [r!.selectedOptionIndex, t, 0];
+      return [r!.selectedOptionIndex, t, 0, ...typed];
     });
     Object.values(sections).forEach(v => { v.score = round2(v.score); });
     return {
@@ -284,7 +289,10 @@ async function buildComparisonFresh(room: RoomRow, members: MemberRow[], deps: R
       maxScore: round2(ordered.filter(q => q.sectionId === s.id).reduce((a, q) => a + marksOf(q).pos, 0)),
       questions: ordered.filter(q => q.sectionId === s.id).length,
     })),
-    questions: ordered.map((q, i) => ({ id: q.id, n: i + 1, sectionId: q.sectionId, correct: q.correctOptionIndex })),
+    questions: ordered.map((q, i) => ({
+      id: q.id, n: i + 1, sectionId: q.sectionId, correct: q.correctOptionIndex,
+      ...(q.questionType === 'numerical_value' ? { numericAnswer: q.numericAnswer ?? null } : {}),
+    })),
     results,
   };
 }

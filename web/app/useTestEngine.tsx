@@ -28,6 +28,8 @@ export interface Question {
     hi: QuestionContent;
   };
   correctOptionIndex: number; // Used for evaluation
+  /** questionType 'numerical_value': the correct answer as written by the setter ("12", "-0.5"); only after submitting */
+  numericAnswer?: string | null;
   orderIndex: number;
   explanation?: {
     en: string;
@@ -74,16 +76,36 @@ export type PaletteState = 1 | 2 | 3 | 4 | 5;
 
 /** The moment the saved answer was chosen: kept when the answer did not change, the last tap otherwise. */
 function answeredAtFor(r: QuestionResponse): number | undefined {
-  const picked = r.tempOptionIndex;
-  if (picked === null || picked === undefined) return undefined;
-  if (picked === r.selectedOptionIndex && r.answeredAt) return r.answeredAt;
+  if (!hasTempAnswer(r)) return undefined;
+  if (r.tempOptionIndex === r.selectedOptionIndex && (r.tempNumericValue ?? null) === (r.numericValue ?? null) && r.answeredAt) return r.answeredAt;
   return r.pickedAt ?? Date.now();
 }
+
+// Numerical-answer questions (JEE Section B) keep a typed value instead of an option index,
+// with the same unsaved / saved pair: tempNumericValue while typing, numericValue once saved.
+const hasValue = (v: string | null | undefined) => typeof v === 'string' && v.trim() !== '' && v.trim() !== '-' && v.trim() !== '.';
+function hasTempAnswer(r: QuestionResponse) {
+  return (r.tempOptionIndex !== null && r.tempOptionIndex !== undefined) || hasValue(r.tempNumericValue);
+}
+/** Save & Next / Mark for Review: the unsaved answer becomes the saved one */
+const commitAnswer = (r: QuestionResponse) => ({
+  selectedOptionIndex: r.tempOptionIndex ?? null,
+  numericValue: hasValue(r.tempNumericValue) ? r.tempNumericValue!.trim() : null,
+});
+/** Leaving a question without saving: the unsaved answer goes back to the saved one */
+const revertAnswer = (r: QuestionResponse) => ({
+  tempOptionIndex: r.selectedOptionIndex,
+  tempNumericValue: r.numericValue ?? null,
+});
 
 export interface QuestionResponse {
   questionId: string;
   selectedOptionIndex: number | null; // Saved option index
   tempOptionIndex: number | null;     // Unsaved selection (active UI radio button state)
+  /** Numerical-answer questions: saved typed answer ("12", "-3.5") */
+  numericValue?: string | null;
+  /** Numerical-answer questions: what is in the answer box, not yet saved */
+  tempNumericValue?: string | null;
   state: PaletteState;
   elapsedSeconds: number;
   /** When an option was last tapped (ms, the device's clock) */
@@ -142,6 +164,7 @@ type EngineAction =
   | { type: 'SET_LANGUAGE'; payload: 'en' | 'hi' }
   | { type: 'TICK_TIMER' }
   | { type: 'SELECT_OPTION'; payload: { optionIndex: number | null } }
+  | { type: 'SET_NUMERIC_ANSWER'; payload: { value: string } }
   | { type: 'SAVE_AND_NEXT' }
   | { type: 'CLEAR_RESPONSE' }
   | { type: 'MARK_FOR_REVIEW_AND_NEXT' }
@@ -220,6 +243,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
           questionId: q.id,
           selectedOptionIndex: existing?.selectedOptionIndex ?? null,
           tempOptionIndex: existing?.tempOptionIndex ?? existing?.selectedOptionIndex ?? null,
+          numericValue: existing?.numericValue ?? null,
+          tempNumericValue: existing?.tempNumericValue ?? existing?.numericValue ?? null,
           state: existing?.state ?? 1, // NOT_VISITED
           elapsedSeconds: existing?.elapsedSeconds ?? 0,
         };
@@ -377,6 +402,21 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       };
     }
 
+    case 'SET_NUMERIC_ANSWER': {
+      const activeQuestion = getSectionQuestions(session, state.currentSectionIndex)[state.currentQuestionIndex];
+      if (!activeQuestion) return state;
+      const currentResp = state.responses[activeQuestion.id] || {
+        questionId: activeQuestion.id, selectedOptionIndex: null, tempOptionIndex: null, state: 1 as PaletteState, elapsedSeconds: 0,
+      };
+      return {
+        ...state,
+        responses: {
+          ...state.responses,
+          [activeQuestion.id]: { ...currentResp, tempNumericValue: action.payload.value.slice(0, 20), pickedAt: Date.now() },
+        },
+      };
+    }
+
     case 'SAVE_AND_NEXT': {
       const activeSectionQuestions = getSectionQuestions(session, state.currentSectionIndex);
       const activeQuestion = activeSectionQuestions[state.currentQuestionIndex];
@@ -390,12 +430,12 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         state: 1,
         elapsedSeconds: 0,
       };
-      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
+      const hasSelection = hasTempAnswer(currentResp);
 
       // Update state: ANSWERED (3) if selected, else NOT_ANSWERED (2)
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
-        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
+        ...commitAnswer(currentResp),
         state: hasSelection ? 3 : 2,
         answeredAt: answeredAtFor(currentResp),
       };
@@ -430,7 +470,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         updatedResponses[nextQuestion.id] = {
           ...nextResp,
           state: nextResp.state === 1 ? 2 : nextResp.state,
-          tempOptionIndex: nextResp.selectedOptionIndex,
+          ...revertAnswer(nextResp),
         };
       }
 
@@ -461,6 +501,8 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         ...currentResp,
         selectedOptionIndex: null,
         tempOptionIndex: null,
+        numericValue: null,
+        tempNumericValue: null,
         state: 2,
       };
 
@@ -483,14 +525,14 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         state: 1,
         elapsedSeconds: 0,
       };
-      const hasSelection = currentResp?.tempOptionIndex !== undefined && currentResp?.tempOptionIndex !== null;
+      const hasSelection = hasTempAnswer(currentResp);
 
       // 5-State Rule:
       // Option chosen: ANSWERED_AND_MARKED_FOR_REVIEW (5)
       // No option chosen: MARKED_FOR_REVIEW (4)
       updatedResponses[activeQuestion.id] = {
         ...currentResp,
-        selectedOptionIndex: currentResp.tempOptionIndex ?? null,
+        ...commitAnswer(currentResp),
         state: hasSelection ? 5 : 4,
         answeredAt: answeredAtFor(currentResp),
       };
@@ -522,7 +564,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         updatedResponses[nextQuestion.id] = {
           ...nextResp,
           state: nextResp.state === 1 ? 2 : nextResp.state,
-          tempOptionIndex: nextResp.selectedOptionIndex,
+          ...revertAnswer(nextResp),
         };
       }
 
@@ -567,7 +609,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
         // Revert temporary changes to saved value
         updatedResponses[currentActiveQuestion.id] = {
           ...activeResp,
-          tempOptionIndex: activeResp.selectedOptionIndex,
+          ...revertAnswer(activeResp),
           state: activeResp.state === 1 ? 2 : activeResp.state,
         };
       }
@@ -584,7 +626,7 @@ function engineReducer(state: EngineState, action: EngineAction): EngineState {
       updatedResponses[targetQuestion.id] = {
         ...targetResp,
         state: targetResp.state === 1 ? 2 : targetResp.state,
-        tempOptionIndex: targetResp.selectedOptionIndex,
+        ...revertAnswer(targetResp),
       };
 
       return {
@@ -800,6 +842,8 @@ interface TestEngineContextType {
   state: EngineState;
   initSession: (session: ActiveSession, maxViolations?: number, resumeData?: EngineResumeData, defaultLanguage?: 'en' | 'hi', isRpscRasMode?: boolean) => void;
   selectOption: (optionIndex: number | null) => void;
+  /** Numerical-answer questions: the text in the answer box (not saved until Save & Next) */
+  setNumericAnswer: (value: string) => void;
   saveAndNext: () => void;
   clearResponse: () => void;
   markForReviewAndNext: () => void;
@@ -869,6 +913,10 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
 
   const selectOption = useCallback((optionIndex: number | null) => {
     dispatch({ type: 'SELECT_OPTION', payload: { optionIndex } });
+  }, []);
+
+  const setNumericAnswer = useCallback((value: string) => {
+    dispatch({ type: 'SET_NUMERIC_ANSWER', payload: { value } });
   }, []);
 
   const saveAndNext = useCallback(() => {
@@ -1033,6 +1081,7 @@ export const TestEngineProvider: React.FC<TestEngineProviderProps> = ({
         state,
         initSession,
         selectOption,
+        setNumericAnswer,
         saveAndNext,
         clearResponse,
         markForReviewAndNext,
