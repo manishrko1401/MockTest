@@ -1,11 +1,11 @@
 {
-  "version": "2.2.2",
-  "versionCode": 113,
-  "releasedAt": "2026-10-28",
-  "key": "apps/android/MockTestHub_2.2.2.apk",
-  "file": "MockTestHub_2.2.2.apk",
-  "size": 45060054,
+  "version": "2.2.3",
+  "versionCode": 114,
+  "releasedAt": "2026-11-27",
+  "key": "apps/android/MockTestHub_2.2.3.apk",
+  "file": "MockTestHub_2.2.3.apk",
+  "size": 45069050,
   "minAndroid": "7.0",
-  "notes": "Better app tour: clear tips on every screen (replay it from Me)\nLight theme by default (change it in Me → Appearance)\nQuestions and options come in a new order on every attempt\nComputer Knowledge Live Test and 80 chapter-wise tests\nSmall design fixes",
+  "notes": "JEE numerical questions: type your answer on the new number keypad\nQuestions and options stay in their original order\nFixed a crash when adding a syllabus in Study Planner\nSmall fixes",
   "minVersionCode": 0
 }
